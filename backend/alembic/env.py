@@ -53,6 +53,18 @@ import app.models.control_seguridad   # noqa: F401
 
 import app.models.regla_so_d   # noqa: F401
 
+import app.models.herramienta_externa   # noqa: F401
+
+import app.models.vulnerabilidad   # noqa: F401
+
+import app.models.historial_vulnerabilidad   # noqa: F401
+
+import app.models.excepcion_vulnerabilidad   # noqa: F401
+
+import app.models.aceptacion_riesgo   # noqa: F401
+
+import app.models.evidencia_remediacion   # noqa: F401
+
 target_metadata = Base.metadata
 
 

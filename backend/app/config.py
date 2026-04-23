@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # ─── Required secrets (no defaults — must be set via env / .env) ───
     DATABASE_URL: str = Field(..., description="Async DB URL, e.g. postgresql+asyncpg://user:pass@host/db")
     SECRET_KEY: str = Field(..., min_length=32, description="JWT signing key — generate with: python -c \"import secrets; print(secrets.token_urlsafe(64))\"")
+    APPSEC_MASTER_KEY: str = Field(..., description="Encryption key for storing credentials at-rest (A5)")
     ADMIN_EMAIL: str = Field(..., description="Initial admin email")
     ADMIN_PASSWORD: str = Field(..., min_length=10, description="Initial admin password")
 

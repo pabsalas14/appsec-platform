@@ -1,0 +1,125 @@
+"""ExcepcionVulnerabilidad service — CRUD con SoD (A6) en aprobación.
+
+Reglas:
+  - Al crear: estado inicial = "Pendiente"
+  - Al aprobar/rechazar: valida SoD si ReglaSoD "vulnerabilidad.aprobar_excepcion" activa
+    → aprobador_id != user_id (creador original)
+"""
+
+from __future__ import annotations
+
+import uuid
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
+from app.models.regla_so_d import ReglaSoD
+from app.schemas.excepcion_vulnerabilidad import (
+    ExcepcionVulnerabilidadCreate,
+    ExcepcionVulnerabilidadUpdate,
+)
+from app.services.base import BaseService
+
+
+class ExcepcionVulnerabilidadService(
+    BaseService[
+        ExcepcionVulnerabilidad,
+        ExcepcionVulnerabilidadCreate,
+        ExcepcionVulnerabilidadUpdate,
+    ]
+):
+    """Extends BaseService with SoD validation on approval (A6)."""
+
+    async def _sod_activa(self, db: AsyncSession) -> bool:
+        """Retorna True si la regla SoD para aprobar excepciones está activa."""
+        result = await db.execute(
+            select(ReglaSoD).where(
+                ReglaSoD.accion == "vulnerabilidad.aprobar_excepcion",
+                ReglaSoD.enabled.is_(True),
+                ReglaSoD.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def aprobar(
+        self,
+        db: AsyncSession,
+        excepcion_id: uuid.UUID,
+        aprobador_id: uuid.UUID,
+        notas: str | None = None,
+        *,
+        scope: dict[str, Any] | None = None,
+    ) -> ExcepcionVulnerabilidad | None:
+        """Aprueba una excepción. Valida SoD: aprobador != creador si regla activa."""
+        from datetime import datetime, timezone
+        from app.core.exceptions import ConflictException
+
+        record = await self.get(db, excepcion_id, scope=scope)
+        if not record:
+            return None
+
+        if await self._sod_activa(db):
+            if record.user_id == aprobador_id:
+                raise ConflictException(
+                    "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
+                    "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
+                )
+
+        record.estado = "Aprobada"
+        record.aprobador_id = aprobador_id
+        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.notas_aprobador = notas
+
+        await db.flush()
+        await db.refresh(record)
+        await self._audit(
+            db, "aprobar", record,
+            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
+        )
+        return record
+
+    async def rechazar(
+        self,
+        db: AsyncSession,
+        excepcion_id: uuid.UUID,
+        aprobador_id: uuid.UUID,
+        notas: str | None = None,
+        *,
+        scope: dict[str, Any] | None = None,
+    ) -> ExcepcionVulnerabilidad | None:
+        """Rechaza una excepción. Valida SoD: aprobador != creador si regla activa."""
+        from datetime import datetime, timezone
+        from app.core.exceptions import ConflictException
+
+        record = await self.get(db, excepcion_id, scope=scope)
+        if not record:
+            return None
+
+        if await self._sod_activa(db):
+            if record.user_id == aprobador_id:
+                raise ConflictException(
+                    "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
+                    "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
+                )
+
+        record.estado = "Rechazada"
+        record.aprobador_id = aprobador_id
+        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.notas_aprobador = notas
+
+        await db.flush()
+        await db.refresh(record)
+        await self._audit(
+            db, "rechazar", record,
+            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
+        )
+        return record
+
+
+excepcion_vulnerabilidad_svc = ExcepcionVulnerabilidadService(
+    ExcepcionVulnerabilidad,
+    owner_field="user_id",
+    audit_action_prefix="excepcion_vulnerabilidad",
+)

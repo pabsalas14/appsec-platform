@@ -11,6 +11,7 @@ from app.api.v1.admin import users as admin_users
 from app.api.v1.admin import roles as admin_roles
 from app.api.v1.admin import settings as admin_settings
 from app.api.v1.admin import regla_sods as admin_regla_sods
+from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 
 admin_router = APIRouter()
 
@@ -25,4 +26,9 @@ admin_router.include_router(
 )
 admin_router.include_router(
     admin_regla_sods.router, prefix="/regla-sods", tags=["Admin · ReglaSoD"]
+)
+admin_router.include_router(
+    admin_herramienta_externas.router,
+    prefix="/herramientas-externas",
+    tags=["Admin · Herramientas Externas"],
 )

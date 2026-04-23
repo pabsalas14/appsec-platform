@@ -1,449 +1,762 @@
-# 🏗️ Development Framework
+# AppSec Platform
 
-> **Production-ready full-stack starter kit** — accelerate new projects with a battle-tested architecture, built-in authentication, and end-to-end type safety.
-
----
-
-## Starting a new project from this framework
-
-You do **not** need to manually duplicate folders and edit everything by hand.
-The intended workflow is: **get a copy of the repo → run `init.sh` → run the stack**.
-That copy can come from GitHub’s template button or from an ordinary `git clone` /
-folder copy of this repository.
-
-### Recommended: GitHub template repository
-
-If this repo is configured as a template on GitHub (**Settings → Template repository**):
-
-1. Open the repo on GitHub and click **Use this template → Create a new repository**.
-2. Clone **your new repository** (not the template source), then:
-
-   ```bash
-   cd your-new-repo
-   ./scripts/init.sh my-app-slug
-   make up
-   make seed
-   ```
-
-You now have your own project folder with renamed placeholders, a generated
-`.env`, and git ready for your first commits.
-
-### Alternative: clone or copy without “Use this template”
-
-If you prefer not to use the template button (or you only have a local mirror):
-
-1. Clone this repository, **or** copy the project directory into a new folder
-   where your app will live.
-2. From that folder, still run `./scripts/init.sh <project-slug>` before you
-   treat it as “your” app. That step replaces framework placeholders (e.g.
-   package/project names), creates `.env` from `.env.example` with a fresh
-   `SECRET_KEY`, prompts for admin credentials, removes template-only files,
-   and can re-init git — see [`TEMPLATE.md`](TEMPLATE.md).
-3. Then `make up` and `make seed` as above.
-
-Skipping `init.sh` means you keep the template names and must configure `.env`
-yourself (see **Quick Start** below).
-
-If you cloned **this** repository to contribute changes upstream, **do not** run
-`init.sh` there — it deletes `.git` and is meant only for spinning off a **new**
-downstream project.
-
-### What `init.sh` does (summary)
-
-| Step | Effect |
-|------|--------|
-| Placeholder rename | Slug-based names across Compose, backend metadata, README, etc. |
-| `.env` | Created from `.env.example` with new `SECRET_KEY` and admin prompts |
-| Cleanup | Removes template-only files (e.g. `TEMPLATE.md`, template workflows) |
-| Git | Replaces `.git` with a new repo and an initial commit (see `scripts/init.sh`) |
-
-Further detail: [`TEMPLATE.md`](TEMPLATE.md). Design decisions you inherit:
-[`docs/adr/`](docs/adr/README.md).
-
-The sections below describe the framework **as a running app** — they apply the
-same whether you arrived here via template + `init.sh` or manual clone + `.env`.
-
----
+> **Plataforma centralizada de Application Security** — un sistema único donde el equipo de AppSec tiene visibilidad completa del estado de vulnerabilidades, programas, auditorías e iniciativas sin depender de reportes manuales ni hojas de cálculo.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Tests](https://img.shields.io/badge/tests-204%20pasando-brightgreen)](#pruebas)
+[![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---
 
-## ✨ Features
+## ¿Qué es esta plataforma?
 
-- **🔐 Authentication** — Browser sessions use HttpOnly cookies, CSRF double-submit protection, refresh rotation, and session-family revocation on suspicious reuse
-- **🧩 CRUD Pattern** — Reference `Tasks` module showing the full Model → Schema → Service → Router → Frontend flow
-- **📦 Async Everywhere** — SQLAlchemy Async + FastAPI async handlers for non-blocking I/O
-- **🎨 Shadcn UI + Tailwind** — Beautiful, accessible component library with dark mode support
-- **📡 Server-Sent Events** — Real-time push notifications with SSE, Nginx buffering pre-configured
-- **🗃️ Database Migrations** — Alembic auto-migrations integrated into the Docker startup flow
-- **🔄 TanStack Query** — Smart client-side caching, pagination, and optimistic updates
-- **🐳 Fully Dockerized** — One command (`make up`) to spin up the entire stack
-- **🌐 Nginx Reverse Proxy** — Unified entry point with CORS, security headers, and upload serving
-- **🤖 AI Provider Ready** — Optional OpenAI, Anthropic, and Ollama integrations
+La **AppSec Platform** centraliza en un solo sistema la gestión completa de seguridad de aplicaciones:
+
+- Vulnerabilidades detectadas por SAST, DAST, SCA, Threat Modeling, MAST, auditorías externas y revisiones de terceros
+- Programas de seguridad con seguimiento mensual de actividades
+- Flujos de aprobación con **Segregación de Funciones (SoD)** configurable
+- Indicadores de madurez de seguridad y dashboards ejecutivos
+- Integraciones con IA para asistencia en Threat Modeling y triaje de hallazgos
+
+Todo con trazabilidad **100% auditable**: cada acción, cambio de configuración, exportación y aprobación queda registrada de forma inmutable.
 
 ---
 
-## 🏛️ Architecture
+## Arquitectura General
 
 ```
-                        ┌──────────┐
-                        │  Client  │
-                        └────┬─────┘
-                             │ :80
-                     ┌───────▼────────┐
-                     │     Nginx      │
-                     │ (reverse proxy)│
-                     └──┬─────────┬───┘
-                        │         │
-             /api/*     │         │  /*
-         ┌──────────────▼┐    ┌───▼──────────────┐
-         │    Backend     │    │    Frontend       │
-         │  FastAPI :8000 │    │  Next.js :3000    │
-         │  Python 3.12   │    │  TypeScript       │
-         │  SQLAlchemy    │    │  Tailwind + Shadcn│
-         │  Pydantic v2   │    │  TanStack Query   │
-         └───────┬────────┘    └──────────────────┘
-                 │
-         ┌───────▼────────┐
-         │   PostgreSQL   │
-         │      :5432     │
-         └────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        CLIENTE (Navegador)                        │
+└──────────────────────────────┬───────────────────────────────────┘
+                               │ :80 / :443
+                    ┌──────────▼──────────┐
+                    │        Nginx         │
+                    │   Reverse Proxy      │
+                    │   Security Headers   │
+                    │   CORS + Rate Limit  │
+                    └─────┬───────────┬───┘
+                          │           │
+               /api/*     │           │  /*
+      ┌─────────▼────────┐│           │┌──────────────────────┐
+      │     Backend       ││           ││      Frontend         │
+      │  FastAPI :8000    ││           ││    Next.js :3000      │
+      │  Python 3.12      ││           ││    TypeScript         │
+      │  SQLAlchemy 2.0   ││           ││    Tailwind CSS       │
+      │  Pydantic v2      ││           ││    Shadcn UI          │
+      │  Alembic          ││           ││    TanStack Query     │
+      └─────────┬─────────┘│           │└──────────────────────┘
+                │           │           │
+      ┌─────────▼───────────┴───────────┘
+      │         PostgreSQL 16                │
+      │         (almacenamiento principal)   │
+      └──────────────────────────────────────┘
+
+      ┌────────────────────────────────────┐
+      │       Proveedor de IA (configurable) │
+      │  Ollama (local, por defecto)         │
+      │  Claude / GPT / OpenRouter (pago)    │
+      └────────────────────────────────────┘
 ```
 
-All services run as Docker containers orchestrated via `docker-compose.yml`.
+### Tecnologías
+
+| Capa | Tecnología | Rol |
+|------|-----------|-----|
+| **Proxy** | Nginx Alpine | Proxy inverso, cabeceras de seguridad, CORS |
+| **Backend** | FastAPI + Uvicorn | API REST async, 100% tipado |
+| **ORM** | SQLAlchemy 2.0 async | Acceso a BD, relaciones, soft delete |
+| **Validación** | Pydantic v2 | Esquemas de entrada/salida, validadores |
+| **Migraciones** | Alembic | Control de versiones del esquema de BD |
+| **Base de datos** | PostgreSQL 16 | Almacenamiento principal con UUID nativo |
+| **Frontend** | Next.js 14 (App Router) | React SSR/CSR, enrutamiento por archivos |
+| **UI** | Tailwind CSS + Shadcn UI | Componentes accesibles, modo oscuro |
+| **Estado** | TanStack Query + Zustand | Caché de servidor + estado local |
+| **Formularios** | React Hook Form + Zod | Validación en cliente (defensa en profundidad) |
+| **Pruebas** | Pytest + Httpx async | Suite completa de integración |
+| **Orquestación** | Docker Compose | Stack completo con un solo comando |
 
 ---
 
-## 🚀 Quick Start
+## Módulos del Sistema
 
-Use this section to run the stack. How you configure the environment depends on
-whether you already ran **`./scripts/init.sh`** (see *Starting a new project* above).
+La plataforma se organiza en **13 módulos de negocio** más **4 módulos transversales**.
 
-| Situation | Configure env |
-|-----------|-----------------|
-| **After `init.sh`** | `.env` already exists with `SECRET_KEY` and admin values. Adjust only if needed, then jump to **Start the Stack**. |
-| **No `init.sh`** (e.g. hacking on the framework repo itself) | Follow **Clone & configure** below: copy `.env.example` → `.env` and set variables manually. |
+---
 
-### Prerequisites
+### Módulo 1 — Catálogos Centrales ✅
 
-- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/) v2+
-- [Git](https://git-scm.com/)
-- GNU Make (pre-installed on most Linux/macOS systems)
+Jerarquía completa de activos de la organización. Toda vulnerabilidad y hallazgo se vincula a uno de estos elementos.
 
-### 1. Clone & configure
+```
+Subdireccion
+    └── Celula
+            ├── Repositorio         (código fuente → SAST / SCA)
+            ├── ActivoWeb           (aplicaciones web → DAST)
+            ├── Servicio            (APIs y microservicios)
+            └── AplicacionMovil     (apps móviles → MAST)
+```
+
+Entidades adicionales: `TipoPrueba` (SAST / DAST / SCA / TM / MAST) y `ControlSeguridad`.
+
+---
+
+### Módulo 2 — Panel de Administración ✅
+
+13 elementos de configuración operativa, todos editables desde el panel sin tocar código:
+
+| # | Elemento configurable |
+|---|-----------------------|
+| 1 | Tipos de programas anuales |
+| 2 | Flujos de estado de vulnerabilidades por tipo |
+| 3 | Tipos de iniciativas (personalizables) |
+| 4 | Severidades + SLA en días (Crítica 7d · Alta 30d · Media 60d · Baja 90d) |
+| 5 | Tipos de auditorías (Interna / Externa) |
+| 6 | Regulaciones y marcos normativos |
+| 7 | Tecnologías del stack |
+| 8 | Pesos de scoring por categoría |
+| 9 | Tipos de temas emergentes |
+| 10 | SLAs por motor y severidad |
+| 11 | Roles y permisos granulares (hasta nivel de widget) |
+| 12 | Plantillas de notificaciones internas |
+| 13 | Umbrales de semáforos (rojo / amarillo / verde) |
+
+Cada cambio genera una entrada de auditoría con diff completo (valor anterior → valor nuevo).
+
+**Segregación de Funciones (SoD):** configurable por acción crítica vía `ReglaSoD`. Si la regla está activa, el sistema rechaza automáticamente que la misma persona inicie y apruebe una acción sensible.
+
+---
+
+### Módulo 3 — Programas de Seguridad ⬜
+
+Cinco programas con entidades propias que generan hallazgos trazables:
+
+| Programa | Activo afectado | Genera |
+|---------|----------------|--------|
+| **Análisis Estático (SAST/SCA)** | Repositorios | Hallazgos → Vulnerabilidad |
+| **Análisis Dinámico (DAST)** | Activos Web | Hallazgos → Vulnerabilidad |
+| **Modelado de Amenazas** | Servicios / Activos | Amenazas STRIDE + scoring DREAD |
+| **Seguridad de Código Fuente** | Repositorios | Controles: branch protection, secret scanning |
+| **Servicios bajo regulación** | Servicios | Cumplimiento por ciclo (trimestral / anual) |
+
+---
+
+### Módulo 4 — MAST (Seguridad Móvil) ⬜
+
+Ejecuciones de análisis sobre aplicaciones móviles con hallazgos que alimentan el ciclo de vulnerabilidades.
+
+---
+
+### Módulo 5 — Iniciativas ⬜
+
+Seguimiento de iniciativas de mejora: `Iniciativa → HitoIniciativa → ActualizacionIniciativa`. Tipos configurables desde el panel de administración.
+
+---
+
+### Módulo 6 — Auditorías ⬜
+
+`Auditoria → HallazgoAuditoria → EvidenciaAuditoria (SHA-256) → PlanRemediacion`.
+
+Las evidencias almacenan hash SHA-256 para verificación de integridad (regla A3).
+
+---
+
+### Módulo 7 — Temas Emergentes ⬜
+
+Seguimiento de temas de seguridad emergentes: `TemaEmergente → ActualizacionTema → CierreConclusion`.
+
+---
+
+### Módulo 8 — Operación (Releases) ⬜
+
+#### Service Releases
+
+Estados secuenciales obligatorios: `Revisión de Diseño → Validación de Seguridad → Pruebas de Seguridad → Aprobación → QA → Producción`
+
+- Solo avanza si la etapa anterior está aprobada
+- Justificación obligatoria al saltarse estados
+- SoD en aprobación: quien crea el release no puede aprobarlo
+
+#### Pipeline Releases
+
+SAST / DAST explícito en cada release. Si falla, genera vulnerabilidades automáticamente.
+
+#### Revisiones de Terceros
+
+Revisiones externas con hallazgos trazables al ciclo de vida de vulnerabilidades.
+
+---
+
+### Módulo 9 — Gestión de Vulnerabilidades ✅
+
+**Ciclo de vida unificado** para todos los hallazgos independientemente de la fuente.
+
+```
+  SAST · DAST · SCA · TM · MAST · Auditoría · Tercero
+                         │
+                ┌────────▼─────────┐
+                │  Vulnerabilidad   │
+                │                  │
+                │  severidad        │──→ SLA calculado automáticamente
+                │  fuente           │
+                │  estado           │──→ flujo configurable desde admin
+                │  activo afectado  │──→ repositorio | activo web |
+                │                  │    servicio | app móvil
+                └────────┬─────────┘
+                         │
+       ┌─────────────────┼──────────────────┐
+       │                 │                  │
+┌──────▼──────┐  ┌───────▼──────┐  ┌───────▼──────────┐
+│  Historial  │  │  Excepción   │  │   Aceptación de  │
+│ (inmutable) │  │  (temporal)  │  │      Riesgo      │
+│             │  │              │  │                  │
+│  cada cambio│  │  SoD (A6)   │  │  SoD (A6)        │
+│  de estado  │  │  justif.≥10c │  │  justif. negocio │
+│  queda      │  │  aprobador   │  │  propietario     │
+│  registrado │  │  ≠ creador  │  │  fecha revisión  │
+└─────────────┘  └─────────────┘  └──────────────────┘
+                                           │
+                              ┌────────────┘
+                    ┌─────────▼──────────┐
+                    │      Evidencia     │
+                    │   de Remediación   │
+                    │   SHA-256 (A3)     │
+                    └────────────────────┘
+```
+
+**Endpoints principales:**
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `GET` | `/api/v1/vulnerabilidads` | Lista por usuario |
+| `POST` | `/api/v1/vulnerabilidads` | Crear vulnerabilidad |
+| `PATCH` | `/api/v1/vulnerabilidads/{id}` | Actualizar parcialmente |
+| `DELETE` | `/api/v1/vulnerabilidads/{id}` | Soft-delete (A2) |
+| `GET` | `/api/v1/historial_vulnerabilidads` | Historial (filtrable por vulnerabilidad) |
+| `POST` | `/api/v1/excepcion_vulnerabilidads/{id}/aprobar` | Aprobar excepción con SoD |
+| `POST` | `/api/v1/excepcion_vulnerabilidads/{id}/rechazar` | Rechazar excepción con SoD |
+| `POST` | `/api/v1/aceptacion_riesgos/{id}/aprobar` | Aprobar riesgo con SoD |
+| `POST` | `/api/v1/aceptacion_riesgos/{id}/rechazar` | Rechazar riesgo con SoD |
+
+---
+
+### Módulo 10 — Indicadores y Métricas ⬜
+
+- **Indicadores por motor** calculados automáticamente desde datos de programas
+- **Índice de Madurez de Seguridad** por célula, subdirección y organización; pesos configurables; histórico mensual
+- **Indicador de cumplimiento regulatorio** trimestral, ponderado por OWASP, semáforo con umbrales configurables
+- **Seguimiento de SLA** — cumplimiento por severidad, MTTR, tendencias
+
+---
+
+### Módulo 11 — Dashboards (9 vistas) ⬜
+
+Todos con drill-down `organización → subdirección → célula → detalle`, filtros contextuales, exportación CSV / Excel / PDF con trazabilidad y **filtros guardados** personales y compartidos.
+
+| # | Vista | Descripción |
+|---|-------|-------------|
+| 1 | **Ejecutivo** | KPIs globales, semáforos, tendencias |
+| 2 | **Equipo** | Estado por analista y célula |
+| 3 | **Programas Consolidado** | Avance de todos los programas |
+| 4 | **Detalle de Programa** | Zoom a un programa específico |
+| 5 | **Vulnerabilidades Multi-Dimensión** | Pivote por fuente, severidad, estado, SLA |
+| 6 | **Releases (Tabla)** | Historial de releases con filtros avanzados |
+| 7 | **Releases (Tablero)** | Vista de tablero de releases por estado |
+| 8 | **Iniciativas** | Avance por hito e iniciativa |
+| 9 | **Temas Emergentes** | Estado y tendencia de temas activos |
+
+---
+
+### Módulo 12 — Seguridad, Roles y Notificaciones ⬜ (parcialmente implementado)
+
+**6 roles base** (editables y configurables desde el panel):
+
+| Rol | Capacidades |
+|-----|-------------|
+| `super_admin` | Todo: configuración, usuarios, roles, salud del sistema |
+| `chief_appsec` | Lectura total + aprobaciones + dashboard ejecutivo |
+| `lider_programa` | Gestión completa de programas asignados |
+| `analista` | Operación diaria: triaje, actividades, releases |
+| `auditor` | Lectura total incluye audit logs, sin modificar |
+| `readonly` | Solo dashboards ejecutivos |
+
+**Notificaciones internas pendientes:**
+- SLA próximo a vencer
+- Nueva vulnerabilidad crítica asignada
+- Release pendiente de aprobación
+- Cambio de estado en un ítem asignado
+- Reporte mensual de madurez disponible
+
+---
+
+### Módulo 13 — Integración IA (multi-proveedor) ⬜
+
+Abstracción `AIProvider` con implementaciones intercambiables, seleccionable desde el panel de administración:
+
+| Proveedor | Tipo | Uso recomendado |
+|-----------|------|-----------------|
+| **Ollama** | Local (por defecto) | Desarrollo, datos sensibles que no deben salir |
+| Claude (Anthropic) | Pago | Producción, alta calidad de análisis |
+| GPT (OpenAI) | Pago | Alternativa de pago |
+| OpenRouter | Pago (proxy) | Flexibilidad de modelo |
+
+**Casos de uso:**
+- **Threat Modeling asistido** — genera amenazas con categoría STRIDE + scoring DREAD + controles sugeridos al crear una sesión
+- **Triaje de falsos positivos** — clasifica hallazgos SAST/DAST/SCA en: Probable FP / Requiere Revisión / Vulnerabilidad Confirmada
+
+---
+
+### Módulos Transversales
+
+| Módulo | Descripción |
+|--------|-------------|
+| **T1 — Cumplimiento y Auditoría** ⬜ | Buscador de eventos, timeline por entidad, verificación de integridad del chain de auditoría, exportación del log |
+| **T2 — Filtros Guardados** ⬜ | Filtros personales y compartidos en todos los dashboards y tablas |
+| **T3 — Changelog de la Plataforma** ⬜ | Registro de versiones, novedades y correcciones visible para usuarios |
+| **T4 — Salud del Sistema** ⬜ | Estado de importaciones, jobs, espacio en BD, sesiones activas, estado del proveedor de IA |
+
+---
+
+## Reglas de Auditabilidad
+
+8 reglas de auditabilidad implementadas en toda la plataforma:
+
+| Regla | Descripción | Implementación |
+|-------|-------------|----------------|
+| **A1** | Justificación obligatoria en acciones críticas | `min_length=10` en esquemas de aprobación, excepción y cierre |
+| **A2** | Soft delete universal | `SoftDeleteMixin` con `deleted_at` + `deleted_by` en todas las entidades |
+| **A3** | Integridad de evidencias | SHA-256 almacenado en `EvidenciaRemediacion` y `Attachment` |
+| **A4** | Registro de auditoría a prueba de manipulación | Cadena de hashes SHA-256: cada registro guarda `prev_hash` y `row_hash` |
+| **A5** | Auditoría de cambios de configuración | Diff completo en cada modificación de `SystemSetting` |
+| **A6** | Segregación de Funciones configurable | `ReglaSoD` por acción; servicios validan `aprobador_id ≠ creador_id` |
+| **A7** | Auditoría de exportaciones | Usuario, fecha, filtros aplicados, cantidad de registros, hash del archivo |
+| **A8** | Vista dedicada de auditoría | Accesible para roles `auditor`, `chief_appsec`, `super_admin` |
+
+---
+
+## Seguridad OWASP
+
+### API Security Top 10 (2023)
+
+| Control | Implementación |
+|---------|----------------|
+| **API1 — BOLA/IDOR** | `require_ownership()` en todos los endpoints con entidades de dueño; pruebas IDOR por entidad |
+| **API2 — Autenticación** | HttpOnly cookies, CSRF double-submit, rotación de tokens, revocación por familia de sesión |
+| **API3 — Exposición de propiedades** | Esquemas Pydantic con campos explícitos; nunca `model_dump()` crudo en respuestas |
+| **API4 — Consumo de recursos** | Paginación obligatoria (máx 100), rate limiting, límite de upload 10 MB, tope de operaciones masivas 500 |
+| **API5 — Autorización a nivel de función** | `require_role()` en endpoints de administración; matriz de permisos validada en pruebas |
+| **API6 — Abuso de flujos de negocio** | SoD bloquea flujos de aprobación; rate limit en importaciones, exportaciones y llamadas a IA |
+| **API7 — SSRF** | Validador SSRF-safe: bloquea IPs privadas, loopback y de metadatos en campos de URL |
+| **API8 — Configuración insegura** | Cabeceras de seguridad en Nginx y middleware: HSTS, X-Frame-Options, CSP, X-Content-Type-Options |
+| **API9 — Inventario** | Versionado `/api/v1/...`, especificación OpenAPI siempre actualizada |
+| **API10 — Consumo inseguro de APIs** | Timeout + retry + validación Pydantic de la respuesta en toda llamada al proveedor de IA |
+
+---
+
+## Inicio Rápido
+
+### Requisitos previos
+
+- [Docker](https://docs.docker.com/get-docker/) y Docker Compose v2+
+- Git y GNU Make
+
+### 1. Clonar y configurar
 
 ```bash
-git clone <your-repo-url> my-project
-cd my-project
+git clone <url-del-repositorio> appsec-platform
+cd appsec-platform
+
 cp .env.example .env
 ```
 
-Skip `cp .env.example .env` if `./scripts/init.sh` already created `.env`.
-
-Edit `.env` and set the **required** variables (unless `init.sh` already set them):
+Editar `.env` con los valores requeridos:
 
 ```dotenv
-# Generate with: python -c "import secrets; print(secrets.token_urlsafe(64))"
-SECRET_KEY=your-secret-key-here
+# Generar con: python -c "import secrets; print(secrets.token_urlsafe(64))"
+SECRET_KEY=clave-secreta-aqui
 
-# Initial admin account (used by seed script)
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=Changeme123!
+# Cuenta de administrador inicial (usada por el seed)
+ADMIN_EMAIL=admin@empresa.com
+ADMIN_PASSWORD=PasswordSeguro123!
+
+# IA — local por defecto (Ollama)
+AI_DEFAULT_PROVIDER=ollama
+OLLAMA_URL=http://host.docker.internal:11434
+AI_MODEL=llama3.1:8b
+
+# Opcional — proveedor de pago
+# ANTHROPIC_API_KEY=sk-ant-...
+# OPENAI_API_KEY=sk-...
 ```
 
-### 2. Start the Stack
+### 2. Levantar el stack
 
 ```bash
 make up
 ```
 
-This single command will:
-1. Build all Docker images
-2. Start PostgreSQL, Backend, Frontend, and Nginx
-3. Run Alembic migrations automatically
-4. Display the container status
+Este comando construye todas las imágenes Docker, levanta PostgreSQL, Backend, Frontend y Nginx, y ejecuta las migraciones de Alembic automáticamente.
 
-### 3. Access the Application
-
-| Service         | URL                          |
-|-----------------|------------------------------|
-| **Application** | http://localhost              |
-| **API Docs**    | http://localhost/docs (dev/staging only unless explicitly enabled in prod) |
-| **ReDoc**       | http://localhost/redoc (dev/staging only unless explicitly enabled in prod) |
-| **Health Check**| http://localhost/api/health   |
-
-### 4. Seed Initial Data (Optional)
+### 3. Poblar datos iniciales
 
 ```bash
 make seed
 ```
 
-This creates the admin user and sample data defined in `backend/app/seed.py`.
+Crea de forma idempotente (seguro de ejecutar múltiples veces):
+- Usuario `admin` con el password del `.env`
+- 32 configuraciones del sistema (`SystemSetting`)
+- 5 reglas de SoD preconfiguradas
+- 5 tipos de prueba base (SAST, DAST, SCA, TM, MAST)
+- 12 controles de seguridad base
+- 5 herramientas externas de ejemplo
+
+### 4. Acceder
+
+| Servicio | URL |
+|---------|-----|
+| **Aplicación** | http://localhost |
+| **Documentación API (Swagger)** | http://localhost/docs |
+| **ReDoc** | http://localhost/redoc |
+| **Health Check** | http://localhost/api/health |
 
 ---
 
-## 📂 Project Structure
+## Estructura del Proyecto
 
 ```
-.
-├── .env.example              # Environment variables template
-├── docker-compose.yml        # Service orchestration
-├── Makefile                  # Developer commands (single entry point)
+appsec-platform/
+├── .env.example
+├── docker-compose.yml
+├── Makefile
 │
-├── backend/                  # FastAPI application
+├── backend/
 │   ├── Dockerfile
-│   ├── requirements.txt      # Python dependencies
-│   ├── alembic.ini           # Migration config
-│   ├── alembic/              # Database migrations
+│   ├── requirements.txt
+│   ├── alembic.ini
+│   ├── alembic/
+│   │   └── versions/               # 16 migraciones
 │   └── app/
-│       ├── main.py           # ASGI entry point
-│       ├── config.py         # Settings (env vars)
-│       ├── database.py       # Async DB session
-│       ├── core/             # Security, exceptions, response helpers
-│       ├── models/           # SQLAlchemy ORM models
-│       ├── schemas/          # Pydantic DTOs (validation)
-│       ├── services/         # Business logic (async)
-│       └── api/
-│           ├── deps.py       # Shared dependencies (auth, DB)
-│           └── v1/           # Versioned API routes
-│               ├── router.py # Route registry
-│               ├── auth.py   # Auth endpoints
-│               └── tasks.py  # Tasks CRUD endpoints
+│       ├── main.py                 # Punto de entrada ASGI + middlewares
+│       ├── config.py               # Configuración vía variables de entorno
+│       ├── database.py             # Sesión async + Base ORM
+│       ├── seed.py                 # Datos iniciales idempotentes
+│       │
+│       ├── core/
+│       │   ├── security.py         # JWT, bcrypt, CSRF
+│       │   ├── exceptions.py       # Wrappers de HTTPException
+│       │   ├── response.py         # Envelopes: success / paginated / error
+│       │   ├── validators.py       # Validador SSRF-safe para URLs
+│       │   └── encryption.py       # AES-256 para datos sensibles
+│       │
+│       ├── models/
+│       │   ├── mixins.py           # SoftDeleteMixin (A2)
+│       │   ├── audit_log.py        # Cadena de hashes (A4)
+│       │   ├── attachment.py       # SHA-256 en archivos (A3)
+│       │   ├── system_setting.py   # 32 configuraciones operativas
+│       │   ├── regla_so_d.py       # SoD configurable (A6)
+│       │   ├── # Catálogos (M1)
+│       │   ├── subdireccion.py · celula.py · repositorio.py
+│       │   ├── activo_web.py · servicio.py · aplicacion_movil.py
+│       │   ├── tipo_prueba.py · control_seguridad.py
+│       │   └── # Vulnerabilidades (M9)
+│       │       ├── vulnerabilidad.py
+│       │       ├── historial_vulnerabilidad.py
+│       │       ├── excepcion_vulnerabilidad.py
+│       │       ├── aceptacion_riesgo.py
+│       │       └── evidencia_remediacion.py
+│       │
+│       ├── schemas/                # Pydantic v2
+│       ├── services/               # BaseService + extensiones con SoD
+│       └── api/v1/
+│           ├── router.py
+│           ├── admin/              # Usuarios, roles, configuración, SoD, herramientas
+│           ├── # Catálogos (M1)
+│           └── # Vulnerabilidades (M9) + endpoints /aprobar y /rechazar
 │
-├── frontend/                 # Next.js application
+├── frontend/
 │   ├── Dockerfile
-│   ├── package.json
-│   ├── next.config.js
-│   ├── tailwind.config.js
 │   └── src/
-│       ├── app/              # App Router (pages & layouts)
-│       │   ├── layout.tsx    # Root layout
-│       │   ├── login/        # Auth pages
-│       │   └── (dashboard)/  # Protected dashboard routes
-│       ├── components/       # React components
-│       │   ├── ui/           # Shadcn base components
-│       │   └── providers.tsx # QueryClient, Theme providers
-│       ├── hooks/            # TanStack Query hooks
-│       ├── lib/              # API client, utils, validators
-│       └── types/            # TypeScript interfaces
+│       ├── app/(dashboard)/        # Rutas protegidas por rol
+│       ├── components/ui/          # Componentes Shadcn
+│       ├── hooks/                  # TanStack Query por entidad
+│       ├── lib/schemas/            # Validadores Zod
+│       └── types/                  # Interfaces TypeScript
 │
 └── nginx/
-    └── nginx.conf            # Reverse proxy + CORS + security headers
+    └── nginx.conf                  # Proxy + CORS + cabeceras de seguridad
 ```
 
 ---
 
-## 🛠️ Development Commands
+## Contrato de API
 
-All operations are managed through the `Makefile`:
+Todas las respuestas siguen el envelope estándar:
 
-### Lifecycle
-
-| Command        | Description                                           |
-|----------------|-------------------------------------------------------|
-| `make up`      | Build and start all services                          |
-| `make down`    | Stop all containers and remove orphans                |
-| `make restart` | Quick restart of all services                         |
-| `make build`   | Rebuild Docker images without starting                |
-| `make seed`    | Re-run database seeding                               |
-| `make clean`   | ⚠️ Stop containers and remove **all** volumes          |
-
-### Debugging
-
-| Command          | Description                              |
-|------------------|------------------------------------------|
-| `make logs`      | Tail logs for all services               |
-| `make logs-back` | Tail backend logs only                   |
-| `make logs-front`| Tail frontend logs only                  |
-| `make shell-back`| Bash shell inside the backend container  |
-| `make shell-db`  | PSQL shell inside the PostgreSQL container |
-| `make status`    | Show container status and active branch  |
-| `make stats`     | Show CPU/RAM usage per container         |
-
-### Testing
-
-| Command          | Description                              |
-|------------------|------------------------------------------|
-| `make test`      | Run backend tests (`pytest`)             |
-| `npm run lint`   | Frontend linting (inside `frontend/`)    |
-| `npm test`       | Frontend tests with Vitest               |
-
----
-
-## 🔑 API Contract
-
-All API responses follow a standardized envelope format:
-
-### Success Response
+### Respuesta exitosa
 
 ```json
 {
   "status": "success",
-  "data": { ... },
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "titulo": "Inyección SQL en endpoint de autenticación",
+    "severidad": "Critica",
+    "estado": "Abierta",
+    "fuente": "SAST"
+  },
   "meta": {
-    "timestamp": "2024-01-15T10:30:00Z",
+    "timestamp": "2026-04-22T23:00:00Z",
+    "request_id": "abc-123",
     "version": "v1"
   }
 }
 ```
 
-### Paginated List Response
+### Lista paginada
 
 ```json
 {
   "status": "success",
   "data": [ ... ],
   "pagination": {
-    "total": 42,
+    "total": 247,
     "skip": 0,
-    "limit": 10,
+    "limit": 50,
     "hasMore": true
-  },
-  "meta": { ... }
+  }
 }
 ```
 
-### Error Response
+### Error de validación
 
 ```json
 {
   "status": "error",
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Validation failed",
-    "details": [
-      { "field": "email", "message": "Invalid email format" }
-    ]
-  },
-  "meta": { ... }
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["body", "severidad"],
+      "msg": "severidad debe ser uno de: Alta, Baja, Critica, Media",
+      "input": "Extreme"
+    }
+  ],
+  "code": "RequestValidationError"
 }
 ```
 
 ---
 
-## 🧩 Adding a New Entity (CRUD Pattern)
+## Flujo de Autenticación
 
-Follow this checklist when adding a new resource (e.g., `Clients`):
+```
+Navegador                Nginx               Backend
+    │                      │                    │
+    │  POST /api/v1/auth/login                  │
+    ├─────────────────────►│───────────────────►│
+    │                      │                    │ Verifica credenciales
+    │                      │                    │ Genera access + refresh tokens
+    │                      │◄───────────────────┤
+    │◄─────────────────────┤ Set-Cookie:        │
+    │  (HttpOnly)          │ access_token       │
+    │  (HttpOnly)          │ refresh_token      │
+    │  (legible)           │ csrf_token         │
+    │                      │                    │
+    │  GET /api/v1/...     │                    │
+    │  + X-CSRF-Token      │                    │
+    ├─────────────────────►│───────────────────►│ Valida JWT + CSRF
+    │                      │                    │ Verifica propiedad
+    │◄─────────────────────┤◄───────────────────┤ Filtra soft-deleted
+    │  200 + data          │                    │
+```
 
-### Backend
-
-1. **Model** — `backend/app/models/client.py` — SQLAlchemy ORM definition
-2. **Schema** — `backend/app/schemas/client.py` — Pydantic Create/Update/Response DTOs
-3. **Service** — `backend/app/services/client_service.py` — Async business logic
-4. **Router** — `backend/app/api/v1/clients.py` — HTTP endpoints
-5. **Register** — Add the router in `backend/app/api/v1/router.py`
-6. **Migrate** — Run `alembic revision --autogenerate -m "add clients"` then `alembic upgrade head`
-
-### Frontend
-
-7. **Types** — `frontend/src/types/client.ts` — TypeScript interfaces (mirroring Pydantic schemas)
-8. **API Hook** — `frontend/src/hooks/useClients.ts` — TanStack Query queries/mutations
-9. **Components** — `frontend/src/components/clients/` — UI components
-10. **Page** — `frontend/src/app/(dashboard)/clients/page.tsx` — App Router page
-
-> 💡 Use the existing **Tasks** module as a reference implementation to copy and adapt.
-
----
-
-## ⚙️ Environment Variables
-
-| Variable | Required | Default | Description |
-|---|:---:|---|---|
-| `SECRET_KEY` | ✅ | — | JWT signing key |
-| `ADMIN_EMAIL` | ✅ | — | Initial admin email (seed) |
-| `ADMIN_PASSWORD` | ✅ | — | Initial admin password (seed) |
-| `POSTGRES_USER` | | `framework` | Database user |
-| `POSTGRES_PASSWORD` | | `framework_secret` | Database password |
-| `POSTGRES_DB` | | `framework` | Database name |
-| `JWT_ALGORITHM` | | `HS256` | Token algorithm |
-| `JWT_ACCESS_EXPIRE_MINUTES` | | `30` | Access cookie TTL |
-| `JWT_REFRESH_EXPIRE_DAYS` | | `7` | Refresh cookie TTL |
-| `AUTH_MIN_PASSWORD_LENGTH` | | `10` | Minimum password length enforced by auth flows |
-| `AUTH_LOGIN_RATE_LIMIT_PER_MIN` | | `10` | Per-client login attempts per minute |
-| `AUTH_REGISTER_RATE_LIMIT_PER_MIN` | | `5` | Per-client register attempts per minute |
-| `AUTH_REFRESH_RATE_LIMIT_PER_MIN` | | `30` | Per-client refresh attempts per minute |
-| `AUTH_LOCKOUT_THRESHOLD` | | `5` | Failed logins before temporary cooldown |
-| `AUTH_LOCKOUT_MINUTES` | | `15` | Cooldown duration after repeated failed login attempts |
-| `CORS_ORIGINS` | | localhost variants | Allowed origins |
-| `NEXT_PUBLIC_API_URL` | | _(empty)_ | Leave empty behind Nginx |
-| `RUN_SEED` | | `false` | Run seed on startup |
-| `SSE_ENABLED` | | `true` | Enable Server-Sent Events |
-| `ENABLE_OPENAPI_DOCS` | | `true` | Enable docs outside prod, or with explicit prod override |
-| `ALLOW_OPENAPI_IN_PROD` | | `false` | Required alongside `ENABLE_OPENAPI_DOCS=true` in prod |
-| `MAX_UPLOAD_SIZE_MB` | | `10` | File upload limit |
-
-See [`.env.example`](.env.example) for the full list including optional AI provider keys.
+- **HttpOnly cookies** — inaccesibles desde JavaScript (previene XSS)
+- **CSRF double-submit** — `csrf_token` cookie legible + header `X-CSRF-Token` en mutaciones
+- **Rotación de refresh token** — cada uso genera uno nuevo; el anterior se revoca
+- **Revocación por familia** — si se detecta reutilización de un token revocado, se invalida toda la sesión
 
 ---
 
-## 🗄️ Database Migrations
+## Comandos de Desarrollo
 
-Migrations run automatically on container startup. For manual operations:
+### Ciclo de vida
+
+| Comando | Descripción |
+|---------|-------------|
+| `make up` | Construir e iniciar todos los servicios |
+| `make down` | Detener y eliminar contenedores |
+| `make restart` | Reinicio rápido |
+| `make build` | Reconstruir imágenes sin iniciar |
+| `make seed` | Re-ejecutar semilla de datos (idempotente) |
+| `make clean` | ⚠️ Detener y eliminar **todos** los volúmenes |
+
+### Depuración
+
+| Comando | Descripción |
+|---------|-------------|
+| `make logs` | Ver logs de todos los servicios |
+| `make logs-back` | Logs del backend |
+| `make logs-front` | Logs del frontend |
+| `make shell-back` | Bash en el contenedor backend |
+| `make shell-db` | PSQL en el contenedor PostgreSQL |
+| `make status` | Estado de contenedores y rama activa |
+
+### Pruebas
 
 ```bash
-# Open a shell in the backend container
+# Ejecutar toda la suite
+make test
+
+# Pruebas específicas
+docker compose exec backend pytest tests/test_vulnerabilidad.py -v
+
+# Con reporte de fallas detallado
+docker compose exec backend pytest tests/ -v --tb=short
+```
+
+**204 pruebas pasando** — incluyendo:
+- Smoke tests (crear / leer / actualizar / eliminar) para cada entidad
+- Pruebas IDOR: cada entidad verifica que un usuario no puede acceder a recursos de otro
+- Pruebas de autenticación: todos los endpoints requieren credenciales válidas
+- Pruebas de validación: valores inválidos en fuente / severidad / estado → 422
+
+### Agregar nuevas entidades
+
+```bash
+# Genera modelo + esquema + servicio + router + hook frontend + prueba
+make new-entity NAME=NombreEntidad FIELDS="campo1:str,campo2:int?,campo3:uuid"
+
+# Generar y aplicar migración
 make shell-back
-
-# Generate a new migration after model changes
-alembic revision --autogenerate -m "describe your change"
-
-# Apply pending migrations
+alembic revision --autogenerate -m "Agregar NombreEntidad"
 alembic upgrade head
 
-# Rollback one step
-alembic downgrade -1
+# Regenerar tipos TypeScript
+make types
 ```
+
+> ⚠️ **Nunca crear entidades a mano** — siempre usar `make new-entity` para garantizar consistencia con los patrones del framework.
 
 ---
 
-## 🔒 Authentication Flow
+## Variables de Entorno
 
-```
-┌──────────┐    POST /api/v1/auth/login    ┌──────────┐
-│ Browser  │ ───────────────────────────▶  │ FastAPI  │
-│ Client   │                               │ Backend  │
-│          │ ◀─ Set-Cookie: access/refresh │          │
-│          │ ◀─ Set-Cookie: csrf_token     │          │
-└──────────┘                               └──────────┘
-```
-
-1. The browser sends credentials to `POST /api/v1/auth/login`.
-2. The backend validates credentials and sets `access_token` and `refresh_token`
-   as HttpOnly cookies plus a readable `csrf_token` cookie.
-3. Browser requests include auth cookies automatically; mutating requests echo
-   `csrf_token` through `X-CSRF-Token`.
-4. `POST /api/v1/auth/refresh` rotates the refresh token and preserves the same
-   session family.
-5. If a revoked refresh token is reused, the backend revokes the whole session
-   family and future access from that session is rejected.
-
----
-
-## 📋 Tech Stack Summary
-
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Runtime** | Docker Compose | Container orchestration |
-| **Proxy** | Nginx Alpine | Reverse proxy, CORS, security headers |
-| **Backend** | FastAPI + Uvicorn | Async REST API |
-| **ORM** | SQLAlchemy 2.0 (async) | Database access |
-| **Validation** | Pydantic v2 | Request/response schemas |
-| **Migrations** | Alembic | Database version control |
-| **Database** | PostgreSQL 16 | Primary data store |
-| **Frontend** | Next.js 14 (App Router) | React framework with SSR |
-| **Styling** | Tailwind CSS + Shadcn UI | Component library |
-| **State** | TanStack Query + Zustand | Server & client state |
-| **Forms** | React Hook Form + Zod | Form handling & validation |
-| **Testing** | Pytest / Vitest | Backend & frontend tests |
+| Variable | Req | Por defecto | Descripción |
+|----------|:---:|------------|-------------|
+| `SECRET_KEY` | ✅ | — | Clave de firma JWT |
+| `ADMIN_EMAIL` | ✅ | — | Email del admin inicial |
+| `ADMIN_PASSWORD` | ✅ | — | Contraseña del admin inicial |
+| `POSTGRES_USER` | | `framework` | Usuario de BD |
+| `POSTGRES_PASSWORD` | | `framework_secret` | Contraseña de BD |
+| `POSTGRES_DB` | | `framework` | Nombre de BD |
+| `JWT_ACCESS_EXPIRE_MINUTES` | | `30` | TTL del token de acceso |
+| `JWT_REFRESH_EXPIRE_DAYS` | | `7` | TTL del token de refresco |
+| `CORS_ORIGINS` | | localhost | Orígenes permitidos |
+| `MAX_UPLOAD_SIZE_MB` | | `10` | Límite de carga de archivos |
+| `AI_DEFAULT_PROVIDER` | | `ollama` | Proveedor de IA activo |
+| `OLLAMA_URL` | | `http://host.docker.internal:11434` | URL de Ollama local |
+| `AI_MODEL` | | `llama3.1:8b` | Modelo de IA a utilizar |
+| `ANTHROPIC_API_KEY` | | — | Clave de API Anthropic |
+| `OPENAI_API_KEY` | | — | Clave de API OpenAI |
+| `OPENROUTER_API_KEY` | | — | Clave de API OpenRouter |
+| `ENABLE_OPENAPI_DOCS` | | `true` | Habilitar Swagger UI |
 
 ---
 
-## 📄 License
+## Roadmap de Funcionalidades
 
-This project is private. All rights reserved.
+### Estado actual — Fase 5 completa ✅
+
+- [x] Catálogos completos (Subdirección, Célula, Repositorio, Activo Web, Servicio, App Móvil)
+- [x] Panel de administración con 32 configuraciones operativas
+- [x] Gestión de roles y herramientas externas
+- [x] Reglas de Segregación de Funciones (SoD) configurables
+- [x] Ciclo de vida completo de vulnerabilidades (Módulo 9)
+- [x] Flujos de excepción y aceptación de riesgo con SoD
+- [x] Historial inmutable de cambios de estado
+- [x] Evidencias de remediación con integridad SHA-256
+- [x] Suite de 204 pruebas de integración
+- [x] Fundación de auditabilidad: soft delete, hash chain, SSRF-safe URLs, cabeceras de seguridad
+
+---
+
+### Próximas fases
+
+#### Fase 6 — Operación: Releases
+- [ ] Service Releases con flujo de estados secuenciales
+- [ ] Validación de etapa previa antes de avanzar
+- [ ] SoD en aprobación de releases
+- [ ] Pipeline Releases (SAST/DAST en CI/CD referencial)
+- [ ] Revisiones de seguridad de terceros
+
+#### Fase 7 — Programas de Seguridad
+- [ ] Programa de análisis estático con registro mensual por repositorio
+- [ ] Programa de análisis dinámico por activo web y ambiente
+- [ ] Sesiones de Modelado de Amenazas con scoring STRIDE/DREAD
+- [ ] Programa de controles de código fuente (branch protection, secret scanning)
+- [ ] Servicios bajo regulación con ciclos de cumplimiento
+
+#### Fase 8 — Análisis Móvil, Iniciativas, Auditorías y Temas Emergentes
+- [ ] Ejecuciones MAST sobre apps móviles registradas
+- [ ] Iniciativas de mejora con hitos y actualizaciones
+- [ ] Auditorías con evidencias y plan de remediación
+- [ ] Seguimiento de temas emergentes de seguridad
+
+#### Fase 9 — Motor de Scoring
+- [ ] Cálculo mensual automático de madurez por célula y subdirección
+- [ ] Histórico de scores con tendencias
+- [ ] Pesos configurables por categoría y motor de análisis
+
+#### Fase 10 — Indicadores y Métricas
+- [ ] Indicadores internos calculados automáticamente desde programas
+- [ ] Índice de madurez de seguridad con drill-down organizacional
+- [ ] Indicador de cumplimiento regulatorio trimestral
+- [ ] Semáforos con umbrales configurables
+
+#### Fase 11 — Dashboards y Exportación
+- [ ] 9 dashboards especializados con drill-down multidimensional
+- [ ] Exportación CSV / Excel / PDF con trazabilidad de auditoría
+- [ ] Filtros guardados personales y compartidos
+- [ ] Operaciones masivas sobre vulnerabilidades (asignación, cambio de estado, excepción)
+- [ ] Importación CSV con mapeo configurable de columnas y deduplicación
+
+#### Fase 12 — Notificaciones y Permisos Granulares
+- [ ] Centro de notificaciones internas (SLA, asignaciones, aprobaciones pendientes)
+- [ ] Permisos hasta nivel de widget configurables por rol
+- [ ] Alertas de patrones sospechosos para el administrador
+
+#### Fase 13 — Cumplimiento, Auditoría y Salud del Sistema
+- [ ] Buscador de eventos con filtros avanzados (usuario, fecha, entidad, acción)
+- [ ] Timeline de auditoría por entidad
+- [ ] Verificación de integridad de la cadena de hashes del log
+- [ ] Dashboard de salud del sistema (jobs, espacio en BD, sesiones, IA)
+- [ ] Changelog interno de la plataforma visible para usuarios
+
+#### Fase 14 — Integración de Inteligencia Artificial
+- [ ] Abstracción `AIProvider` intercambiable (Ollama / Claude / GPT / OpenRouter)
+- [ ] Panel de configuración del proveedor de IA en el admin (con prueba de conectividad)
+- [ ] Threat Modeling asistido: generación automática de amenazas STRIDE con scoring DREAD
+- [ ] Triaje asistido de falsos positivos SAST/DAST/SCA
+- [ ] Política configurable de sanitización de datos antes de enviar a proveedores de pago
+
+---
+
+## Principios de Diseño
+
+1. **100% auditable** — toda acción deja huella; no existe operación sin trazabilidad.
+2. **Configuración sobre código** — ningún parámetro operativo requiere modificar código.
+3. **SoD como defensa por diseño** — los flujos críticos de aprobación están blindados contra conflictos de interés desde el nivel de servicio.
+4. **Soft delete universal** — ningún dato se elimina físicamente; todo es recuperable y auditable.
+5. **Defensa en profundidad** — validación Pydantic en backend + Zod en frontend; IDOR verificado en cada endpoint.
+6. **IA como asistente, no como decisor** — el sistema funciona al 100% sin IA; la IA acelera análisis pero nunca toma decisiones autónomas.
+7. **Framework como base inmutable** — los patrones no se reescriben, se extienden.
+
+---
+
+## Licencia
+
+Proyecto privado — todos los derechos reservados.

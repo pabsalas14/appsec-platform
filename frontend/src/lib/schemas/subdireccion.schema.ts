@@ -1,0 +1,23 @@
+import { z } from 'zod';
+
+export const SubdireccionSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+nombre: z.string(),
+codigo: z.string(),
+descripcion: z.string().nullable().optional(),
+created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const SubdireccionCreateSchema = z.object({
+nombre: z.string(),
+codigo: z.string(),
+descripcion: z.string().nullable().optional(),
+});
+
+export const SubdireccionUpdateSchema = SubdireccionCreateSchema.partial();
+
+export type Subdireccion = z.infer<typeof SubdireccionSchema>;
+export type SubdireccionCreate = z.infer<typeof SubdireccionCreateSchema>;
+export type SubdireccionUpdate = z.infer<typeof SubdireccionUpdateSchema>;

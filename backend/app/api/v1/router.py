@@ -17,6 +17,12 @@ from app.api.v1 import (
     tasks,
     tipo_prueba,
     uploads,
+    # ── Módulo 9 — Gestión de Vulnerabilidades ─────────────────────────────
+    vulnerabilidad,
+    historial_vulnerabilidad,
+    excepcion_vulnerabilidad,
+    aceptacion_riesgo,
+    evidencia_remediacion,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -56,3 +62,26 @@ api_router.include_router(tipo_prueba.router, prefix="/tipo_pruebas", tags=["Tip
 api_router.include_router(control_seguridad.router, prefix="/control_seguridads", tags=["ControlSeguridad"])
 
 # ─── Módulo 2 — ReglaSoD está bajo /api/v1/admin/regla-sods ──────────────────
+
+# ─── Módulo 9 — Gestión de Vulnerabilidades ───────────────────────────────────
+api_router.include_router(vulnerabilidad.router, prefix="/vulnerabilidads", tags=["Vulnerabilidad"])
+api_router.include_router(
+    historial_vulnerabilidad.router,
+    prefix="/historial_vulnerabilidads",
+    tags=["Historial Vulnerabilidad"],
+)
+api_router.include_router(
+    excepcion_vulnerabilidad.router,
+    prefix="/excepcion_vulnerabilidads",
+    tags=["Excepcion Vulnerabilidad"],
+)
+api_router.include_router(
+    aceptacion_riesgo.router,
+    prefix="/aceptacion_riesgos",
+    tags=["Aceptacion Riesgo"],
+)
+api_router.include_router(
+    evidencia_remediacion.router,
+    prefix="/evidencia_remediacions",
+    tags=["Evidencia Remediacion"],
+)

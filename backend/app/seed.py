@@ -24,6 +24,7 @@ from app.models.system_setting import SystemSetting
 from app.models.regla_so_d import ReglaSoD
 from app.models.tipo_prueba import TipoPrueba
 from app.models.control_seguridad import ControlSeguridad
+from app.models.herramienta_externa import HerramientaExterna
 from app.api.v1.admin.settings import DEFAULT_SETTINGS
 
 logger = logging.getLogger(__name__)
@@ -193,6 +194,32 @@ async def _seed_controles(db, admin_id: uuid.UUID) -> None:
     logger.info("🌱 ControlSeguridad: %d new controls seeded", count)
 
 
+# ─── Herramientas Externas Base ──────────────────────────────────────────────
+
+HERRAMIENTAS_SEEDS = [
+    {"nombre": "SonarQube",            "tipo": "SAST",                  "url_base": "https://sonarqube.internal.example.com", "api_token": "sq_token_placeholder"},
+    {"nombre": "GitHub Advanced Sec.", "tipo": "SCA",                   "url_base": "https://api.github.com",                 "api_token": "ghp_placeholder_token"},
+    {"nombre": "DefectDojo",           "tipo": "VulnerabilityManager",  "url_base": "https://defectdojo.internal.example.com","api_token": "dd_placeholder_token"},
+    {"nombre": "BurpSuite Enterprise", "tipo": "DAST",                  "url_base": "https://burp.internal.example.com",      "api_token": "burp_placeholder_token"},
+    {"nombre": "Trivy",                "tipo": "CI/CD",                 "url_base": "",                                       "api_token": ""},
+]
+
+
+async def _seed_herramientas(db, admin_id: uuid.UUID) -> None:
+    count = 0
+    for herr in HERRAMIENTAS_SEEDS:
+        # Avoid duplicate tools by name
+        result = await db.execute(
+            select(HerramientaExterna).where(HerramientaExterna.nombre == herr["nombre"])
+        )
+        if result.scalar_one_or_none():
+            continue
+        db.add(HerramientaExterna(id=uuid.uuid4(), user_id=admin_id, **herr))
+        count += 1
+    await db.flush()
+    logger.info("🌱 HerramientaExterna: %d new tools seeded", count)
+
+
 # ─── Entry point ─────────────────────────────────────────────────────────────
 
 async def seed() -> None:
@@ -205,6 +232,7 @@ async def seed() -> None:
         await _seed_regla_sods(db, admin.id)
         await _seed_tipos_prueba(db, admin.id)
         await _seed_controles(db, admin.id)
+        await _seed_herramientas(db, admin.id)
 
     logger.info("━━━ Seed Complete ✅ ━━━")
 
