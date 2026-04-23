@@ -10,6 +10,7 @@ from fastapi import APIRouter
 from app.api.v1.admin import users as admin_users
 from app.api.v1.admin import roles as admin_roles
 from app.api.v1.admin import settings as admin_settings
+from app.api.v1.admin import regla_sods as admin_regla_sods
 
 admin_router = APIRouter()
 
@@ -21,4 +22,7 @@ admin_router.include_router(
 )
 admin_router.include_router(
     admin_settings.router, prefix="/settings", tags=["Admin · Settings"]
+)
+admin_router.include_router(
+    admin_regla_sods.router, prefix="/regla-sods", tags=["Admin · ReglaSoD"]
 )

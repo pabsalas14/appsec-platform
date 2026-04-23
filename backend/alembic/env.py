@@ -35,6 +35,24 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+import app.models.subdireccion   # noqa: F401
+
+import app.models.celula   # noqa: F401
+
+import app.models.repositorio   # noqa: F401
+
+import app.models.activo_web   # noqa: F401
+
+import app.models.servicio   # noqa: F401
+
+import app.models.aplicacion_movil   # noqa: F401
+
+import app.models.tipo_prueba   # noqa: F401
+
+import app.models.control_seguridad   # noqa: F401
+
+import app.models.regla_so_d   # noqa: F401
+
 target_metadata = Base.metadata
 
 

@@ -13,3 +13,9 @@ async def test_health(client: AsyncClient):
     data = resp.json()
     assert data["status"] == "ok"
     assert "version" in data
+
+    # Baseline OWASP API8 headers
+    assert resp.headers.get("x-frame-options") == "DENY"
+    assert resp.headers.get("x-content-type-options") == "nosniff"
+    assert resp.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+    assert "content-security-policy" in resp.headers

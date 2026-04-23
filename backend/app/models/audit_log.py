@@ -48,6 +48,8 @@ class AuditLog(Base):
     status: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default=text("'success'")
     )
+    prev_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    row_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     meta: Mapped[dict] = mapped_column(
         "metadata",
         JSONB,

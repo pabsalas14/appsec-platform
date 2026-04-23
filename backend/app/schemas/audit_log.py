@@ -22,6 +22,8 @@ class AuditLogRead(BaseModel):
     user_agent: str | None = None
     request_id: str | None = None
     status: str
+    prev_hash: str | None = None
+    row_hash: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
 
     @field_validator("ip", mode="before")

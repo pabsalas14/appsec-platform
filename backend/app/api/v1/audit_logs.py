@@ -14,10 +14,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_role
-from app.core.response import paginated
+from app.core.response import paginated, success
 from app.models.audit_log import AuditLog
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
+from app.services.audit_service import validate_chain
 
 router = APIRouter()
 
@@ -71,3 +72,13 @@ async def list_audit_logs(
         page_size=page_size,
         total=int(total),
     )
+
+
+@router.get("/verify")
+async def verify_audit_chain(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(require_role("admin")),
+    limit: int = Query(default=5000, ge=1, le=200000),
+):
+    """Verify audit hash-chain integrity (A4)."""
+    return success(await validate_chain(db, limit=limit))

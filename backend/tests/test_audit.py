@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from app.models.audit_log import AuditLog
+from app.models.task import Task
 
 
 @pytest.mark.asyncio
@@ -123,3 +124,54 @@ async def test_audit_log_filter_by_action(
     rows = resp.json()["data"]
     assert rows, "expected at least one task.delete row"
     assert all(r["action"] == "task.delete" for r in rows)
+
+
+@pytest.mark.asyncio
+async def test_audit_hash_chain_verify_endpoint(
+    client: AsyncClient,
+    admin_auth_headers: dict[str, str],
+    auth_headers: dict[str, str],
+):
+    # Seed at least one new mutation so a new hash-chain segment is produced.
+    created = await client.post(
+        "/api/v1/tasks",
+        headers=auth_headers,
+        json={"title": "verify-chain", "description": "", "completed": False},
+    )
+    assert created.status_code == 201
+
+    resp = await client.get(
+        "/api/v1/audit-logs/verify",
+        headers=admin_auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["status"] == "success"
+    assert body["data"]["ok"] is True
+    assert body["data"]["checked"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_task_delete_uses_soft_delete(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    _session_factory: async_sessionmaker[AsyncSession],
+):
+    created = await client.post(
+        "/api/v1/tasks",
+        headers=auth_headers,
+        json={"title": "soft-delete-me", "description": "", "completed": False},
+    )
+    assert created.status_code == 201
+    task_id = created.json()["data"]["id"]
+
+    deleted = await client.delete(f"/api/v1/tasks/{task_id}", headers=auth_headers)
+    assert deleted.status_code == 200
+
+    async with _session_factory() as session:
+        task_row = (
+            await session.execute(select(Task).where(Task.id == task_id))
+        ).scalar_one_or_none()
+
+    assert task_row is not None
+    assert task_row.deleted_at is not None

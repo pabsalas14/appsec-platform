@@ -84,3 +84,20 @@ async def test_download_nonexistent_404(
         f"/api/v1/uploads/{uuid.uuid4()}/download", headers=auth_headers
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_upload_delete_is_soft_delete_and_keeps_hash(
+    client: AsyncClient, auth_headers: dict[str, str]
+):
+    attachment = await _upload_png(client, auth_headers)
+    attachment_id = attachment["id"]
+    assert attachment.get("sha256"), "upload response must expose attachment sha256"
+
+    deleted = await client.delete(f"/api/v1/uploads/{attachment_id}", headers=auth_headers)
+    assert deleted.status_code == 204
+
+    listed = await client.get("/api/v1/uploads", headers=auth_headers)
+    assert listed.status_code == 200
+    ids = {row["id"] for row in listed.json()["data"]}
+    assert attachment_id not in ids

@@ -6,6 +6,7 @@ using a per-user subdirectory. Metadata is stored in the ``attachments`` table.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import uuid
 from pathlib import Path
@@ -62,12 +63,14 @@ async def list_uploads(
             select(func.count())
             .select_from(Attachment)
             .where(Attachment.user_id == current_user.id)
+            .where(Attachment.deleted_at.is_(None))
         )
     ).scalar_one()
 
     stmt = (
         select(Attachment)
         .where(Attachment.user_id == current_user.id)
+        .where(Attachment.deleted_at.is_(None))
         .order_by(Attachment.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -98,6 +101,8 @@ async def create_upload(
             f"File exceeds max upload size of {settings.MAX_UPLOAD_SIZE_MB} MB"
         )
 
+    sha256 = hashlib.sha256(contents).hexdigest()
+
     attachment_id = uuid.uuid4()
     safe_name = Path(file.filename or "file").name
     target = _user_dir(current_user.id) / f"{attachment_id}_{safe_name}"
@@ -110,6 +115,7 @@ async def create_upload(
         content_type=content_type,
         size=len(contents),
         storage_path=str(target),
+        sha256=sha256,
     )
     db.add(row)
     await db.flush()
@@ -120,7 +126,7 @@ async def create_upload(
         action="attachment.create",
         entity_type="attachments",
         entity_id=row.id,
-        metadata={"filename": safe_name, "size": len(contents)},
+        metadata={"filename": safe_name, "size": len(contents), "sha256": sha256},
     )
     return success(AttachmentRead.model_validate(row).model_dump(mode="json"))
 
@@ -136,6 +142,7 @@ async def download_upload(
             select(Attachment).where(
                 Attachment.id == attachment_id,
                 Attachment.user_id == current_user.id,
+                Attachment.deleted_at.is_(None),
             )
         )
     ).scalar_one_or_none()
@@ -159,18 +166,18 @@ async def delete_upload(
             select(Attachment).where(
                 Attachment.id == attachment_id,
                 Attachment.user_id == current_user.id,
+                Attachment.deleted_at.is_(None),
             )
         )
     ).scalar_one_or_none()
     if not row:
         raise NotFoundException("Attachment not found")
 
-    try:
-        Path(row.storage_path).unlink(missing_ok=True)
-    except OSError:
-        pass
+    # Soft-delete (A2): keep metadata & file for evidentiary integrity.
+    from datetime import datetime, timezone
 
-    await db.delete(row)
+    row.deleted_at = datetime.now(timezone.utc)
+    row.deleted_by = current_user.id
     await db.flush()
     await audit_record(
         db,

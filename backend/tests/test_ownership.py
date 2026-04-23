@@ -36,20 +36,156 @@ async def _create_project(client: AsyncClient, headers: dict[str, str]) -> str:
     return resp.json()["data"]["id"]
 
 
+async def _create_subdireccion(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/subdireccions",
+        headers=headers,
+        json={"nombre": "OwnedSub", "codigo": "OWNSUB", "descripcion": "x"},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _make_celula_for_ownership(client: AsyncClient, headers: dict[str, str]) -> str:
+    """Internal helper: sub + celula, returns celula ID."""
+    sub = await client.post(
+        "/api/v1/subdireccions",
+        headers=headers,
+        json={"nombre": "OwnSub2", "codigo": "OWNSUB2", "descripcion": "x"},
+    )
+    assert sub.status_code == 201, sub.text
+    cel = await client.post(
+        "/api/v1/celulas",
+        headers=headers,
+        json={
+            "nombre": "OwnCel",
+            "tipo": "appsec",
+            "subdireccion_id": sub.json()["data"]["id"],
+        },
+    )
+    assert cel.status_code == 201, cel.text
+    return cel.json()["data"]["id"]
+
+
+async def _create_celula(client: AsyncClient, headers: dict[str, str]) -> str:
+    sub = await client.post(
+        "/api/v1/subdireccions",
+        headers=headers,
+        json={"nombre": "OwnSubC", "codigo": "OWNSUBC", "descripcion": "x"},
+    )
+    assert sub.status_code == 201, sub.text
+    resp = await client.post(
+        "/api/v1/celulas",
+        headers=headers,
+        json={
+            "nombre": "OwnedCel",
+            "tipo": "appsec",
+            "subdireccion_id": sub.json()["data"]["id"],
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_repositorio(client: AsyncClient, headers: dict[str, str]) -> str:
+    celula_id = await _make_celula_for_ownership(client, headers)
+    resp = await client.post(
+        "/api/v1/repositorios",
+        headers=headers,
+        json={
+            "nombre": "OwnedRepo",
+            "url": "https://github.example.com/owned",
+            "plataforma": "github",
+            "rama_default": "main",
+            "activo": True,
+            "celula_id": celula_id,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_activo_web(client: AsyncClient, headers: dict[str, str]) -> str:
+    celula_id = await _make_celula_for_ownership(client, headers)
+    resp = await client.post(
+        "/api/v1/activo_webs",
+        headers=headers,
+        json={
+            "nombre": "OwnedAW",
+            "url": "https://web.example.com/owned",
+            "ambiente": "prod",
+            "tipo": "api",
+            "celula_id": celula_id,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_servicio(client: AsyncClient, headers: dict[str, str]) -> str:
+    celula_id = await _make_celula_for_ownership(client, headers)
+    resp = await client.post(
+        "/api/v1/servicios",
+        headers=headers,
+        json={
+            "nombre": "OwnedSvc",
+            "criticidad": "alta",
+            "celula_id": celula_id,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_aplicacion_movil(client: AsyncClient, headers: dict[str, str]) -> str:
+    celula_id = await _make_celula_for_ownership(client, headers)
+    resp = await client.post(
+        "/api/v1/aplicacion_movils",
+        headers=headers,
+        json={
+            "nombre": "OwnedApp",
+            "plataforma": "iOS",
+            "bundle_id": "com.owned.app",
+            "celula_id": celula_id,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_tipo_prueba(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/tipo_pruebas",
+        headers=headers,
+        json={"nombre": "OwnedTP", "categoria": "SAST"},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+async def _create_control_seguridad(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/control_seguridads",
+        headers=headers,
+        json={"nombre": "OwnedCS", "tipo": "source_code"},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
 OWNED_ENTITIES = [
-    pytest.param(
-        "tasks",
-        _create_task,
-        "/api/v1/tasks/{id}",
-        id="tasks",
-    ),
-    pytest.param(
-        "projects",
-        _create_project,
-        "/api/v1/projects/{id}",
-        id="projects",
-    ),
+    pytest.param("tasks", _create_task, "/api/v1/tasks/{id}", id="tasks"),
+    pytest.param("projects", _create_project, "/api/v1/projects/{id}", id="projects"),
+    pytest.param("subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", id="subdireccions"),
+    pytest.param("celulas", _create_celula, "/api/v1/celulas/{id}", id="celulas"),
+    pytest.param("repositorios", _create_repositorio, "/api/v1/repositorios/{id}", id="repositorios"),
+    pytest.param("activo_webs", _create_activo_web, "/api/v1/activo_webs/{id}", id="activo_webs"),
+    pytest.param("servicios", _create_servicio, "/api/v1/servicios/{id}", id="servicios"),
+    pytest.param("aplicacion_movils", _create_aplicacion_movil, "/api/v1/aplicacion_movils/{id}", id="aplicacion_movils"),
+    pytest.param("tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", id="tipo_pruebas"),
+    pytest.param("control_seguridads", _create_control_seguridad, "/api/v1/control_seguridads/{id}", id="control_seguridads"),
 ]
+
 
 
 @pytest.mark.asyncio

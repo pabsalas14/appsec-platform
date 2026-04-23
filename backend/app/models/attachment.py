@@ -14,9 +14,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+from app.models.mixins import SoftDeleteMixin
 
 
-class Attachment(Base):
+class Attachment(SoftDeleteMixin, Base):
     __tablename__ = "attachments"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -34,6 +35,7 @@ class Attachment(Base):
     content_type: Mapped[str] = mapped_column(String(128), nullable=False)
     size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     storage_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

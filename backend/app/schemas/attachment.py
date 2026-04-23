@@ -14,6 +14,7 @@ class AttachmentRead(BaseModel):
     filename: str
     content_type: str
     size: int
+    sha256: str | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

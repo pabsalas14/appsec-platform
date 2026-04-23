@@ -60,6 +60,20 @@ class Settings(BaseSettings):
     CLIENT_LOGS_MAX_BATCH: int = 50
     AUDIT_LOG_ENABLED: bool = True
 
+    # ─── Security headers (OWASP API8) ───
+    SECURITY_HEADERS_ENABLED: bool = True
+    SECURITY_HSTS_MAX_AGE_SECONDS: int = 31536000  # 1 year
+    SECURITY_CSP: str = (
+        "default-src 'self'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'; "
+        "object-src 'none'; "
+        "img-src 'self' data:; "
+        "style-src 'self' 'unsafe-inline'; "
+        "script-src 'self'; "
+        "connect-src 'self'"
+    )
+
     # ─── Seed control ───
     RUN_SEED: bool = False  # Only run seed when explicitly enabled
 

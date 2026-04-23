@@ -281,6 +281,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit-logs/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Audit Chain
+         * @description Verify audit hash-chain integrity (A4).
+         */
+        get: operations["verify_audit_chain_api_v1_audit_logs_verify_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/client-logs": {
         parameters: {
             query?: never;
@@ -538,6 +558,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/regla-sods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Regla Sods
+         * @description List all SoD rules. Admin only.
+         */
+        get: operations["list_regla_sods_api_v1_admin_regla_sods_get"];
+        put?: never;
+        /**
+         * Create Regla Sod
+         * @description Create a new SoD rule. Admin only. Audit logged.
+         */
+        post: operations["create_regla_sod_api_v1_admin_regla_sods_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/regla-sods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Regla Sod
+         * @description Get a SoD rule by ID. Admin only.
+         */
+        get: operations["get_regla_sod_api_v1_admin_regla_sods__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Regla Sod
+         * @description Soft-delete a SoD rule. Admin only. Audit logged.
+         */
+        delete: operations["delete_regla_sod_api_v1_admin_regla_sods__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Regla Sod
+         * @description Partially update a SoD rule. Admin only. Audit logged.
+         */
+        patch: operations["update_regla_sod_api_v1_admin_regla_sods__id__patch"];
+        trace?: never;
+    };
     "/api/v1/": {
         parameters: {
             query?: never;
@@ -553,6 +625,422 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subdireccions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Subdireccions
+         * @description List subdireccions owned by the current user.
+         */
+        get: operations["list_subdireccions_api_v1_subdireccions_get"];
+        put?: never;
+        /**
+         * Create Subdireccion
+         * @description Create a new subdireccion for the current user.
+         */
+        post: operations["create_subdireccion_api_v1_subdireccions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subdireccions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Subdireccion
+         * @description Get a single owned subdireccion by ID (404 if not owned).
+         */
+        get: operations["get_subdireccion_api_v1_subdireccions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Subdireccion
+         * @description Delete an owned subdireccion (404 if not owned).
+         */
+        delete: operations["delete_subdireccion_api_v1_subdireccions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Subdireccion
+         * @description Partially update an owned subdireccion (404 if not owned).
+         */
+        patch: operations["update_subdireccion_api_v1_subdireccions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/celulas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Celulas
+         * @description List celulas owned by the current user.
+         */
+        get: operations["list_celulas_api_v1_celulas_get"];
+        put?: never;
+        /**
+         * Create Celula
+         * @description Create a new celula for the current user.
+         */
+        post: operations["create_celula_api_v1_celulas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/celulas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Celula
+         * @description Get a single owned celula by ID (404 if not owned).
+         */
+        get: operations["get_celula_api_v1_celulas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Celula
+         * @description Delete an owned celula (404 if not owned).
+         */
+        delete: operations["delete_celula_api_v1_celulas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Celula
+         * @description Partially update an owned celula (404 if not owned).
+         */
+        patch: operations["update_celula_api_v1_celulas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/repositorios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Repositorios
+         * @description List repositorios owned by the current user.
+         */
+        get: operations["list_repositorios_api_v1_repositorios_get"];
+        put?: never;
+        /**
+         * Create Repositorio
+         * @description Create a new repositorio for the current user.
+         */
+        post: operations["create_repositorio_api_v1_repositorios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositorios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Repositorio
+         * @description Get a single owned repositorio by ID (404 if not owned).
+         */
+        get: operations["get_repositorio_api_v1_repositorios__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Repositorio
+         * @description Delete an owned repositorio (404 if not owned).
+         */
+        delete: operations["delete_repositorio_api_v1_repositorios__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Repositorio
+         * @description Partially update an owned repositorio (404 if not owned).
+         */
+        patch: operations["update_repositorio_api_v1_repositorios__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/activo_webs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Activo Webs
+         * @description List activo_webs owned by the current user.
+         */
+        get: operations["list_activo_webs_api_v1_activo_webs_get"];
+        put?: never;
+        /**
+         * Create Activo Web
+         * @description Create a new activo_web for the current user.
+         */
+        post: operations["create_activo_web_api_v1_activo_webs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activo_webs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Activo Web
+         * @description Get a single owned activo_web by ID (404 if not owned).
+         */
+        get: operations["get_activo_web_api_v1_activo_webs__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Activo Web
+         * @description Delete an owned activo_web (404 if not owned).
+         */
+        delete: operations["delete_activo_web_api_v1_activo_webs__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Activo Web
+         * @description Partially update an owned activo_web (404 if not owned).
+         */
+        patch: operations["update_activo_web_api_v1_activo_webs__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/servicios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Servicios
+         * @description List servicios owned by the current user.
+         */
+        get: operations["list_servicios_api_v1_servicios_get"];
+        put?: never;
+        /**
+         * Create Servicio
+         * @description Create a new servicio for the current user.
+         */
+        post: operations["create_servicio_api_v1_servicios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/servicios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Servicio
+         * @description Get a single owned servicio by ID (404 if not owned).
+         */
+        get: operations["get_servicio_api_v1_servicios__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Servicio
+         * @description Delete an owned servicio (404 if not owned).
+         */
+        delete: operations["delete_servicio_api_v1_servicios__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Servicio
+         * @description Partially update an owned servicio (404 if not owned).
+         */
+        patch: operations["update_servicio_api_v1_servicios__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/aplicacion_movils": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Aplicacion Movils
+         * @description List aplicacion_movils owned by the current user.
+         */
+        get: operations["list_aplicacion_movils_api_v1_aplicacion_movils_get"];
+        put?: never;
+        /**
+         * Create Aplicacion Movil
+         * @description Create a new aplicacion_movil for the current user.
+         */
+        post: operations["create_aplicacion_movil_api_v1_aplicacion_movils_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/aplicacion_movils/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Aplicacion Movil
+         * @description Get a single owned aplicacion_movil by ID (404 if not owned).
+         */
+        get: operations["get_aplicacion_movil_api_v1_aplicacion_movils__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Aplicacion Movil
+         * @description Delete an owned aplicacion_movil (404 if not owned).
+         */
+        delete: operations["delete_aplicacion_movil_api_v1_aplicacion_movils__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Aplicacion Movil
+         * @description Partially update an owned aplicacion_movil (404 if not owned).
+         */
+        patch: operations["update_aplicacion_movil_api_v1_aplicacion_movils__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/tipo_pruebas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tipo Pruebas
+         * @description List tipo_pruebas owned by the current user.
+         */
+        get: operations["list_tipo_pruebas_api_v1_tipo_pruebas_get"];
+        put?: never;
+        /**
+         * Create Tipo Prueba
+         * @description Create a new tipo_prueba for the current user.
+         */
+        post: operations["create_tipo_prueba_api_v1_tipo_pruebas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tipo_pruebas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tipo Prueba
+         * @description Get a single owned tipo_prueba by ID (404 if not owned).
+         */
+        get: operations["get_tipo_prueba_api_v1_tipo_pruebas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Tipo Prueba
+         * @description Delete an owned tipo_prueba (404 if not owned).
+         */
+        delete: operations["delete_tipo_prueba_api_v1_tipo_pruebas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Tipo Prueba
+         * @description Partially update an owned tipo_prueba (404 if not owned).
+         */
+        patch: operations["update_tipo_prueba_api_v1_tipo_pruebas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/control_seguridads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Control Seguridads
+         * @description List control_seguridads owned by the current user.
+         */
+        get: operations["list_control_seguridads_api_v1_control_seguridads_get"];
+        put?: never;
+        /**
+         * Create Control Seguridad
+         * @description Create a new control_seguridad for the current user.
+         */
+        post: operations["create_control_seguridad_api_v1_control_seguridads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/control_seguridads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Control Seguridad
+         * @description Get a single owned control_seguridad by ID (404 if not owned).
+         */
+        get: operations["get_control_seguridad_api_v1_control_seguridads__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Control Seguridad
+         * @description Delete an owned control_seguridad (404 if not owned).
+         */
+        delete: operations["delete_control_seguridad_api_v1_control_seguridads__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Control Seguridad
+         * @description Partially update an owned control_seguridad (404 if not owned).
+         */
+        patch: operations["update_control_seguridad_api_v1_control_seguridads__id__patch"];
         trace?: never;
     };
     "/api/health": {
@@ -576,6 +1064,72 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ActivoWebCreate
+         * @description Fields required to create a activo_web. user_id is set from auth context.
+         */
+        ActivoWebCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Url */
+            url: string;
+            /** Ambiente */
+            ambiente: string;
+            /** Tipo */
+            tipo: string;
+            /**
+             * Celula Id
+             * Format: uuid
+             */
+            celula_id: string;
+        };
+        /**
+         * ActivoWebUpdate
+         * @description All fields optional for partial updates.
+         */
+        ActivoWebUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Ambiente */
+            ambiente?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Celula Id */
+            celula_id?: string | null;
+        };
+        /**
+         * AplicacionMovilCreate
+         * @description Fields required to create a aplicacion_movil. user_id is set from auth context.
+         */
+        AplicacionMovilCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Plataforma */
+            plataforma: string;
+            /** Bundle Id */
+            bundle_id: string;
+            /**
+             * Celula Id
+             * Format: uuid
+             */
+            celula_id: string;
+        };
+        /**
+         * AplicacionMovilUpdate
+         * @description All fields optional for partial updates.
+         */
+        AplicacionMovilUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Plataforma */
+            plataforma?: string | null;
+            /** Bundle Id */
+            bundle_id?: string | null;
+            /** Celula Id */
+            celula_id?: string | null;
+        };
         /** Body_create_upload_api_v1_uploads_post */
         Body_create_upload_api_v1_uploads_post: {
             /**
@@ -583,6 +1137,37 @@ export interface components {
              * Format: binary
              */
             file: string;
+        };
+        /**
+         * CelulaCreate
+         * @description Fields required to create a celula. user_id is set from auth context.
+         */
+        CelulaCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Tipo */
+            tipo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Subdireccion Id
+             * Format: uuid
+             */
+            subdireccion_id: string;
+        };
+        /**
+         * CelulaUpdate
+         * @description All fields optional for partial updates.
+         */
+        CelulaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Subdireccion Id */
+            subdireccion_id?: string | null;
         };
         /** ClientLogBatch */
         ClientLogBatch: {
@@ -609,6 +1194,37 @@ export interface components {
             request_id?: string | null;
             /** Version */
             version?: string | null;
+        };
+        /**
+         * ControlSeguridadCreate
+         * @description Fields required to create a control_seguridad. user_id is set from auth context.
+         */
+        ControlSeguridadCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Tipo */
+            tipo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Obligatorio
+             * @default false
+             */
+            obligatorio: boolean;
+        };
+        /**
+         * ControlSeguridadUpdate
+         * @description All fields optional for partial updates.
+         */
+        ControlSeguridadUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Obligatorio */
+            obligatorio?: boolean | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -670,6 +1286,79 @@ export interface components {
             /** Color */
             color?: string | null;
         };
+        /**
+         * ReglaSoDCreate
+         * @description Fields required to create a ReglaSoD. user_id is set from auth context.
+         */
+        ReglaSoDCreate: {
+            /** Accion */
+            accion: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Alcance */
+            alcance?: string | null;
+        };
+        /**
+         * ReglaSoDUpdate
+         * @description All fields optional for partial updates.
+         */
+        ReglaSoDUpdate: {
+            /** Accion */
+            accion?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Alcance */
+            alcance?: string | null;
+        };
+        /**
+         * RepositorioCreate
+         * @description Fields required to create a repositorio. user_id is set from auth context.
+         */
+        RepositorioCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Url */
+            url: string;
+            /** Plataforma */
+            plataforma: string;
+            /** Rama Default */
+            rama_default: string;
+            /**
+             * Activo
+             * @default true
+             */
+            activo: boolean;
+            /**
+             * Celula Id
+             * Format: uuid
+             */
+            celula_id: string;
+        };
+        /**
+         * RepositorioUpdate
+         * @description All fields optional for partial updates.
+         */
+        RepositorioUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Plataforma */
+            plataforma?: string | null;
+            /** Rama Default */
+            rama_default?: string | null;
+            /** Activo */
+            activo?: boolean | null;
+            /** Celula Id */
+            celula_id?: string | null;
+        };
         /** RoleCreate */
         RoleCreate: {
             /** Name */
@@ -685,6 +1374,65 @@ export interface components {
             description?: string | null;
             /** Permissions */
             permissions?: string[] | null;
+        };
+        /**
+         * ServicioCreate
+         * @description Fields required to create a servicio. user_id is set from auth context.
+         */
+        ServicioCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Criticidad */
+            criticidad: string;
+            /** Tecnologia Stack */
+            tecnologia_stack?: string | null;
+            /**
+             * Celula Id
+             * Format: uuid
+             */
+            celula_id: string;
+        };
+        /**
+         * ServicioUpdate
+         * @description All fields optional for partial updates.
+         */
+        ServicioUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Criticidad */
+            criticidad?: string | null;
+            /** Tecnologia Stack */
+            tecnologia_stack?: string | null;
+            /** Celula Id */
+            celula_id?: string | null;
+        };
+        /**
+         * SubdireccionCreate
+         * @description Fields required to create a subdireccion. user_id is set from auth context.
+         */
+        SubdireccionCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Codigo */
+            codigo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+        };
+        /**
+         * SubdireccionUpdate
+         * @description All fields optional for partial updates.
+         */
+        SubdireccionUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Codigo */
+            codigo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
         };
         /** SystemSettingUpsert */
         SystemSettingUpsert: {
@@ -730,6 +1478,33 @@ export interface components {
             status?: string | null;
             /** Project Id */
             project_id?: string | null;
+        };
+        /**
+         * TipoPruebaCreate
+         * @description Fields required to create a tipo_prueba. user_id is set from auth context.
+         */
+        TipoPruebaCreate: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Categoria
+             * @enum {string}
+             */
+            categoria: "SAST" | "DAST" | "SCA" | "TM" | "MAST";
+            /** Descripcion */
+            descripcion?: string | null;
+        };
+        /**
+         * TipoPruebaUpdate
+         * @description All fields optional for partial updates.
+         */
+        TipoPruebaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Categoria */
+            categoria?: ("SAST" | "DAST" | "SCA" | "TM" | "MAST") | null;
+            /** Descripcion */
+            descripcion?: string | null;
         };
         /**
          * UserAdminCreate
@@ -1455,6 +2230,42 @@ export interface operations {
                 until?: string | null;
                 page?: number;
                 page_size?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_audit_chain_api_v1_audit_logs_verify_get: {
+        parameters: {
+            query?: {
+                limit?: number;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -2229,6 +3040,190 @@ export interface operations {
             };
         };
     };
+    list_regla_sods_api_v1_admin_regla_sods_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_regla_sod_api_v1_admin_regla_sods_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReglaSoDCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_regla_sod_api_v1_admin_regla_sods__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_regla_sod_api_v1_admin_regla_sods__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_regla_sod_api_v1_admin_regla_sods__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReglaSoDUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     root_api_v1__get: {
         parameters: {
             query?: never;
@@ -2245,6 +3240,1430 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_subdireccions_api_v1_subdireccions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_subdireccion_api_v1_subdireccions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubdireccionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_subdireccion_api_v1_subdireccions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_subdireccion_api_v1_subdireccions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subdireccion_api_v1_subdireccions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubdireccionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_celulas_api_v1_celulas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_celula_api_v1_celulas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CelulaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_celula_api_v1_celulas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_celula_api_v1_celulas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_celula_api_v1_celulas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CelulaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_repositorios_api_v1_repositorios_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_repositorio_api_v1_repositorios_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepositorioCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_repositorio_api_v1_repositorios__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_repositorio_api_v1_repositorios__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_repositorio_api_v1_repositorios__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepositorioUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_activo_webs_api_v1_activo_webs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_activo_web_api_v1_activo_webs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivoWebCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_activo_web_api_v1_activo_webs__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_activo_web_api_v1_activo_webs__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_activo_web_api_v1_activo_webs__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivoWebUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_servicios_api_v1_servicios_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_servicio_api_v1_servicios_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_servicio_api_v1_servicios__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_servicio_api_v1_servicios__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_servicio_api_v1_servicios__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_aplicacion_movils_api_v1_aplicacion_movils_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_aplicacion_movil_api_v1_aplicacion_movils_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AplicacionMovilCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_aplicacion_movil_api_v1_aplicacion_movils__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_aplicacion_movil_api_v1_aplicacion_movils__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_aplicacion_movil_api_v1_aplicacion_movils__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AplicacionMovilUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tipo_pruebas_api_v1_tipo_pruebas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tipo_prueba_api_v1_tipo_pruebas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TipoPruebaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tipo_prueba_api_v1_tipo_pruebas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_tipo_prueba_api_v1_tipo_pruebas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tipo_prueba_api_v1_tipo_pruebas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TipoPruebaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_control_seguridads_api_v1_control_seguridads_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_control_seguridad_api_v1_control_seguridads_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlSeguridadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_control_seguridad_api_v1_control_seguridads__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_control_seguridad_api_v1_control_seguridads__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_control_seguridad_api_v1_control_seguridads__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlSeguridadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

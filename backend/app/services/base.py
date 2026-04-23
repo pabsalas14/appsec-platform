@@ -81,6 +81,15 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         model_col = getattr(self.model, self.owner_field)
         return stmt.where(model_col == scope[self.owner_field])
 
+    def _apply_not_deleted(self, stmt, *, include_deleted: bool = False):
+        """Filter out soft-deleted rows when the model supports it."""
+        if include_deleted:
+            return stmt
+        deleted_at_col = getattr(self.model, "deleted_at", None)
+        if deleted_at_col is None:
+            return stmt
+        return stmt.where(deleted_at_col.is_(None))
+
     # ─── List ────────────────────────────────────────────────────────────────
 
     async def list(
@@ -89,6 +98,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         *,
         filters: dict[str, Any] | None = None,
         order_by: str | None = None,
+        include_deleted: bool = False,
     ) -> Sequence[ModelT]:
         """Return all records, optionally filtered by column values.
 
@@ -99,6 +109,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         order_col = getattr(self.model, col_name, None)
 
         stmt = select(self.model)
+        stmt = self._apply_not_deleted(stmt, include_deleted=include_deleted)
 
         if filters:
             for col, val in filters.items():
@@ -126,9 +137,11 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         record_id: uuid.UUID | int,
         *,
         scope: dict[str, Any] | None = None,
+        include_deleted: bool = False,
     ) -> ModelT | None:
         """Return a single record by primary key (scoped if ``owner_field``)."""
         stmt = select(self.model).where(self.model.id == record_id)
+        stmt = self._apply_not_deleted(stmt, include_deleted=include_deleted)
         stmt = self._apply_scope(stmt, scope)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
@@ -203,6 +216,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         record_id: uuid.UUID | int,
         *,
         scope: dict[str, Any] | None = None,
+        actor_id: uuid.UUID | str | None = None,
     ) -> bool:
         """Delete a scoped record. Returns True if deleted, False if not found.
 
@@ -213,8 +227,18 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             return False
 
         entity_id = getattr(record, "id", None)
-        await db.delete(record)
-        await db.flush()
+        if hasattr(record, "deleted_at"):
+            # Soft-delete (A2): keep row, mark as deleted.
+            import datetime as _dt
+
+            setattr(record, "deleted_at", _dt.datetime.now(_dt.timezone.utc))
+            if hasattr(record, "deleted_by"):
+                setattr(record, "deleted_by", _coerce_uuid(actor_id))
+            await db.flush()
+            await db.refresh(record)
+        else:
+            await db.delete(record)
+            await db.flush()
 
         await self._audit(
             db,
@@ -267,3 +291,16 @@ def _safe_dump(data: dict[str, Any]) -> dict[str, Any]:
         else:
             out[k] = str(v)
     return out
+
+
+def _coerce_uuid(value: Any):
+    import uuid as _uuid
+
+    if value is None:
+        return None
+    if isinstance(value, _uuid.UUID):
+        return value
+    try:
+        return _uuid.UUID(str(value))
+    except (ValueError, TypeError):
+        return None

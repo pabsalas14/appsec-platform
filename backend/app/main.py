@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from app.config import settings
@@ -86,7 +87,7 @@ async def _validation_exception_handler(
         status_code=422,
         content={
             "status": "error",
-            "detail": exc.errors(),
+            "detail": jsonable_encoder(exc.errors()),
             "code": "RequestValidationError",
         },
     )
@@ -203,6 +204,34 @@ async def log_requests(request: Request, call_next):
         )
 
     clear_ctx()
+    return response
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Apply baseline security headers (OWASP API8)."""
+    response = await call_next(request)
+    if not settings.SECURITY_HEADERS_ENABLED:
+        return response
+
+    # Clickjacking + MIME sniffing
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault(
+        "Referrer-Policy", "strict-origin-when-cross-origin"
+    )
+
+    # CSP: keep config-driven; can be tightened later per frontend needs.
+    if settings.SECURITY_CSP:
+        response.headers.setdefault("Content-Security-Policy", settings.SECURITY_CSP)
+
+    # HSTS only in prod (needs HTTPS end-to-end)
+    if settings.ENV == "prod":
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            f"max-age={settings.SECURITY_HSTS_MAX_AGE_SECONDS}; includeSubDomains",
+        )
+
     return response
 
 
