@@ -23,6 +23,13 @@ from app.api.v1 import (
     excepcion_vulnerabilidad,
     aceptacion_riesgo,
     evidencia_remediacion,
+    # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
+    service_release,
+    etapa_release,
+    pipeline_release,
+    hallazgo_pipeline,
+    revision_tercero,
+    hallazgo_tercero,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -85,3 +92,9 @@ api_router.include_router(
     prefix="/evidencia_remediacions",
     tags=["Evidencia Remediacion"],
 )
+api_router.include_router(service_release.router, prefix="/service_releases", tags=["Service_release"])
+api_router.include_router(etapa_release.router, prefix="/etapa_releases", tags=["Etapa_release"])
+api_router.include_router(pipeline_release.router, prefix="/pipeline_releases", tags=["Pipeline_release"])
+api_router.include_router(hallazgo_pipeline.router, prefix="/hallazgo_pipelines", tags=["Hallazgo_pipeline"])
+api_router.include_router(revision_tercero.router, prefix="/revision_terceros", tags=["Revision_tercero"])
+api_router.include_router(hallazgo_tercero.router, prefix="/hallazgo_terceros", tags=["Hallazgo_tercero"])

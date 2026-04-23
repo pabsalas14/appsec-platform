@@ -65,6 +65,18 @@ import app.models.aceptacion_riesgo   # noqa: F401
 
 import app.models.evidencia_remediacion   # noqa: F401
 
+import app.models.service_release   # noqa: F401
+
+import app.models.etapa_release   # noqa: F401
+
+import app.models.pipeline_release   # noqa: F401
+
+import app.models.hallazgo_pipeline   # noqa: F401
+
+import app.models.revision_tercero   # noqa: F401
+
+import app.models.hallazgo_tercero   # noqa: F401
+
 target_metadata = Base.metadata
 
 

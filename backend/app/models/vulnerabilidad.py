@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from app.models.aceptacion_riesgo import AceptacionRiesgo
     from app.models.evidencia_remediacion import EvidenciaRemediacion
     from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
+    from app.models.hallazgo_pipeline import HallazgoPipeline
+    from app.models.hallazgo_tercero import HallazgoTercero
     from app.models.historial_vulnerabilidad import HistorialVulnerabilidad
     from app.models.repositorio import Repositorio
     from app.models.servicio import Servicio
@@ -159,4 +161,10 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
         back_populates="vulnerabilidad",
         cascade="all, delete-orphan",
         lazy="noload",
+    )
+    hallazgos_pipeline: Mapped[list["HallazgoPipeline"]] = relationship(
+        "HallazgoPipeline", back_populates="vulnerabilidad", lazy="noload"
+    )
+    hallazgos_tercero: Mapped[list["HallazgoTercero"]] = relationship(
+        "HallazgoTercero", back_populates="vulnerabilidad", lazy="noload"
     )

@@ -13,6 +13,7 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
+    from app.models.revision_tercero import RevisionTercero
 
 
 class ActivoWeb(SoftDeleteMixin, Base):
@@ -52,4 +53,7 @@ class ActivoWeb(SoftDeleteMixin, Base):
     celula: Mapped["Celula"] = relationship(back_populates="activo_webs")
     vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
         "Vulnerabilidad", back_populates="activo_web", lazy="noload"
+    )
+    revision_terceros: Mapped[list["RevisionTercero"]] = relationship(
+        "RevisionTercero", back_populates="activo_web", lazy="noload"
     )

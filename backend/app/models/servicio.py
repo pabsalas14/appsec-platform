@@ -13,6 +13,8 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
+    from app.models.service_release import ServiceRelease
+    from app.models.revision_tercero import RevisionTercero
 
 
 class Servicio(SoftDeleteMixin, Base):
@@ -49,4 +51,10 @@ class Servicio(SoftDeleteMixin, Base):
     celula: Mapped["Celula"] = relationship(back_populates="servicios")
     vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
         "Vulnerabilidad", back_populates="servicio", lazy="noload"
+    )
+    service_releases: Mapped[list["ServiceRelease"]] = relationship(
+        "ServiceRelease", back_populates="servicio", lazy="noload"
+    )
+    revision_terceros: Mapped[list["RevisionTercero"]] = relationship(
+        "RevisionTercero", back_populates="servicio", lazy="noload"
     )

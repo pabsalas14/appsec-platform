@@ -1,0 +1,85 @@
+"""ServiceRelease CRUD endpoints (Módulo 8 — Operación)."""
+
+from typing import Optional
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
+from app.api.deps_ownership import require_ownership
+from app.core.response import success
+from app.models.service_release import ServiceRelease
+from app.models.user import User
+from app.schemas.service_release import (
+    ServiceReleaseCreate,
+    ServiceReleaseRead,
+    ServiceReleaseUpdate,
+)
+from app.services.service_release_service import service_release_svc
+
+router = APIRouter()
+
+
+@router.get("")
+async def list_service_releases(
+    servicio_id: Optional[UUID] = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Lista releases del usuario. Filtrar por ?servicio_id=<uuid>."""
+    filters: dict = {"user_id": current_user.id}
+    if servicio_id:
+        filters["servicio_id"] = servicio_id
+    items = await service_release_svc.list(db, filters=filters)
+    return success(
+        [ServiceReleaseRead.model_validate(x).model_dump(mode="json") for x in items]
+    )
+
+
+@router.get("/{id}")
+async def get_service_release(
+    entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
+):
+    """Obtiene un release por ID (404 si no pertenece al usuario)."""
+    return success(ServiceReleaseRead.model_validate(entity).model_dump(mode="json"))
+
+
+@router.post("", status_code=201)
+async def create_service_release(
+    entity_in: ServiceReleaseCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Crea un nuevo ServiceRelease para el usuario autenticado."""
+    entity = await service_release_svc.create(
+        db, entity_in, extra={"user_id": current_user.id}
+    )
+    return success(ServiceReleaseRead.model_validate(entity).model_dump(mode="json"))
+
+
+@router.patch("/{id}")
+async def update_service_release(
+    entity_in: ServiceReleaseUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
+):
+    """Actualiza parcialmente un release (404 si no es del usuario)."""
+    updated = await service_release_svc.update(
+        db, entity.id, entity_in, scope={"user_id": current_user.id}
+    )
+    return success(ServiceReleaseRead.model_validate(updated).model_dump(mode="json"))
+
+
+@router.delete("/{id}")
+async def delete_service_release(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
+):
+    """Elimina (soft-delete) un release (404 si no es del usuario)."""
+    await service_release_svc.delete(
+        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
+    )
+    return success(None, meta={"message": "ServiceRelease eliminado"})

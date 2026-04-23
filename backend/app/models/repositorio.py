@@ -13,6 +13,7 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
+    from app.models.pipeline_release import PipelineRelease
 
 
 class Repositorio(SoftDeleteMixin, Base):
@@ -53,4 +54,7 @@ class Repositorio(SoftDeleteMixin, Base):
     celula: Mapped["Celula"] = relationship(back_populates="repositorios")
     vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
         "Vulnerabilidad", back_populates="repositorio", lazy="noload"
+    )
+    pipeline_releases: Mapped[list["PipelineRelease"]] = relationship(
+        "PipelineRelease", back_populates="repositorio", lazy="noload"
     )
