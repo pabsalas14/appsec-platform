@@ -1,0 +1,33 @@
+"""{{ pascal }} schemas — Pydantic v2."""
+
+from datetime import datetime
+from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
+
+class {{ pascal }}Base(BaseModel):
+{% for f in fields -%}
+    {{ f.name }}: {{ f.py_schema_type }}{% if f.nullable %} = None{% endif %}
+{% endfor %}
+
+class {{ pascal }}Create({{ pascal }}Base):
+    """Fields required to create a {{ snake }}. user_id is set from auth context."""
+    pass
+
+
+class {{ pascal }}Update(BaseModel):
+    """All fields optional for partial updates."""
+{% for f in fields -%}
+    {{ f.name }}: Optional[{{ f.py_schema_type_strict }}] = None
+{% endfor %}
+
+class {{ pascal }}Read({{ pascal }}Base):
+    """Full {{ snake }} representation returned from the API."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    user_id: UUID
+    created_at: datetime
+    updated_at: datetime

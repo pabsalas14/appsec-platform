@@ -1,0 +1,50 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import api from '@/lib/api';
+import type { {{ pascal }}, {{ pascal }}Create, {{ pascal }}Update } from '@/lib/schemas/{{ snake }}.schema';
+
+type Envelope<T> = { status: 'success'; data: T };
+
+const KEY = ['{{ plural_snake }}'] as const;
+
+export function use{{ pascal_plural }}() {
+  return useQuery({
+    queryKey: KEY,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<{{ pascal }}[]>>('/{{ plural_snake }}/');
+      return data.data;
+    },
+  });
+}
+
+export function useCreate{{ pascal }}() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {{ pascal }}Create) => {
+      const { data } = await api.post<Envelope<{{ pascal }}>>('/{{ plural_snake }}/', payload);
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useUpdate{{ pascal }}() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: {{ pascal }}Update & { id: string }) => {
+      const { data } = await api.patch<Envelope<{{ pascal }}>>(`/{{ plural_snake }}/${id}`, payload);
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useDelete{{ pascal }}() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/{{ plural_snake }}/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}

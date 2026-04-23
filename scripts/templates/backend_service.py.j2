@@ -1,0 +1,11 @@
+"""{{ pascal }} service — async CRUD with enforced per-user ownership."""
+
+from app.models.{{ snake }} import {{ pascal }}
+from app.schemas.{{ snake }} import {{ pascal }}Create, {{ pascal }}Update
+from app.services.base import BaseService
+
+{{ snake }}_svc = BaseService[{{ pascal }}, {{ pascal }}Create, {{ pascal }}Update](
+    {{ pascal }},
+    owner_field="user_id",
+    audit_action_prefix="{{ snake }}",
+)

@@ -1,0 +1,23 @@
+import { z } from 'zod';
+
+export const {{ pascal }}Schema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+{% for f in fields -%}
+  {{ f.name }}: {{ f.zod }}{% if f.nullable %}.nullable().optional(){% endif %},
+{% endfor -%}
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const {{ pascal }}CreateSchema = z.object({
+{% for f in fields -%}
+  {{ f.name }}: {{ f.zod }}{% if f.nullable %}.nullable().optional(){% endif %},
+{% endfor -%}
+});
+
+export const {{ pascal }}UpdateSchema = {{ pascal }}CreateSchema.partial();
+
+export type {{ pascal }} = z.infer<typeof {{ pascal }}Schema>;
+export type {{ pascal }}Create = z.infer<typeof {{ pascal }}CreateSchema>;
+export type {{ pascal }}Update = z.infer<typeof {{ pascal }}UpdateSchema>;

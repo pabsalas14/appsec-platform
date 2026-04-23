@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Development overrides — auto-loaded by `docker compose` in addition to
+# docker-compose.yml.
+#
+# Purpose:
+#   - Bind-mount source so hot-reload works for backend (uvicorn --reload) and
+#     frontend (next dev).
+#   - Add ENV=dev so auth cookies aren't `Secure`-only over HTTP.
+#
+# Disable it for a production-ish test:
+#   docker compose -f docker-compose.yml up -d --build       # use `make up-prod`
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  backend:
+    environment:
+      ENV: "dev"
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    command: >
+      sh -c "
+        echo '⏳ Running migrations...' &&
+        alembic upgrade head &&
+        if [ \"$$RUN_SEED\" = 'true' ]; then
+          echo '🌱 Running seed...' &&
+          python -m app.seed;
+        else
+          echo '⏭️  Seed skipped (RUN_SEED!=true)';
+        fi &&
+        echo '🚀 Starting server (hot-reload)...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  uploads:

@@ -1,0 +1,107 @@
+version: "3.9"
+
+services:
+  # ──────────────────────────────────
+  # PostgreSQL 16
+  # ──────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: framework_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-framework}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-framework_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-framework}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # ports removed — access postgres via: docker compose exec postgres psql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-framework}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ──────────────────────────────────
+  # Backend - Python FastAPI
+  # ──────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: framework_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-framework}:${POSTGRES_PASSWORD:-framework_secret}@postgres:5432/${POSTGRES_DB:-framework}"
+      ENV: "${ENV:-dev}"
+      SECRET_KEY: "${SECRET_KEY:?SECRET_KEY must be set}"
+      JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
+      JWT_ACCESS_EXPIRE_MINUTES: "${JWT_ACCESS_EXPIRE_MINUTES:-30}"
+      JWT_REFRESH_EXPIRE_DAYS: "${JWT_REFRESH_EXPIRE_DAYS:-7}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://localhost,http://localhost:80,http://127.0.0.1,http://127.0.0.1:3000,http://127.0.0.1:80}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:?ADMIN_EMAIL must be set}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
+      RUN_SEED: "${RUN_SEED:-false}"
+      WEBHOOK_URL: "${WEBHOOK_URL:-}"
+      WEBHOOK_TYPE: "${WEBHOOK_TYPE:-slack}"
+      SLA_ALERT_DAYS: "${SLA_ALERT_DAYS:-5}"
+      SSE_ENABLED: "${SSE_ENABLED:-true}"
+      SSE_KEEPALIVE_INTERVAL: "${SSE_KEEPALIVE_INTERVAL:-30}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/uploads
+    command: >
+      sh -c "
+        echo '⏳ Running migrations...' &&
+        alembic upgrade head &&
+        if [ \"$$RUN_SEED\" = 'true' ]; then
+          echo '🌱 Running seed...' &&
+          python -m app.seed;
+        else
+          echo '⏭️  Seed skipped (RUN_SEED!=true)';
+        fi &&
+        echo '🚀 Starting server...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+
+  # ──────────────────────────────────
+  # Frontend - Next.js TypeScript
+  # ──────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_SSE_ENABLED: ${SSE_ENABLED:-true}
+    container_name: framework_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    ports:
+      - "3000:3000"
+
+  # ──────────────────────────────────
+  # Nginx (reverse proxy + static)
+  # ──────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: framework_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - uploads:/usr/share/nginx/html/uploads:ro
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
+  uploads:

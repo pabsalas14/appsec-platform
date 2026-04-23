@@ -1,0 +1,45 @@
+# ── Env / secrets ───────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Editor / OS ────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json.example
+
+# ── Python / backend ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+
+# ── Node / frontend ────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+coverage/
+.tsbuildinfo
+*.tsbuildinfo
+
+# ── Playwright / Vitest artifacts ──────────────────────────────────────
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# ── Docker ─────────────────────────────────────────────────────────────
+# Keep the example override committed, ignore local-only tweaks
+docker-compose.local.yml
+
+# ── Uploads (dev volume) ───────────────────────────────────────────────
+backend/uploads/

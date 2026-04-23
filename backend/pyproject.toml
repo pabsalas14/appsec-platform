@@ -1,0 +1,68 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+# ─── Ruff linter & formatter ───────────────────────────────────────────────
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+# See https://docs.astral.sh/ruff/rules/ — grouping rationale:
+#   E/F/W/I  : pyflakes + import-order basics.
+#   UP       : upgrade to modern Python idioms.
+#   B        : flake8-bugbear — bug-prone patterns.
+#   C4       : comprehensions.
+#   SIM      : redundant patterns.
+#   ASYNC    : blocking calls inside async functions.
+#   S        : bandit — security anti-patterns (e.g. `assert`, hardcoded secrets).
+#   T20      : flake8-print — no `print(...)` in production code (ADR-0007).
+#   RUF      : ruff-specific gotchas.
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "ASYNC", "S", "T20", "RUF"]
+ignore = [
+    "E712",  # `== True` required by SQLAlchemy column expressions
+    "S101",  # asserts in tests are fine
+    "S104",  # 0.0.0.0 bind is intentional in docker dev
+    "S105",  # hardcoded password strings in tests
+    "S106",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use asserts, hardcoded test passwords, and request timeouts don't
+# apply to ASGITransport clients.
+"tests/**/*.py" = ["S101", "S105", "S106", "S311", "ASYNC109", "T201"]
+# Alembic migrations are generated boilerplate.
+"alembic/**/*.py" = ["E501", "I", "UP"]
+# Seed script is an ops entrypoint — prints are OK, and it is the sole
+# writer outside `get_db`.
+"app/seed.py" = ["S608", "T201"]
+# Management scripts may print to stdout for CLI UX.
+"scripts/**/*.py" = ["T201"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ─── Vulture (dead code) ───────────────────────────────────────────────────
+[tool.vulture]
+paths = ["app"]
+exclude = ["alembic/"]
+min_confidence = 80
+# Names that look unused but are part of the framework API surface.
+ignore_names = [
+    "lifespan",
+    "downgrade",
+    "upgrade",
+    "alembic_version",
+    "_http_exception_handler",
+    "_validation_exception_handler",
+    "_global_exception_handler",
+    "log_requests",
+]
