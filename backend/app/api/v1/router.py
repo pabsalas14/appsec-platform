@@ -1,7 +1,7 @@
 """API v1 router — aggregates all endpoint modules."""
 
 from fastapi import APIRouter
-from app.api.v1 import (, ejecucion_mast, hallazgo_mast, iniciativa, organizacion, gerencia
+from app.api.v1 import (
     activo_web,
     aplicacion_movil,
     audit_logs,
@@ -48,6 +48,25 @@ from app.api.v1 import (, ejecucion_mast, hallazgo_mast, iniciativa, organizacio
     regulacion_control,
     evidencia_regulacion,
     estado_cumplimiento,
+    # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
+    ejecucion_mast,
+    hallazgo_mast,
+    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
+    organizacion,
+    gerencia,
+    # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
+    iniciativa,
+    hito_iniciativa,
+    actualizacion_iniciativa,
+    # ── Módulo 6 — Auditorías ─────────────────────────────────────────────────
+    auditoria,
+    hallazgo_auditoria,
+    evidencia_auditoria,
+    plan_remediacion,
+    # ── Módulo 7 — Temas Emergentes ───────────────────────────────────────────
+    tema_emergente,
+    actualizacion_tema,
+    cierre_conclusion,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -135,6 +154,23 @@ api_router.include_router(evidencia_regulacion.router, prefix="/evidencia_regula
 api_router.include_router(estado_cumplimiento.router, prefix="/estado_cumplimientos", tags=["Estado_cumplimiento"])
 api_router.include_router(ejecucion_mast.router, prefix="/ejecucion_masts", tags=["Ejecucion_mast"])
 api_router.include_router(hallazgo_mast.router, prefix="/hallazgo_masts", tags=["Hallazgo_mast"])
-api_router.include_router(iniciativa.router, prefix="/iniciativas", tags=["Iniciativa"])
+
+# ─── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
 api_router.include_router(organizacion.router, prefix="/organizacions", tags=["Organizacion"])
 api_router.include_router(gerencia.router, prefix="/gerencias", tags=["Gerencia"])
+
+# ─── Módulo 5 — Iniciativas ───────────────────────────────────────────────────
+api_router.include_router(iniciativa.router, prefix="/iniciativas", tags=["Iniciativa"])
+api_router.include_router(hito_iniciativa.router, prefix="/hito_iniciativas", tags=["Hito_iniciativa"])
+api_router.include_router(actualizacion_iniciativa.router, prefix="/actualizacion_iniciativas", tags=["Actualizacion_iniciativa"])
+
+# ─── Módulo 6 — Auditorías ────────────────────────────────────────────────────
+api_router.include_router(auditoria.router, prefix="/auditorias", tags=["Auditoria"])
+api_router.include_router(hallazgo_auditoria.router, prefix="/hallazgo_auditorias", tags=["Hallazgo_auditoria"])
+api_router.include_router(evidencia_auditoria.router, prefix="/evidencia_auditorias", tags=["Evidencia_auditoria"])
+api_router.include_router(plan_remediacion.router, prefix="/plan_remediacions", tags=["Plan_remediacion"])
+
+# ─── Módulo 7 — Temas Emergentes ──────────────────────────────────────────────
+api_router.include_router(tema_emergente.router, prefix="/temas_emergentes", tags=["Tema_emergente"])
+api_router.include_router(actualizacion_tema.router, prefix="/actualizacion_temas", tags=["Actualizacion_tema"])
+api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones", tags=["Cierre_conclusion"])

@@ -8,9 +8,11 @@ from pydantic import BaseModel, ConfigDict
 
 
 class OrganizacionBase(BaseModel):
-nombre: str
-codigo: str
-descripcion: str
+    """Base schema for Organizacion."""
+
+    nombre: str
+    codigo: str
+    descripcion: str
 
 
 class OrganizacionCreate(OrganizacionBase):
@@ -20,9 +22,10 @@ class OrganizacionCreate(OrganizacionBase):
 
 class OrganizacionUpdate(BaseModel):
     """All fields optional for partial updates."""
-nombre: Optional[str] = None
-codigo: Optional[str] = None
-descripcion: Optional[str] = None
+
+    nombre: Optional[str] = None
+    codigo: Optional[str] = None
+    descripcion: Optional[str] = None
 
 
 class OrganizacionRead(OrganizacionBase):

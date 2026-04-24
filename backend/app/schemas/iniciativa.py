@@ -8,12 +8,14 @@ from pydantic import BaseModel, ConfigDict
 
 
 class IniciativaBase(BaseModel):
-titulo: str
-descripcion: Optional[str] = None
-tipo: str
-estado: str
-fecha_inicio: Optional[datetime] = None
-fecha_fin_estimada: Optional[datetime] = None
+    """Base schema for Iniciativa."""
+
+    titulo: str
+    descripcion: Optional[str] = None
+    tipo: str
+    estado: str
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin_estimada: Optional[datetime] = None
 
 
 class IniciativaCreate(IniciativaBase):
@@ -23,12 +25,13 @@ class IniciativaCreate(IniciativaBase):
 
 class IniciativaUpdate(BaseModel):
     """All fields optional for partial updates."""
-titulo: Optional[str] = None
-descripcion: Optional[str] = None
-tipo: Optional[str] = None
-estado: Optional[str] = None
-fecha_inicio: Optional[datetime] = None
-fecha_fin_estimada: Optional[datetime] = None
+
+    titulo: Optional[str] = None
+    descripcion: Optional[str] = None
+    tipo: Optional[str] = None
+    estado: Optional[str] = None
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin_estimada: Optional[datetime] = None
 
 
 class IniciativaRead(IniciativaBase):

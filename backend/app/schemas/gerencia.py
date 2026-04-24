@@ -8,9 +8,11 @@ from pydantic import BaseModel, ConfigDict
 
 
 class GerenciaBase(BaseModel):
-nombre: str
-subdireccion_id: uuid.UUID
-descripcion: str
+    """Base schema for Gerencia."""
+
+    nombre: str
+    subdireccion_id: UUID
+    descripcion: str
 
 
 class GerenciaCreate(GerenciaBase):
@@ -20,9 +22,10 @@ class GerenciaCreate(GerenciaBase):
 
 class GerenciaUpdate(BaseModel):
     """All fields optional for partial updates."""
-nombre: Optional[str] = None
-subdireccion_id: Optional[uuid.UUID] = None
-descripcion: Optional[str] = None
+
+    nombre: Optional[str] = None
+    subdireccion_id: Optional[UUID] = None
+    descripcion: Optional[str] = None
 
 
 class GerenciaRead(GerenciaBase):
