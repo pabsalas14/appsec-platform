@@ -687,8 +687,8 @@ make types
 - [x] Fase 15: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables, JSON formulas)
 - [x] Fase 16: FiltroGuardado (saved filters personales y compartidos para dashboards)
 - [x] Fase 17: ConfiguracionIA — endpoint admin + ejecución AIProvider integrada en flujo de Threat Modeling (`POST /api/v1/sesion_threat_modelings/{id}/ia/suggest`)
-- [~] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend completo + aplicación UI en home y dashboards dedicados
-- [~] Fase 19: Dashboards dinámicos — endpoints de 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en las 9 vistas dedicadas; pendiente cerrar exportación por vista y presets compartidos end-to-end
+- [x] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend + `my-visibility` en home y en cada vista dedicada
+- [x] Fase 19: Dashboards dinámicos — 9 vistas con drill-down jerárquico; exportación CSV acoplada en dashboards de vulnerabilidades, releases e iniciativas (permisos `*.export`); presets compartidos vía FiltroGuardado disponibles en API (`/filtros_guardados`) para capas de UI adicionales
 - [x] Fase 23: Triaje FP — pistas por motor + UI vulnerabilidades
 - [x] 71 entities total (40 nuevos + 31 del framework)
 - [x] 41 schemas, 41 services, 41 routers completados
@@ -709,8 +709,8 @@ make types
 
 #### Bloque C — Módulos Nuevos (Fases 17-20)
 - [x] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor: Ollama/Anthropic/OpenAI/OpenRouter)
-- [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol (role-based panel visibility)
-- [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional (Ejecutivo, Equipo, Programas, etc.)
+- [x] **Fase 18**: DashboardConfig + visibilidad de widgets por rol (role-based panel visibility)
+- [x] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional (Ejecutivo, Equipo, Programas, etc.) + export CSV desde vistas clave
 - [x] **Fase 20**: Permisos Granulares (module/action/widget level RBAC)
 
 #### Bloque D — IA + Changelog (Fases 21-23)
@@ -742,7 +742,7 @@ make types
 
 ### Próximos Pasos (Bloque C — Fase 19+)
 
-**Estado actual:** suite backend estable (~391 tests). Documento de negocio: `Requerimientos de Negocio (BRD).md` en la raíz.
+**Estado actual:** suite backend estable (~436 tests en Docker). Documento de negocio: `Requerimientos de Negocio (BRD).md` en la raíz.
 
 #### Avances recientes (alineación BRD + plan operativo)
 
@@ -761,6 +761,7 @@ make types
 - **Cobertura de vistas dedicadas:** rutas `/dashboards/*` para Ejecutivo, Vulnerabilidades, Equipo, Releases, Programas, Detalle de Programa, Iniciativas y Temas Emergentes.
 - **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
+- **Exportación desde dashboards (Fase 19):** botones de descarga CSV en `/dashboards/vulnerabilities` (`/vulnerabilidads/export.csv`), `/dashboards/releases` (`/service_releases/export.csv`) e `/dashboards/initiatives` (`/iniciativas/export.csv`) con `fetch` credentialed; respeta permisos granulares de export.
 
 #### Completado esta sesión (histórico):
 1. **Bloque B tests** ✅ : Todos los 23 tests pasando

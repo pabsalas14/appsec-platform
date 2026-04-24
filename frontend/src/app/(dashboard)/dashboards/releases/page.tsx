@@ -2,6 +2,7 @@
 
 import { Layers } from 'lucide-react';
 
+import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Card,
@@ -29,6 +30,13 @@ export default function ReleasesDashboardPage() {
       <PageHeader
         title="Dashboard · Releases"
         description="Vista tabla y kanban de releases con drill-down organizacional."
+        action={
+          <DashboardCsvExportButton
+            apiPath="/service_releases/export.csv"
+            filename="service_releases.csv"
+            label="Exportar releases"
+          />
+        }
       />
 
       <HierarchyFiltersBar

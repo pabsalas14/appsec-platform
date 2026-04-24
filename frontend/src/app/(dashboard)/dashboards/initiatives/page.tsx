@@ -2,6 +2,7 @@
 
 import { CheckSquare, Circle } from 'lucide-react';
 
+import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardInitiatives } from '@/hooks/useAppDashboardPanels';
@@ -17,7 +18,17 @@ export default function InitiativesDashboardPage() {
 
   return (
     <PageWrapper className="space-y-6 p-6">
-      <PageHeader title="Dashboard · Iniciativas" description="Seguimiento de avance de iniciativas." />
+      <PageHeader
+        title="Dashboard · Iniciativas"
+        description="Seguimiento de avance de iniciativas."
+        action={
+          <DashboardCsvExportButton
+            apiPath="/iniciativas/export.csv"
+            filename="iniciativas.csv"
+            label="Exportar iniciativas"
+          />
+        }
+      />
       <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {isVisible('dashboard.initiatives.card.total') && (

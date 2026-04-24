@@ -2,6 +2,7 @@
 
 import { Circle, ShieldCheck } from 'lucide-react';
 
+import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { Card, CardContent, CardHeader, CardTitle, PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
@@ -20,6 +21,13 @@ export default function VulnerabilitiesDashboardPage() {
       <PageHeader
         title="Dashboard · Vulnerabilidades"
         description="Severidad, estado y cumplimiento SLA por jerarquía."
+        action={
+          <DashboardCsvExportButton
+            apiPath="/vulnerabilidads/export.csv"
+            filename="vulnerabilidades.csv"
+            label="Exportar hallazgos"
+          />
+        }
       />
       <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
