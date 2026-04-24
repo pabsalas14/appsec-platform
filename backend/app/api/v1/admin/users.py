@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.exceptions import (
     ConflictException,
     ForbiddenException,
@@ -45,7 +45,7 @@ def _ensure_valid_role(role: str) -> None:
 @router.get("")
 async def list_users(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
     role: Optional[str] = Query(default=None),
     is_active: Optional[bool] = Query(default=None),
     q: Optional[str] = Query(default=None, description="Search by username/email"),
@@ -91,7 +91,7 @@ async def list_users(
 async def get_user(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Return a single user (admin only)."""
     result = await db.execute(select(User).where(User.id == user_id))
@@ -105,7 +105,7 @@ async def get_user(
 async def create_user(
     payload: UserAdminCreate,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Create a user account (admin only).
 
@@ -149,7 +149,7 @@ async def update_user(
     user_id: uuid.UUID,
     payload: UserAdminUpdate,
     db: AsyncSession = Depends(get_db),
-    admin: User = Depends(require_role("admin")),
+    admin: User = Depends(require_backoffice),
 ):
     """Partially update a user (admin only)."""
     user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
@@ -195,7 +195,7 @@ async def reset_password(
     user_id: uuid.UUID,
     payload: UserPasswordReset,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Reset a user's password to a new value (admin only)."""
     user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
@@ -221,7 +221,7 @@ async def reset_password(
 async def delete_user(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    admin: User = Depends(require_role("admin")),
+    admin: User = Depends(require_backoffice),
 ):
     """Delete a user (admin only). Cannot delete yourself."""
     if admin.id == user_id:

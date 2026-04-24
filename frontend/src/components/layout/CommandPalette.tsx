@@ -44,6 +44,7 @@ import {
   CommandList,
 } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { isBackofficeUser } from '@/lib/roles';
 
 type PaletteContextValue = {
   open: () => void;
@@ -63,7 +64,7 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
   const router = useRouter();
   const { setTheme } = useTheme();
   const { data: user } = useCurrentUser();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isBackofficeUser(user?.role);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

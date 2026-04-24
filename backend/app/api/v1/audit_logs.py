@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.response import paginated, success
 from app.models.audit_log import AuditLog
 from app.models.user import User
@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("")
 async def list_audit_logs(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
     actor_user_id: uuid.UUID | None = Query(
         default=None, description="Filter by actor"
     ),
@@ -77,7 +77,7 @@ async def list_audit_logs(
 @router.get("/verify")
 async def verify_audit_chain(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
     limit: int = Query(default=5000, ge=1, le=200000),
 ):
     """Verify audit hash-chain integrity (A4)."""

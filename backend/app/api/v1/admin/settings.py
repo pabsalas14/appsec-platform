@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.exceptions import NotFoundException
 from app.core.response import success
 from app.models.system_setting import SystemSetting
@@ -476,7 +476,7 @@ async def _ensure_seeded(db: AsyncSession) -> None:
 @router.get("")
 async def list_settings(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     await _ensure_seeded(db)
     rows = (
@@ -491,7 +491,7 @@ async def list_settings(
 async def get_setting(
     key: str,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     row = (
         await db.execute(select(SystemSetting).where(SystemSetting.key == key))
@@ -506,7 +506,7 @@ async def put_setting(
     key: str,
     payload: SystemSettingUpsert,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Upsert a setting by key. The description is optional."""
     row = (

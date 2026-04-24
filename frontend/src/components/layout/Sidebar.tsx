@@ -37,6 +37,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSidebarState } from '@/hooks/useSidebarState';
+import { isBackofficeUser } from '@/lib/roles';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -172,7 +173,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebarState();
   const { data: user } = useCurrentUser();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isBackofficeUser(user?.role);
 
   return (
     <aside

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.response import success
 from app.models.system_setting import SystemSetting
 from app.models.user import User
@@ -45,7 +45,7 @@ async def _ensure_ia_seeded(db: AsyncSession) -> None:
 @router.get("")
 async def get_ia_config(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Get effective IA provider configuration."""
     await _ensure_ia_seeded(db)
@@ -57,7 +57,7 @@ async def get_ia_config(
 async def put_ia_config(
     payload: IAConfigUpdate,
     db: AsyncSession = Depends(get_db),
-    admin_user: User = Depends(require_role("admin")),
+    admin_user: User = Depends(require_backoffice),
 ):
     """Update IA configuration in SystemSetting keys."""
     await _ensure_ia_seeded(db)
@@ -104,7 +104,7 @@ async def put_ia_config(
 async def ia_test_call(
     payload: IATestCallRequest,
     db: AsyncSession = Depends(get_db),
-    admin_user: User = Depends(require_role("admin")),
+    admin_user: User = Depends(require_backoffice),
 ):
     """Execute (or dry-run) a provider call with current IA configuration."""
     await _ensure_ia_seeded(db)

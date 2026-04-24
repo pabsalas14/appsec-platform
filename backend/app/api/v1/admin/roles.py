@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.exceptions import ConflictException, NotFoundException
 from app.core.permissions import VALID_ROLES
 from app.core.response import success
@@ -55,7 +55,7 @@ def _to_read(role: Role) -> dict:
 @router.get("")
 async def list_roles(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """List all roles (auto-seeds on first access)."""
     await _ensure_seeded(db)
@@ -66,7 +66,7 @@ async def list_roles(
 @router.get("/_permissions")
 async def list_permissions(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """List the full permission catalogue — used by the role editor."""
     await _ensure_seeded(db)
@@ -80,7 +80,7 @@ async def list_permissions(
 async def get_role(
     role_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Return a single role."""
     role = (await db.execute(select(Role).where(Role.id == role_id))).scalar_one_or_none()
@@ -93,7 +93,7 @@ async def get_role(
 async def create_role(
     payload: RoleCreate,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Create a new role with the given permission codes."""
     await _ensure_seeded(db)
@@ -131,7 +131,7 @@ async def update_role(
     role_id: uuid.UUID,
     payload: RoleUpdate,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Update role description and/or permission set."""
     role = (await db.execute(select(Role).where(Role.id == role_id))).scalar_one_or_none()
@@ -168,7 +168,7 @@ async def update_role(
 async def delete_role(
     role_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_role("admin")),
+    _admin: User = Depends(require_backoffice),
 ):
     """Delete a role (not allowed for seeded canonical names)."""
     role = (await db.execute(select(Role).where(Role.id == role_id))).scalar_one_or_none()

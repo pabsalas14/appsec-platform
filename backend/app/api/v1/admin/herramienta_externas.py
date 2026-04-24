@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_backoffice
 from app.core.exceptions import NotFoundException
 from app.core.response import success
 from app.models.user import User
@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("")
 async def list_herramientas(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """List all configured integrations/tools. Admin only."""
     items = await herramienta_externa_svc.list(db)
@@ -38,7 +38,7 @@ async def list_herramientas(
 async def get_herramienta(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """Get a specific tool config by ID. Admin only."""
     item = await herramienta_externa_svc.get(db, id)
@@ -51,7 +51,7 @@ async def get_herramienta(
 async def create_herramienta(
     entity_in: HerramientaExternaCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_backoffice),
 ):
     """Create a new integration/tool. Admin only. Audit logged."""
     entity = await herramienta_externa_svc.create(
@@ -65,7 +65,7 @@ async def update_herramienta(
     id: UUID,
     entity_in: HerramientaExternaUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """Partially update a tool configuration. Admin only. Audit logged."""
     existing = await herramienta_externa_svc.get(db, id)
@@ -80,7 +80,7 @@ async def update_herramienta(
 async def delete_herramienta(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_backoffice),
 ):
     """Soft-delete a tool configuration. Admin only. Audit logged."""
     existing = await herramienta_externa_svc.get(db, id)

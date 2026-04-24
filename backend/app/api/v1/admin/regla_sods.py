@@ -9,8 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
-from app.api.deps import require_role
+from app.api.deps import get_current_user, get_db, require_backoffice
 from app.core.exceptions import NotFoundException
 from app.core.response import success
 from app.models.user import User
@@ -23,7 +22,7 @@ router = APIRouter()
 @router.get("")
 async def list_regla_sods(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """List all SoD rules. Admin only."""
     items = await regla_so_d_svc.list(db)
@@ -34,7 +33,7 @@ async def list_regla_sods(
 async def get_regla_sod(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """Get a SoD rule by ID. Admin only."""
     item = await regla_so_d_svc.get(db, id)
@@ -47,7 +46,7 @@ async def get_regla_sod(
 async def create_regla_sod(
     entity_in: ReglaSoDCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_backoffice),
 ):
     """Create a new SoD rule. Admin only. Audit logged."""
     entity = await regla_so_d_svc.create(
@@ -61,7 +60,7 @@ async def update_regla_sod(
     id: UUID,
     entity_in: ReglaSoDUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role("admin")),
+    _: User = Depends(require_backoffice),
 ):
     """Partially update a SoD rule. Admin only. Audit logged."""
     existing = await regla_so_d_svc.get(db, id)
@@ -75,7 +74,7 @@ async def update_regla_sod(
 async def delete_regla_sod(
     id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_backoffice),
 ):
     """Soft-delete a SoD rule. Admin only. Audit logged."""
     existing = await regla_so_d_svc.get(db, id)

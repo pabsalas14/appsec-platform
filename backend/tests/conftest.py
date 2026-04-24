@@ -235,3 +235,37 @@ async def admin_auth_headers(
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after admin login"
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def super_admin_auth_headers(
+    client: AsyncClient,
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> dict[str, str]:
+    """Register a user, promote to ``super_admin``, return Bearer headers."""
+    unique = uuid.uuid4().hex[:8]
+    username = f"superadmin_{unique}"
+    payload = {
+        "username": username,
+        "email": f"{username}@example.com",
+        "password": "Adminpass123",
+    }
+
+    resp = await client.post("/api/v1/auth/register", json=payload)
+    assert resp.status_code == 201, resp.text
+
+    async with _session_factory() as session:
+        await session.execute(
+            text("UPDATE users SET role = 'super_admin' WHERE username = :u"),
+            {"u": username},
+        )
+        await session.commit()
+
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": payload["password"]},
+    )
+    assert resp.status_code == 200, resp.text
+    token = client.cookies.get("access_token")
+    assert token, "Missing access_token cookie after super_admin login"
+    return {"Authorization": f"Bearer {token}"}

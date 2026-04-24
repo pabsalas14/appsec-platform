@@ -16,6 +16,7 @@ import {
 } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import api from '@/lib/api';
+import { isBackofficeUser } from '@/lib/roles';
 import { extractErrorMessage } from '@/lib/utils';
 
 function initials(name?: string | null, fallback = '?') {
@@ -64,7 +65,7 @@ export function UserMenu() {
           <UserIcon className="mr-2 h-4 w-4" />
           Profile
         </DropdownMenuItem>
-        {user?.role === 'admin' && (
+        {isBackofficeUser(user?.role) && (
           <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
             <Settings className="mr-2 h-4 w-4" />
             Settings

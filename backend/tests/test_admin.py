@@ -26,6 +26,19 @@ async def test_admin_can_list_users(
 
 
 @pytest.mark.asyncio
+async def test_super_admin_can_access_backoffice_admin_routes(
+    client: AsyncClient, super_admin_auth_headers: dict[str, str]
+):
+    """super_admin must access legacy admin API paths (useRoles, audit, etc.)."""
+    u = await client.get("/api/v1/admin/users", headers=super_admin_auth_headers)
+    assert u.status_code == 200
+    r = await client.get("/api/v1/admin/roles", headers=super_admin_auth_headers)
+    assert r.status_code == 200
+    logs = await client.get("/api/v1/audit-logs", headers=super_admin_auth_headers)
+    assert logs.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_admin_can_upsert_system_setting(
     client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
@@ -59,6 +72,18 @@ async def test_non_admin_cannot_manage_ia_config(
 ):
     resp = await client.get("/api/v1/admin/ia-config", headers=auth_headers)
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_super_admin_can_get_ia_config(
+    client: AsyncClient, super_admin_auth_headers: dict[str, str]
+):
+    """Configuración IA vive bajo /admin/ia-config — accesible para backoffice (admin + super_admin)."""
+    get_resp = await client.get(
+        "/api/v1/admin/ia-config", headers=super_admin_auth_headers
+    )
+    assert get_resp.status_code == 200, get_resp.text
+    assert "proveedor_activo" in get_resp.json()["data"]
 
 
 @pytest.mark.asyncio

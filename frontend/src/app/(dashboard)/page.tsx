@@ -34,6 +34,7 @@ import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilte
 import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { isBackofficeUser } from '@/lib/roles';
 
 export default function DashboardHomePage() {
   const { data: user } = useCurrentUser();
@@ -45,7 +46,7 @@ export default function DashboardHomePage() {
   const { data: teamDash, isLoading: teamLoading } = useDashboardTeam(filters);
   const { data: visibility } = useMyDashboardVisibility('home');
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isBackofficeUser(user?.role);
   const isWidgetVisible = (widgetId: string) =>
     visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
 

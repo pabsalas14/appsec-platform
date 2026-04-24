@@ -105,6 +105,10 @@ def require_role(*roles: str):
     return role_checker
 
 
+# /api/v1/admin/* y exportaciones de audit: rol legacy ``admin`` o ``super_admin`` (BRD).
+require_backoffice = require_role("admin", "super_admin")
+
+
 def require_permission(*permission_codes: str):
     """Dependency factory that validates granular permissions via the
     ``role_permissions`` join table.
