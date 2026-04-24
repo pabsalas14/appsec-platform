@@ -1,10 +1,10 @@
-"""Celula model — owned per-user entity."""
+"""Celula model — bajo organización de plataforma (BRD §3.1)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,10 +14,9 @@ from app.models.mixins import SoftDeleteMixin
 if TYPE_CHECKING:
     from app.models.activo_web import ActivoWeb
     from app.models.aplicacion_movil import AplicacionMovil
-    from app.models.gerencia import Gerencia
+    from app.models.organizacion import Organizacion
     from app.models.repositorio import Repositorio
     from app.models.servicio import Servicio
-    from app.models.subdireccion import Subdireccion
 
 
 class Celula(SoftDeleteMixin, Base):
@@ -35,15 +34,9 @@ class Celula(SoftDeleteMixin, Base):
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
     tipo: Mapped[str] = mapped_column(String(255), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    subdireccion_id: Mapped[uuid.UUID] = mapped_column(
+    organizacion_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("subdireccions.id", ondelete="RESTRICT"),
-        nullable=False,
-        index=True,
-    )
-    gerencia_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("gerencias.id", ondelete="RESTRICT"),
+        ForeignKey("organizacions.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -53,11 +46,10 @@ class Celula(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    subdireccion: Mapped["Subdireccion"] = relationship(back_populates="celulas")
-    gerencia: Mapped["Gerencia"] = relationship(back_populates="celulas")
+    organizacion: Mapped["Organizacion"] = relationship(back_populates="celulas")
     repositorios: Mapped[list["Repositorio"]] = relationship(back_populates="celula")
     activo_webs: Mapped[list["ActivoWeb"]] = relationship(back_populates="celula")
     servicios: Mapped[list["Servicio"]] = relationship(back_populates="celula")

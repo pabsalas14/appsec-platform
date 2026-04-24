@@ -1,26 +1,29 @@
-"""Smoke + IDOR tests for the changelog_entrada entity — generated."""
+"""Smoke tests for ChangelogEntrada — mutations require admin; list is authenticated read."""
 
 from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 
-
 BASE_URL = "/api/v1/changelog_entradas"
 
-SAMPLE_PAYLOAD = {
-"version": "sample version",
-"titulo": "sample titulo",
-"descripcion": "sample descripcion",
-"tipo": "sample tipo",
-"fecha_publicacion": "2026-01-01T00:00:00Z",
-"publicado": False,
+VALID_PAYLOAD = {
+    "version": "0.9.0",
+    "titulo": "Test entry",
+    "descripcion": "Desc",
+    "tipo": "feature",
+    "publicado": False,
 }
 
 
 @pytest.mark.asyncio
-async def test_create_changelog_entrada(client: AsyncClient, auth_headers: dict):
-    resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
+async def test_create_changelog_entrada(client: AsyncClient, admin_auth_headers: dict):
+    csrf = {"X-CSRF-Token": client.cookies.get("csrf_token", "")}
+    resp = await client.post(
+        BASE_URL,
+        headers={**admin_auth_headers, **csrf},
+        json=VALID_PAYLOAD,
+    )
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
 
@@ -39,20 +42,13 @@ async def test_changelog_entrada_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_changelog_entrada_idor_protected(
-    client: AsyncClient,
-    auth_headers: dict,
-    other_auth_headers: dict,
+async def test_non_admin_cannot_create_changelog_entrada(
+    client: AsyncClient, auth_headers: dict
 ):
-    resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
-    resource_id = resp.json()["data"]["id"]
-
-    for method, args in [
-        ("GET", {}),
-        ("PATCH", {"json": {}}),
-        ("DELETE", {}),
-    ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
-        assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+    csrf = {"X-CSRF-Token": client.cookies.get("csrf_token", "")}
+    resp = await client.post(
+        BASE_URL,
+        headers={**auth_headers, **csrf},
+        json=VALID_PAYLOAD,
+    )
+    assert resp.status_code == 403

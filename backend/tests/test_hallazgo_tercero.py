@@ -5,28 +5,16 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_servicio_id
+
 BASE_URL = "/api/v1/hallazgo_terceros"
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async def _create_revision_tercero(client: AsyncClient, headers: dict) -> str:
-    """Crea subdireccion → celula → servicio → revision_tercero. Retorna revision_id."""
-    sub = await client.post(
-        "/api/v1/subdireccions", headers=headers,
-        json={"nombre": f"Sub {uuid4().hex[:6]}", "codigo": uuid4().hex[:6]},
-    )
-    sub_id = sub.json()["data"]["id"]
-    cel = await client.post(
-        "/api/v1/celulas", headers=headers,
-        json={"nombre": f"Cel {uuid4().hex[:6]}", "tipo": "Desarrollo", "subdireccion_id": sub_id},
-    )
-    cel_id = cel.json()["data"]["id"]
-    svc = await client.post(
-        "/api/v1/servicios", headers=headers,
-        json={"nombre": f"Srv {uuid4().hex[:6]}", "criticidad": "Alta", "celula_id": cel_id},
-    )
-    svc_id = svc.json()["data"]["id"]
+    """Crea servicio → revision_tercero. Retorna revision_id."""
+    svc_id = await create_servicio_id(client, headers)
     rev = await client.post(
         "/api/v1/revision_terceros", headers=headers,
         json={

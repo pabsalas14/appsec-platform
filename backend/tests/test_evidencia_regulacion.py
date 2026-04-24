@@ -5,21 +5,27 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import (
+    create_regulacion_control_id,
+    create_servicio_regulado_registro_id,
+)
+
 
 BASE_URL = "/api/v1/evidencia_regulacions"
-
-SAMPLE_PAYLOAD = {
-    "registro_id": "00000000-0000-0000-0000-000000000001",
-    "control_id": None,
-    "descripcion": "Compliance evidence",
-    "filename": "evidence.pdf",
-    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "fecha": "2024-03-01T10:00:00+00:00"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_evidencia_regulacion(client: AsyncClient, auth_headers: dict):
+    rid = await create_servicio_regulado_registro_id(client, auth_headers)
+    cid = await create_regulacion_control_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "registro_id": rid,
+        "control_id": cid,
+        "descripcion": "Compliance evidence",
+        "filename": "evidence.pdf",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "fecha": "2024-03-01T10:00:00+00:00",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -44,6 +50,16 @@ async def test_evidencia_regulacion_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    rid = await create_servicio_regulado_registro_id(client, auth_headers)
+    cid = await create_regulacion_control_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "registro_id": rid,
+        "control_id": cid,
+        "descripcion": "Compliance evidence",
+        "filename": "evidence.pdf",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "fecha": "2024-03-01T10:00:00+00:00",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

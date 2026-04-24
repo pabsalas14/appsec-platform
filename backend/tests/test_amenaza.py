@@ -5,25 +5,27 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_sesion_tm_id
+
 
 BASE_URL = "/api/v1/amenazas"
-
-SAMPLE_PAYLOAD = {
-    "sesion_id": "00000000-0000-0000-0000-000000000001",
-    "titulo": "Unauthorized Access",
-    "descripcion": "Potential unauthorized access",
-    "categoria_stride": "Spoofing",
-    "dread_damage": 8,
-    "dread_reproducibility": 7,
-    "dread_exploitability": 6,
-    "dread_affected_users": 9,
-    "dread_discoverability": 5,
-    "estado": "Abierta"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_amenaza(client: AsyncClient, auth_headers: dict):
+    sid = await create_sesion_tm_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "sesion_id": sid,
+        "titulo": "Unauthorized Access",
+        "descripcion": "Potential unauthorized access",
+        "categoria_stride": "Spoofing",
+        "dread_damage": 8,
+        "dread_reproducibility": 7,
+        "dread_exploitability": 6,
+        "dread_affected_users": 9,
+        "dread_discoverability": 5,
+        "estado": "Abierta",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -48,6 +50,19 @@ async def test_amenaza_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    sid = await create_sesion_tm_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "sesion_id": sid,
+        "titulo": "Unauthorized Access",
+        "descripcion": "Potential unauthorized access",
+        "categoria_stride": "Spoofing",
+        "dread_damage": 8,
+        "dread_reproducibility": 7,
+        "dread_exploitability": 6,
+        "dread_affected_users": 9,
+        "dread_discoverability": 5,
+        "estado": "Abierta",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

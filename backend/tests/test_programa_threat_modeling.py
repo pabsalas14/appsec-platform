@@ -5,21 +5,23 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_activo_web_id
+
 
 BASE_URL = "/api/v1/programa_threat_modelings"
-
-SAMPLE_PAYLOAD = {
-    "nombre": "Test TM Program",
-    "ano": 2024,
-    "descripcion": "Test program",
-    "activo_web_id": "00000000-0000-0000-0000-000000000001",
-    "servicio_id": None,
-    "estado": "Activo"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_programa_threat_modeling(client: AsyncClient, auth_headers: dict):
+    aw_id = await create_activo_web_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "nombre": "Test TM Program",
+        "ano": 2024,
+        "descripcion": "Test program",
+        "activo_web_id": aw_id,
+        "servicio_id": None,
+        "estado": "Activo",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -44,6 +46,15 @@ async def test_programa_threat_modeling_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    aw_id = await create_activo_web_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "nombre": "Test TM Program",
+        "ano": 2024,
+        "descripcion": "Test program",
+        "activo_web_id": aw_id,
+        "servicio_id": None,
+        "estado": "Activo",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

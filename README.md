@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![Tests](https://img.shields.io/badge/Bloque%20B%2BC%20Phase%2018-35%20pasando-brightgreen)](#pruebas)
+[![Tests](https://img.shields.io/badge/suite%20backend-%7E391%20tests-brightgreen)](#pruebas)
 [![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---
@@ -90,16 +90,20 @@ La plataforma se organiza en **13 módulos de negocio** más **4 módulos transv
 
 ### Módulo 1 — Catálogos Centrales ✅
 
-Jerarquía completa de activos de la organización. Toda vulnerabilidad y hallazgo se vincula a uno de estos elementos.
+Jerarquía alineada al **BRD** (documento de requerimientos en la raíz del repo): cadena organizacional y activos. Toda vulnerabilidad y hallazgo hereda contexto desde el inventario.
 
 ```
-Subdireccion
-    └── Celula
-            ├── Repositorio         (código fuente → SAST / SCA)
-            ├── ActivoWeb           (aplicaciones web → DAST)
-            ├── Servicio            (APIs y microservicios)
-            └── AplicacionMovil     (apps móviles → MAST)
+Subdirección
+    └── Gerencia
+            └── Organización (GitHub / Atlassian — plataforma, URL, responsable)
+                    └── Célula
+                            ├── Repositorio      (código fuente → SAST / SCA)
+                            ├── ActivoWeb        (aplicaciones web → DAST)
+                            ├── Servicio         (APIs y microservicios)
+                            └── AplicacionMovil  (apps móviles → MAST)
 ```
+
+**Migración Alembic** `f3a9c1d2e8b0`: la organización de plataforma cuelga de la gerencia; la célula referencia solo `organizacion_id` (la cadena completa se obtiene por joins). Campos opcionales en subdirección: director / contacto.
 
 Entidades adicionales: `TipoPrueba` (SAST / DAST / SCA / TM / MAST) y `ControlSeguridad`.
 
@@ -233,6 +237,7 @@ Revisiones externas con hallazgos trazables al ciclo de vida de vulnerabilidades
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | `GET` | `/api/v1/vulnerabilidads` | Lista por usuario |
+| `GET` | `/api/v1/vulnerabilidads/export.csv` | Export CSV (permiso `vulnerabilities.export`; auditoría A7) |
 | `POST` | `/api/v1/vulnerabilidads` | Crear vulnerabilidad |
 | `PATCH` | `/api/v1/vulnerabilidads/{id}` | Actualizar parcialmente |
 | `DELETE` | `/api/v1/vulnerabilidads/{id}` | Soft-delete (A2) |
@@ -618,11 +623,12 @@ docker compose exec backend pytest tests/test_vulnerabilidad.py -v
 docker compose exec backend pytest tests/ -v --tb=short
 ```
 
-**204 pruebas pasando** — incluyendo:
-- Smoke tests (crear / leer / actualizar / eliminar) para cada entidad
-- Pruebas IDOR: cada entidad verifica que un usuario no puede acceder a recursos de otro
-- Pruebas de autenticación: todos los endpoints requieren credenciales válidas
-- Pruebas de validación: valores inválidos en fuente / severidad / estado → 422
+**~391 pruebas de integración** (`make test` sobre la base de datos de pruebas) — incluyendo:
+- Contrato API (envelopes, rutas protegidas) y autenticación cookie + CSRF
+- Smoke + IDOR por entidad con dueño (`require_ownership`)
+- Bloques B/C (flujos de estatus, indicadores, filtros guardados, dashboards)
+- Permisos granulares (`require_permission`): p. ej. `dashboards.view`, `vulnerabilities.export`
+- Validación de negocio (422 en esquemas de vulnerabilidad y catálogos)
 
 ### Agregar nuevas entidades
 
@@ -726,7 +732,7 @@ make types
 | **Services** | 41/41 | ✅ CRUD + audit_action_prefix en cada uno |
 | **Routers** | 41/41 | ✅ Endpoints GET/POST/PATCH/DELETE con IDOR |
 | **Migraciones** | 18/27 | En progreso (Fase 18 completada, Bloque C iniciado) |
-| **Testing** | 35/35 | ✅ Bloque B+C Phase 18: 35 tests pasando (FlujoEstatus, IndicadorFormula, FiltroGuardado, Iniciativas, Dashboards, DashboardConfig) |
+| **Testing** | ~391 | ✅ Suite `pytest` en Docker (`make test`); incluye dashboards, permisos, export CSV, jerarquía BRD |
 | **OWASP Coverage** | 80% | S1-S7, S10-S13, S21-S23 implementados |
 | **Auditabilidad** | 85% | A1-A8 implementado en 55+ services |
 
@@ -734,9 +740,16 @@ make types
 
 ### Próximos Pasos (Bloque C — Fase 19+)
 
-**Estado actual (24-04-2026):** Bloque B ✅ completado (23 tests), Fase 18 ✅ completada (35 tests)
+**Estado actual:** suite backend estable (~391 tests). Documento de negocio: `Requerimientos de Negocio (BRD).md` en la raíz.
 
-#### Completado esta sesión:
+#### Avances recientes (alineación BRD + plan operativo)
+
+- **Jerarquía §3.1 del BRD** en base de datos y API: Subdirección → Gerencia → Organización de plataforma → Célula; migración `f3a9c1d2e8b0` (ejecutar `alembic upgrade head`).
+- **Permisos en dashboards:** todos los `GET /api/v1/dashboard/*` exigen `dashboards.view`. Si la tabla `roles` está vacía tras un `TRUNCATE` de tests, se hace **bootstrap** automático del catálogo de permisos y roles (`app/services/permission_seed.py`).
+- **Exportación con auditoría:** `GET /api/v1/vulnerabilidads/export.csv` con `vulnerabilities.export`; registro en `audit_logs` (`vulnerabilidad.export_csv`) con filas exportadas y hash SHA-256 del contenido.
+- **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
+
+#### Completado esta sesión (histórico):
 1. **Bloque B tests** ✅ : Todos los 23 tests pasando
    - 7 tests FiltroGuardado (saved filters personales/compartidos)
    - 5 tests FlujoEstatus (state machines dinámicos)

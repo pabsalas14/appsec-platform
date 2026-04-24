@@ -4,26 +4,9 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models.role import Role
-from sqlalchemy import select
 
 
 BASE_URL = "/api/v1/dashboard_configs"
-
-
-async def get_admin_role_id(db: AsyncSession) -> str:
-    """Get or create admin role for testing."""
-    result = await db.execute(select(Role).where(Role.name == "admin"))
-    role = result.scalar_one_or_none()
-    if role:
-        return str(role.id)
-    # Create a test role
-    role = Role(name="test_admin", description="Test Admin Role")
-    db.add(role)
-    await db.flush()
-    return str(role.id)
 
 
 @pytest.mark.asyncio
@@ -32,7 +15,7 @@ async def test_dashboard_config_requires_super_admin(client: AsyncClient, auth_h
     payload = {
         "dashboard_id": "1",
         "widget_id": "dashboard.1.panel.kpis",
-        "role_id": "00000000-0000-0000-0000-000000000001",
+        "role_id": str(uuid4()),
         "visible": True,
         "editable_by_role": False,
     }

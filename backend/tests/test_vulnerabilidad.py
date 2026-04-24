@@ -114,3 +114,28 @@ async def test_vulnerabilidad_idor_protected(
             method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
         )
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_export_csv_requires_export_permission(
+    client: AsyncClient, auth_headers: dict
+):
+    """Rol user (solo .view) no puede exportar sin vulnerabilities.export."""
+    r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert r.status_code == 403
+    assert "vulnerabilities.export" in r.text
+
+
+@pytest.mark.asyncio
+async def test_export_csv_success_records_audit(
+    client: AsyncClient, admin_auth_headers: dict
+):
+    """Admin exporta CSV y el cuerpo incluye cabecera + fila."""
+    create = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
+    assert create.status_code == 201, create.text
+
+    r = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
+    assert r.status_code == 200, r.text
+    assert "titulo" in r.text
+    assert SAMPLE_PAYLOAD["titulo"] in r.text
+    assert r.headers.get("content-type", "").startswith("text/csv")

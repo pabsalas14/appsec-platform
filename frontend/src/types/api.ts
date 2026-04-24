@@ -3977,10 +3977,10 @@ export interface components {
             /** Descripcion */
             descripcion?: string | null;
             /**
-             * Subdireccion Id
+             * Organizacion Id
              * Format: uuid
              */
-            subdireccion_id: string;
+            organizacion_id: string;
         };
         /**
          * CelulaUpdate
@@ -3993,8 +3993,8 @@ export interface components {
             tipo?: string | null;
             /** Descripcion */
             descripcion?: string | null;
-            /** Subdireccion Id */
-            subdireccion_id?: string | null;
+            /** Organizacion Id */
+            organizacion_id?: string | null;
         };
         /**
          * CierreConclusionCreate
@@ -5130,7 +5130,21 @@ export interface components {
             /** Codigo */
             codigo: string;
             /** Descripcion */
-            descripcion: string;
+            descripcion?: string | null;
+            /**
+             * Gerencia Id
+             * Format: uuid
+             */
+            gerencia_id: string;
+            /**
+             * Plataforma
+             * @default GitHub
+             */
+            plataforma?: string;
+            /** Url Base */
+            url_base?: string | null;
+            /** Responsable */
+            responsable?: string | null;
         };
         /**
          * OrganizacionUpdate
@@ -5143,6 +5157,14 @@ export interface components {
             codigo?: string | null;
             /** Descripcion */
             descripcion?: string | null;
+            /** Gerencia Id */
+            gerencia_id?: string | null;
+            /** Plataforma */
+            plataforma?: string | null;
+            /** Url Base */
+            url_base?: string | null;
+            /** Responsable */
+            responsable?: string | null;
         };
         /** PasswordChange */
         PasswordChange: {
@@ -5822,6 +5844,10 @@ export interface components {
             codigo: string;
             /** Descripcion */
             descripcion?: string | null;
+            /** Director Nombre */
+            director_nombre?: string | null;
+            /** Director Contacto */
+            director_contacto?: string | null;
         };
         /**
          * SubdireccionUpdate
@@ -5834,6 +5860,10 @@ export interface components {
             codigo?: string | null;
             /** Descripcion */
             descripcion?: string | null;
+            /** Director Nombre */
+            director_nombre?: string | null;
+            /** Director Contacto */
+            director_contacto?: string | null;
         };
         /** SystemSettingUpsert */
         SystemSettingUpsert: {

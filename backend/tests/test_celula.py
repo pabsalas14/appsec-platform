@@ -5,24 +5,20 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_org_hierarchy
+
 
 BASE_URL = "/api/v1/celulas"
 
 
 @pytest.mark.asyncio
 async def test_create_celula(client: AsyncClient, auth_headers: dict):
-    sub = await client.post(
-        "/api/v1/subdireccions",
-        headers=auth_headers,
-        json={"nombre": "sub-a", "codigo": "SUB-A", "descripcion": "x"},
-    )
-    sub_id = sub.json()["data"]["id"]
-
+    h = await create_org_hierarchy(client, auth_headers)
     payload = {
         "nombre": "sample nombre",
         "tipo": "sample tipo",
         "descripcion": "sample descripcion",
-        "subdireccion_id": sub_id,
+        "organizacion_id": h["organizacion_id"],
     }
     resp = await client.post(BASE_URL, headers=auth_headers, json=payload)
     assert resp.status_code == 201, resp.text
@@ -48,16 +44,12 @@ async def test_celula_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
-    sub = await client.post(
-        "/api/v1/subdireccions",
-        headers=auth_headers,
-        json={"nombre": "sub-b", "codigo": "SUB-B", "descripcion": "x"},
-    )
+    h = await create_org_hierarchy(client, auth_headers)
     payload = {
         "nombre": "sample nombre",
         "tipo": "sample tipo",
         "descripcion": "sample descripcion",
-        "subdireccion_id": sub.json()["data"]["id"],
+        "organizacion_id": h["organizacion_id"],
     }
     resp = await client.post(BASE_URL, headers=auth_headers, json=payload)
     resource_id = resp.json()["data"]["id"]

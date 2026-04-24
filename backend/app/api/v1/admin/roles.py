@@ -11,7 +11,6 @@ fresh clone of the template "just works".
 
 from __future__ import annotations
 
-import inspect
 import uuid
 
 from fastapi import APIRouter, Depends
@@ -20,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_role
 from app.core.exceptions import ConflictException, NotFoundException
-from app.core.permissions import P, VALID_ROLES
+from app.core.permissions import VALID_ROLES
 from app.core.response import success
 from app.models.role import Permission, Role
 from app.models.user import User
@@ -35,48 +34,11 @@ from app.services.audit_service import record as audit_record
 router = APIRouter()
 
 
-def _permission_codes_from_P() -> list[tuple[str, str]]:
-    """Iterate every class on ``P`` and yield ``(code, description)`` tuples."""
-    out: list[tuple[str, str]] = []
-    for _, cls in inspect.getmembers(P, inspect.isclass):
-        group = cls.__name__.lstrip("_")
-        for name, value in inspect.getmembers(cls):
-            if name.startswith("_") or not isinstance(value, str):
-                continue
-            out.append((value, f"{group}: {name.title().lower()}"))
-    return out
-
-
 async def _ensure_seeded(db: AsyncSession) -> None:
     """Populate ``permissions`` + default roles on first access."""
-    perm_count = (await db.execute(select(Permission))).scalars().first()
-    if perm_count is None:
-        for code, desc in _permission_codes_from_P():
-            db.add(Permission(code=code, description=desc))
-        await db.flush()
+    from app.services.permission_seed import ensure_roles_permissions_seeded
 
-    existing_roles = {
-        r.name
-        for r in (await db.execute(select(Role))).scalars().all()
-    }
-    perms = {
-        p.code: p
-        for p in (await db.execute(select(Permission))).scalars().all()
-    }
-
-    from app.core.permissions import DEFAULT_ROLE_PERMISSIONS
-
-    for role_name in VALID_ROLES:
-        if role_name in existing_roles:
-            continue
-        role_perms_codes = DEFAULT_ROLE_PERMISSIONS.get(role_name, [])
-        role = Role(
-            name=role_name,
-            description=f"Platform role '{role_name}'",
-            permissions=[perms[c] for c in role_perms_codes if c in perms],
-        )
-        db.add(role)
-    await db.flush()
+    await ensure_roles_permissions_seeded(db)
 
 
 def _to_read(role: Role) -> dict:

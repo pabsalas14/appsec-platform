@@ -15,6 +15,8 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_celula_id
+
 
 async def _create_task(client: AsyncClient, headers: dict[str, str]) -> str:
     resp = await client.post(
@@ -40,51 +42,23 @@ async def _create_subdireccion(client: AsyncClient, headers: dict[str, str]) -> 
     resp = await client.post(
         "/api/v1/subdireccions",
         headers=headers,
-        json={"nombre": "OwnedSub", "codigo": "OWNSUB", "descripcion": "x"},
+        json={
+            "nombre": "OwnedSub",
+            "codigo": "OWNSUB",
+            "descripcion": "x",
+        },
     )
     assert resp.status_code == 201, resp.text
     return resp.json()["data"]["id"]
 
 
 async def _make_celula_for_ownership(client: AsyncClient, headers: dict[str, str]) -> str:
-    """Internal helper: sub + celula, returns celula ID."""
-    sub = await client.post(
-        "/api/v1/subdireccions",
-        headers=headers,
-        json={"nombre": "OwnSub2", "codigo": "OWNSUB2", "descripcion": "x"},
-    )
-    assert sub.status_code == 201, sub.text
-    cel = await client.post(
-        "/api/v1/celulas",
-        headers=headers,
-        json={
-            "nombre": "OwnCel",
-            "tipo": "appsec",
-            "subdireccion_id": sub.json()["data"]["id"],
-        },
-    )
-    assert cel.status_code == 201, cel.text
-    return cel.json()["data"]["id"]
+    """Return celula ID under a fresh org hierarchy."""
+    return await create_celula_id(client, headers)
 
 
 async def _create_celula(client: AsyncClient, headers: dict[str, str]) -> str:
-    sub = await client.post(
-        "/api/v1/subdireccions",
-        headers=headers,
-        json={"nombre": "OwnSubC", "codigo": "OWNSUBC", "descripcion": "x"},
-    )
-    assert sub.status_code == 201, sub.text
-    resp = await client.post(
-        "/api/v1/celulas",
-        headers=headers,
-        json={
-            "nombre": "OwnedCel",
-            "tipo": "appsec",
-            "subdireccion_id": sub.json()["data"]["id"],
-        },
-    )
-    assert resp.status_code == 201, resp.text
-    return resp.json()["data"]["id"]
+    return await create_celula_id(client, headers)
 
 
 async def _create_repositorio(client: AsyncClient, headers: dict[str, str]) -> str:

@@ -12,7 +12,7 @@ class GerenciaBase(BaseModel):
 
     nombre: str
     subdireccion_id: UUID
-    descripcion: str
+    descripcion: Optional[str] = None
 
 
 class GerenciaCreate(GerenciaBase):

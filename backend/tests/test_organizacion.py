@@ -5,19 +5,26 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_org_hierarchy
+
 
 BASE_URL = "/api/v1/organizacions"
-
-SAMPLE_PAYLOAD = {
-"nombre": "sample nombre",
-"codigo": "sample codigo",
-"descripcion": "sample descripcion",
-}
 
 
 @pytest.mark.asyncio
 async def test_create_organizacion(client: AsyncClient, auth_headers: dict):
-    resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
+    h = await create_org_hierarchy(client, auth_headers)
+    resp = await client.post(
+        BASE_URL,
+        headers=auth_headers,
+        json={
+            "nombre": "sample nombre",
+            "codigo": "sample-codigo-2",
+            "descripcion": "sample descripcion",
+            "gerencia_id": h["gerencia_id"],
+            "plataforma": "GitHub",
+        },
+    )
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
 
@@ -41,7 +48,18 @@ async def test_organizacion_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
-    resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
+    h = await create_org_hierarchy(client, auth_headers)
+    resp = await client.post(
+        BASE_URL,
+        headers=auth_headers,
+        json={
+            "nombre": "sample nombre",
+            "codigo": "sample-codigo-idor",
+            "descripcion": "sample descripcion",
+            "gerencia_id": h["gerencia_id"],
+            "plataforma": "Atlassian",
+        },
+    )
     resource_id = resp.json()["data"]["id"]
 
     for method, args in [

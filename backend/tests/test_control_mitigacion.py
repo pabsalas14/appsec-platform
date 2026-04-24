@@ -5,20 +5,44 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_sesion_tm_id
+
 
 BASE_URL = "/api/v1/control_mitigacions"
 
-SAMPLE_PAYLOAD = {
-    "amenaza_id": "00000000-0000-0000-0000-000000000001",
-    "nombre": "Implement Auth",
-    "descripcion": "Add authentication",
-    "tipo": "Preventivo",
-    "estado": "Pendiente"
-}
+
+async def _amenaza_id(client, headers: dict) -> str:
+    sid = await create_sesion_tm_id(client, headers)
+    r = await client.post(
+        "/api/v1/amenazas",
+        headers=headers,
+        json={
+            "sesion_id": sid,
+            "titulo": "T",
+            "descripcion": "D",
+            "categoria_stride": "Spoofing",
+            "dread_damage": 5,
+            "dread_reproducibility": 5,
+            "dread_exploitability": 5,
+            "dread_affected_users": 5,
+            "dread_discoverability": 5,
+            "estado": "Abierta",
+        },
+    )
+    assert r.status_code == 201, r.text
+    return r.json()["data"]["id"]
 
 
 @pytest.mark.asyncio
 async def test_create_control_mitigacion(client: AsyncClient, auth_headers: dict):
+    aid = await _amenaza_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "amenaza_id": aid,
+        "nombre": "Implement Auth",
+        "descripcion": "Add authentication",
+        "tipo": "Preventivo",
+        "estado": "Pendiente",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -43,6 +67,14 @@ async def test_control_mitigacion_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    aid = await _amenaza_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "amenaza_id": aid,
+        "nombre": "Implement Auth",
+        "descripcion": "Add authentication",
+        "tipo": "Preventivo",
+        "estado": "Pendiente",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

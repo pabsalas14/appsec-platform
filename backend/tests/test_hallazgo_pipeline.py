@@ -5,34 +5,16 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_repositorio_id
+
 BASE_URL = "/api/v1/hallazgo_pipelines"
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async def _create_pipeline_release(client: AsyncClient, headers: dict) -> str:
-    """Crea subdireccion → celula → repositorio → pipeline_release. Retorna pipeline_id."""
-    sub = await client.post(
-        "/api/v1/subdireccions", headers=headers,
-        json={"nombre": f"Sub {uuid4().hex[:6]}", "codigo": uuid4().hex[:6]},
-    )
-    sub_id = sub.json()["data"]["id"]
-    cel = await client.post(
-        "/api/v1/celulas", headers=headers,
-        json={"nombre": f"Cel {uuid4().hex[:6]}", "tipo": "Desarrollo", "subdireccion_id": sub_id},
-    )
-    cel_id = cel.json()["data"]["id"]
-    repo = await client.post(
-        "/api/v1/repositorios", headers=headers,
-        json={
-            "nombre": f"Repo {uuid4().hex[:6]}",
-            "url": f"https://github.com/test/{uuid4().hex[:8]}",
-            "plataforma": "GitHub",
-            "rama_default": "main",
-            "celula_id": cel_id,
-        },
-    )
-    repo_id = repo.json()["data"]["id"]
+    """Crea repositorio → pipeline_release. Retorna pipeline_id."""
+    repo_id = await create_repositorio_id(client, headers)
     pipeline = await client.post(
         "/api/v1/pipeline_releases", headers=headers,
         json={

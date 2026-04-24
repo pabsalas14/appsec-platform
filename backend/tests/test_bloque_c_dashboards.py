@@ -2,6 +2,11 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.models.role import Permission, Role, role_permissions
+from app.services.permission_seed import ensure_roles_permissions_seeded
 
 
 @pytest.mark.asyncio
@@ -123,3 +128,33 @@ async def test_dashboard_requires_auth(client: AsyncClient):
     for endpoint in endpoints:
         response = await client.get(endpoint)
         assert response.status_code == 401, f"{endpoint} should require auth"
+
+
+@pytest.mark.asyncio
+async def test_dashboard_forbidden_without_dashboards_view(
+    client: AsyncClient,
+    auth_headers: dict,
+    _session_factory: async_sessionmaker[AsyncSession],
+):
+    """Usuario sin permiso dashboards.view recibe 403."""
+    async with _session_factory() as session:
+        await ensure_roles_permissions_seeded(session)
+        r_user = (
+            await session.execute(select(Role).where(Role.name == "user"))
+        ).scalar_one()
+        perm = (
+            await session.execute(
+                select(Permission).where(Permission.code == "dashboards.view")
+            )
+        ).scalar_one()
+        await session.execute(
+            delete(role_permissions).where(
+                role_permissions.c.role_id == r_user.id,
+                role_permissions.c.permission_id == perm.id,
+            )
+        )
+        await session.commit()
+
+    response = await client.get("/api/v1/dashboard/stats", headers=auth_headers)
+    assert response.status_code == 403
+    assert "dashboards.view" in response.text

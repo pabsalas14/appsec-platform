@@ -22,12 +22,18 @@ import {
   PageWrapper,
   StatCard,
 } from '@/components/ui';
+import {
+  useDashboardExecutive,
+  useDashboardVulnerabilities,
+} from '@/hooks/useAppDashboardPanels';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function DashboardHomePage() {
   const { data: user } = useCurrentUser();
   const { data: stats, isLoading } = useDashboardStats();
+  const { data: exec, isLoading: execLoading } = useDashboardExecutive();
+  const { data: vulnDash, isLoading: vulnDashLoading } = useDashboardVulnerabilities();
 
   const isAdmin = user?.role === 'admin';
 
@@ -73,6 +79,40 @@ export default function DashboardHomePage() {
           icon={isAdmin ? UserCheck : ShieldCheck}
           iconColor="text-sky-400"
           iconBg="bg-sky-500/10"
+        />
+      </div>
+
+      {/* ─── AppSec panels (BRD dashboards) ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Vulnerabilidades (total)"
+          value={
+            vulnDash?.total_vulnerabilities ?? (vulnDashLoading ? '…' : 0)
+          }
+          icon={ShieldCheck}
+          iconColor="text-rose-400"
+          iconBg="bg-rose-500/10"
+        />
+        <StatCard
+          label="Críticas (KPI)"
+          value={exec?.kpis.critical_count ?? (execLoading ? '…' : 0)}
+          icon={ShieldCheck}
+          iconColor="text-orange-400"
+          iconBg="bg-orange-500/10"
+        />
+        <StatCard
+          label="Vencidas SLA (panel)"
+          value={vulnDash?.overdue_count ?? (vulnDashLoading ? '…' : 0)}
+          icon={Circle}
+          iconColor="text-amber-400"
+          iconBg="bg-amber-500/10"
+        />
+        <StatCard
+          label="Riesgo (ejecutivo)"
+          value={exec?.risk_level ?? (execLoading ? '…' : '—')}
+          icon={ShieldCheck}
+          iconColor="text-violet-400"
+          iconBg="bg-violet-500/10"
         />
       </div>
 

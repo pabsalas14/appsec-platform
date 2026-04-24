@@ -3,17 +3,21 @@ import { z } from 'zod';
 export const SubdireccionSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-nombre: z.string(),
-codigo: z.string(),
-descripcion: z.string().nullable().optional(),
-created_at: z.string(),
+  nombre: z.string(),
+  codigo: z.string(),
+  descripcion: z.string().nullable().optional(),
+  director_nombre: z.string().nullable().optional(),
+  director_contacto: z.string().nullable().optional(),
+  created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const SubdireccionCreateSchema = z.object({
-nombre: z.string(),
-codigo: z.string(),
-descripcion: z.string().nullable().optional(),
+  nombre: z.string(),
+  codigo: z.string(),
+  descripcion: z.string().nullable().optional(),
+  director_nombre: z.string().nullable().optional(),
+  director_contacto: z.string().nullable().optional(),
 });
 
 export const SubdireccionUpdateSchema = SubdireccionCreateSchema.partial();

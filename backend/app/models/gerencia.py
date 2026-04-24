@@ -1,10 +1,10 @@
-"""Gerencia model — middle organizational hierarchy level."""
+"""Gerencia model — nivel bajo subdirección (BRD §3.1)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, Text, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,7 +12,7 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.celula import Celula
+    from app.models.organizacion import Organizacion
     from app.models.subdireccion import Subdireccion
 
 
@@ -42,11 +42,8 @@ class Gerencia(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    subdireccion: Mapped["Subdireccion"] = relationship()
-    celulas: Mapped[list["Celula"]] = relationship(
-        back_populates="gerencia",
-        cascade="all, delete-orphan",
-    )
+    subdireccion: Mapped["Subdireccion"] = relationship(back_populates="gerencias")
+    organizacions: Mapped[list["Organizacion"]] = relationship(back_populates="gerencia")

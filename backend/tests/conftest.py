@@ -128,7 +128,7 @@ async def _apply_db_override(
                     "control_seguridads, tipo_pruebas, "
                     "aplicacion_movils, servicios, "
                     "repositorios, activo_webs, "
-                    "celulas, subdireccions, "
+                    "celulas, gerencias, subdireccions, organizacions, "
                     "users CASCADE"
                 )
             )

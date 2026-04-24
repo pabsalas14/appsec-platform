@@ -5,21 +5,23 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_aplicacion_movil_id
+
 
 BASE_URL = "/api/v1/ejecucion_masts"
-
-SAMPLE_PAYLOAD = {
-    "aplicacion_movil_id": "00000000-0000-0000-0000-000000000000",
-    "ambiente": "Desarrollo",
-    "fecha_inicio": "2026-01-01T10:00:00Z",
-    "fecha_fin": "2026-01-01T11:30:00Z",
-    "resultado": "Completada",
-    "url_reporte": "https://example.com/reports/mast-001",
-}
 
 
 @pytest.mark.asyncio
 async def test_create_ejecucion_mast(client: AsyncClient, auth_headers: dict):
+    app_id = await create_aplicacion_movil_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "aplicacion_movil_id": app_id,
+        "ambiente": "Desarrollo",
+        "fecha_inicio": "2026-01-01T10:00:00Z",
+        "fecha_fin": "2026-01-01T11:30:00Z",
+        "resultado": "Completada",
+        "url_reporte": "https://example.com/reports/mast-001",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -44,6 +46,15 @@ async def test_ejecucion_mast_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    app_id = await create_aplicacion_movil_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "aplicacion_movil_id": app_id,
+        "ambiente": "Desarrollo",
+        "fecha_inicio": "2026-01-01T10:00:00Z",
+        "fecha_fin": "2026-01-01T11:30:00Z",
+        "resultado": "Completada",
+        "url_reporte": "https://example.com/reports/mast-001",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

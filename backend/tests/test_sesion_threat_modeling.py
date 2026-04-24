@@ -5,21 +5,23 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_programa_tm_id
+
 
 BASE_URL = "/api/v1/sesion_threat_modelings"
-
-SAMPLE_PAYLOAD = {
-    "programa_tm_id": "00000000-0000-0000-0000-000000000001",
-    "fecha": "2024-03-01T10:00:00+00:00",
-    "participantes": "Alice, Bob",
-    "contexto": "API review",
-    "estado": "Completada",
-    "ia_utilizada": False
-}
 
 
 @pytest.mark.asyncio
 async def test_create_sesion_threat_modeling(client: AsyncClient, auth_headers: dict):
+    pt = await create_programa_tm_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "programa_tm_id": pt,
+        "fecha": "2024-03-01T10:00:00+00:00",
+        "participantes": "Alice, Bob",
+        "contexto": "API review",
+        "estado": "Completada",
+        "ia_utilizada": False,
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -44,6 +46,15 @@ async def test_sesion_threat_modeling_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    pt = await create_programa_tm_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "programa_tm_id": pt,
+        "fecha": "2024-03-01T10:00:00+00:00",
+        "participantes": "Alice, Bob",
+        "contexto": "API review",
+        "estado": "Completada",
+        "ia_utilizada": False,
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

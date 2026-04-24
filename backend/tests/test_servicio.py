@@ -5,35 +5,15 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_celula_id
+
 
 BASE_URL = "/api/v1/servicios"
 
 
-async def _make_celula(client: AsyncClient, headers: dict, suffix: str = "") -> str:
-    """Helper: create a Subdireccion + Celula and return the celula ID."""
-    sub = await client.post(
-        "/api/v1/subdireccions",
-        headers=headers,
-        json={"nombre": f"sub-svc{suffix}", "codigo": f"SUB-SVC{suffix.upper()}", "descripcion": "x"},
-    )
-    assert sub.status_code == 201, sub.text
-    cel = await client.post(
-        "/api/v1/celulas",
-        headers=headers,
-        json={
-            "nombre": f"cel-svc{suffix}",
-            "tipo": "appsec",
-            "descripcion": "x",
-            "subdireccion_id": sub.json()["data"]["id"],
-        },
-    )
-    assert cel.status_code == 201, cel.text
-    return cel.json()["data"]["id"]
-
-
 @pytest.mark.asyncio
 async def test_create_servicio(client: AsyncClient, auth_headers: dict):
-    celula_id = await _make_celula(client, auth_headers, suffix="1")
+    celula_id = await create_celula_id(client, auth_headers)
     payload = {
         "nombre": "API Gateway",
         "descripcion": "Servicio de enrutamiento",
@@ -68,7 +48,7 @@ async def test_servicio_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
-    celula_id = await _make_celula(client, auth_headers, suffix="2")
+    celula_id = await create_celula_id(client, auth_headers)
     payload = {
         "nombre": "Servicio X",
         "criticidad": "media",
@@ -91,7 +71,7 @@ async def test_servicio_idor_protected(
 
 @pytest.mark.asyncio
 async def test_servicio_update_and_delete(client: AsyncClient, auth_headers: dict):
-    celula_id = await _make_celula(client, auth_headers, suffix="3")
+    celula_id = await create_celula_id(client, auth_headers)
     payload = {
         "nombre": "Svc Delete",
         "criticidad": "baja",

@@ -5,25 +5,27 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_actividad_mensual_sast_id
+
 
 BASE_URL = "/api/v1/hallazgo_sasts"
-
-SAMPLE_PAYLOAD = {
-    "actividad_sast_id": "00000000-0000-0000-0000-000000000001",
-    "vulnerabilidad_id": None,
-    "titulo": "SQL Injection",
-    "descripcion": "Potential SQL injection",
-    "severidad": "Alta",
-    "herramienta": "Sonar",
-    "regla": "sql-injection",
-    "archivo": "users.py",
-    "linea": 42,
-    "estado": "Abierto"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_hallazgo_sast(client: AsyncClient, auth_headers: dict):
+    aid = await create_actividad_mensual_sast_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "actividad_sast_id": aid,
+        "vulnerabilidad_id": None,
+        "titulo": "SQL Injection",
+        "descripcion": "Potential SQL injection",
+        "severidad": "Alta",
+        "herramienta": "Sonar",
+        "regla": "sql-injection",
+        "archivo": "users.py",
+        "linea": 42,
+        "estado": "Abierto",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -48,6 +50,19 @@ async def test_hallazgo_sast_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    aid = await create_actividad_mensual_sast_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "actividad_sast_id": aid,
+        "vulnerabilidad_id": None,
+        "titulo": "SQL Injection",
+        "descripcion": "Potential SQL injection",
+        "severidad": "Alta",
+        "herramienta": "Sonar",
+        "regla": "sql-injection",
+        "archivo": "users.py",
+        "linea": 42,
+        "estado": "Abierto",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

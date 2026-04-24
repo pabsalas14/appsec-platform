@@ -5,18 +5,20 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_org_hierarchy
+
 
 BASE_URL = "/api/v1/gerencias"
-
-SAMPLE_PAYLOAD = {
-"nombre": "sample nombre",
-"subdireccion_id": "00000000-0000-0000-0000-000000000000",
-"descripcion": "sample descripcion",
-}
 
 
 @pytest.mark.asyncio
 async def test_create_gerencia(client: AsyncClient, auth_headers: dict):
+    h = await create_org_hierarchy(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "nombre": "sample nombre",
+        "subdireccion_id": h["subdireccion_id"],
+        "descripcion": "sample descripcion",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -41,6 +43,12 @@ async def test_gerencia_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    h = await create_org_hierarchy(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "nombre": "sample nombre",
+        "subdireccion_id": h["subdireccion_id"],
+        "descripcion": "sample descripcion",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

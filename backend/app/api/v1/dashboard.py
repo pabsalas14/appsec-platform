@@ -12,10 +12,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, require_permission
+from app.core.permissions import P
 from app.core.response import success
 from app.models.audit_log import AuditLog
 from app.models.task import Task
@@ -28,7 +29,7 @@ router = APIRouter()
 @router.get("/stats")
 async def dashboard_stats(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Aggregate dashboard metrics for the current user (or global if admin)."""
     is_admin = current_user.role == "admin"
@@ -118,11 +119,10 @@ async def dashboard_stats(
 @router.get("/vulnerabilities")
 async def dashboard_vulnerabilities(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 5: Vulnerabilities multidimensional view (org→subdireccion→celula)."""
     from app.models.vulnerabilidad import Vulnerabilidad
-    from sqlalchemy import and_
 
     # Count vulnerabilities by severity
     severities = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
@@ -184,7 +184,7 @@ async def dashboard_vulnerabilities(
 @router.get("/releases")
 async def dashboard_releases(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 6-7: Releases (table + kanban) view."""
     from app.models.service_release import ServiceRelease
@@ -249,7 +249,7 @@ async def dashboard_releases(
 @router.get("/initiatives")
 async def dashboard_initiatives(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 8: Iniciativas view."""
     from app.models.iniciativa import Iniciativa
@@ -306,7 +306,7 @@ async def dashboard_initiatives(
 @router.get("/emerging-themes")
 async def dashboard_emerging_themes(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 9: Temas Emergentes view."""
     from app.models.tema_emergente import TemaEmergente
@@ -351,7 +351,7 @@ async def dashboard_emerging_themes(
 @router.get("/executive")
 async def dashboard_executive(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 1: Ejecutivo/General - High-level KPIs."""
     from app.models.vulnerabilidad import Vulnerabilidad
@@ -396,7 +396,7 @@ async def dashboard_executive(
 @router.get("/programs")
 async def dashboard_programs(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Programas Consolidado - Progress placeholder."""
     return success(

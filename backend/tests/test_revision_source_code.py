@@ -5,21 +5,27 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import (
+    create_control_source_code_id,
+    create_programa_source_code_id,
+)
+
 
 BASE_URL = "/api/v1/revision_source_codes"
-
-SAMPLE_PAYLOAD = {
-    "programa_sc_id": "00000000-0000-0000-0000-000000000001",
-    "control_sc_id": "00000000-0000-0000-0000-000000000001",
-    "fecha_revision": "2024-03-01T10:00:00+00:00",
-    "resultado": "Cumple",
-    "evidencia_filename": "screenshot.png",
-    "evidencia_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_revision_source_code(client: AsyncClient, auth_headers: dict):
+    pid = await create_programa_source_code_id(client, auth_headers)
+    cid = await create_control_source_code_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "programa_sc_id": pid,
+        "control_sc_id": cid,
+        "fecha_revision": "2024-03-01T10:00:00+00:00",
+        "resultado": "Cumple",
+        "evidencia_filename": "screenshot.png",
+        "evidencia_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -44,6 +50,16 @@ async def test_revision_source_code_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    pid = await create_programa_source_code_id(client, auth_headers)
+    cid = await create_control_source_code_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "programa_sc_id": pid,
+        "control_sc_id": cid,
+        "fecha_revision": "2024-03-01T10:00:00+00:00",
+        "resultado": "Cumple",
+        "evidencia_filename": "screenshot.png",
+        "evidencia_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 

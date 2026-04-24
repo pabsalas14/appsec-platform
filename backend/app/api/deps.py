@@ -137,7 +137,15 @@ def require_permission(*permission_codes: str):
         role_obj = role_result.scalar_one_or_none()
 
         if role_obj is None:
-            # Role not seeded yet — deny by default for safety
+            from app.services.permission_seed import ensure_roles_permissions_seeded
+
+            await ensure_roles_permissions_seeded(db)
+            role_result = await db.execute(
+                select(Role).where(Role.name == current_user.role)
+            )
+            role_obj = role_result.scalar_one_or_none()
+
+        if role_obj is None:
             raise ForbiddenException(
                 "Your role has not been configured. Contact an administrator."
             )

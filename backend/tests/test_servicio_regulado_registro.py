@@ -5,20 +5,22 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_servicio_id
+
 
 BASE_URL = "/api/v1/servicio_regulado_registros"
-
-SAMPLE_PAYLOAD = {
-    "servicio_id": "00000000-0000-0000-0000-000000000001",
-    "nombre_regulacion": "CNBV",
-    "ciclo": "Q1",
-    "ano": 2024,
-    "estado": "Pendiente"
-}
 
 
 @pytest.mark.asyncio
 async def test_create_servicio_regulado_registro(client: AsyncClient, auth_headers: dict):
+    svc_id = await create_servicio_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "servicio_id": svc_id,
+        "nombre_regulacion": "CNBV",
+        "ciclo": "Q1",
+        "ano": 2024,
+        "estado": "Pendiente",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
@@ -43,6 +45,14 @@ async def test_servicio_regulado_registro_idor_protected(
     auth_headers: dict,
     other_auth_headers: dict,
 ):
+    svc_id = await create_servicio_id(client, auth_headers)
+    SAMPLE_PAYLOAD = {
+        "servicio_id": svc_id,
+        "nombre_regulacion": "CNBV",
+        "ciclo": "Q1",
+        "ano": 2024,
+        "estado": "Pendiente",
+    }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     resource_id = resp.json()["data"]["id"]
 
