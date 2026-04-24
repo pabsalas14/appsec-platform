@@ -30,6 +30,24 @@ from app.api.v1 import (
     hallazgo_pipeline,
     revision_tercero,
     hallazgo_tercero,
+    # ── Módulo 3 — Programas Anuales ────────────────────────────────────────
+    programa_sast,
+    actividad_mensual_sast,
+    hallazgo_sast,
+    programa_dast,
+    ejecucion_dast,
+    hallazgo_dast,
+    programa_threat_modeling,
+    sesion_threat_modeling,
+    amenaza,
+    control_mitigacion,
+    programa_source_code,
+    control_source_code,
+    revision_source_code,
+    servicio_regulado_registro,
+    regulacion_control,
+    evidencia_regulacion,
+    estado_cumplimiento,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -98,3 +116,20 @@ api_router.include_router(pipeline_release.router, prefix="/pipeline_releases", 
 api_router.include_router(hallazgo_pipeline.router, prefix="/hallazgo_pipelines", tags=["Hallazgo_pipeline"])
 api_router.include_router(revision_tercero.router, prefix="/revision_terceros", tags=["Revision_tercero"])
 api_router.include_router(hallazgo_tercero.router, prefix="/hallazgo_terceros", tags=["Hallazgo_tercero"])
+api_router.include_router(programa_sast.router, prefix="/programa_sasts", tags=["Programa_sast"])
+api_router.include_router(actividad_mensual_sast.router, prefix="/actividad_mensual_sasts", tags=["Actividad_mensual_sast"])
+api_router.include_router(hallazgo_sast.router, prefix="/hallazgo_sasts", tags=["Hallazgo_sast"])
+api_router.include_router(programa_dast.router, prefix="/programa_dasts", tags=["Programa_dast"])
+api_router.include_router(ejecucion_dast.router, prefix="/ejecucion_dasts", tags=["Ejecucion_dast"])
+api_router.include_router(hallazgo_dast.router, prefix="/hallazgo_dasts", tags=["Hallazgo_dast"])
+api_router.include_router(programa_threat_modeling.router, prefix="/programa_threat_modelings", tags=["Programa_threat_modeling"])
+api_router.include_router(sesion_threat_modeling.router, prefix="/sesion_threat_modelings", tags=["Sesion_threat_modeling"])
+api_router.include_router(amenaza.router, prefix="/amenazas", tags=["Amenaza"])
+api_router.include_router(control_mitigacion.router, prefix="/control_mitigacions", tags=["Control_mitigacion"])
+api_router.include_router(programa_source_code.router, prefix="/programa_source_codes", tags=["Programa_source_code"])
+api_router.include_router(control_source_code.router, prefix="/control_source_codes", tags=["Control_source_code"])
+api_router.include_router(revision_source_code.router, prefix="/revision_source_codes", tags=["Revision_source_code"])
+api_router.include_router(servicio_regulado_registro.router, prefix="/servicio_regulado_registros", tags=["Servicio_regulado_registro"])
+api_router.include_router(regulacion_control.router, prefix="/regulacion_controls", tags=["Regulacion_control"])
+api_router.include_router(evidencia_regulacion.router, prefix="/evidencia_regulacions", tags=["Evidencia_regulacion"])
+api_router.include_router(estado_cumplimiento.router, prefix="/estado_cumplimientos", tags=["Estado_cumplimiento"])

@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from app.models.celula import Celula
     from app.models.service_release import ServiceRelease
     from app.models.revision_tercero import RevisionTercero
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.servicio_regulado_registro import ServicioReguladoRegistro
 
 
 class Servicio(SoftDeleteMixin, Base):
@@ -57,4 +59,10 @@ class Servicio(SoftDeleteMixin, Base):
     )
     revision_terceros: Mapped[list["RevisionTercero"]] = relationship(
         "RevisionTercero", back_populates="servicio", lazy="noload"
+    )
+    programas_threat_modeling: Mapped[list["ProgramaThreatModeling"]] = relationship(
+        "ProgramaThreatModeling", back_populates="servicio", lazy="noload"
+    )
+    registros_regulacion: Mapped[list["ServicioReguladoRegistro"]] = relationship(
+        "ServicioReguladoRegistro", back_populates="servicio", lazy="noload"
     )

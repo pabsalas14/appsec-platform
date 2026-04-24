@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
     from app.models.hallazgo_pipeline import HallazgoPipeline
     from app.models.hallazgo_tercero import HallazgoTercero
+    from app.models.hallazgo_sast import HallazgoSast
+    from app.models.hallazgo_dast import HallazgoDast
     from app.models.historial_vulnerabilidad import HistorialVulnerabilidad
     from app.models.repositorio import Repositorio
     from app.models.servicio import Servicio
@@ -167,4 +169,10 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
     )
     hallazgos_tercero: Mapped[list["HallazgoTercero"]] = relationship(
         "HallazgoTercero", back_populates="vulnerabilidad", lazy="noload"
+    )
+    hallazgos_sast: Mapped[list["HallazgoSast"]] = relationship(
+        "HallazgoSast", back_populates="vulnerabilidad", lazy="noload"
+    )
+    hallazgos_dast: Mapped[list["HallazgoDast"]] = relationship(
+        "HallazgoDast", back_populates="vulnerabilidad", lazy="noload"
     )

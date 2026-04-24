@@ -14,6 +14,8 @@ from app.models.mixins import SoftDeleteMixin
 if TYPE_CHECKING:
     from app.models.celula import Celula
     from app.models.pipeline_release import PipelineRelease
+    from app.models.programa_sast import ProgramaSast
+    from app.models.programa_source_code import ProgramaSourceCode
 
 
 class Repositorio(SoftDeleteMixin, Base):
@@ -57,4 +59,10 @@ class Repositorio(SoftDeleteMixin, Base):
     )
     pipeline_releases: Mapped[list["PipelineRelease"]] = relationship(
         "PipelineRelease", back_populates="repositorio", lazy="noload"
+    )
+    programas_sast: Mapped[list["ProgramaSast"]] = relationship(
+        "ProgramaSast", back_populates="repositorio", lazy="noload"
+    )
+    programas_source_code: Mapped[list["ProgramaSourceCode"]] = relationship(
+        "ProgramaSourceCode", back_populates="repositorio", lazy="noload"
     )

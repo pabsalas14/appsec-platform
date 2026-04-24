@@ -77,6 +77,40 @@ import app.models.revision_tercero   # noqa: F401
 
 import app.models.hallazgo_tercero   # noqa: F401
 
+import app.models.programa_sast   # noqa: F401
+
+import app.models.actividad_mensual_sast   # noqa: F401
+
+import app.models.hallazgo_sast   # noqa: F401
+
+import app.models.programa_dast   # noqa: F401
+
+import app.models.ejecucion_dast   # noqa: F401
+
+import app.models.hallazgo_dast   # noqa: F401
+
+import app.models.programa_threat_modeling   # noqa: F401
+
+import app.models.sesion_threat_modeling   # noqa: F401
+
+import app.models.amenaza   # noqa: F401
+
+import app.models.control_mitigacion   # noqa: F401
+
+import app.models.programa_source_code   # noqa: F401
+
+import app.models.control_source_code   # noqa: F401
+
+import app.models.revision_source_code   # noqa: F401
+
+import app.models.servicio_regulado_registro   # noqa: F401
+
+import app.models.regulacion_control   # noqa: F401
+
+import app.models.evidencia_regulacion   # noqa: F401
+
+import app.models.estado_cumplimiento   # noqa: F401
+
 target_metadata = Base.metadata
 
 

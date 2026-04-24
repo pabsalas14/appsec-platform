@@ -14,6 +14,8 @@ from app.models.mixins import SoftDeleteMixin
 if TYPE_CHECKING:
     from app.models.celula import Celula
     from app.models.revision_tercero import RevisionTercero
+    from app.models.programa_dast import ProgramaDast
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
 
 
 class ActivoWeb(SoftDeleteMixin, Base):
@@ -56,4 +58,10 @@ class ActivoWeb(SoftDeleteMixin, Base):
     )
     revision_terceros: Mapped[list["RevisionTercero"]] = relationship(
         "RevisionTercero", back_populates="activo_web", lazy="noload"
+    )
+    programas_dast: Mapped[list["ProgramaDast"]] = relationship(
+        "ProgramaDast", back_populates="activo_web", lazy="noload"
+    )
+    programas_threat_modeling: Mapped[list["ProgramaThreatModeling"]] = relationship(
+        "ProgramaThreatModeling", back_populates="activo_web", lazy="noload"
     )
