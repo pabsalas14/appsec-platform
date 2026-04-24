@@ -1,0 +1,97 @@
+"use client";
+
+import { Layers } from 'lucide-react';
+
+import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  PageHeader,
+  PageWrapper,
+} from '@/components/ui';
+import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { useDashboardReleasesKanban, useDashboardReleasesTable } from '@/hooks/useAppDashboardPanels';
+
+export default function ReleasesDashboardPage() {
+  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { data: tableData, isLoading: tableLoading } = useDashboardReleasesTable(50, filters);
+  const { data: kanbanData, isLoading: kanbanLoading } = useDashboardReleasesKanban(filters);
+
+  return (
+    <PageWrapper className="space-y-6 p-6">
+      <PageHeader
+        title="Dashboard · Releases"
+        description="Vista tabla y kanban de releases con drill-down organizacional."
+      />
+
+      <HierarchyFiltersBar
+        title="Filtros organizacionales"
+        filters={filters}
+        onChange={updateFilter}
+        onClear={clearFilters}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Tabla de releases</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {tableLoading ? (
+            <div className="text-sm text-muted-foreground">Cargando...</div>
+          ) : (tableData?.items.length ?? 0) === 0 ? (
+            <EmptyState
+              icon={Layers}
+              title="Sin releases para este filtro"
+              description="Ajusta jerarquía o limpia filtros."
+            />
+          ) : (
+            <div className="space-y-2">
+              {tableData?.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-md border border-border px-3 py-2 text-sm"
+                >
+                  <div className="font-medium">{item.nombre}</div>
+                  <div className="text-muted-foreground">
+                    v{item.version} · {item.estado_actual}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Kanban de releases</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {kanbanLoading ? (
+            <div className="text-sm text-muted-foreground">Cargando...</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {Object.entries(kanbanData?.columns ?? {}).map(([column, items]) => (
+                <div key={column} className="rounded-md border border-border p-3">
+                  <div className="mb-2 text-sm font-medium">
+                    {column} ({items.length})
+                  </div>
+                  <div className="space-y-1">
+                    {items.map((item) => (
+                      <div key={item.id} className="rounded bg-muted/40 px-2 py-1 text-xs">
+                        {item.nombre} · v{item.version}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </PageWrapper>
+  );
+}

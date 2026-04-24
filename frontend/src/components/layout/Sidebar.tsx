@@ -46,6 +46,8 @@ const SECTIONS: NavSection[] = [
       { href: '/projects', label: 'Projects', icon: FolderKanban },
       { href: '/kanban', label: 'Kanban', icon: Layers },
       { href: '/uploads', label: 'Uploads', icon: Upload },
+      { href: '/dashboards/team', label: 'Dashboard Team', icon: Users },
+      { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
     ],
   },
   {

@@ -20,6 +20,7 @@ from app.api.deps import get_db, require_role
 from app.core.response import success
 from app.models.audit_log import AuditLog
 from app.models.user import User
+from app.services.ia_provider import read_ia_config
 
 router = APIRouter()
 
@@ -101,11 +102,14 @@ async def system_health(
                 "error": "table_not_found",
             })
 
-    # ── IA integration status (placeholder until M13 ConfiguracionIA) ──
+    # ── IA integration status (phase 17 admin-config-aware) ──
+    ia_cfg = await read_ia_config(db)
     ia_status = {
-        "provider": "unconfigured",
-        "status": "untested",
-        "last_call": None,
+        "provider": ia_cfg.proveedor_activo,
+        "model": ia_cfg.modelo,
+        "status": "configured",
+        "timeout_segundos": ia_cfg.timeout_segundos,
+        "sanitizar_datos_paga": ia_cfg.sanitizar_datos_paga,
     }
 
     return success({

@@ -6,6 +6,14 @@ import type { DashboardConfig, DashboardConfigCreate, DashboardConfigUpdate } fr
 type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['dashboard_configs'] as const;
+const VISIBILITY_KEY = ['dashboard_configs', 'visibility'] as const;
+
+export type DashboardVisibility = {
+  dashboard_id: string;
+  role: string;
+  default_visible: boolean;
+  widgets: Record<string, { visible: boolean; editable_by_role: boolean }>;
+};
 
 export function useDashboardConfigs() {
   return useQuery({
@@ -46,5 +54,18 @@ export function useDeleteDashboardConfig() {
       await api.delete(`/dashboard_configs/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useMyDashboardVisibility(dashboardId = 'home') {
+  return useQuery({
+    queryKey: [...VISIBILITY_KEY, dashboardId],
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<DashboardVisibility>>(
+        `/dashboard_configs/my-visibility?dashboard_id=${encodeURIComponent(dashboardId)}`
+      );
+      return data.data;
+    },
+    staleTime: 60_000,
   });
 }

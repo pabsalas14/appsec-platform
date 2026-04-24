@@ -2,6 +2,7 @@
 
 import {
   FolderKanban,
+  Layers,
   LayoutDashboard,
   ListTodo,
   Moon,
@@ -93,6 +94,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/uploads'))}>
               <Upload className="mr-2 h-4 w-4" /> Uploads
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/team'))}>
+              <Users className="mr-2 h-4 w-4" /> Dashboard Team
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/releases'))}>
+              <Layers className="mr-2 h-4 w-4" /> Dashboard Releases
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/profile'))}>
               <UserCircle className="mr-2 h-4 w-4" /> Profile

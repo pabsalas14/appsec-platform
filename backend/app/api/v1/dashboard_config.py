@@ -1,16 +1,64 @@
-"""DashboardConfig CRUD endpoints — role-based dashboard widget visibility (admin-only)."""
+"""DashboardConfig CRUD endpoints — role-based dashboard widget visibility."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_role
-from app.core.response import success, paginated
-from app.models.user import User
+from app.core.response import paginated, success
 from app.models.dashboard_config import DashboardConfig
+from app.models.role import Role
+from app.models.user import User
 from app.schemas.dashboard_config import DashboardConfigCreate, DashboardConfigRead, DashboardConfigUpdate
 from app.services.dashboard_config_service import dashboard_config_svc
 
 router = APIRouter()
+
+
+@router.get("/my-visibility")
+async def my_dashboard_visibility(
+    dashboard_id: str = Query(default="home"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return widget visibility map for current user's role and dashboard."""
+    role = (
+        await db.execute(select(Role).where(Role.name == current_user.role))
+    ).scalar_one_or_none()
+    if role is None:
+        return success(
+            {
+                "dashboard_id": dashboard_id,
+                "role": current_user.role,
+                "default_visible": True,
+                "widgets": {},
+            }
+        )
+
+    rows = (
+        await db.execute(
+            select(DashboardConfig).where(
+                DashboardConfig.dashboard_id == dashboard_id,
+                DashboardConfig.role_id == role.id,
+                DashboardConfig.deleted_at.is_(None),
+            )
+        )
+    ).scalars().all()
+    widgets = {
+        row.widget_id: {
+            "visible": row.visible,
+            "editable_by_role": row.editable_by_role,
+        }
+        for row in rows
+    }
+    return success(
+        {
+            "dashboard_id": dashboard_id,
+            "role": current_user.role,
+            "default_visible": True,
+            "widgets": widgets,
+        }
+    )
 
 
 @router.get("")

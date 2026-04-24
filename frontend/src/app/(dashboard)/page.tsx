@@ -12,6 +12,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 import { BarChartCard, DonutChartCard, LineChartCard } from '@/components/charts';
+import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Badge,
   Card,
@@ -23,19 +24,29 @@ import {
   StatCard,
 } from '@/components/ui';
 import {
+  useDashboardReleases,
+  useDashboardTeam,
   useDashboardExecutive,
   useDashboardVulnerabilities,
 } from '@/hooks/useAppDashboardPanels';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function DashboardHomePage() {
   const { data: user } = useCurrentUser();
   const { data: stats, isLoading } = useDashboardStats();
-  const { data: exec, isLoading: execLoading } = useDashboardExecutive();
-  const { data: vulnDash, isLoading: vulnDashLoading } = useDashboardVulnerabilities();
+  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { data: exec, isLoading: execLoading } = useDashboardExecutive(filters);
+  const { data: vulnDash, isLoading: vulnDashLoading } = useDashboardVulnerabilities(filters);
+  const { data: releasesDash, isLoading: releasesLoading } = useDashboardReleases(filters);
+  const { data: teamDash, isLoading: teamLoading } = useDashboardTeam(filters);
+  const { data: visibility } = useMyDashboardVisibility('home');
 
   const isAdmin = user?.role === 'admin';
+  const isWidgetVisible = (widgetId: string) =>
+    visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
 
   return (
     <PageWrapper className="space-y-6 p-6">
@@ -47,6 +58,8 @@ export default function DashboardHomePage() {
             : 'Resumen personal — tus tareas, proyectos y actividad reciente.'
         }
       />
+
+      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
 
       {/* ─── Stat cards ── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -84,35 +97,74 @@ export default function DashboardHomePage() {
 
       {/* ─── AppSec panels (BRD dashboards) ── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {isWidgetVisible('dashboard.home.card.appsec.total_vulnerabilities') && (
+          <StatCard
+            label="Vulnerabilidades (total)"
+            value={
+              vulnDash?.total_vulnerabilities ?? (vulnDashLoading ? '…' : 0)
+            }
+            icon={ShieldCheck}
+            iconColor="text-rose-400"
+            iconBg="bg-rose-500/10"
+          />
+        )}
+        {isWidgetVisible('dashboard.home.card.appsec.critical_count') && (
+          <StatCard
+            label="Críticas (KPI)"
+            value={exec?.kpis.critical_count ?? (execLoading ? '…' : 0)}
+            icon={ShieldCheck}
+            iconColor="text-orange-400"
+            iconBg="bg-orange-500/10"
+          />
+        )}
+        {isWidgetVisible('dashboard.home.card.appsec.overdue_sla') && (
+          <StatCard
+            label="Vencidas SLA (panel)"
+            value={vulnDash?.overdue_count ?? (vulnDashLoading ? '…' : 0)}
+            icon={Circle}
+            iconColor="text-amber-400"
+            iconBg="bg-amber-500/10"
+          />
+        )}
+        {isWidgetVisible('dashboard.home.card.appsec.risk_level') && (
+          <StatCard
+            label="Riesgo (ejecutivo)"
+            value={exec?.risk_level ?? (execLoading ? '…' : '—')}
+            icon={ShieldCheck}
+            iconColor="text-violet-400"
+            iconBg="bg-violet-500/10"
+          />
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Vulnerabilidades (total)"
-          value={
-            vulnDash?.total_vulnerabilities ?? (vulnDashLoading ? '…' : 0)
-          }
-          icon={ShieldCheck}
-          iconColor="text-rose-400"
-          iconBg="bg-rose-500/10"
+          label="Equipo (analistas)"
+          value={teamDash?.team_size ?? (teamLoading ? '…' : 0)}
+          icon={Users}
+          iconColor="text-cyan-400"
+          iconBg="bg-cyan-500/10"
         />
         <StatCard
-          label="Críticas (KPI)"
-          value={exec?.kpis.critical_count ?? (execLoading ? '…' : 0)}
-          icon={ShieldCheck}
-          iconColor="text-orange-400"
-          iconBg="bg-orange-500/10"
+          label="Releases (total)"
+          value={releasesDash?.total_releases ?? (releasesLoading ? '…' : 0)}
+          icon={ListTodo}
+          iconColor="text-blue-400"
+          iconBg="bg-blue-500/10"
         />
         <StatCard
-          label="Vencidas SLA (panel)"
-          value={vulnDash?.overdue_count ?? (vulnDashLoading ? '…' : 0)}
+          label="Releases en progreso"
+          value={releasesDash?.in_progress ?? (releasesLoading ? '…' : 0)}
+          icon={Activity}
+          iconColor="text-indigo-400"
+          iconBg="bg-indigo-500/10"
+        />
+        <StatCard
+          label="Pendientes aprobación"
+          value={releasesDash?.pending_approval ?? (releasesLoading ? '…' : 0)}
           icon={Circle}
-          iconColor="text-amber-400"
-          iconBg="bg-amber-500/10"
-        />
-        <StatCard
-          label="Riesgo (ejecutivo)"
-          value={exec?.risk_level ?? (execLoading ? '…' : '—')}
-          icon={ShieldCheck}
-          iconColor="text-violet-400"
-          iconBg="bg-violet-500/10"
+          iconColor="text-fuchsia-400"
+          iconBg="bg-fuchsia-500/10"
         />
       </div>
 

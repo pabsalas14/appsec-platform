@@ -13,6 +13,7 @@ from app.api.v1.admin import settings as admin_settings
 from app.api.v1.admin import regla_sods as admin_regla_sods
 from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 from app.api.v1.admin import system_health as admin_system_health
+from app.api.v1.admin import ia_config as admin_ia_config
 
 admin_router = APIRouter()
 
@@ -37,4 +38,9 @@ admin_router.include_router(
     admin_system_health.router,
     prefix="/system-health",
     tags=["Admin · System Health"],
+)
+admin_router.include_router(
+    admin_ia_config.router,
+    prefix="/ia-config",
+    tags=["Admin · IA Config"],
 )

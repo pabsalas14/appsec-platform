@@ -21,7 +21,7 @@ La **AppSec Platform** centraliza en un solo sistema la gestión completa de seg
 - Programas de seguridad con seguimiento mensual de actividades
 - Flujos de aprobación con **Segregación de Funciones (SoD)** configurable
 - Indicadores de madurez de seguridad y dashboards ejecutivos
-- Integraciones con IA para asistencia en Threat Modeling y triaje de hallazgos
+- Integraciones con IA planificadas para asistencia en Threat Modeling y triaje de hallazgos
 
 Todo con trazabilidad **100% auditable**: cada acción, cambio de configuración, exportación y aprobación queda registrada de forma inmutable.
 
@@ -675,7 +675,7 @@ make types
 
 ## Roadmap de Funcionalidades
 
-### Estado Actual — Fase 18 (Bloque C Dashboards) ✅
+### Estado Actual — Bloque C en ejecución (Fases 17-19)
 
 **Completado (Fases 0-18):**
 - [x] Fase 0-9: Inicialización, Catálogos, Admin, Auditabilidad Base, Roles, Vulnerabilidades, Releases, Programas, MAST, Motor de Scoring
@@ -686,8 +686,9 @@ make types
 - [x] Fase 14: FlujoEstatus (dynamic state machines, transiciones configurables)
 - [x] Fase 15: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables, JSON formulas)
 - [x] Fase 16: FiltroGuardado (saved filters personales y compartidos para dashboards)
-- [x] Fase 17: ConfiguracionIA (multi-proveedor IA: Ollama, Anthropic, OpenAI, OpenRouter)
-- [x] Fase 18: DashboardConfig + 6 Dashboard endpoints (vulnerabilities, releases, initiatives, emerging-themes, executive, programs)
+- [~] Fase 17: ConfiguracionIA — endpoint admin implementado (`/api/v1/admin/ia-config`), pendiente capa de ejecución AIProvider
+- [~] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend completo + aplicación UI base en dashboard home
+- [~] Fase 19: Dashboards dinámicos — endpoints base de las 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en vistas clave; pendiente completar drill-down UI end-to-end
 - [x] 71 entities total (40 nuevos + 31 del framework)
 - [x] 41 schemas, 41 services, 41 routers completados
 - [x] Soft delete universal, IDOR protection, audit logging (55+ services)
@@ -728,7 +729,7 @@ make types
 | Métrica | Estado | Detalle |
 |---------|--------|---------|
 | **Entities** | 67/67 | ✅ 36 nuevas + 31 del framework (Bloque A-B completados) |
-| **Schemas** | 41/41 | ✅ Completos hasta Fase 17 (incluyendo ConfigIA) |
+| **Schemas** | 41/41 | ✅ Bloque A-B completo; ConfiguracionIA pendiente |
 | **Services** | 41/41 | ✅ CRUD + audit_action_prefix en cada uno |
 | **Routers** | 41/41 | ✅ Endpoints GET/POST/PATCH/DELETE con IDOR |
 | **Migraciones** | 18/27 | En progreso (Fase 18 completada, Bloque C iniciado) |
@@ -746,6 +747,12 @@ make types
 
 - **Jerarquía §3.1 del BRD** en base de datos y API: Subdirección → Gerencia → Organización de plataforma → Célula; migración `f3a9c1d2e8b0` (ejecutar `alembic upgrade head`).
 - **Permisos en dashboards:** todos los `GET /api/v1/dashboard/*` exigen `dashboards.view`. Si la tabla `roles` está vacía tras un `TRUNCATE` de tests, se hace **bootstrap** automático del catálogo de permisos y roles (`app/services/permission_seed.py`).
+- **Visibilidad por rol en widgets:** `GET /api/v1/dashboard_configs/my-visibility` entrega overrides por rol para cada widget; la home del dashboard aplica estas reglas para mostrar/ocultar tarjetas AppSec.
+- **Configuración IA administrable:** `GET/PUT /api/v1/admin/ia-config` para proveedor activo, modelo, temperatura, tokens y timeout (persistido en `system_settings` con auditoría).
+- **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
+- **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
+- **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.
+- **Dashboards dedicados con drill-down:** rutas `/dashboards/team` y `/dashboards/releases` reutilizan filtros jerárquicos persistidos y consumen endpoints filtrados.
 - **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
 
@@ -756,7 +763,7 @@ make types
    - 5 tests IndicadorFormula (XXX-001 a XXX-005, KRI0025)
    - 5 tests M5 Iniciativas (CRUD + ownership validation)
 
-2. **Fase 18 (Completa)** ✅ : DashboardConfig + 6 Dashboard endpoints
+2. **Dashboards implementados (estado parcial)** : DashboardConfig + 6 endpoints base
    - ✅ DashboardConfig entity + services + router (super_admin only)
    - ✅ /dashboard/vulnerabilities (counts by severity, state, overdue)
    - ✅ /dashboard/releases (status distribution, pending/in-progress/completed)
@@ -775,7 +782,7 @@ make types
    - Fixed: Password policy relajada para testing (completado antes de producción)
 
 #### Completado esta sesión (Fases 19-21):
-4. **Fase 19 (Completa)** ✅ : Permisos granulares (module/action/widget level RBAC)
+4. **Permisos granulares implementados** : module/action/widget level RBAC
    - Extensión de roles a 6 perfiles (super_admin, chief_appsec, lider_programa, analista, auditor, readonly).
    - Dependency `require_permission` implementada.
    - 5 tests superados.

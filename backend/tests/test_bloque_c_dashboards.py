@@ -1,5 +1,7 @@
 """Tests for Bloque C Dashboard endpoints — Phase 18."""
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import delete, select
@@ -103,6 +105,113 @@ async def test_dashboard_programs_endpoint(client: AsyncClient, auth_headers: di
 
 
 @pytest.mark.asyncio
+async def test_dashboard_team_endpoint(client: AsyncClient, auth_headers: dict):
+    """Test team dashboard structure."""
+    response = await client.get("/api/v1/dashboard/team", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "team_size" in data["data"]
+    assert "analysts" in data["data"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_program_detail_endpoint(client: AsyncClient, auth_headers: dict):
+    """Test program detail dashboard structure."""
+    response = await client.get(
+        "/api/v1/dashboard/program-detail?program=sast", headers=auth_headers
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["data"]["program"] == "sast"
+    assert "total_findings" in data["data"]
+    assert "completion_percentage" in data["data"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_releases_table_endpoint(client: AsyncClient, auth_headers: dict):
+    """Test releases table dashboard structure."""
+    response = await client.get("/api/v1/dashboard/releases-table", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "items" in data["data"]
+    assert "count" in data["data"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_releases_kanban_endpoint(client: AsyncClient, auth_headers: dict):
+    """Test releases kanban dashboard structure."""
+    response = await client.get("/api/v1/dashboard/releases-kanban", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert "columns" in data["data"]
+    assert "total_cards" in data["data"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_vulnerabilities_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    sid = uuid4()
+    endpoint = f"/api/v1/dashboard/vulnerabilities?subdireccion_id={sid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["subdireccion_id"] == str(sid)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_releases_table_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    gid = uuid4()
+    endpoint = f"/api/v1/dashboard/releases-table?gerencia_id={gid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["gerencia_id"] == str(gid)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_executive_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    oid = uuid4()
+    endpoint = f"/api/v1/dashboard/executive?organizacion_id={oid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["organizacion_id"] == str(oid)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_team_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    cid = uuid4()
+    endpoint = f"/api/v1/dashboard/team?celula_id={cid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["celula_id"] == str(cid)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_releases_kanban_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    sid = uuid4()
+    endpoint = f"/api/v1/dashboard/releases-kanban?subdireccion_id={sid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["subdireccion_id"] == str(sid)
+
+
+@pytest.mark.asyncio
 async def test_dashboard_stats_still_works(client: AsyncClient, auth_headers: dict):
     """Test original stats endpoint still works."""
     response = await client.get("/api/v1/dashboard/stats", headers=auth_headers)
@@ -123,6 +232,10 @@ async def test_dashboard_requires_auth(client: AsyncClient):
         "/api/v1/dashboard/emerging-themes",
         "/api/v1/dashboard/executive",
         "/api/v1/dashboard/programs",
+        "/api/v1/dashboard/team",
+        "/api/v1/dashboard/program-detail",
+        "/api/v1/dashboard/releases-table",
+        "/api/v1/dashboard/releases-kanban",
     ]
 
     for endpoint in endpoints:
