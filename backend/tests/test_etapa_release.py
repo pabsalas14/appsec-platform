@@ -168,3 +168,29 @@ async def test_etapa_release_idor_protected(
     for method, args in [("GET", {}), ("PATCH", {"json": {}}), ("DELETE", {})]:
         r = await client.request(method, f"{BASE_URL}/{eid}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_etapa_release_export_requires_permission(
+    client: AsyncClient, auth_headers: dict
+):
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert resp.status_code == 403
+    assert "releases.export" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_etapa_release_export_csv_success(
+    client: AsyncClient, auth_headers: dict, admin_auth_headers: dict
+):
+    rid = await _create_service_release(client, admin_auth_headers)
+    created = await client.post(
+        BASE_URL, headers=admin_auth_headers, json=_payload(rid)
+    )
+    assert created.status_code == 201, created.text
+
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("content-type", "").startswith("text/csv")
+    assert "service_release_id,etapa,estado" in resp.text
+    assert "Design Review" in resp.text

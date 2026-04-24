@@ -1,9 +1,15 @@
 """EtapaRelease CRUD endpoints + endpoints de aprobación con SoD (A6)."""
 
+from __future__ import annotations
+
+import csv
+import hashlib
+from io import StringIO
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -19,9 +25,58 @@ from app.schemas.etapa_release import (
     EtapaReleaseRead,
     EtapaReleaseUpdate,
 )
+from app.services.audit_service import record as audit_record
 from app.services.etapa_release_service import etapa_release_svc
 
 router = APIRouter()
+
+
+@router.get("/export.csv")
+async def export_etapa_releases_csv(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.RELEASES.EXPORT)),
+):
+    """Exporta etapas de releases del usuario a CSV y registra auditoría A7."""
+    items = await etapa_release_svc.list(db, filters={"user_id": current_user.id})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        [
+            "id",
+            "service_release_id",
+            "etapa",
+            "estado",
+            "created_at",
+            "fecha_completada",
+            "aprobador_id",
+        ]
+    )
+    for etapa in items:
+        writer.writerow(
+            [
+                str(etapa.id),
+                str(etapa.service_release_id),
+                etapa.etapa,
+                etapa.estado,
+                etapa.created_at.isoformat() if etapa.created_at else "",
+                etapa.fecha_completada.isoformat() if etapa.fecha_completada else "",
+                str(etapa.aprobador_id) if etapa.aprobador_id else "",
+            ]
+        )
+    body = buf.getvalue()
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    await audit_record(
+        db,
+        action="etapa_release.export_csv",
+        entity_type="etapa_release",
+        entity_id=current_user.id,
+        metadata={"rows": len(items), "sha256": digest, "format": "csv"},
+    )
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="etapa_releases.csv"'},
+    )
 
 
 @router.get("")
