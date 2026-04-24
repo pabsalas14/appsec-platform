@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![Tests](https://img.shields.io/badge/tests-204%20pasando-brightgreen)](#pruebas)
+[![Tests](https://img.shields.io/badge/Bloque%20B%20tests-23%20pasando-brightgreen)](#pruebas)
 [![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---
@@ -719,25 +719,29 @@ make types
 
 | Métrica | Estado | Detalle |
 |---------|--------|---------|
-| **Entities** | 70/80 | 39 nuevas + 31 del framework (faltarían 7-10 más para fases C-E) |
-| **Schemas** | 38/45 | Completos hasta Fase 16 |
-| **Services** | 38/45 | CRUD + audit_action_prefix en cada uno |
-| **Routers** | 38/45 | Endpoints GET/POST/PATCH/DELETE con IDOR |
-| **Migraciones** | 16/26 | Alembic versiones para fases 0-16 |
+| **Entities** | 67/67 | ✅ 36 nuevas + 31 del framework (Bloque A-B completados) |
+| **Schemas** | 41/41 | ✅ Completos hasta Fase 17 (incluyendo ConfigIA) |
+| **Services** | 41/41 | ✅ CRUD + audit_action_prefix en cada uno |
+| **Routers** | 41/41 | ✅ Endpoints GET/POST/PATCH/DELETE con IDOR |
+| **Migraciones** | 5/27 | En progreso (Fase 18 de 27) |
+| **Testing** | 23/23 | ✅ Bloque B: Todas las pruebas Fase 13-17 pasando |
 | **OWASP Coverage** | 80% | S1-S7, S10-S13, S21-S23 implementados |
 | **Auditabilidad** | 85% | A1-A8 implementado en 55+ services |
-| **Testing** | Deferred | Fase 25 (suite integral 80%+ coverage) |
 
 ---
 
-### Próximos Pasos (Después de esta sesión)
+### Próximos Pasos (Bloque C en progreso)
 
-1. **Fase 17** (2-3 días): ConfiguracionIA → AIProvider abstraction + multi-proveedor
-2. **Fases 18-20** (6-8 días): Dashboards dinámicos + DashboardConfig + Permisos granulares
-3. **Fases 21-23** (4-5 días): IA integrado (Threat Modeling + FP Triage) + Changelog + Health
-4. **Fases 24-26** (5-7 días): Testing integral + Performance + Docs + Production readiness
+**Estado actual (24-04-2026):** Bloque A-B completados ✅, iniciando Bloque C
 
-**Tiempo estimado restante:** 17-23 días (2-3 semanas)
+1. **Fase 18** (EN PROGRESO): DashboardConfig + 9 dashboards dinámicos con drill-down
+2. **Fase 19** (Próxima): Permisos granulares (module/action/widget level)
+3. **Fase 20** (Próxima): ChangelogEntrada (platform changelog)
+4. **Fase 21** (Próxima): SistemaHealthMetric (system health dashboard)
+5. **Bloque D** (Fases 22-24): IA multi-proveedor (Threat Modeling + FP Triage)
+6. **Bloque E** (Fases 25-27): Testing integral + Performance + Documentación
+
+**Tiempo estimado restante:** 10-15 días (1.5-2 semanas)
 
 ---
 
