@@ -36,6 +36,7 @@ const LABELS: Record<string, string> = {
   celulas: 'Células',
   repositorios: 'Repositorios',
   'activo_webs': 'Activos web',
+  servicios: 'Servicios',
   'service_releases': 'Liberaciones de servicio',
   amenazas: 'Amenazas',
   iniciativas: 'Iniciativas',

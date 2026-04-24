@@ -10,6 +10,7 @@ import {
   Globe2,
   Link2,
   Package,
+  Server,
   Target,
   Users,
   FolderKanban,
@@ -126,6 +127,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/activo_webs'))}>
               <Link2 className="mr-2 h-4 w-4" /> Activos web
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/servicios'))}>
+              <Server className="mr-2 h-4 w-4" /> Servicios
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/service_releases'))}>
               <Package className="mr-2 h-4 w-4" /> Liberaciones de servicio

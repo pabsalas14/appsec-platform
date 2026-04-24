@@ -16,6 +16,7 @@ import {
   Link2,
   ListTodo,
   Package,
+  Server,
   Target,
   Network,
   ScrollText,
@@ -83,6 +84,7 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Entrega y plan (BRD)',
     items: [
+      { href: '/servicios', label: 'Servicios', icon: Server },
       { href: '/service_releases', label: 'Liberaciones de servicio', icon: Package },
       { href: '/iniciativas', label: 'Iniciativas', icon: Target },
     ],
