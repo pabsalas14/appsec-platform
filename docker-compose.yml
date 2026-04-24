@@ -37,6 +37,7 @@ services:
       DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-framework}:${POSTGRES_PASSWORD:-framework_secret}@postgres:5432/${POSTGRES_DB:-framework}"
       ENV: "${ENV:-dev}"
       SECRET_KEY: "${SECRET_KEY:?SECRET_KEY must be set}"
+      APPSEC_MASTER_KEY: "${APPSEC_MASTER_KEY:?APPSEC_MASTER_KEY must be set}"
       JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
       JWT_ACCESS_EXPIRE_MINUTES: "${JWT_ACCESS_EXPIRE_MINUTES:-30}"
       JWT_REFRESH_EXPIRE_DAYS: "${JWT_REFRESH_EXPIRE_DAYS:-7}"
