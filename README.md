@@ -746,7 +746,7 @@ make types
 
 - **Jerarquía §3.1 del BRD** en base de datos y API: Subdirección → Gerencia → Organización de plataforma → Célula; migración `f3a9c1d2e8b0` (ejecutar `alembic upgrade head`).
 - **Permisos en dashboards:** todos los `GET /api/v1/dashboard/*` exigen `dashboards.view`. Si la tabla `roles` está vacía tras un `TRUNCATE` de tests, se hace **bootstrap** automático del catálogo de permisos y roles (`app/services/permission_seed.py`).
-- **Exportación con auditoría:** `GET /api/v1/vulnerabilidads/export.csv` con `vulnerabilities.export`; registro en `audit_logs` (`vulnerabilidad.export_csv`) con filas exportadas y hash SHA-256 del contenido.
+- **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
 
 #### Completado esta sesión (histórico):
