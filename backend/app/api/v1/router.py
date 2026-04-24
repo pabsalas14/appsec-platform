@@ -67,6 +67,8 @@ from app.api.v1 import (
     tema_emergente,
     actualizacion_tema,
     cierre_conclusion,
+    # ── Módulo 2 — Panel de Administración (transversal) ──────────────────────
+    flujo_estatus,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -174,3 +176,6 @@ api_router.include_router(plan_remediacion.router, prefix="/plan_remediacions", 
 api_router.include_router(tema_emergente.router, prefix="/temas_emergentes", tags=["Tema_emergente"])
 api_router.include_router(actualizacion_tema.router, prefix="/actualizacion_temas", tags=["Actualizacion_tema"])
 api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones", tags=["Cierre_conclusion"])
+
+# ─── Módulo 2 — Panel de Administración (transversal) ─────────────────────────
+api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
