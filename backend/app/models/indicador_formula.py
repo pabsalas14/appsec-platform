@@ -47,4 +47,6 @@ class IndicadorFormula(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    user: Mapped["User"] = relationship(back_populates="indicadores_formulas")
+    user: Mapped["User"] = relationship(
+        foreign_keys=[user_id]
+    )

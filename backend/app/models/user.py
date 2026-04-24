@@ -12,10 +12,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-if TYPE_CHECKING:
-    from app.models.flujo_estatus import FlujoEstatus
-    from app.models.indicador_formula import IndicadorFormula
-    from app.models.filtro_guardado import FiltroGuardado
 
 
 class User(Base):
@@ -45,12 +41,3 @@ class User(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    flujos_estatus: Mapped[list["FlujoEstatus"]] = relationship(
-        back_populates="user", lazy="noload"
-    )
-    indicadores_formulas: Mapped[list["IndicadorFormula"]] = relationship(
-        back_populates="user", lazy="noload"
-    )
-    filtros_guardados: Mapped[list["FiltroGuardado"]] = relationship(
-        back_populates="usuario", lazy="noload"
-    )

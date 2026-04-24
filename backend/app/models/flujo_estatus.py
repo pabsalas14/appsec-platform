@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, Boolean, ForeignKey, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, ONETOMANY
 
 from app.database import Base
 from app.models.mixins import SoftDeleteMixin
@@ -48,4 +48,6 @@ class FlujoEstatus(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    user: Mapped["User"] = relationship(back_populates="flujos_estatus")
+    user: Mapped["User"] = relationship(
+        foreign_keys=[user_id]
+    )

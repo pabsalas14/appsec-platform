@@ -42,4 +42,6 @@ class FiltroGuardado(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    usuario: Mapped["User"] = relationship(back_populates="filtros_guardados")
+    usuario: Mapped["User"] = relationship(
+        foreign_keys=[usuario_id]
+    )

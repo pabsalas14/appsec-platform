@@ -121,6 +121,31 @@ import app.models.organizacion   # noqa: F401
 
 import app.models.gerencia   # noqa: F401
 
+# ── Bloque B — Fases 13-17 ────────────────────────────────────────────────────
+import app.models.hito_iniciativa   # noqa: F401
+
+import app.models.actualizacion_iniciativa   # noqa: F401
+
+import app.models.auditoria   # noqa: F401
+
+import app.models.hallazgo_auditoria   # noqa: F401
+
+import app.models.evidencia_auditoria   # noqa: F401
+
+import app.models.plan_remediacion   # noqa: F401
+
+import app.models.tema_emergente   # noqa: F401
+
+import app.models.actualizacion_tema   # noqa: F401
+
+import app.models.cierre_conclusion   # noqa: F401
+
+import app.models.flujo_estatus   # noqa: F401
+
+import app.models.indicador_formula   # noqa: F401
+
+import app.models.filtro_guardado   # noqa: F401
+
 target_metadata = Base.metadata
 
 
