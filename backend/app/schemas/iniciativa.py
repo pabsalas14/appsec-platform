@@ -14,6 +14,7 @@ class IniciativaBase(BaseModel):
     descripcion: Optional[str] = None
     tipo: str
     estado: str
+    celula_id: Optional[UUID] = None
     fecha_inicio: Optional[datetime] = None
     fecha_fin_estimada: Optional[datetime] = None
 
@@ -30,6 +31,7 @@ class IniciativaUpdate(BaseModel):
     descripcion: Optional[str] = None
     tipo: Optional[str] = None
     estado: Optional[str] = None
+    celula_id: Optional[UUID] = None
     fecha_inicio: Optional[datetime] = None
     fecha_fin_estimada: Optional[datetime] = None
 
@@ -40,5 +42,6 @@ class IniciativaRead(IniciativaBase):
 
     id: UUID
     user_id: UUID
+    celula_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime

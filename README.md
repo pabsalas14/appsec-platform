@@ -688,7 +688,7 @@ make types
 - [x] Fase 16: FiltroGuardado (saved filters personales y compartidos para dashboards)
 - [~] Fase 17: ConfiguracionIA — endpoint admin implementado (`/api/v1/admin/ia-config`), pendiente capa de ejecución AIProvider
 - [~] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend completo + aplicación UI en home y dashboards dedicados
-- [~] Fase 19: Dashboards dinámicos — endpoints de 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en vistas clave; pendiente completar drill-down UI end-to-end para iniciativas/temas emergentes
+- [~] Fase 19: Dashboards dinámicos — endpoints de 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en las 9 vistas dedicadas; pendiente cerrar exportación por vista y presets compartidos end-to-end
 - [x] 71 entities total (40 nuevos + 31 del framework)
 - [x] 41 schemas, 41 services, 41 routers completados
 - [x] Soft delete universal, IDOR protection, audit logging (55+ services)
@@ -752,7 +752,8 @@ make types
 - **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
 - **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.
-- **Dashboards dedicados con drill-down:** rutas `/dashboards/executive`, `/dashboards/vulnerabilities`, `/dashboards/team`, `/dashboards/releases`, `/dashboards/programs` y `/dashboards/program-detail` reutilizan filtros jerárquicos persistidos y consumen endpoints filtrados.
+- **Dashboards dedicados con drill-down:** rutas `/dashboards/executive`, `/dashboards/vulnerabilities`, `/dashboards/team`, `/dashboards/releases`, `/dashboards/programs`, `/dashboards/program-detail`, `/dashboards/initiatives` y `/dashboards/emerging-themes` reutilizan filtros jerárquicos persistidos y consumen endpoints filtrados.
+- **Contexto jerárquico en M5/M7:** `Iniciativa` y `TemaEmergente` incluyen `celula_id` (migración `c5d9a4f2b7e1`) para habilitar filtros organizacionales reales en dashboards de iniciativas y temas emergentes.
 - **Cobertura de vistas dedicadas:** rutas `/dashboards/*` para Ejecutivo, Vulnerabilidades, Equipo, Releases, Programas, Detalle de Programa, Iniciativas y Temas Emergentes.
 - **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.

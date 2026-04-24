@@ -2,12 +2,15 @@
 
 import { AlertCircle, Circle } from 'lucide-react';
 
+import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardEmergingThemes } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
+import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 
 export default function EmergingThemesDashboardPage() {
-  const { data, isLoading } = useDashboardEmergingThemes();
+  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { data, isLoading } = useDashboardEmergingThemes(filters);
   const { data: visibility } = useMyDashboardVisibility('emerging-themes');
   const isVisible = (widgetId: string) =>
     visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
@@ -18,6 +21,7 @@ export default function EmergingThemesDashboardPage() {
         title="Dashboard · Temas Emergentes"
         description="Visibilidad de temas activos y estancados."
       />
+      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {isVisible('dashboard.emerging-themes.card.total') && (
           <StatCard

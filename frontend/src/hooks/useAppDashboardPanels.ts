@@ -152,18 +152,22 @@ export function useDashboardReleases(filters?: HierarchyFilters) {
   });
 }
 
-export function useDashboardInitiatives() {
+export function useDashboardInitiatives(filters?: HierarchyFilters) {
   return useQuery({
-    queryKey: ['dashboard', 'initiatives'],
-    queryFn: () => fetchDashboard<DashboardInitiativesData>('/dashboard/initiatives'),
+    queryKey: ['dashboard', 'initiatives', filters ?? {}],
+    queryFn: () =>
+      fetchDashboard<DashboardInitiativesData>(withHierarchy('/dashboard/initiatives', filters)),
     staleTime: 60_000,
   });
 }
 
-export function useDashboardEmergingThemes() {
+export function useDashboardEmergingThemes(filters?: HierarchyFilters) {
   return useQuery({
-    queryKey: ['dashboard', 'emerging-themes'],
-    queryFn: () => fetchDashboard<DashboardEmergingThemesData>('/dashboard/emerging-themes'),
+    queryKey: ['dashboard', 'emerging-themes', filters ?? {}],
+    queryFn: () =>
+      fetchDashboard<DashboardEmergingThemesData>(
+        withHierarchy('/dashboard/emerging-themes', filters)
+      ),
     staleTime: 60_000,
   });
 }

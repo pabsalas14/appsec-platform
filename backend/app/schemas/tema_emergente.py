@@ -18,6 +18,7 @@ class TemaEmergenteBase(BaseModel):
     impacto: str = Field(..., min_length=1, max_length=50)
     estado: str = Field(..., min_length=1, max_length=100)
     fuente: str = Field(..., min_length=1, max_length=255)
+    celula_id: Optional[UUID] = None
 
 
 class TemaEmergenteCreate(TemaEmergenteBase):
@@ -35,6 +36,7 @@ class TemaEmergenteUpdate(BaseModel):
     impacto: Optional[str] = Field(None, min_length=1, max_length=50)
     estado: Optional[str] = Field(None, min_length=1, max_length=100)
     fuente: Optional[str] = Field(None, min_length=1, max_length=255)
+    celula_id: Optional[UUID] = None
 
 
 class TemaEmergenteRead(TemaEmergenteBase):
@@ -44,5 +46,6 @@ class TemaEmergenteRead(TemaEmergenteBase):
 
     id: UUID
     user_id: UUID
+    celula_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime

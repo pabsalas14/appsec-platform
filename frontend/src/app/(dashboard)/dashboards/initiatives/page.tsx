@@ -2,12 +2,15 @@
 
 import { CheckSquare, Circle } from 'lucide-react';
 
+import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardInitiatives } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
+import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 
 export default function InitiativesDashboardPage() {
-  const { data, isLoading } = useDashboardInitiatives();
+  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { data, isLoading } = useDashboardInitiatives(filters);
   const { data: visibility } = useMyDashboardVisibility('initiatives');
   const isVisible = (widgetId: string) =>
     visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
@@ -15,6 +18,7 @@ export default function InitiativesDashboardPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader title="Dashboard · Iniciativas" description="Seguimiento de avance de iniciativas." />
+      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {isVisible('dashboard.initiatives.card.total') && (
           <StatCard

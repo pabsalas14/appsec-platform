@@ -410,18 +410,32 @@ async def dashboard_releases(
 
 @router.get("/initiatives")
 async def dashboard_initiatives(
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 8: Iniciativas view."""
     from app.models.iniciativa import Iniciativa
 
+    filters = [Iniciativa.deleted_at.is_(None)]
+    if any([subdireccion_id, gerencia_id, organizacion_id, celula_id]):
+        celula_scope = _celula_scope_query(
+            subdireccion_id=subdireccion_id,
+            gerencia_id=gerencia_id,
+            organizacion_id=organizacion_id,
+            celula_id=celula_id,
+        )
+        filters.append(Iniciativa.celula_id.in_(celula_scope))
+
     total = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(Iniciativa)
-                .where(Iniciativa.deleted_at.is_(None))
+                .where(*filters)
             )
         ).scalar_one()
         or 0
@@ -434,7 +448,7 @@ async def dashboard_initiatives(
                 .select_from(Iniciativa)
                 .where(
                     Iniciativa.estado == "En Progreso",
-                    Iniciativa.deleted_at.is_(None),
+                    *filters,
                 )
             )
         ).scalar_one()
@@ -448,7 +462,7 @@ async def dashboard_initiatives(
                 .select_from(Iniciativa)
                 .where(
                     Iniciativa.estado == "Completada",
-                    Iniciativa.deleted_at.is_(None),
+                    *filters,
                 )
             )
         ).scalar_one()
@@ -461,12 +475,22 @@ async def dashboard_initiatives(
             "in_progress": in_progress,
             "completed": completed,
             "completion_percentage": int((completed / total * 100) if total > 0 else 0),
+            "applied_filters": _hierarchy_filter_dict(
+                subdireccion_id=subdireccion_id,
+                gerencia_id=gerencia_id,
+                organizacion_id=organizacion_id,
+                celula_id=celula_id,
+            ),
         }
     )
 
 
 @router.get("/emerging-themes")
 async def dashboard_emerging_themes(
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -475,12 +499,22 @@ async def dashboard_emerging_themes(
 
     from app.models.tema_emergente import TemaEmergente
 
+    filters = [TemaEmergente.deleted_at.is_(None)]
+    if any([subdireccion_id, gerencia_id, organizacion_id, celula_id]):
+        celula_scope = _celula_scope_query(
+            subdireccion_id=subdireccion_id,
+            gerencia_id=gerencia_id,
+            organizacion_id=organizacion_id,
+            celula_id=celula_id,
+        )
+        filters.append(TemaEmergente.celula_id.in_(celula_scope))
+
     total = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(TemaEmergente)
-                .where(TemaEmergente.deleted_at.is_(None))
+                .where(*filters)
             )
         ).scalar_one()
         or 0
@@ -495,7 +529,7 @@ async def dashboard_emerging_themes(
                 .select_from(TemaEmergente)
                 .where(
                     TemaEmergente.updated_at < old_date,
-                    TemaEmergente.deleted_at.is_(None),
+                    *filters,
                 )
             )
         ).scalar_one()
@@ -507,6 +541,12 @@ async def dashboard_emerging_themes(
             "total_themes": total,
             "unmoved_7_days": unmoved,
             "active": total - unmoved,
+            "applied_filters": _hierarchy_filter_dict(
+                subdireccion_id=subdireccion_id,
+                gerencia_id=gerencia_id,
+                organizacion_id=organizacion_id,
+                celula_id=celula_id,
+            ),
         }
     )
 

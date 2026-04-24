@@ -214,6 +214,30 @@ async def test_dashboard_team_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
+async def test_dashboard_initiatives_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    oid = uuid4()
+    endpoint = f"/api/v1/dashboard/initiatives?organizacion_id={oid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["organizacion_id"] == str(oid)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_emerging_themes_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    gid = uuid4()
+    endpoint = f"/api/v1/dashboard/emerging-themes?gerencia_id={gid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["gerencia_id"] == str(gid)
+
+
+@pytest.mark.asyncio
 async def test_dashboard_releases_kanban_accepts_hierarchy_filters(
     client: AsyncClient, auth_headers: dict
 ):
