@@ -1,4 +1,6 @@
-"""AplicacionMovil model — owned per-user entity."""
+"""HallazgoMAST model — finding from MAST execution, optionally linked to Vulnerabilidad (Módulo 4)."""
+
+from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
@@ -12,12 +14,11 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.celula import Celula
     from app.models.ejecucion_mast import EjecucionMAST
 
 
-class AplicacionMovil(SoftDeleteMixin, Base):
-    __tablename__ = "aplicacion_movils"
+class HallazgoMAST(SoftDeleteMixin, Base):
+    __tablename__ = "hallazgo_masts"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -28,15 +29,22 @@ class AplicacionMovil(SoftDeleteMixin, Base):
         nullable=False,
         index=True,
     )
-    nombre: Mapped[str] = mapped_column(String(255), nullable=False)
-    plataforma: Mapped[str] = mapped_column(String(50), nullable=False)
-    bundle_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    celula_id: Mapped[uuid.UUID] = mapped_column(
+    ejecucion_mast_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("celulas.id", ondelete="RESTRICT"),
+        ForeignKey("ejecucion_masts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+    vulnerabilidad_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+        index=True,
+    )
+    nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    descripcion: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    severidad: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    cwe: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    owasp_categoria: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), nullable=False
     )
@@ -46,10 +54,5 @@ class AplicacionMovil(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    celula: Mapped["Celula"] = relationship(back_populates="aplicacion_movils")
-    vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
-        "Vulnerabilidad", back_populates="aplicacion_movil", lazy="noload"
-    )
-    ejecuciones_mast: Mapped[list["EjecucionMAST"]] = relationship(
-        "EjecucionMAST", back_populates="aplicacion_movil", lazy="noload"
-    )
+    ejecucion: Mapped["EjecucionMAST"] = relationship(back_populates="hallazgos")
+    # vulnerabilidad_id se vinculará en Módulo 9 cuando se complete la gestión de Vulnerabilidades

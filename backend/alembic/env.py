@@ -111,6 +111,10 @@ import app.models.evidencia_regulacion   # noqa: F401
 
 import app.models.estado_cumplimiento   # noqa: F401
 
+import app.models.ejecucion_mast   # noqa: F401
+
+import app.models.hallazgo_mast   # noqa: F401
+
 target_metadata = Base.metadata
 
 
