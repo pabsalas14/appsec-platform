@@ -16,6 +16,7 @@ import {
   FolderKanban,
   Layers,
   LayoutDashboard,
+  ListChecks,
   ListTodo,
   Moon,
   Network,
@@ -25,6 +26,7 @@ import {
   Sun,
   Upload,
   UserCircle,
+  Workflow,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -133,6 +135,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/service_releases'))}>
               <Package className="mr-2 h-4 w-4" /> Liberaciones de servicio
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/etapa_releases'))}>
+              <ListChecks className="mr-2 h-4 w-4" /> Etapas de liberación
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/pipeline_releases'))}>
+              <Workflow className="mr-2 h-4 w-4" /> Pipelines
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/iniciativas'))}>
               <Target className="mr-2 h-4 w-4" /> Iniciativas

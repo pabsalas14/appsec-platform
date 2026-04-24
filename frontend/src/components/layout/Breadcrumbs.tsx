@@ -38,6 +38,8 @@ const LABELS: Record<string, string> = {
   'activo_webs': 'Activos web',
   servicios: 'Servicios',
   'service_releases': 'Liberaciones de servicio',
+  'etapa_releases': 'Etapas de liberación',
+  'pipeline_releases': 'Pipelines',
   amenazas: 'Amenazas',
   iniciativas: 'Iniciativas',
 };
