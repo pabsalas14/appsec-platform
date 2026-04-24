@@ -29,6 +29,7 @@ from app.schemas.vulnerabilidad import (
 )
 from app.services.audit_service import record as audit_record
 from app.services.ia_provider import run_prompt
+from app.services.vulnerabilidad_ia_triage_hints import get_motor_triage_hints
 from app.services.vulnerabilidad_service import vulnerabilidad_svc
 
 router = APIRouter()
@@ -167,11 +168,13 @@ async def triage_vulnerabilidad_false_positive(
     if vuln is None:
         raise NotFoundException("Vulnerabilidad not found")
 
+    motor_hints = get_motor_triage_hints(vuln.fuente)
     prompt = (
         "Eres un analista AppSec. Evalúa si el hallazgo podría ser falso positivo.\n"
         f"Titulo: {vuln.titulo}\n"
         f"Descripcion: {vuln.descripcion or 'N/A'}\n"
-        f"Fuente: {vuln.fuente}\n"
+        f"Fuente (motor): {vuln.fuente}\n"
+        f"Guía específica para este motor: {motor_hints}\n"
         f"Severidad: {vuln.severidad}\n"
         f"Estado: {vuln.estado}\n"
         f"CVSS: {vuln.cvss_score if vuln.cvss_score is not None else 'N/A'}\n"
@@ -193,6 +196,7 @@ async def triage_vulnerabilidad_false_positive(
             "provider": result.provider,
             "model": result.model,
             "dry_run": payload.dry_run,
+            "fuente": vuln.fuente,
             "verdict": verdict,
             "confidence": confidence,
         },

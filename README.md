@@ -689,6 +689,7 @@ make types
 - [x] Fase 17: ConfiguracionIA — endpoint admin + ejecución AIProvider integrada en flujo de Threat Modeling (`POST /api/v1/sesion_threat_modelings/{id}/ia/suggest`)
 - [~] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend completo + aplicación UI en home y dashboards dedicados
 - [~] Fase 19: Dashboards dinámicos — endpoints de 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en las 9 vistas dedicadas; pendiente cerrar exportación por vista y presets compartidos end-to-end
+- [x] Fase 23: Triaje FP — pistas por motor + UI vulnerabilidades
 - [x] 71 entities total (40 nuevos + 31 del framework)
 - [x] 41 schemas, 41 services, 41 routers completados
 - [x] Soft delete universal, IDOR protection, audit logging (55+ services)
@@ -715,7 +716,7 @@ make types
 #### Bloque D — IA + Changelog (Fases 21-23)
 - [x] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
 - [x] **Fase 22**: Threat Modeling Asistido (endpoint IA estructurado + UI: `/sesion_threat_modelings` y detalle con `ia/suggest`, simulación y amenazas por sesión)
-- [~] **Fase 23**: Triaje de Falsos Positivos (endpoint IA implementado para vulnerabilidades; pendiente ampliar cobertura por motores)
+- [x] **Fase 23**: Triaje de Falsos Positivos (IA + pistas por motor `fuente` en el prompt, auditoría con `fuente`, UI `/vulnerabilidads` y detalle con triaje)
 
 #### Bloque E — Testing + Finalización (Fases 24-26)
 - [ ] **Fase 24**: E2E Testing de IA multi-proveedor (Ollama/Anthropic/OpenAI/OpenRouter)
@@ -751,7 +752,7 @@ make types
 - **Configuración IA administrable:** `GET/PUT /api/v1/admin/ia-config` para proveedor activo, modelo, temperatura, tokens y timeout (persistido en `system_settings` con auditoría).
 - **Ejecución IA en flujo real:** `POST /api/v1/sesion_threat_modelings/{id}/ia/suggest` usa `AIProvider`, requiere permiso `ia.execute`, audita la invocación y puede marcar la sesión con `ia_utilizada=true`.
 - **Threat Modeling asistido (Fase 22):** el endpoint `ia/suggest` entrega JSON estructurado STRIDE/DREAD y puede crear amenazas cuando `crear_amenazas=true`; el frontend incluye listado, detalle, panel IA y listado de amenazas filtrado por `sesion_id` (navegación en sidebar y Ctrl+K).
-- **Triaje IA de falsos positivos (Fase 23 parcial):** `POST /api/v1/vulnerabilidads/{id}/ia/triage-fp` clasifica `false_positive|likely_real|needs_review`, devuelve confianza/racional, y deja auditoría por invocación.
+- **Triaje IA de falsos positivos (Fase 23):** `POST /api/v1/vulnerabilidads/{id}/ia/triage-fp` clasifica `false_positive|likely_real|needs_review` con pistas de FP específicas por motor (SAST/DAST/SCA/TM/MAST/Auditoria/Tercero), auditoría incluye `fuente`; en frontend: listado, detalle y panel de triaje (permiso `ia.execute`).
 - **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
 - **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.

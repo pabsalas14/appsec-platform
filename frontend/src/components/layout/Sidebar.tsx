@@ -2,11 +2,12 @@
 
 import {
   AppWindow,
+  Bug,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   FolderKanban,
   LayoutDashboard,
-  ClipboardList,
   Layers,
   ListTodo,
   Network,
@@ -48,6 +49,7 @@ const SECTIONS: NavSection[] = [
       { href: '/projects', label: 'Projects', icon: FolderKanban },
       { href: '/kanban', label: 'Kanban', icon: Layers },
       { href: '/uploads', label: 'Uploads', icon: Upload },
+      { href: '/vulnerabilidads', label: 'Vulnerabilidades', icon: Bug },
       { href: '/dashboards', label: 'Dashboards', icon: LayoutDashboard },
       { href: '/dashboards/executive', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
       { href: '/dashboards/vulnerabilities', label: 'Dashboard Vulnerabilidades', icon: ShieldCheck },

@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Bug,
   ClipboardList,
   FolderKanban,
   Layers,
@@ -97,6 +98,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/uploads'))}>
               <Upload className="mr-2 h-4 w-4" /> Uploads
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads'))}>
+              <Bug className="mr-2 h-4 w-4" /> Vulnerabilidades
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
