@@ -123,6 +123,7 @@ async def _apply_db_override(
                     "TRUNCATE TABLE audit_logs, refresh_tokens, attachments, "
                     "role_permissions, roles, permissions, system_settings, "
                     "tasks, projects, "
+                    "changelog_entradas, "
                     "regla_sods, "
                     "control_seguridads, tipo_pruebas, "
                     "aplicacion_movils, servicios, "

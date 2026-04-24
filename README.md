@@ -703,10 +703,10 @@ make types
 - [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor: Ollama/Anthropic/OpenAI/OpenRouter)
 - [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol (role-based panel visibility)
 - [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional (Ejecutivo, Equipo, Programas, etc.)
-- [ ] **Fase 20**: Permisos Granulares (module/action/widget level RBAC)
+- [x] **Fase 20**: Permisos Granulares (module/action/widget level RBAC)
 
 #### Bloque D — IA + Changelog (Fases 21-23)
-- [ ] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
+- [x] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
 - [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD scoring automático con IA)
 - [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA classification con IA)
 
@@ -761,14 +761,23 @@ make types
    - Fixed: docker-compose.yml APPSEC_MASTER_KEY environment variable
    - Fixed: Password policy relajada para testing (completado antes de producción)
 
+#### Completado esta sesión (Fases 19-21):
+4. **Fase 19 (Completa)** ✅ : Permisos granulares (module/action/widget level RBAC)
+   - Extensión de roles a 6 perfiles (super_admin, chief_appsec, lider_programa, analista, auditor, readonly).
+   - Dependency `require_permission` implementada.
+   - 5 tests superados.
+5. **Fase 20 (Completa)** ✅ : ChangelogEntrada (platform changelog)
+   - CRUD para super_admin, vistas públicas.
+   - 7 tests superados.
+6. **Fase 21 (Completa)** ✅ : SistemaHealthMetric (system health dashboard)
+   - Endpoint de salud del sistema para administradores.
+   - 2 tests superados.
+
 #### Próximas fases:
-4. **Fase 19**: Permisos granulares (module/action/widget level RBAC)
-5. **Fase 20**: ChangelogEntrada (platform changelog) + SistemaHealthMetric
-6. **Bloque C final**: 9 Dashboards complete con drill-down + exports
 7. **Bloque D** (Fases 22-24): IA multi-proveedor (Threat Modeling + FP Triage + E2E tests)
 8. **Bloque E** (Fases 25-27): Testing integral + Performance + Documentación
 
-**Tiempo estimado restante:** 7-10 días (1-1.5 semanas)
+**Tiempo estimado restante:** 4-6 días
 
 ---
 

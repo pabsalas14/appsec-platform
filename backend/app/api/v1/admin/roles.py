@@ -63,16 +63,18 @@ async def _ensure_seeded(db: AsyncSession) -> None:
         p.code: p
         for p in (await db.execute(select(Permission))).scalars().all()
     }
+
+    from app.core.permissions import DEFAULT_ROLE_PERMISSIONS
+
     for role_name in VALID_ROLES:
         if role_name in existing_roles:
             continue
-        role = Role(name=role_name, description=f"Demo '{role_name}' role")
-        if role_name == "admin":
-            role.permissions = list(perms.values())
-        else:
-            role.permissions = [
-                perms[c] for c in perms if c.endswith(".view")
-            ]
+        role_perms_codes = DEFAULT_ROLE_PERMISSIONS.get(role_name, [])
+        role = Role(
+            name=role_name,
+            description=f"Platform role '{role_name}'",
+            permissions=[perms[c] for c in role_perms_codes if c in perms],
+        )
         db.add(role)
     await db.flush()
 

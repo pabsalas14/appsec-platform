@@ -12,6 +12,7 @@ from app.api.v1.admin import roles as admin_roles
 from app.api.v1.admin import settings as admin_settings
 from app.api.v1.admin import regla_sods as admin_regla_sods
 from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
+from app.api.v1.admin import system_health as admin_system_health
 
 admin_router = APIRouter()
 
@@ -31,4 +32,9 @@ admin_router.include_router(
     admin_herramienta_externas.router,
     prefix="/herramientas-externas",
     tags=["Admin · Herramientas Externas"],
+)
+admin_router.include_router(
+    admin_system_health.router,
+    prefix="/system-health",
+    tags=["Admin · System Health"],
 )

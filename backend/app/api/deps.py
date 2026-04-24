@@ -105,6 +105,62 @@ def require_role(*roles: str):
     return role_checker
 
 
+def require_permission(*permission_codes: str):
+    """Dependency factory that validates granular permissions via the
+    ``role_permissions`` join table.
+
+    Usage::
+
+        @router.post("/findings/export")
+        async def export_findings(
+            current_user: User = Depends(require_permission("vulnerabilities.export")),
+        ): ...
+
+    ``super_admin`` and ``admin`` roles bypass permission checks entirely.
+    If the permissions table hasn't been seeded yet the check falls back to
+    role-level access (backward compatible with pre-Fase 19 code).
+    """
+    async def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        # super_admin / admin bypass all permission checks
+        if current_user.role in ("super_admin", "admin"):
+            return current_user
+
+        # Query the role_permissions join table for the user's role
+        from app.models.role import Permission, Role, role_permissions
+
+        role_result = await db.execute(
+            select(Role).where(Role.name == current_user.role)
+        )
+        role_obj = role_result.scalar_one_or_none()
+
+        if role_obj is None:
+            # Role not seeded yet — deny by default for safety
+            raise ForbiddenException(
+                "Your role has not been configured. Contact an administrator."
+            )
+
+        # Fetch permission codes for this role
+        perm_result = await db.execute(
+            select(Permission.code)
+            .join(role_permissions, Permission.id == role_permissions.c.permission_id)
+            .where(role_permissions.c.role_id == role_obj.id)
+        )
+        user_permissions = {row[0] for row in perm_result.all()}
+
+        # Check that the user has ALL required permission codes
+        missing = set(permission_codes) - user_permissions
+        if missing:
+            raise ForbiddenException(
+                f"Missing required permissions: {', '.join(sorted(missing))}"
+            )
+
+        return current_user
+    return permission_checker
+
+
 # ─── Shared helpers ──────────────────────────────────────────────────────────
 
 async def validate_fk_exists(
