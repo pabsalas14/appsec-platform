@@ -2,11 +2,13 @@
 
 import {
   AlertTriangle,
+  ClipboardList,
   FolderKanban,
   Layers,
   LayoutDashboard,
   ListTodo,
   Moon,
+  Network,
   Plus,
   ScrollText,
   Settings,
@@ -122,6 +124,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/emerging-themes'))}>
               <AlertTriangle className="mr-2 h-4 w-4" /> Dashboard Temas Emergentes
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/programa_threat_modelings'))}>
+              <Network className="mr-2 h-4 w-4" /> Programas de threat modeling
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/sesion_threat_modelings'))}>
+              <ClipboardList className="mr-2 h-4 w-4" /> Sesiones de threat modeling
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/profile'))}>
               <UserCircle className="mr-2 h-4 w-4" /> Profile

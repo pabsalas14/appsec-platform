@@ -17,6 +17,19 @@ export function useAmenazas() {
   });
 }
 
+export function useAmenazasBySesion(sesionId: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, 'sesion', sesionId] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<Amenaza[]>>('/amenazas/', {
+        params: { sesion_id: sesionId },
+      });
+      return data.data;
+    },
+    enabled: Boolean(sesionId),
+  });
+}
+
 export function useCreateAmenaza() {
   const qc = useQueryClient();
   return useMutation({

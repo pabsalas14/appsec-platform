@@ -6,8 +6,10 @@ import {
   ChevronRight,
   FolderKanban,
   LayoutDashboard,
+  ClipboardList,
   Layers,
   ListTodo,
+  Network,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -51,6 +53,13 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/vulnerabilities', label: 'Dashboard Vulnerabilidades', icon: ShieldCheck },
       { href: '/dashboards/team', label: 'Dashboard Team', icon: Users },
       { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
+    ],
+  },
+  {
+    title: 'Threat modeling',
+    items: [
+      { href: '/programa_threat_modelings', label: 'Programas TM', icon: Network },
+      { href: '/sesion_threat_modelings', label: 'Sesiones TM', icon: ClipboardList },
     ],
   },
   {
