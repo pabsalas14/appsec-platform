@@ -6,7 +6,9 @@ import {
   Briefcase,
   Building2,
   ClipboardList,
+  GitBranch,
   Globe2,
+  Link2,
   Users,
   FolderKanban,
   Layers,
@@ -116,6 +118,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/celulas'))}>
               <Users className="mr-2 h-4 w-4" /> Células
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/repositorios'))}>
+              <GitBranch className="mr-2 h-4 w-4" /> Repositorios
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/activo_webs'))}>
+              <Link2 className="mr-2 h-4 w-4" /> Activos web
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards

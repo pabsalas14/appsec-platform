@@ -10,8 +10,10 @@ import {
   ChevronRight,
   ClipboardList,
   FolderKanban,
+  GitBranch,
   LayoutDashboard,
   Layers,
+  Link2,
   ListTodo,
   Network,
   ScrollText,
@@ -67,6 +69,13 @@ const SECTIONS: NavSection[] = [
       { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
       { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
       { href: '/celulas', label: 'Células', icon: Users },
+    ],
+  },
+  {
+    title: 'Inventario (BRD)',
+    items: [
+      { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
+      { href: '/activo_webs', label: 'Activos web', icon: Link2 },
     ],
   },
   {

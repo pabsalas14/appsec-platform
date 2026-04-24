@@ -3,23 +3,23 @@ import { z } from 'zod';
 export const RepositorioSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-nombre: z.string(),
-url: z.string(),
-plataforma: z.string(),
-rama_default: z.string(),
-activo: z.boolean(),
-celula_id: z.string().uuid(),
-created_at: z.string(),
+  nombre: z.string(),
+  url: z.string().url(),
+  plataforma: z.string(),
+  rama_default: z.string(),
+  activo: z.boolean(),
+  celula_id: z.string().uuid(),
+  created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const RepositorioCreateSchema = z.object({
-nombre: z.string(),
-url: z.string(),
-plataforma: z.string(),
-rama_default: z.string(),
-activo: z.boolean(),
-celula_id: z.string().uuid(),
+  nombre: z.string().min(1).max(500),
+  url: z.string().url('Debe ser una URL http(s) válida'),
+  plataforma: z.string().min(1),
+  rama_default: z.string().min(1).max(255),
+  activo: z.boolean(),
+  celula_id: z.string().uuid(),
 });
 
 export const RepositorioUpdateSchema = RepositorioCreateSchema.partial();
