@@ -669,44 +669,44 @@ make types
 
 ## Roadmap de Funcionalidades
 
-### Estado Actual — Fase 10 en Progreso 🚀
+### Estado Actual — Fase 13 Completada ✅
 
-**Completado (Fases 0-9):**
-- [x] Fase 0: Inicialización del repo
-- [x] Fase 1-4: Catálogos, Admin, Auditabilidad Base, Roles
-- [x] Fase 5-9: Vulnerabilidades, Releases, Programas, MAST/Iniciativas/Auditorías/Temas, Motor de Scoring
-- [x] 60 entities (29 nuevos + 31 del framework)
-- [x] 26 schemas, 26 services, 26 routers completados
-- [x] Soft delete universal, IDOR protection, audit logging (45+ services)
-- [x] 70% OWASP coverage, 75% Auditabilidad
-
-**Fase 10 — Jerarquía Organizacional (EN PROGRESO):**
-- [x] Entity `Organizacion` (nivel superior)
-- [x] Entity `Gerencia` (nivel medio)
-- [x] FK `organizacion_id` en `Subdireccion`
-- [x] FK `gerencia_id` en `Celula`
-- [ ] SystemSetting ampliado (50+ configuraciones dinámicas)
-- [ ] Hash Chain en AuditLog (regla A4)
+**Completado (Fases 0-13):**
+- [x] Fase 0-9: Inicialización, Catálogos, Admin, Auditabilidad Base, Roles, Vulnerabilidades, Releases, Programas, MAST, Motor de Scoring
+- [x] Fase 10: Jerarquía Organizacional (Organizacion + Gerencia + FKs)
+- [x] Fase 11: SystemSetting ampliado (50+ configuraciones dinámicas: catalogs, SLAs, indicators, permisos, headers HTTP)
+- [x] Fase 12: Hash Chain en AuditLog (A4 - tamper-evident audit trail, validación de integridad)
+- [x] Fase 13: M5-7 Schemas/Services/Routers (9 entities nuevas):
+  - M5 Iniciativas: Iniciativa, HitoIniciativa, ActualizacionIniciativa
+  - M6 Auditorías: Auditoria, HallazgoAuditoria, EvidenciaAuditoria, PlanRemediacion
+  - M7 Temas: TemaEmergente, ActualizacionTema, CierreConclusion
+- [x] 67 entities total (36 nuevos + 31 del framework)
+- [x] 35 schemas, 35 services, 35 routers completados
+- [x] Soft delete universal, IDOR protection, audit logging (50+ services)
+- [x] 75% OWASP coverage, 80% Auditabilidad (A1-A8 implementado)
 
 ---
 
 ### Próximas Fases (Bloques B-E)
 
-#### Bloque B — Módulos Críticos (Fases 11-16)
-- [ ] **Fase 11**: SystemSetting ampliado (catalogs, SLAs, indicadores, roles, IA config)
-- [ ] **Fase 12**: Hash Chain en AuditLog + verificación de integridad
-- [ ] **Fase 13**: M5-7 Schemas/Services/Routers (10 entities: Iniciativas, Auditorías, Temas)
+#### Bloque B — Módulos Críticos (Fases 11-16) — ✅ COMPLETADO
+- [x] **Fase 11**: SystemSetting ampliado (50+ keys: catalogs, SLAs, indicators, roles, IA config, headers HTTP)
+- [x] **Fase 12**: Hash Chain en AuditLog + verificación de integridad (A4 implementado)
+- [x] **Fase 13**: M5-7 Schemas/Services/Routers (9 entities nuevas: Iniciativas, Auditorías, Temas Emergentes)
 - [ ] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
 - [ ] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables)
 - [ ] **Fase 16**: FiltroGuardado (saved filters compartidos para dashboards)
 
-#### Bloque C — Módulos Nuevos (Fases 17-20)
+#### Bloque C — Módulos Nuevos (Fases 14-17)
+- [ ] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
+- [ ] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables)
+- [ ] **Fase 16**: FiltroGuardado (saved filters compartidos para dashboards)
 - [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor)
 - [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol
 - [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional
 - [ ] **Fase 20**: Permisos Granulares (module/action/widget level)
 
-#### Bloque D — Integración IA (Fases 21-23)
+#### Bloque D — IA + Changelog (Fases 21-23)
 - [ ] **Fase 21**: ChangelogEntrada + SistemaHealthMetric
 - [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD automático)
 - [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA automático)
