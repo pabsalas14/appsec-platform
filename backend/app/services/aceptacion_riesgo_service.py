@@ -39,6 +39,22 @@ class AceptacionRiesgoService(
         )
         return result.scalar_one_or_none() is not None
 
+    async def _get_for_decision(
+        self, db: AsyncSession, aceptacion_id: uuid.UUID
+    ) -> AceptacionRiesgo | None:
+        """Lee una aceptación para aprobar/rechazar sin scope de owner.
+
+        Estas acciones se autorizan por permiso granular (`vulnerabilities.approve`)
+        y requieren separación de funciones; por diseño no se limitan al owner.
+        """
+        result = await db.execute(
+            select(AceptacionRiesgo).where(
+                AceptacionRiesgo.id == aceptacion_id,
+                AceptacionRiesgo.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def aprobar(
         self,
         db: AsyncSession,
@@ -52,7 +68,7 @@ class AceptacionRiesgoService(
         from datetime import datetime, timezone
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, aceptacion_id, scope=scope)
+        record = await self._get_for_decision(db, aceptacion_id)
         if not record:
             return None
 
@@ -89,7 +105,7 @@ class AceptacionRiesgoService(
         from datetime import datetime, timezone
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, aceptacion_id, scope=scope)
+        record = await self._get_for_decision(db, aceptacion_id)
         if not record:
             return None
 

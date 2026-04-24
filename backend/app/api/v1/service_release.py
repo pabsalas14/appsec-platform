@@ -1,13 +1,21 @@
 """ServiceRelease CRUD endpoints (Módulo 8 — Operación)."""
 
+from __future__ import annotations
+
+import csv
+import hashlib
+from io import StringIO
+
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.service_release import ServiceRelease
 from app.models.user import User
@@ -16,9 +24,49 @@ from app.schemas.service_release import (
     ServiceReleaseRead,
     ServiceReleaseUpdate,
 )
+from app.services.audit_service import record as audit_record
 from app.services.service_release_service import service_release_svc
 
 router = APIRouter()
+
+
+@router.get("/export.csv")
+async def export_service_releases_csv(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.RELEASES.EXPORT)),
+):
+    """Exporta releases del usuario a CSV y registra auditoría A7."""
+    items = await service_release_svc.list(db, filters={"user_id": current_user.id})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        ["id", "nombre", "version", "estado_actual", "jira_referencia", "servicio_id"]
+    )
+    for rel in items:
+        writer.writerow(
+            [
+                str(rel.id),
+                rel.nombre,
+                rel.version,
+                rel.estado_actual,
+                rel.jira_referencia or "",
+                str(rel.servicio_id),
+            ]
+        )
+    body = buf.getvalue()
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    await audit_record(
+        db,
+        action="service_release.export_csv",
+        entity_type="service_release",
+        entity_id=current_user.id,
+        metadata={"rows": len(items), "sha256": digest, "format": "csv"},
+    )
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="service_releases.csv"'},
+    )
 
 
 @router.get("")

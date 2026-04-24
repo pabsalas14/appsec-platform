@@ -73,24 +73,42 @@ async def test_aprobar_etapa(client: AsyncClient, auth_headers: dict):
     etapa = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
     eid = etapa.json()["data"]["id"]
 
-    resp = await client.post(f"{BASE_URL}/{eid}/aprobar", headers=auth_headers, json={})
+    resp = await client.post(
+        f"{BASE_URL}/{eid}/aprobar", headers=auth_headers, json={}
+    )
+    assert resp.status_code == 403
+    assert "releases.approve" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_aprobar_etapa_with_admin(client: AsyncClient, auth_headers: dict, admin_auth_headers: dict):
+    rid = await _create_service_release(client, auth_headers)
+    etapa = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
+    eid = etapa.json()["data"]["id"]
+
+    resp = await client.post(f"{BASE_URL}/{eid}/aprobar", headers=admin_auth_headers, json={})
     assert resp.status_code == 200, resp.text
     assert resp.json()["data"]["estado"] == "Aprobada"
 
 
 @pytest.mark.asyncio
-async def test_rechazar_etapa_justificacion_obligatoria(client: AsyncClient, auth_headers: dict):
+async def test_rechazar_etapa_justificacion_obligatoria(
+    client: AsyncClient, auth_headers: dict, admin_auth_headers: dict
+):
     rid = await _create_service_release(client, auth_headers)
     etapa = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
     eid = etapa.json()["data"]["id"]
 
     # Sin justificacion → 422
-    resp = await client.post(f"{BASE_URL}/{eid}/rechazar", headers=auth_headers, json={})
+    resp = await client.post(
+        f"{BASE_URL}/{eid}/rechazar", headers=admin_auth_headers, json={}
+    )
     assert resp.status_code == 422
 
     # Con justificacion corta → 422
     resp2 = await client.post(
-        f"{BASE_URL}/{eid}/rechazar", headers=auth_headers,
+        f"{BASE_URL}/{eid}/rechazar",
+        headers=admin_auth_headers,
         json={"justificacion": "corta"},
     )
     assert resp2.status_code == 422
@@ -104,6 +122,20 @@ async def test_rechazar_etapa(client: AsyncClient, auth_headers: dict):
 
     resp = await client.post(
         f"{BASE_URL}/{eid}/rechazar", headers=auth_headers,
+        json={"justificacion": "La etapa no cumple los criterios de seguridad establecidos"},
+    )
+    assert resp.status_code == 403
+    assert "releases.approve" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_rechazar_etapa_with_admin(client: AsyncClient, auth_headers: dict, admin_auth_headers: dict):
+    rid = await _create_service_release(client, auth_headers)
+    etapa = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
+    eid = etapa.json()["data"]["id"]
+
+    resp = await client.post(
+        f"{BASE_URL}/{eid}/rechazar", headers=admin_auth_headers,
         json={"justificacion": "La etapa no cumple los criterios de seguridad establecidos"},
     )
     assert resp.status_code == 200, resp.text

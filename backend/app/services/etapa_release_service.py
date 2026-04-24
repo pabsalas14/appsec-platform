@@ -51,6 +51,22 @@ class EtapaReleaseService(
         )
         return result.scalar_one_or_none()
 
+    async def _get_for_decision(
+        self, db: AsyncSession, etapa_id: uuid.UUID
+    ) -> EtapaRelease | None:
+        """Lee la etapa a aprobar/rechazar sin scope de owner.
+
+        La autorización se valida con permiso granular (`releases.approve`)
+        y el control SoD se aplica contra el dueño del ServiceRelease.
+        """
+        result = await db.execute(
+            select(EtapaRelease).where(
+                EtapaRelease.id == etapa_id,
+                EtapaRelease.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def aprobar(
         self,
         db: AsyncSession,
@@ -67,7 +83,7 @@ class EtapaReleaseService(
         """
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, etapa_id, scope=scope)
+        record = await self._get_for_decision(db, etapa_id)
         if not record:
             return None
 
@@ -113,7 +129,7 @@ class EtapaReleaseService(
         """
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, etapa_id, scope=scope)
+        record = await self._get_for_decision(db, etapa_id)
         if not record:
             return None
 

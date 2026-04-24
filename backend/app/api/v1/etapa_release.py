@@ -6,8 +6,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import error, success
 from app.models.etapa_release import EtapaRelease
 from app.models.user import User
@@ -91,10 +92,10 @@ async def delete_etapa_release(
 
 @router.post("/{id}/aprobar")
 async def aprobar_etapa(
+    id: UUID,
     body: EtapaAprobarRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    entity: EtapaRelease = Depends(require_ownership(etapa_release_svc)),
+    current_user: User = Depends(require_permission(P.RELEASES.APPROVE)),
 ):
     """Aprueba una etapa.
 
@@ -103,10 +104,9 @@ async def aprobar_etapa(
     """
     updated = await etapa_release_svc.aprobar(
         db,
-        entity.id,
+        id,
         aprobador_id=current_user.id,
         notas=body.notas,
-        scope={"user_id": current_user.id},
     )
     if not updated:
         return error("Etapa no encontrada", status_code=404)
@@ -115,10 +115,10 @@ async def aprobar_etapa(
 
 @router.post("/{id}/rechazar")
 async def rechazar_etapa(
+    id: UUID,
     body: EtapaRechazarRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    entity: EtapaRelease = Depends(require_ownership(etapa_release_svc)),
+    current_user: User = Depends(require_permission(P.RELEASES.APPROVE)),
 ):
     """Rechaza una etapa. Justificación obligatoria (A1) — min 10 chars.
 
@@ -126,11 +126,10 @@ async def rechazar_etapa(
     """
     updated = await etapa_release_svc.rechazar(
         db,
-        entity.id,
+        id,
         aprobador_id=current_user.id,
         justificacion=body.justificacion,
         notas=body.notas,
-        scope={"user_id": current_user.id},
     )
     if not updated:
         return error("Etapa no encontrada", status_code=404)

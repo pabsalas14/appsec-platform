@@ -110,3 +110,29 @@ async def test_service_release_idor_protected(
     for method, args in [("GET", {}), ("PATCH", {"json": {}}), ("DELETE", {})]:
         r = await client.request(method, f"{BASE_URL}/{rid}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_service_release_export_requires_permission(
+    client: AsyncClient, auth_headers: dict
+):
+    """El rol user no puede exportar sin releases.export."""
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert resp.status_code == 403
+    assert "releases.export" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_service_release_export_csv_success(
+    client: AsyncClient, admin_auth_headers: dict
+):
+    svc_id = await _create_servicio(client, admin_auth_headers)
+    created = await client.post(
+        BASE_URL, headers=admin_auth_headers, json=_payload(svc_id)
+    )
+    assert created.status_code == 201, created.text
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("content-type", "").startswith("text/csv")
+    assert "nombre,version,estado_actual" in resp.text
+    assert "Release v2.0" in resp.text

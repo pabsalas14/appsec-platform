@@ -5,9 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.exceptions import NotFoundException
+from app.core.permissions import P
 from app.core.response import success
 from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
 from app.models.user import User
@@ -89,7 +90,7 @@ async def aprobar_excepcion(
     id: UUID,
     notas: str | None = Body(None, embed=True),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.APPROVE)),
 ):
     """Aprueba una excepción pendiente.
 
@@ -109,7 +110,7 @@ async def rechazar_excepcion(
     id: UUID,
     notas: str | None = Body(None, embed=True),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.APPROVE)),
 ):
     """Rechaza una excepción pendiente.
 

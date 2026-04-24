@@ -43,6 +43,22 @@ class ExcepcionVulnerabilidadService(
         )
         return result.scalar_one_or_none() is not None
 
+    async def _get_for_decision(
+        self, db: AsyncSession, excepcion_id: uuid.UUID
+    ) -> ExcepcionVulnerabilidad | None:
+        """Lee una excepción para aprobar/rechazar sin scope de owner.
+
+        Estas acciones se autorizan por permiso granular (`vulnerabilities.approve`)
+        y requieren separación de funciones; por diseño no se limitan al owner.
+        """
+        result = await db.execute(
+            select(ExcepcionVulnerabilidad).where(
+                ExcepcionVulnerabilidad.id == excepcion_id,
+                ExcepcionVulnerabilidad.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def aprobar(
         self,
         db: AsyncSession,
@@ -56,7 +72,7 @@ class ExcepcionVulnerabilidadService(
         from datetime import datetime, timezone
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, excepcion_id, scope=scope)
+        record = await self._get_for_decision(db, excepcion_id)
         if not record:
             return None
 
@@ -93,7 +109,7 @@ class ExcepcionVulnerabilidadService(
         from datetime import datetime, timezone
         from app.core.exceptions import ConflictException
 
-        record = await self.get(db, excepcion_id, scope=scope)
+        record = await self._get_for_decision(db, excepcion_id)
         if not record:
             return None
 

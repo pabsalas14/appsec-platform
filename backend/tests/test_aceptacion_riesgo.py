@@ -4,6 +4,8 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
 BASE_URL = "/api/v1/aceptacion_riesgos"
@@ -103,3 +105,76 @@ async def test_aceptacion_riesgo_idor_protected(
             method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
         )
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_aprobar_aceptacion_requires_permission(
+    client: AsyncClient,
+    auth_headers: dict,
+    other_auth_headers: dict,
+    _session_factory: async_sessionmaker[AsyncSession],
+):
+    vuln_id = await _create_vuln(client, other_auth_headers)
+    user_info = await client.get("/api/v1/auth/me", headers=other_auth_headers)
+    assert user_info.status_code == 200, user_info.text
+    owner_id = user_info.json()["data"]["id"]
+    created = await client.post(
+        BASE_URL,
+        headers=other_auth_headers,
+        json={
+            "vulnerabilidad_id": vuln_id,
+            "justificacion_negocio": "Riesgo residual aceptable por impacto acotado",
+            "propietario_riesgo_id": owner_id,
+            "fecha_revision_obligatoria": "2027-07-01T00:00:00Z",
+        },
+    )
+    assert created.status_code == 201, created.text
+    rid = created.json()["data"]["id"]
+
+    me = await client.get("/api/v1/auth/me", headers=auth_headers)
+    assert me.status_code == 200, me.text
+    uid = me.json()["data"]["id"]
+    async with _session_factory() as session:
+        await session.execute(
+            text("UPDATE users SET role = 'readonly' WHERE id = :uid"),
+            {"uid": uid},
+        )
+        await session.commit()
+
+    denied = await client.post(
+        f"{BASE_URL}/{rid}/aprobar", headers=auth_headers, json={"notas": "ok"}
+    )
+    assert denied.status_code == 403
+    assert "vulnerabilities.approve" in denied.text
+
+
+@pytest.mark.asyncio
+async def test_aprobar_aceptacion_success_with_admin(
+    client: AsyncClient,
+    admin_auth_headers: dict,
+    other_auth_headers: dict,
+):
+    vuln_id = await _create_vuln(client, other_auth_headers)
+    user_info = await client.get("/api/v1/auth/me", headers=other_auth_headers)
+    assert user_info.status_code == 200, user_info.text
+    owner_id = user_info.json()["data"]["id"]
+    created = await client.post(
+        BASE_URL,
+        headers=other_auth_headers,
+        json={
+            "vulnerabilidad_id": vuln_id,
+            "justificacion_negocio": "Riesgo aceptado temporalmente por dependencia externa",
+            "propietario_riesgo_id": owner_id,
+            "fecha_revision_obligatoria": "2027-10-01T00:00:00Z",
+        },
+    )
+    assert created.status_code == 201, created.text
+    rid = created.json()["data"]["id"]
+
+    approved = await client.post(
+        f"{BASE_URL}/{rid}/aprobar",
+        headers=admin_auth_headers,
+        json={"notas": "Aprobada por negocio"},
+    )
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["data"]["estado"] == "Aprobada"
