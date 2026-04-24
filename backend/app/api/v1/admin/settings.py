@@ -322,6 +322,142 @@ DEFAULT_SETTINGS: list[dict] = [
         },
         "description": "Pesos por categoría OWASP Top 10 para el KRI0025. Deben sumar 100.",
     },
+
+    # ── Indicadores base (XXX-001 a XXX-005) ──────────────────────────────────
+    {
+        "key": "indicadores.base",
+        "value": [
+            {
+                "code": "XXX-001",
+                "nombre": "# Vulnerabilidades Críticas y Altas identificadas/mes",
+                "motor": "multi",
+                "formula": {"type": "count", "entity": "hallazgo", "filters": [{"field": "severity", "value": ["CRITICA", "ALTA"]}, {"field": "created_month", "value": "current"}]},
+                "sla_config": {"CRITICA": 7, "ALTA": 30, "MEDIA": 60, "BAJA": 90},
+                "threshold_green": 5,
+                "threshold_yellow": 10,
+                "threshold_red": 0,
+                "periodicidad": "monthly",
+            },
+            {
+                "code": "XXX-002",
+                "nombre": "% de vulnerabilidades Críticas/Altas remediadas",
+                "motor": "multi",
+                "formula": {"type": "ratio", "numerator": "remediadas", "denominator": "identificadas"},
+                "sla_config": {"CRITICA": 7, "ALTA": 30},
+                "threshold_green": 85,
+                "threshold_yellow": 70,
+                "threshold_red": 0,
+                "periodicidad": "monthly",
+            },
+            {
+                "code": "XXX-003",
+                "nombre": "Backlog activo: Vulnerabilidades Críticas/Altas sin remediar",
+                "motor": "multi",
+                "formula": {"type": "count", "filters": [{"field": "estatus", "value": ["ABIERTA", "EN_REMEDIACION"]}, {"field": "severidad", "value": ["CRITICA", "ALTA"]}]},
+                "sla_config": {"CRITICA": 7, "ALTA": 30},
+                "threshold_green": 5,
+                "threshold_yellow": 15,
+                "threshold_red": 25,
+                "periodicidad": "monthly",
+            },
+            {
+                "code": "XXX-004",
+                "nombre": "% de vulnerabilidades con SLA vencido",
+                "motor": "multi",
+                "formula": {"type": "ratio", "numerator": "sla_vencido", "denominator": "activas"},
+                "sla_config": {"CRITICA": 7, "ALTA": 30},
+                "threshold_green": 0,
+                "threshold_yellow": 10,
+                "threshold_red": 20,
+                "periodicidad": "monthly",
+            },
+            {
+                "code": "XXX-005",
+                "nombre": "Cambios/releases con vulnerabilidades Críticas/Altas detectadas",
+                "motor": "multi",
+                "formula": {"type": "count", "entity": "service_release", "filters": [{"field": "tiene_vulns_altas", "value": True}]},
+                "sla_config": {},
+                "threshold_green": 0,
+                "threshold_yellow": 1,
+                "threshold_red": 5,
+                "periodicidad": "monthly",
+            },
+        ],
+        "description": "Definición de indicadores base del sistema. Editable vía admin.",
+    },
+
+    # ── Dashboards base ───────────────────────────────────────────────────────
+    {
+        "key": "dashboards.lista",
+        "value": [
+            {"id": 1, "nombre": "Ejecutivo/General", "icon": "BarChart3", "ruta": "/dashboards/ejecutivo"},
+            {"id": 2, "nombre": "Equipo", "icon": "Users", "ruta": "/dashboards/equipo"},
+            {"id": 3, "nombre": "Programas Consolidado", "icon": "GitBranch", "ruta": "/dashboards/programas"},
+            {"id": 4, "nombre": "Detalle Programa", "icon": "Layers", "ruta": "/dashboards/programa-detalle"},
+            {"id": 5, "nombre": "Vulnerabilidades Multi-Dim", "icon": "AlertTriangle", "ruta": "/dashboards/vulns"},
+            {"id": 6, "nombre": "Releases (Tabla)", "icon": "Table", "ruta": "/dashboards/releases-tabla"},
+            {"id": 7, "nombre": "Releases (Kanban)", "icon": "LayoutGrid", "ruta": "/dashboards/releases-kanban"},
+            {"id": 8, "nombre": "Iniciativas", "icon": "CheckSquare", "ruta": "/dashboards/iniciativas"},
+            {"id": 9, "nombre": "Temas Emergentes", "icon": "AlertCircle", "ruta": "/dashboards/temas"},
+        ],
+        "description": "Catálogo de 9 dashboards disponibles en la plataforma.",
+    },
+
+    # ── Permisos granulares base ──────────────────────────────────────────────
+    {
+        "key": "permisos.modulos",
+        "value": [
+            "vulnerabilidades",
+            "releases",
+            "programas",
+            "iniciativas",
+            "auditorias",
+            "temas_emergentes",
+            "dashboards",
+            "admin",
+        ],
+        "description": "Módulos de la plataforma para RBAC granular.",
+    },
+
+    # ── Flujos de estado por entidad ──────────────────────────────────────────
+    {
+        "key": "flujos.vulnerabilidad_default",
+        "value": [
+            {"from": "abierta", "to": "en_revision", "allowed": True, "requires_justification": False, "requires_approval": False},
+            {"from": "en_revision", "to": "en_remediacion", "allowed": True, "requires_justification": False, "requires_approval": False},
+            {"from": "en_remediacion", "to": "verificacion", "allowed": True, "requires_justification": False, "requires_approval": False},
+            {"from": "verificacion", "to": "cerrada", "allowed": True, "requires_justification": False, "requires_approval": True},
+            {"from": "abierta", "to": "falso_positivo", "allowed": True, "requires_justification": True, "requires_approval": False},
+            {"from": "abierta", "to": "riesgo_aceptado", "allowed": True, "requires_justification": True, "requires_approval": True},
+        ],
+        "description": "Flujo de estados por defecto para vulnerabilidades (configurable).",
+    },
+
+    # ── Seguridad Headers (OWASP S8) ──────────────────────────────────────────
+    {
+        "key": "seguridad.headers_http",
+        "value": {
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "X-XSS-Protection": "1; mode=block",
+        },
+        "description": "Cabeceras HTTP de seguridad OWASP aplicadas por Nginx/FastAPI.",
+    },
+
+    # ── Trazabilidad y Auditoría ──────────────────────────────────────────────
+    {
+        "key": "auditoria.retencion_dias",
+        "value": 730,
+        "description": "Días de retención de audit logs antes de purga archivada.",
+    },
+    {
+        "key": "auditoria.verificar_hash_chain",
+        "value": True,
+        "description": "Si True, valida la cadena de hashes de audit log en cada lectura (regla A4).",
+    },
 ]
 
 
