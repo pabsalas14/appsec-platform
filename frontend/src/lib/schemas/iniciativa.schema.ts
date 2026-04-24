@@ -3,23 +3,25 @@ import { z } from 'zod';
 export const IniciativaSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-titulo: z.string(),
-descripcion: z.string().nullable().optional(),
-tipo: z.string(),
-estado: z.string(),
-fecha_inicio: z.string().nullable().optional(),
-fecha_fin_estimada: z.string().nullable().optional(),
-created_at: z.string(),
+  titulo: z.string(),
+  descripcion: z.string().nullable().optional(),
+  tipo: z.string(),
+  estado: z.string(),
+  celula_id: z.string().uuid().nullable().optional(),
+  fecha_inicio: z.string().nullable().optional(),
+  fecha_fin_estimada: z.string().nullable().optional(),
+  created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const IniciativaCreateSchema = z.object({
-titulo: z.string(),
-descripcion: z.string().nullable().optional(),
-tipo: z.string(),
-estado: z.string(),
-fecha_inicio: z.string().nullable().optional(),
-fecha_fin_estimada: z.string().nullable().optional(),
+  titulo: z.string().min(1).max(500),
+  descripcion: z.string().nullable().optional(),
+  tipo: z.string().min(1).max(200),
+  estado: z.string().min(1).max(200),
+  celula_id: z.union([z.string().uuid(), z.null()]).optional(),
+  fecha_inicio: z.string().nullable().optional(),
+  fecha_fin_estimada: z.string().nullable().optional(),
 });
 
 export const IniciativaUpdateSchema = IniciativaCreateSchema.partial();

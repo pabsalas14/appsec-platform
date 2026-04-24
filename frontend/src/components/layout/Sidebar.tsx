@@ -15,6 +15,8 @@ import {
   Layers,
   Link2,
   ListTodo,
+  Package,
+  Target,
   Network,
   ScrollText,
   Settings,
@@ -76,6 +78,13 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
       { href: '/activo_webs', label: 'Activos web', icon: Link2 },
+    ],
+  },
+  {
+    title: 'Entrega y plan (BRD)',
+    items: [
+      { href: '/service_releases', label: 'Liberaciones de servicio', icon: Package },
+      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
     ],
   },
   {

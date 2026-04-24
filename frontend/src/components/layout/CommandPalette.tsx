@@ -9,6 +9,8 @@ import {
   GitBranch,
   Globe2,
   Link2,
+  Package,
+  Target,
   Users,
   FolderKanban,
   Layers,
@@ -124,6 +126,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/activo_webs'))}>
               <Link2 className="mr-2 h-4 w-4" /> Activos web
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/service_releases'))}>
+              <Package className="mr-2 h-4 w-4" /> Liberaciones de servicio
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/iniciativas'))}>
+              <Target className="mr-2 h-4 w-4" /> Iniciativas
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
