@@ -146,6 +146,8 @@ import app.models.indicador_formula   # noqa: F401
 
 import app.models.filtro_guardado   # noqa: F401
 
+import app.models.dashboard_config   # noqa: F401
+
 target_metadata = Base.metadata
 
 

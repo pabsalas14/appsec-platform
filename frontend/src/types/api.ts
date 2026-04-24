@@ -610,6 +610,58 @@ export interface paths {
         patch: operations["update_regla_sod_api_v1_admin_regla_sods__id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/herramientas-externas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Herramientas
+         * @description List all configured integrations/tools. Admin only.
+         */
+        get: operations["list_herramientas_api_v1_admin_herramientas_externas_get"];
+        put?: never;
+        /**
+         * Create Herramienta
+         * @description Create a new integration/tool. Admin only. Audit logged.
+         */
+        post: operations["create_herramienta_api_v1_admin_herramientas_externas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/herramientas-externas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Herramienta
+         * @description Get a specific tool config by ID. Admin only.
+         */
+        get: operations["get_herramienta_api_v1_admin_herramientas_externas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Herramienta
+         * @description Soft-delete a tool configuration. Admin only. Audit logged.
+         */
+        delete: operations["delete_herramienta_api_v1_admin_herramientas_externas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Herramienta
+         * @description Partially update a tool configuration. Admin only. Audit logged.
+         */
+        patch: operations["update_herramienta_api_v1_admin_herramientas_externas__id__patch"];
+        trace?: never;
+    };
     "/api/v1/": {
         parameters: {
             query?: never;
@@ -1043,6 +1095,2489 @@ export interface paths {
         patch: operations["update_control_seguridad_api_v1_control_seguridads__id__patch"];
         trace?: never;
     };
+    "/api/v1/vulnerabilidads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Vulnerabilidads
+         * @description List vulnerabilidads owned by the current user.
+         */
+        get: operations["list_vulnerabilidads_api_v1_vulnerabilidads_get"];
+        put?: never;
+        /**
+         * Create Vulnerabilidad
+         * @description Create a new vulnerabilidad for the current user.
+         */
+        post: operations["create_vulnerabilidad_api_v1_vulnerabilidads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vulnerabilidads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vulnerabilidad
+         * @description Get a single owned vulnerabilidad by ID (404 if not owned).
+         */
+        get: operations["get_vulnerabilidad_api_v1_vulnerabilidads__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Vulnerabilidad
+         * @description Delete an owned vulnerabilidad (404 if not owned).
+         */
+        delete: operations["delete_vulnerabilidad_api_v1_vulnerabilidads__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Vulnerabilidad
+         * @description Partially update an owned vulnerabilidad (404 if not owned).
+         */
+        patch: operations["update_vulnerabilidad_api_v1_vulnerabilidads__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/historial_vulnerabilidads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Historial
+         * @description Lista entradas de historial. Puede filtrarse por vulnerabilidad_id.
+         */
+        get: operations["list_historial_api_v1_historial_vulnerabilidads_get"];
+        put?: never;
+        /**
+         * Create Historial
+         * @description Registra manualmente una entrada de historial.
+         *
+         *     Normalmente esto lo hace el service de vulnerabilidades automáticamente
+         *     al cambiar el estado. Solo usar para registros manuales.
+         */
+        post: operations["create_historial_api_v1_historial_vulnerabilidads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historial_vulnerabilidads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Historial
+         * @description Obtiene una entrada de historial por ID.
+         */
+        get: operations["get_historial_api_v1_historial_vulnerabilidads__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/excepcion_vulnerabilidads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Excepciones
+         * @description Lista excepciones de vulnerabilidad del usuario actual.
+         */
+        get: operations["list_excepciones_api_v1_excepcion_vulnerabilidads_get"];
+        put?: never;
+        /**
+         * Create Excepcion
+         * @description Crea una nueva solicitud de excepción. Estado inicial: Pendiente.
+         *
+         *     Requiere justificacion (mínimo 10 caracteres) — regla A1.
+         */
+        post: operations["create_excepcion_api_v1_excepcion_vulnerabilidads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/excepcion_vulnerabilidads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Excepcion
+         * @description Obtiene una excepción por ID (404 si no existe o no es del usuario).
+         */
+        get: operations["get_excepcion_api_v1_excepcion_vulnerabilidads__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Excepcion
+         * @description Soft-delete de una excepción (A2).
+         */
+        delete: operations["delete_excepcion_api_v1_excepcion_vulnerabilidads__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Excepcion
+         * @description Actualiza parcialmente una excepción (solo mientras está Pendiente).
+         */
+        patch: operations["update_excepcion_api_v1_excepcion_vulnerabilidads__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/excepcion_vulnerabilidads/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar Excepcion
+         * @description Aprueba una excepción pendiente.
+         *
+         *     SoD (A6): si la regla 'vulnerabilidad.aprobar_excepcion' está activa,
+         *     el aprobador no puede ser el mismo que solicitó la excepción.
+         */
+        post: operations["aprobar_excepcion_api_v1_excepcion_vulnerabilidads__id__aprobar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/excepcion_vulnerabilidads/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechazar Excepcion
+         * @description Rechaza una excepción pendiente.
+         *
+         *     SoD (A6): si la regla 'vulnerabilidad.aprobar_excepcion' está activa,
+         *     el rechazador no puede ser el mismo que solicitó la excepción.
+         */
+        post: operations["rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/aceptacion_riesgos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Aceptaciones
+         * @description Lista aceptaciones de riesgo del usuario actual.
+         */
+        get: operations["list_aceptaciones_api_v1_aceptacion_riesgos_get"];
+        put?: never;
+        /**
+         * Create Aceptacion
+         * @description Registra una aceptación de riesgo. Estado inicial: Pendiente.
+         *
+         *     Requiere justificacion_negocio (mínimo 10 caracteres) — regla A1.
+         */
+        post: operations["create_aceptacion_api_v1_aceptacion_riesgos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/aceptacion_riesgos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Aceptacion
+         * @description Obtiene una aceptación de riesgo por ID.
+         */
+        get: operations["get_aceptacion_api_v1_aceptacion_riesgos__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Aceptacion
+         * @description Soft-delete de una aceptación de riesgo (A2).
+         */
+        delete: operations["delete_aceptacion_api_v1_aceptacion_riesgos__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Aceptacion
+         * @description Actualiza parcialmente una aceptación de riesgo.
+         */
+        patch: operations["update_aceptacion_api_v1_aceptacion_riesgos__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/aceptacion_riesgos/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar Aceptacion
+         * @description Aprueba una aceptación de riesgo pendiente.
+         *
+         *     SoD (A6): si la regla 'vulnerabilidad.aceptar_riesgo' está activa,
+         *     quien registra el riesgo no puede ser quien lo aprueba.
+         */
+        post: operations["aprobar_aceptacion_api_v1_aceptacion_riesgos__id__aprobar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/aceptacion_riesgos/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechazar Aceptacion
+         * @description Rechaza una aceptación de riesgo pendiente.
+         *
+         *     SoD (A6): si la regla 'vulnerabilidad.aceptar_riesgo' está activa,
+         *     quien registra el riesgo no puede ser quien lo rechaza.
+         */
+        post: operations["rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evidencia_remediacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Evidencias
+         * @description Lista evidencias de remediación. Puede filtrarse por vulnerabilidad_id.
+         */
+        get: operations["list_evidencias_api_v1_evidencia_remediacions_get"];
+        put?: never;
+        /**
+         * Create Evidencia
+         * @description Registra una evidencia de remediación.
+         *
+         *     El sha256 debe ser calculado por el cliente o pre-calculado al subir el archivo.
+         *     Se almacena para verificación de integridad (A3).
+         */
+        post: operations["create_evidencia_api_v1_evidencia_remediacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evidencia_remediacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evidencia
+         * @description Obtiene una evidencia de remediación por ID.
+         */
+        get: operations["get_evidencia_api_v1_evidencia_remediacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Evidencia
+         * @description Soft-delete de una evidencia de remediación (A2).
+         */
+        delete: operations["delete_evidencia_api_v1_evidencia_remediacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Evidencia
+         * @description Actualiza la descripción de una evidencia (el archivo y hash son inmutables).
+         */
+        patch: operations["update_evidencia_api_v1_evidencia_remediacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/service_releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Service Releases
+         * @description Lista releases del usuario. Filtrar por ?servicio_id=<uuid>.
+         */
+        get: operations["list_service_releases_api_v1_service_releases_get"];
+        put?: never;
+        /**
+         * Create Service Release
+         * @description Crea un nuevo ServiceRelease para el usuario autenticado.
+         */
+        post: operations["create_service_release_api_v1_service_releases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service_releases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Service Release
+         * @description Obtiene un release por ID (404 si no pertenece al usuario).
+         */
+        get: operations["get_service_release_api_v1_service_releases__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Service Release
+         * @description Elimina (soft-delete) un release (404 si no es del usuario).
+         */
+        delete: operations["delete_service_release_api_v1_service_releases__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Service Release
+         * @description Actualiza parcialmente un release (404 si no es del usuario).
+         */
+        patch: operations["update_service_release_api_v1_service_releases__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/etapa_releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Etapa Releases
+         * @description Lista etapas del usuario. Filtrar por ?service_release_id=<uuid>.
+         */
+        get: operations["list_etapa_releases_api_v1_etapa_releases_get"];
+        put?: never;
+        /**
+         * Create Etapa Release
+         * @description Crea una nueva etapa para el usuario autenticado.
+         */
+        post: operations["create_etapa_release_api_v1_etapa_releases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/etapa_releases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Etapa Release
+         * @description Obtiene una etapa por ID (404 si no pertenece al usuario).
+         */
+        get: operations["get_etapa_release_api_v1_etapa_releases__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Etapa Release
+         * @description Elimina (soft-delete) una etapa (404 si no es del usuario).
+         */
+        delete: operations["delete_etapa_release_api_v1_etapa_releases__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Etapa Release
+         * @description Actualiza parcialmente una etapa (404 si no es del usuario).
+         */
+        patch: operations["update_etapa_release_api_v1_etapa_releases__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/etapa_releases/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar Etapa
+         * @description Aprueba una etapa.
+         *
+         *     Si la ReglaSoD 'release.aprobar' está activa, el aprobador no puede ser
+         *     el creador del ServiceRelease padre (A6).
+         */
+        post: operations["aprobar_etapa_api_v1_etapa_releases__id__aprobar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/etapa_releases/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechazar Etapa
+         * @description Rechaza una etapa. Justificación obligatoria (A1) — min 10 chars.
+         *
+         *     Si la ReglaSoD 'release.aprobar' está activa, aplica SoD (A6).
+         */
+        post: operations["rechazar_etapa_api_v1_etapa_releases__id__rechazar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pipeline_releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Pipeline Releases
+         * @description Lista pipelines del usuario. Filtrar por ?repositorio_id= o ?service_release_id=.
+         */
+        get: operations["list_pipeline_releases_api_v1_pipeline_releases_get"];
+        put?: never;
+        /** Create Pipeline Release */
+        post: operations["create_pipeline_release_api_v1_pipeline_releases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pipeline_releases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pipeline Release */
+        get: operations["get_pipeline_release_api_v1_pipeline_releases__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Pipeline Release */
+        delete: operations["delete_pipeline_release_api_v1_pipeline_releases__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Pipeline Release */
+        patch: operations["update_pipeline_release_api_v1_pipeline_releases__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Pipelines
+         * @description Lista hallazgos de pipeline. Filtrar por ?pipeline_release_id=<uuid>.
+         */
+        get: operations["list_hallazgo_pipelines_api_v1_hallazgo_pipelines_get"];
+        put?: never;
+        /** Create Hallazgo Pipeline */
+        post: operations["create_hallazgo_pipeline_api_v1_hallazgo_pipelines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_pipelines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Hallazgo Pipeline */
+        get: operations["get_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Hallazgo Pipeline */
+        delete: operations["delete_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Hallazgo Pipeline */
+        patch: operations["update_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/revision_terceros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Revision Terceros
+         * @description Lista revisiones. Filtrar por ?servicio_id= o ?activo_web_id=.
+         */
+        get: operations["list_revision_terceros_api_v1_revision_terceros_get"];
+        put?: never;
+        /** Create Revision Tercero */
+        post: operations["create_revision_tercero_api_v1_revision_terceros_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/revision_terceros/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Revision Tercero */
+        get: operations["get_revision_tercero_api_v1_revision_terceros__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Revision Tercero */
+        delete: operations["delete_revision_tercero_api_v1_revision_terceros__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Revision Tercero */
+        patch: operations["update_revision_tercero_api_v1_revision_terceros__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_terceros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Terceros
+         * @description Lista hallazgos de tercero. Filtrar por ?revision_tercero_id=<uuid>.
+         */
+        get: operations["list_hallazgo_terceros_api_v1_hallazgo_terceros_get"];
+        put?: never;
+        /** Create Hallazgo Tercero */
+        post: operations["create_hallazgo_tercero_api_v1_hallazgo_terceros_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_terceros/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Hallazgo Tercero */
+        get: operations["get_hallazgo_tercero_api_v1_hallazgo_terceros__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Hallazgo Tercero */
+        delete: operations["delete_hallazgo_tercero_api_v1_hallazgo_terceros__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Hallazgo Tercero */
+        patch: operations["update_hallazgo_tercero_api_v1_hallazgo_terceros__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_sasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Programa Sasts
+         * @description List programa_sasts owned by the current user.
+         */
+        get: operations["list_programa_sasts_api_v1_programa_sasts_get"];
+        put?: never;
+        /**
+         * Create Programa Sast
+         * @description Create a new programa_sast for the current user.
+         */
+        post: operations["create_programa_sast_api_v1_programa_sasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programa_sasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Programa Sast
+         * @description Get a single owned programa_sast by ID (404 if not owned).
+         */
+        get: operations["get_programa_sast_api_v1_programa_sasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Programa Sast
+         * @description Delete an owned programa_sast (404 if not owned).
+         */
+        delete: operations["delete_programa_sast_api_v1_programa_sasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Programa Sast
+         * @description Partially update an owned programa_sast (404 if not owned).
+         */
+        patch: operations["update_programa_sast_api_v1_programa_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/actividad_mensual_sasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Actividad Mensual Sasts
+         * @description List actividades mensual SAST owned by the current user, optionally filtered by programa.
+         */
+        get: operations["list_actividad_mensual_sasts_api_v1_actividad_mensual_sasts_get"];
+        put?: never;
+        /**
+         * Create Actividad Mensual Sast
+         * @description Create a new actividad mensual SAST for the current user.
+         */
+        post: operations["create_actividad_mensual_sast_api_v1_actividad_mensual_sasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actividad_mensual_sasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Actividad Mensual Sast
+         * @description Get a single owned actividad mensual SAST by ID.
+         */
+        get: operations["get_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Actividad Mensual Sast
+         * @description Delete an owned actividad mensual SAST.
+         */
+        delete: operations["delete_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Actividad Mensual Sast
+         * @description Partially update an owned actividad mensual SAST.
+         */
+        patch: operations["update_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_sasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Sasts
+         * @description List hallazgos SAST owned by the current user, optionally filtered by actividad.
+         */
+        get: operations["list_hallazgo_sasts_api_v1_hallazgo_sasts_get"];
+        put?: never;
+        /**
+         * Create Hallazgo Sast
+         * @description Create a new hallazgo SAST for the current user.
+         */
+        post: operations["create_hallazgo_sast_api_v1_hallazgo_sasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_sasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hallazgo Sast
+         * @description Get a single owned hallazgo SAST by ID.
+         */
+        get: operations["get_hallazgo_sast_api_v1_hallazgo_sasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Hallazgo Sast
+         * @description Delete an owned hallazgo SAST.
+         */
+        delete: operations["delete_hallazgo_sast_api_v1_hallazgo_sasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Hallazgo Sast
+         * @description Partially update an owned hallazgo SAST.
+         */
+        patch: operations["update_hallazgo_sast_api_v1_hallazgo_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_dasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Programa Dasts
+         * @description List programa_dasts owned by the current user.
+         */
+        get: operations["list_programa_dasts_api_v1_programa_dasts_get"];
+        put?: never;
+        /**
+         * Create Programa Dast
+         * @description Create a new programa_dast for the current user.
+         */
+        post: operations["create_programa_dast_api_v1_programa_dasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programa_dasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Programa Dast
+         * @description Get a single owned programa_dast by ID (404 if not owned).
+         */
+        get: operations["get_programa_dast_api_v1_programa_dasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Programa Dast
+         * @description Delete an owned programa_dast (404 if not owned).
+         */
+        delete: operations["delete_programa_dast_api_v1_programa_dasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Programa Dast
+         * @description Partially update an owned programa_dast (404 if not owned).
+         */
+        patch: operations["update_programa_dast_api_v1_programa_dasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/ejecucion_dasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Ejecucion Dasts
+         * @description List ejecuciones DAST owned by the current user, optionally filtered by programa.
+         */
+        get: operations["list_ejecucion_dasts_api_v1_ejecucion_dasts_get"];
+        put?: never;
+        /**
+         * Create Ejecucion Dast
+         * @description Create a new ejecucion DAST for the current user.
+         */
+        post: operations["create_ejecucion_dast_api_v1_ejecucion_dasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejecucion_dasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ejecucion Dast
+         * @description Get a single owned ejecucion DAST by ID.
+         */
+        get: operations["get_ejecucion_dast_api_v1_ejecucion_dasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Ejecucion Dast
+         * @description Delete an owned ejecucion DAST.
+         */
+        delete: operations["delete_ejecucion_dast_api_v1_ejecucion_dasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Ejecucion Dast
+         * @description Partially update an owned ejecucion DAST.
+         */
+        patch: operations["update_ejecucion_dast_api_v1_ejecucion_dasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_dasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Dasts
+         * @description List hallazgos DAST owned by the current user, optionally filtered by ejecucion.
+         */
+        get: operations["list_hallazgo_dasts_api_v1_hallazgo_dasts_get"];
+        put?: never;
+        /**
+         * Create Hallazgo Dast
+         * @description Create a new hallazgo DAST for the current user.
+         */
+        post: operations["create_hallazgo_dast_api_v1_hallazgo_dasts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_dasts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hallazgo Dast
+         * @description Get a single owned hallazgo DAST by ID.
+         */
+        get: operations["get_hallazgo_dast_api_v1_hallazgo_dasts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Hallazgo Dast
+         * @description Delete an owned hallazgo DAST.
+         */
+        delete: operations["delete_hallazgo_dast_api_v1_hallazgo_dasts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Hallazgo Dast
+         * @description Partially update an owned hallazgo DAST.
+         */
+        patch: operations["update_hallazgo_dast_api_v1_hallazgo_dasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_threat_modelings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Programa Threat Modelings
+         * @description List programa_threat_modelings owned by the current user.
+         */
+        get: operations["list_programa_threat_modelings_api_v1_programa_threat_modelings_get"];
+        put?: never;
+        /**
+         * Create Programa Threat Modeling
+         * @description Create a new programa_threat_modeling for the current user.
+         */
+        post: operations["create_programa_threat_modeling_api_v1_programa_threat_modelings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programa_threat_modelings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Programa Threat Modeling
+         * @description Get a single owned programa_threat_modeling by ID (404 if not owned).
+         */
+        get: operations["get_programa_threat_modeling_api_v1_programa_threat_modelings__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Programa Threat Modeling
+         * @description Delete an owned programa_threat_modeling (404 if not owned).
+         */
+        delete: operations["delete_programa_threat_modeling_api_v1_programa_threat_modelings__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Programa Threat Modeling
+         * @description Partially update an owned programa_threat_modeling (404 if not owned).
+         */
+        patch: operations["update_programa_threat_modeling_api_v1_programa_threat_modelings__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sesion_threat_modelings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sesion Threat Modelings
+         * @description List sesiones de threat modeling, optionally filtered by programa.
+         */
+        get: operations["list_sesion_threat_modelings_api_v1_sesion_threat_modelings_get"];
+        put?: never;
+        /**
+         * Create Sesion Threat Modeling
+         * @description Create a new sesion de threat modeling for the current user.
+         */
+        post: operations["create_sesion_threat_modeling_api_v1_sesion_threat_modelings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sesion_threat_modelings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sesion Threat Modeling
+         * @description Get a single owned sesion de threat modeling by ID.
+         */
+        get: operations["get_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Sesion Threat Modeling
+         * @description Delete an owned sesion de threat modeling.
+         */
+        delete: operations["delete_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Sesion Threat Modeling
+         * @description Partially update an owned sesion de threat modeling.
+         */
+        patch: operations["update_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/amenazas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Amenazas
+         * @description List amenazas owned by the current user, optionally filtered by sesion.
+         */
+        get: operations["list_amenazas_api_v1_amenazas_get"];
+        put?: never;
+        /**
+         * Create Amenaza
+         * @description Create a new amenaza for the current user. score_total is auto-calculated.
+         */
+        post: operations["create_amenaza_api_v1_amenazas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/amenazas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Amenaza
+         * @description Get a single owned amenaza by ID.
+         */
+        get: operations["get_amenaza_api_v1_amenazas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Amenaza
+         * @description Delete an owned amenaza.
+         */
+        delete: operations["delete_amenaza_api_v1_amenazas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Amenaza
+         * @description Partially update an owned amenaza. score_total is recalculated automatically.
+         */
+        patch: operations["update_amenaza_api_v1_amenazas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/control_mitigacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Control Mitigacions
+         * @description List controles de mitigación, optionally filtered by amenaza.
+         */
+        get: operations["list_control_mitigacions_api_v1_control_mitigacions_get"];
+        put?: never;
+        /**
+         * Create Control Mitigacion
+         * @description Create a new control de mitigación for the current user.
+         */
+        post: operations["create_control_mitigacion_api_v1_control_mitigacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/control_mitigacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Control Mitigacion
+         * @description Get a single owned control de mitigación by ID.
+         */
+        get: operations["get_control_mitigacion_api_v1_control_mitigacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Control Mitigacion
+         * @description Delete an owned control de mitigación.
+         */
+        delete: operations["delete_control_mitigacion_api_v1_control_mitigacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Control Mitigacion
+         * @description Partially update an owned control de mitigación.
+         */
+        patch: operations["update_control_mitigacion_api_v1_control_mitigacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_source_codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Programa Source Codes
+         * @description List programa_source_codes owned by the current user.
+         */
+        get: operations["list_programa_source_codes_api_v1_programa_source_codes_get"];
+        put?: never;
+        /**
+         * Create Programa Source Code
+         * @description Create a new programa_source_code for the current user.
+         */
+        post: operations["create_programa_source_code_api_v1_programa_source_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programa_source_codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Programa Source Code
+         * @description Get a single owned programa_source_code by ID (404 if not owned).
+         */
+        get: operations["get_programa_source_code_api_v1_programa_source_codes__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Programa Source Code
+         * @description Delete an owned programa_source_code (404 if not owned).
+         */
+        delete: operations["delete_programa_source_code_api_v1_programa_source_codes__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Programa Source Code
+         * @description Partially update an owned programa_source_code (404 if not owned).
+         */
+        patch: operations["update_programa_source_code_api_v1_programa_source_codes__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/control_source_codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Control Source Codes
+         * @description List control_source_codes owned by the current user.
+         */
+        get: operations["list_control_source_codes_api_v1_control_source_codes_get"];
+        put?: never;
+        /**
+         * Create Control Source Code
+         * @description Create a new control_source_code for the current user.
+         */
+        post: operations["create_control_source_code_api_v1_control_source_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/control_source_codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Control Source Code
+         * @description Get a single owned control_source_code by ID (404 if not owned).
+         */
+        get: operations["get_control_source_code_api_v1_control_source_codes__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Control Source Code
+         * @description Delete an owned control_source_code (404 if not owned).
+         */
+        delete: operations["delete_control_source_code_api_v1_control_source_codes__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Control Source Code
+         * @description Partially update an owned control_source_code (404 if not owned).
+         */
+        patch: operations["update_control_source_code_api_v1_control_source_codes__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/revision_source_codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Revision Source Codes
+         * @description List revisiones source code, optionally filtered by programa or control.
+         */
+        get: operations["list_revision_source_codes_api_v1_revision_source_codes_get"];
+        put?: never;
+        /**
+         * Create Revision Source Code
+         * @description Create a new revision source code for the current user.
+         */
+        post: operations["create_revision_source_code_api_v1_revision_source_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/revision_source_codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Revision Source Code
+         * @description Get a single owned revision source code by ID.
+         */
+        get: operations["get_revision_source_code_api_v1_revision_source_codes__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Revision Source Code
+         * @description Delete an owned revision source code.
+         */
+        delete: operations["delete_revision_source_code_api_v1_revision_source_codes__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Revision Source Code
+         * @description Partially update an owned revision source code.
+         */
+        patch: operations["update_revision_source_code_api_v1_revision_source_codes__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/servicio_regulado_registros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Servicio Regulado Registros
+         * @description List servicio_regulado_registros owned by the current user.
+         */
+        get: operations["list_servicio_regulado_registros_api_v1_servicio_regulado_registros_get"];
+        put?: never;
+        /**
+         * Create Servicio Regulado Registro
+         * @description Create a new servicio_regulado_registro for the current user.
+         */
+        post: operations["create_servicio_regulado_registro_api_v1_servicio_regulado_registros_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/servicio_regulado_registros/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Servicio Regulado Registro
+         * @description Get a single owned servicio_regulado_registro by ID (404 if not owned).
+         */
+        get: operations["get_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Servicio Regulado Registro
+         * @description Delete an owned servicio_regulado_registro (404 if not owned).
+         */
+        delete: operations["delete_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Servicio Regulado Registro
+         * @description Partially update an owned servicio_regulado_registro (404 if not owned).
+         */
+        patch: operations["update_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/regulacion_controls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Regulacion Controls
+         * @description List regulacion_controls owned by the current user.
+         */
+        get: operations["list_regulacion_controls_api_v1_regulacion_controls_get"];
+        put?: never;
+        /**
+         * Create Regulacion Control
+         * @description Create a new regulacion_control for the current user.
+         */
+        post: operations["create_regulacion_control_api_v1_regulacion_controls_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/regulacion_controls/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Regulacion Control
+         * @description Get a single owned regulacion_control by ID (404 if not owned).
+         */
+        get: operations["get_regulacion_control_api_v1_regulacion_controls__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Regulacion Control
+         * @description Delete an owned regulacion_control (404 if not owned).
+         */
+        delete: operations["delete_regulacion_control_api_v1_regulacion_controls__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Regulacion Control
+         * @description Partially update an owned regulacion_control (404 if not owned).
+         */
+        patch: operations["update_regulacion_control_api_v1_regulacion_controls__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/evidencia_regulacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Evidencia Regulacions
+         * @description List evidencia_regulacions owned by the current user.
+         */
+        get: operations["list_evidencia_regulacions_api_v1_evidencia_regulacions_get"];
+        put?: never;
+        /**
+         * Create Evidencia Regulacion
+         * @description Create a new evidencia_regulacion for the current user.
+         */
+        post: operations["create_evidencia_regulacion_api_v1_evidencia_regulacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evidencia_regulacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evidencia Regulacion
+         * @description Get a single owned evidencia_regulacion by ID (404 if not owned).
+         */
+        get: operations["get_evidencia_regulacion_api_v1_evidencia_regulacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Evidencia Regulacion
+         * @description Delete an owned evidencia_regulacion (404 if not owned).
+         */
+        delete: operations["delete_evidencia_regulacion_api_v1_evidencia_regulacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Evidencia Regulacion
+         * @description Partially update an owned evidencia_regulacion (404 if not owned).
+         */
+        patch: operations["update_evidencia_regulacion_api_v1_evidencia_regulacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/estado_cumplimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Estado Cumplimientos
+         * @description List estado_cumplimientos owned by the current user.
+         */
+        get: operations["list_estado_cumplimientos_api_v1_estado_cumplimientos_get"];
+        put?: never;
+        /**
+         * Create Estado Cumplimiento
+         * @description Create a new estado_cumplimiento for the current user.
+         */
+        post: operations["create_estado_cumplimiento_api_v1_estado_cumplimientos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/estado_cumplimientos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Estado Cumplimiento
+         * @description Get a single owned estado_cumplimiento by ID (404 if not owned).
+         */
+        get: operations["get_estado_cumplimiento_api_v1_estado_cumplimientos__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Estado Cumplimiento
+         * @description Delete an owned estado_cumplimiento (404 if not owned).
+         */
+        delete: operations["delete_estado_cumplimiento_api_v1_estado_cumplimientos__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Estado Cumplimiento
+         * @description Partially update an owned estado_cumplimiento (404 if not owned).
+         */
+        patch: operations["update_estado_cumplimiento_api_v1_estado_cumplimientos__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/ejecucion_masts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Ejecucion Masts
+         * @description List ejecuciones MAST owned by the current user, optionally filtered by aplicacion móvil.
+         */
+        get: operations["list_ejecucion_masts_api_v1_ejecucion_masts_get"];
+        put?: never;
+        /**
+         * Create Ejecucion Mast
+         * @description Create a new ejecucion_mast for the current user.
+         */
+        post: operations["create_ejecucion_mast_api_v1_ejecucion_masts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ejecucion_masts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ejecucion Mast
+         * @description Get a single owned ejecucion_mast by ID (404 if not owned).
+         */
+        get: operations["get_ejecucion_mast_api_v1_ejecucion_masts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Ejecucion Mast
+         * @description Delete an owned ejecucion_mast (404 if not owned).
+         */
+        delete: operations["delete_ejecucion_mast_api_v1_ejecucion_masts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Ejecucion Mast
+         * @description Partially update an owned ejecucion_mast (404 if not owned).
+         */
+        patch: operations["update_ejecucion_mast_api_v1_ejecucion_masts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_masts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Masts
+         * @description List hallazgos MAST owned by the current user, optionally filtered by ejecución.
+         */
+        get: operations["list_hallazgo_masts_api_v1_hallazgo_masts_get"];
+        put?: never;
+        /**
+         * Create Hallazgo Mast
+         * @description Create a new hallazgo_mast for the current user.
+         */
+        post: operations["create_hallazgo_mast_api_v1_hallazgo_masts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_masts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hallazgo Mast
+         * @description Get a single owned hallazgo_mast by ID (404 if not owned).
+         */
+        get: operations["get_hallazgo_mast_api_v1_hallazgo_masts__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Hallazgo Mast
+         * @description Delete an owned hallazgo_mast (404 if not owned).
+         */
+        delete: operations["delete_hallazgo_mast_api_v1_hallazgo_masts__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Hallazgo Mast
+         * @description Partially update an owned hallazgo_mast (404 if not owned).
+         */
+        patch: operations["update_hallazgo_mast_api_v1_hallazgo_masts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/organizacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Organizacions
+         * @description List organizacions owned by the current user.
+         */
+        get: operations["list_organizacions_api_v1_organizacions_get"];
+        put?: never;
+        /**
+         * Create Organizacion
+         * @description Create a new organizacion for the current user.
+         */
+        post: operations["create_organizacion_api_v1_organizacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Organizacion
+         * @description Get a single owned organizacion by ID (404 if not owned).
+         */
+        get: operations["get_organizacion_api_v1_organizacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Organizacion
+         * @description Delete an owned organizacion (404 if not owned).
+         */
+        delete: operations["delete_organizacion_api_v1_organizacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Organizacion
+         * @description Partially update an owned organizacion (404 if not owned).
+         */
+        patch: operations["update_organizacion_api_v1_organizacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/gerencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Gerencias
+         * @description List gerencias owned by the current user.
+         */
+        get: operations["list_gerencias_api_v1_gerencias_get"];
+        put?: never;
+        /**
+         * Create Gerencia
+         * @description Create a new gerencia for the current user.
+         */
+        post: operations["create_gerencia_api_v1_gerencias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gerencias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Gerencia
+         * @description Get a single owned gerencia by ID (404 if not owned).
+         */
+        get: operations["get_gerencia_api_v1_gerencias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Gerencia
+         * @description Delete an owned gerencia (404 if not owned).
+         */
+        delete: operations["delete_gerencia_api_v1_gerencias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Gerencia
+         * @description Partially update an owned gerencia (404 if not owned).
+         */
+        patch: operations["update_gerencia_api_v1_gerencias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/iniciativas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Iniciativas
+         * @description List iniciativas owned by the current user.
+         */
+        get: operations["list_iniciativas_api_v1_iniciativas_get"];
+        put?: never;
+        /**
+         * Create Iniciativa
+         * @description Create a new iniciativa for the current user.
+         */
+        post: operations["create_iniciativa_api_v1_iniciativas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/iniciativas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Iniciativa
+         * @description Get a single owned iniciativa by ID (404 if not owned).
+         */
+        get: operations["get_iniciativa_api_v1_iniciativas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Iniciativa
+         * @description Delete an owned iniciativa (404 if not owned).
+         */
+        delete: operations["delete_iniciativa_api_v1_iniciativas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Iniciativa
+         * @description Partially update an owned iniciativa (404 if not owned).
+         */
+        patch: operations["update_iniciativa_api_v1_iniciativas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hito_iniciativas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hito Iniciativas
+         * @description List hito iniciativas owned by the current user.
+         */
+        get: operations["list_hito_iniciativas_api_v1_hito_iniciativas_get"];
+        put?: never;
+        /**
+         * Create Hito Iniciativa
+         * @description Create a new hito iniciativa for the current user.
+         */
+        post: operations["create_hito_iniciativa_api_v1_hito_iniciativas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hito_iniciativas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hito Iniciativa
+         * @description Get a single owned hito iniciativa by ID (404 if not owned).
+         */
+        get: operations["get_hito_iniciativa_api_v1_hito_iniciativas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Hito Iniciativa
+         * @description Delete an owned hito iniciativa (404 if not owned).
+         */
+        delete: operations["delete_hito_iniciativa_api_v1_hito_iniciativas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Hito Iniciativa
+         * @description Partially update an owned hito iniciativa (404 if not owned).
+         */
+        patch: operations["update_hito_iniciativa_api_v1_hito_iniciativas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/actualizacion_iniciativas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Actualizacion Iniciativas
+         * @description List actualizacion iniciativas owned by the current user.
+         */
+        get: operations["list_actualizacion_iniciativas_api_v1_actualizacion_iniciativas_get"];
+        put?: never;
+        /**
+         * Create Actualizacion Iniciativa
+         * @description Create a new actualizacion iniciativa for the current user.
+         */
+        post: operations["create_actualizacion_iniciativa_api_v1_actualizacion_iniciativas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actualizacion_iniciativas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Actualizacion Iniciativa
+         * @description Get a single owned actualizacion iniciativa by ID (404 if not owned).
+         */
+        get: operations["get_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Actualizacion Iniciativa
+         * @description Delete an owned actualizacion iniciativa (404 if not owned).
+         */
+        delete: operations["delete_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Actualizacion Iniciativa
+         * @description Partially update an owned actualizacion iniciativa (404 if not owned).
+         */
+        patch: operations["update_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/auditorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Auditorias
+         * @description List auditorias owned by the current user.
+         */
+        get: operations["list_auditorias_api_v1_auditorias_get"];
+        put?: never;
+        /**
+         * Create Auditoria
+         * @description Create a new auditoria for the current user.
+         */
+        post: operations["create_auditoria_api_v1_auditorias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auditorias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Auditoria
+         * @description Get a single owned auditoria by ID (404 if not owned).
+         */
+        get: operations["get_auditoria_api_v1_auditorias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Auditoria
+         * @description Delete an owned auditoria (404 if not owned).
+         */
+        delete: operations["delete_auditoria_api_v1_auditorias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Auditoria
+         * @description Partially update an owned auditoria (404 if not owned).
+         */
+        patch: operations["update_auditoria_api_v1_auditorias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_auditorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hallazgo Auditorias
+         * @description List hallazgo auditorias owned by the current user.
+         */
+        get: operations["list_hallazgo_auditorias_api_v1_hallazgo_auditorias_get"];
+        put?: never;
+        /**
+         * Create Hallazgo Auditoria
+         * @description Create a new hallazgo auditoria for the current user.
+         */
+        post: operations["create_hallazgo_auditoria_api_v1_hallazgo_auditorias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_auditorias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Hallazgo Auditoria
+         * @description Get a single owned hallazgo auditoria by ID (404 if not owned).
+         */
+        get: operations["get_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Hallazgo Auditoria
+         * @description Delete an owned hallazgo auditoria (404 if not owned).
+         */
+        delete: operations["delete_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Hallazgo Auditoria
+         * @description Partially update an owned hallazgo auditoria (404 if not owned).
+         */
+        patch: operations["update_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/evidencia_auditorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Evidencia Auditorias
+         * @description List evidencia auditorias owned by the current user.
+         */
+        get: operations["list_evidencia_auditorias_api_v1_evidencia_auditorias_get"];
+        put?: never;
+        /**
+         * Create Evidencia Auditoria
+         * @description Create a new evidencia auditoria for the current user.
+         */
+        post: operations["create_evidencia_auditoria_api_v1_evidencia_auditorias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/evidencia_auditorias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Evidencia Auditoria
+         * @description Get a single owned evidencia auditoria by ID (404 if not owned).
+         */
+        get: operations["get_evidencia_auditoria_api_v1_evidencia_auditorias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Evidencia Auditoria
+         * @description Delete an owned evidencia auditoria (404 if not owned).
+         */
+        delete: operations["delete_evidencia_auditoria_api_v1_evidencia_auditorias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Evidencia Auditoria
+         * @description Partially update an owned evidencia auditoria (404 if not owned).
+         */
+        patch: operations["update_evidencia_auditoria_api_v1_evidencia_auditorias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/plan_remediacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Plan Remediaciones
+         * @description List plan remediaciones owned by the current user.
+         */
+        get: operations["list_plan_remediaciones_api_v1_plan_remediacions_get"];
+        put?: never;
+        /**
+         * Create Plan Remediacion
+         * @description Create a new plan remediacion for the current user.
+         */
+        post: operations["create_plan_remediacion_api_v1_plan_remediacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plan_remediacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Plan Remediacion
+         * @description Get a single owned plan remediacion by ID (404 if not owned).
+         */
+        get: operations["get_plan_remediacion_api_v1_plan_remediacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Plan Remediacion
+         * @description Delete an owned plan remediacion (404 if not owned).
+         */
+        delete: operations["delete_plan_remediacion_api_v1_plan_remediacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Plan Remediacion
+         * @description Partially update an owned plan remediacion (404 if not owned).
+         */
+        patch: operations["update_plan_remediacion_api_v1_plan_remediacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/temas_emergentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Temas Emergentes
+         * @description List temas emergentes owned by the current user.
+         */
+        get: operations["list_temas_emergentes_api_v1_temas_emergentes_get"];
+        put?: never;
+        /**
+         * Create Tema Emergente
+         * @description Create a new tema emergente for the current user.
+         */
+        post: operations["create_tema_emergente_api_v1_temas_emergentes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/temas_emergentes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tema Emergente
+         * @description Get a single owned tema emergente by ID (404 if not owned).
+         */
+        get: operations["get_tema_emergente_api_v1_temas_emergentes__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Tema Emergente
+         * @description Delete an owned tema emergente (404 if not owned).
+         */
+        delete: operations["delete_tema_emergente_api_v1_temas_emergentes__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Tema Emergente
+         * @description Partially update an owned tema emergente (404 if not owned).
+         */
+        patch: operations["update_tema_emergente_api_v1_temas_emergentes__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/actualizacion_temas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Actualizacion Temas
+         * @description List actualizacion temas owned by the current user.
+         */
+        get: operations["list_actualizacion_temas_api_v1_actualizacion_temas_get"];
+        put?: never;
+        /**
+         * Create Actualizacion Tema
+         * @description Create a new actualizacion tema for the current user.
+         */
+        post: operations["create_actualizacion_tema_api_v1_actualizacion_temas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actualizacion_temas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Actualizacion Tema
+         * @description Get a single owned actualizacion tema by ID (404 if not owned).
+         */
+        get: operations["get_actualizacion_tema_api_v1_actualizacion_temas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Actualizacion Tema
+         * @description Delete an owned actualizacion tema (404 if not owned).
+         */
+        delete: operations["delete_actualizacion_tema_api_v1_actualizacion_temas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Actualizacion Tema
+         * @description Partially update an owned actualizacion tema (404 if not owned).
+         */
+        patch: operations["update_actualizacion_tema_api_v1_actualizacion_temas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/cierre_conclusiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Cierre Conclusiones
+         * @description List cierre conclusiones owned by the current user.
+         */
+        get: operations["list_cierre_conclusiones_api_v1_cierre_conclusiones_get"];
+        put?: never;
+        /**
+         * Create Cierre Conclusion
+         * @description Create a new cierre conclusion for the current user.
+         */
+        post: operations["create_cierre_conclusion_api_v1_cierre_conclusiones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cierre_conclusiones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Cierre Conclusion
+         * @description Get a single owned cierre conclusion by ID (404 if not owned).
+         */
+        get: operations["get_cierre_conclusion_api_v1_cierre_conclusiones__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Cierre Conclusion
+         * @description Delete an owned cierre conclusion (404 if not owned).
+         */
+        delete: operations["delete_cierre_conclusion_api_v1_cierre_conclusiones__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Cierre Conclusion
+         * @description Partially update an owned cierre conclusion (404 if not owned).
+         */
+        patch: operations["update_cierre_conclusion_api_v1_cierre_conclusiones__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/flujos_estatus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Flujos Estatus
+         * @description List flujo estatus owned by the current user.
+         */
+        get: operations["list_flujos_estatus_api_v1_flujos_estatus_get"];
+        put?: never;
+        /**
+         * Create Flujo Estatus
+         * @description Create a new flujo estatus for the current user.
+         */
+        post: operations["create_flujo_estatus_api_v1_flujos_estatus_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flujos_estatus/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Flujo Estatus
+         * @description Get a single owned flujo estatus by ID (404 if not owned).
+         */
+        get: operations["get_flujo_estatus_api_v1_flujos_estatus__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Flujo Estatus
+         * @description Delete an owned flujo estatus (404 if not owned).
+         */
+        delete: operations["delete_flujo_estatus_api_v1_flujos_estatus__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Flujo Estatus
+         * @description Partially update an owned flujo estatus (404 if not owned).
+         */
+        patch: operations["update_flujo_estatus_api_v1_flujos_estatus__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/indicadores_formulas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Indicador Formulas
+         * @description List indicador formulas owned by the current user.
+         */
+        get: operations["list_indicador_formulas_api_v1_indicadores_formulas_get"];
+        put?: never;
+        /**
+         * Create Indicador Formula
+         * @description Create a new indicador formula for the current user.
+         */
+        post: operations["create_indicador_formula_api_v1_indicadores_formulas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicadores_formulas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Indicador Formula
+         * @description Get a single owned indicador formula by ID (404 if not owned).
+         */
+        get: operations["get_indicador_formula_api_v1_indicadores_formulas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Indicador Formula
+         * @description Delete an owned indicador formula (404 if not owned).
+         */
+        delete: operations["delete_indicador_formula_api_v1_indicadores_formulas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Indicador Formula
+         * @description Partially update an owned indicador formula (404 if not owned).
+         */
+        patch: operations["update_indicador_formula_api_v1_indicadores_formulas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/filtros_guardados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Filtros Guardados
+         * @description List filtros guardados owned by the current user.
+         */
+        get: operations["list_filtros_guardados_api_v1_filtros_guardados_get"];
+        put?: never;
+        /**
+         * Create Filtro Guardado
+         * @description Create a new filtro guardado for the current user.
+         */
+        post: operations["create_filtro_guardado_api_v1_filtros_guardados_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/filtros_guardados/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Filtro Guardado
+         * @description Get a single owned filtro guardado by ID (404 if not owned).
+         */
+        get: operations["get_filtro_guardado_api_v1_filtros_guardados__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Filtro Guardado
+         * @description Delete an owned filtro guardado (404 if not owned).
+         */
+        delete: operations["delete_filtro_guardado_api_v1_filtros_guardados__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Filtro Guardado
+         * @description Partially update an owned filtro guardado (404 if not owned).
+         */
+        patch: operations["update_filtro_guardado_api_v1_filtros_guardados__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/dashboard_configs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Dashboard Configs
+         * @description List all dashboard configs (super_admin only).
+         */
+        get: operations["list_dashboard_configs_api_v1_dashboard_configs_get"];
+        put?: never;
+        /**
+         * Create Dashboard Config
+         * @description Create a new dashboard config (super_admin only).
+         */
+        post: operations["create_dashboard_config_api_v1_dashboard_configs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard_configs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Config
+         * @description Get a single dashboard config by ID (super_admin only).
+         */
+        get: operations["get_dashboard_config_api_v1_dashboard_configs__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Dashboard Config
+         * @description Delete a dashboard config (super_admin only).
+         */
+        delete: operations["delete_dashboard_config_api_v1_dashboard_configs__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Dashboard Config
+         * @description Update a dashboard config (super_admin only).
+         */
+        patch: operations["update_dashboard_config_api_v1_dashboard_configs__id__patch"];
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1064,6 +3599,115 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AceptacionRiesgoCreate
+         * @description Campos para registrar aceptación de riesgo. user_id se toma del contexto de auth.
+         *
+         *     El servicio valida SoD: aprobador_id != user_id cuando la regla está activa.
+         */
+        AceptacionRiesgoCreate: {
+            /**
+             * Vulnerabilidad Id
+             * Format: uuid
+             */
+            vulnerabilidad_id: string;
+            /** Justificacion Negocio */
+            justificacion_negocio: string;
+            /**
+             * Propietario Riesgo Id
+             * Format: uuid
+             */
+            propietario_riesgo_id: string;
+            /**
+             * Fecha Revision Obligatoria
+             * Format: date-time
+             */
+            fecha_revision_obligatoria: string;
+            /**
+             * Estado
+             * @default Pendiente
+             */
+            estado: string;
+            /** Aprobador Id */
+            aprobador_id?: string | null;
+            /** Fecha Aprobacion */
+            fecha_aprobacion?: string | null;
+            /** Notas Aprobador */
+            notas_aprobador?: string | null;
+        };
+        /**
+         * AceptacionRiesgoUpdate
+         * @description Todos los campos opcionales para actualizaciones parciales.
+         */
+        AceptacionRiesgoUpdate: {
+            /** Justificacion Negocio */
+            justificacion_negocio?: string | null;
+            /** Propietario Riesgo Id */
+            propietario_riesgo_id?: string | null;
+            /** Fecha Revision Obligatoria */
+            fecha_revision_obligatoria?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Aprobador Id */
+            aprobador_id?: string | null;
+            /** Fecha Aprobacion */
+            fecha_aprobacion?: string | null;
+            /** Notas Aprobador */
+            notas_aprobador?: string | null;
+        };
+        /**
+         * ActividadMensualSastCreate
+         * @description Fields required to create a actividad_mensual_sast. user_id is set from auth context.
+         */
+        ActividadMensualSastCreate: {
+            /**
+             * Programa Sast Id
+             * Format: uuid
+             */
+            programa_sast_id: string;
+            /** Mes */
+            mes: number;
+            /** Ano */
+            ano: number;
+            /** Total Hallazgos */
+            total_hallazgos?: number | null;
+            /** Criticos */
+            criticos?: number | null;
+            /** Altos */
+            altos?: number | null;
+            /** Medios */
+            medios?: number | null;
+            /** Bajos */
+            bajos?: number | null;
+            /** Score */
+            score?: number | null;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * ActividadMensualSastUpdate
+         * @description All fields optional for partial updates.
+         */
+        ActividadMensualSastUpdate: {
+            /** Mes */
+            mes?: number | null;
+            /** Ano */
+            ano?: number | null;
+            /** Total Hallazgos */
+            total_hallazgos?: number | null;
+            /** Criticos */
+            criticos?: number | null;
+            /** Altos */
+            altos?: number | null;
+            /** Medios */
+            medios?: number | null;
+            /** Bajos */
+            bajos?: number | null;
+            /** Score */
+            score?: number | null;
+            /** Notas */
+            notas?: string | null;
+        };
         /**
          * ActivoWebCreate
          * @description Fields required to create a activo_web. user_id is set from auth context.
@@ -1100,6 +3744,134 @@ export interface components {
             celula_id?: string | null;
         };
         /**
+         * ActualizacionIniciativaCreate
+         * @description Schema for creating ActualizacionIniciativa.
+         */
+        ActualizacionIniciativaCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Contenido */
+            contenido: string;
+            /**
+             * Iniciativa Id
+             * Format: uuid
+             */
+            iniciativa_id: string;
+        };
+        /**
+         * ActualizacionIniciativaUpdate
+         * @description Schema for updating ActualizacionIniciativa (all fields optional).
+         */
+        ActualizacionIniciativaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Contenido */
+            contenido?: string | null;
+        };
+        /**
+         * ActualizacionTemaCreate
+         * @description Schema for creating ActualizacionTema.
+         */
+        ActualizacionTemaCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Contenido */
+            contenido: string;
+            /** Fuente */
+            fuente?: string | null;
+            /**
+             * Tema Id
+             * Format: uuid
+             */
+            tema_id: string;
+        };
+        /**
+         * ActualizacionTemaUpdate
+         * @description Schema for updating ActualizacionTema (all fields optional).
+         */
+        ActualizacionTemaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Contenido */
+            contenido?: string | null;
+            /** Fuente */
+            fuente?: string | null;
+        };
+        /**
+         * AmenazaCreate
+         * @description Fields required to create an amenaza. score_total is calculated automatically.
+         */
+        AmenazaCreate: {
+            /**
+             * Sesion Id
+             * Format: uuid
+             */
+            sesion_id: string;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Categoria Stride
+             * @description STRIDE category
+             */
+            categoria_stride: string;
+            /**
+             * Dread Damage
+             * @description Damage potential (1-10)
+             */
+            dread_damage: number;
+            /**
+             * Dread Reproducibility
+             * @description Reproducibility (1-10)
+             */
+            dread_reproducibility: number;
+            /**
+             * Dread Exploitability
+             * @description Exploitability (1-10)
+             */
+            dread_exploitability: number;
+            /**
+             * Dread Affected Users
+             * @description Affected users (1-10)
+             */
+            dread_affected_users: number;
+            /**
+             * Dread Discoverability
+             * @description Discoverability (1-10)
+             */
+            dread_discoverability: number;
+            /**
+             * Estado
+             * @description Abierta | Mitigada | Aceptada | Transferida | En Revision
+             */
+            estado: string;
+        };
+        /**
+         * AmenazaUpdate
+         * @description All fields optional for partial updates. score_total is recalculated automatically.
+         */
+        AmenazaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Categoria Stride */
+            categoria_stride?: string | null;
+            /** Dread Damage */
+            dread_damage?: number | null;
+            /** Dread Reproducibility */
+            dread_reproducibility?: number | null;
+            /** Dread Exploitability */
+            dread_exploitability?: number | null;
+            /** Dread Affected Users */
+            dread_affected_users?: number | null;
+            /** Dread Discoverability */
+            dread_discoverability?: number | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
          * AplicacionMovilCreate
          * @description Fields required to create a aplicacion_movil. user_id is set from auth context.
          */
@@ -1130,6 +3902,51 @@ export interface components {
             /** Celula Id */
             celula_id?: string | null;
         };
+        /**
+         * AuditoriaCreate
+         * @description Schema for creating Auditoria.
+         */
+        AuditoriaCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Tipo */
+            tipo: string;
+            /** Alcance */
+            alcance: string;
+            /**
+             * Fecha Inicio
+             * Format: date-time
+             */
+            fecha_inicio: string;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+        };
+        /**
+         * AuditoriaUpdate
+         * @description Schema for updating Auditoria (all fields optional).
+         */
+        AuditoriaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Alcance */
+            alcance?: string | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+        };
+        /** Body_aprobar_aceptacion_api_v1_aceptacion_riesgos__id__aprobar_post */
+        Body_aprobar_aceptacion_api_v1_aceptacion_riesgos__id__aprobar_post: {
+            /** Notas */
+            notas?: string | null;
+        };
+        /** Body_aprobar_excepcion_api_v1_excepcion_vulnerabilidads__id__aprobar_post */
+        Body_aprobar_excepcion_api_v1_excepcion_vulnerabilidads__id__aprobar_post: {
+            /** Notas */
+            notas?: string | null;
+        };
         /** Body_create_upload_api_v1_uploads_post */
         Body_create_upload_api_v1_uploads_post: {
             /**
@@ -1137,6 +3954,16 @@ export interface components {
              * Format: binary
              */
             file: string;
+        };
+        /** Body_rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post */
+        Body_rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post: {
+            /** Notas */
+            notas?: string | null;
+        };
+        /** Body_rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post */
+        Body_rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post: {
+            /** Notas */
+            notas?: string | null;
         };
         /**
          * CelulaCreate
@@ -1169,6 +3996,42 @@ export interface components {
             /** Subdireccion Id */
             subdireccion_id?: string | null;
         };
+        /**
+         * CierreConclusionCreate
+         * @description Schema for creating CierreConclusion.
+         */
+        CierreConclusionCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Conclusion */
+            conclusion: string;
+            /** Recomendaciones */
+            recomendaciones?: string | null;
+            /**
+             * Fecha Cierre
+             * Format: date-time
+             */
+            fecha_cierre: string;
+            /**
+             * Tema Id
+             * Format: uuid
+             */
+            tema_id: string;
+        };
+        /**
+         * CierreConclusionUpdate
+         * @description Schema for updating CierreConclusion (all fields optional).
+         */
+        CierreConclusionUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Conclusion */
+            conclusion?: string | null;
+            /** Recomendaciones */
+            recomendaciones?: string | null;
+            /** Fecha Cierre */
+            fecha_cierre?: string | null;
+        };
         /** ClientLogBatch */
         ClientLogBatch: {
             /** Entries */
@@ -1194,6 +4057,49 @@ export interface components {
             request_id?: string | null;
             /** Version */
             version?: string | null;
+        };
+        /**
+         * ControlMitigacionCreate
+         * @description Fields required to create a control_mitigacion. user_id is set from auth context.
+         */
+        ControlMitigacionCreate: {
+            /**
+             * Amenaza Id
+             * Format: uuid
+             */
+            amenaza_id: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Tipo
+             * @description Preventivo | Detectivo | Correctivo | Disuasivo
+             */
+            tipo: string;
+            /**
+             * Estado
+             * @description Pendiente | Implementado | En Progreso | Descartado
+             */
+            estado: string;
+            /** Responsable Id */
+            responsable_id?: string | null;
+        };
+        /**
+         * ControlMitigacionUpdate
+         * @description All fields optional for partial updates.
+         */
+        ControlMitigacionUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Responsable Id */
+            responsable_id?: string | null;
         };
         /**
          * ControlSeguridadCreate
@@ -1226,10 +4132,986 @@ export interface components {
             /** Obligatorio */
             obligatorio?: boolean | null;
         };
+        /**
+         * ControlSourceCodeCreate
+         * @description Fields required to create a control_source_code. user_id is set from auth context.
+         */
+        ControlSourceCodeCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Tipo */
+            tipo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Obligatorio
+             * @default true
+             */
+            obligatorio: boolean;
+        };
+        /**
+         * ControlSourceCodeUpdate
+         * @description All fields optional for partial updates.
+         */
+        ControlSourceCodeUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Obligatorio */
+            obligatorio?: boolean | null;
+        };
+        /**
+         * DashboardConfigCreate
+         * @description Fields required to create a dashboard config.
+         */
+        DashboardConfigCreate: {
+            /** Dashboard Id */
+            dashboard_id: string;
+            /** Widget Id */
+            widget_id: string;
+            /**
+             * Role Id
+             * Format: uuid
+             */
+            role_id: string;
+            /** Visible */
+            visible: boolean;
+            /** Editable By Role */
+            editable_by_role: boolean;
+        };
+        /**
+         * DashboardConfigUpdate
+         * @description All fields optional for partial updates.
+         */
+        DashboardConfigUpdate: {
+            /** Dashboard Id */
+            dashboard_id?: string | null;
+            /** Widget Id */
+            widget_id?: string | null;
+            /** Role Id */
+            role_id?: string | null;
+            /** Visible */
+            visible?: boolean | null;
+            /** Editable By Role */
+            editable_by_role?: boolean | null;
+        };
+        /**
+         * EjecucionDastCreate
+         * @description Fields required to create a ejecucion_dast. user_id is set from auth context.
+         */
+        EjecucionDastCreate: {
+            /**
+             * Programa Dast Id
+             * Format: uuid
+             */
+            programa_dast_id: string;
+            /**
+             * Fecha Inicio
+             * Format: date-time
+             */
+            fecha_inicio: string;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /**
+             * Ambiente
+             * @description Desarrollo | Staging | QA | Produccion
+             */
+            ambiente: string;
+            /** Herramienta */
+            herramienta?: string | null;
+            /**
+             * Resultado
+             * @description Pendiente | Exitosa | Fallida | En Progreso
+             */
+            resultado: string;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * EjecucionDastUpdate
+         * @description All fields optional for partial updates.
+         */
+        EjecucionDastUpdate: {
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /** Ambiente */
+            ambiente?: string | null;
+            /** Herramienta */
+            herramienta?: string | null;
+            /** Resultado */
+            resultado?: string | null;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * EjecucionMASTCreate
+         * @description Fields required to create ejecucion MAST. user_id is set from auth context.
+         */
+        EjecucionMASTCreate: {
+            /**
+             * Aplicacion Movil Id
+             * Format: uuid
+             */
+            aplicacion_movil_id: string;
+            /** Ambiente */
+            ambiente: string;
+            /**
+             * Fecha Inicio
+             * Format: date-time
+             */
+            fecha_inicio: string;
+            /**
+             * Fecha Fin
+             * Format: date-time
+             */
+            fecha_fin: string;
+            /** Resultado */
+            resultado: string;
+            /** Url Reporte */
+            url_reporte?: string | null;
+        };
+        /**
+         * EjecucionMASTUpdate
+         * @description All fields optional for partial updates.
+         */
+        EjecucionMASTUpdate: {
+            /** Aplicacion Movil Id */
+            aplicacion_movil_id?: string | null;
+            /** Ambiente */
+            ambiente?: string | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /** Resultado */
+            resultado?: string | null;
+            /** Url Reporte */
+            url_reporte?: string | null;
+        };
+        /**
+         * EstadoCumplimientoCreate
+         * @description Fields required to create a estado_cumplimiento. user_id is set from auth context.
+         */
+        EstadoCumplimientoCreate: {
+            /**
+             * Registro Id
+             * Format: uuid
+             */
+            registro_id: string;
+            /** Control Id */
+            control_id?: string | null;
+            /**
+             * Estado
+             * @description Cumple | No Cumple | Parcial | No Aplica
+             */
+            estado: string;
+            /** Porcentaje */
+            porcentaje?: number | null;
+            /** Notas */
+            notas?: string | null;
+            /**
+             * Fecha Evaluacion
+             * Format: date-time
+             */
+            fecha_evaluacion: string;
+        };
+        /**
+         * EstadoCumplimientoUpdate
+         * @description All fields optional for partial updates.
+         */
+        EstadoCumplimientoUpdate: {
+            /** Control Id */
+            control_id?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Porcentaje */
+            porcentaje?: number | null;
+            /** Notas */
+            notas?: string | null;
+            /** Fecha Evaluacion */
+            fecha_evaluacion?: string | null;
+        };
+        /**
+         * EtapaAprobarRequest
+         * @description Body para aprobar una etapa.
+         */
+        EtapaAprobarRequest: {
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * EtapaRechazarRequest
+         * @description Body para rechazar una etapa (justificación obligatoria — A1).
+         */
+        EtapaRechazarRequest: {
+            /** Justificacion */
+            justificacion: string;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * EtapaReleaseCreate
+         * @description Fields required to create an etapa_release. user_id is set from auth context.
+         */
+        EtapaReleaseCreate: {
+            /**
+             * Service Release Id
+             * Format: uuid
+             */
+            service_release_id: string;
+            /** Etapa */
+            etapa: string;
+            /**
+             * Estado
+             * @default Pendiente
+             */
+            estado: string;
+            /** Aprobador Id */
+            aprobador_id?: string | null;
+            /** Justificacion */
+            justificacion?: string | null;
+            /** Notas */
+            notas?: string | null;
+            /** Fecha Completada */
+            fecha_completada?: string | null;
+        };
+        /**
+         * EtapaReleaseUpdate
+         * @description All fields optional for partial updates.
+         */
+        EtapaReleaseUpdate: {
+            /** Etapa */
+            etapa?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Justificacion */
+            justificacion?: string | null;
+            /** Notas */
+            notas?: string | null;
+            /** Fecha Completada */
+            fecha_completada?: string | null;
+        };
+        /**
+         * EvidenciaAuditoriaCreate
+         * @description Schema for creating EvidenciaAuditoria.
+         */
+        EvidenciaAuditoriaCreate: {
+            /** Nombre Archivo */
+            nombre_archivo: string;
+            /** Tipo Evidencia */
+            tipo_evidencia: string;
+            /** Url Archivo */
+            url_archivo: string;
+            /** Hash Sha256 */
+            hash_sha256: string;
+            /**
+             * Auditoria Id
+             * Format: uuid
+             */
+            auditoria_id: string;
+        };
+        /**
+         * EvidenciaAuditoriaUpdate
+         * @description Schema for updating EvidenciaAuditoria (all fields optional).
+         */
+        EvidenciaAuditoriaUpdate: {
+            /** Nombre Archivo */
+            nombre_archivo?: string | null;
+            /** Tipo Evidencia */
+            tipo_evidencia?: string | null;
+            /** Url Archivo */
+            url_archivo?: string | null;
+            /** Hash Sha256 */
+            hash_sha256?: string | null;
+        };
+        /**
+         * EvidenciaRegulacionCreate
+         * @description Fields required to create a evidencia_regulacion. user_id is set from auth context.
+         */
+        EvidenciaRegulacionCreate: {
+            /**
+             * Registro Id
+             * Format: uuid
+             */
+            registro_id: string;
+            /** Control Id */
+            control_id?: string | null;
+            /** Descripcion */
+            descripcion: string;
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Sha256
+             * @description SHA-256 hex del archivo (A3)
+             */
+            sha256?: string | null;
+            /**
+             * Fecha
+             * Format: date-time
+             */
+            fecha: string;
+        };
+        /**
+         * EvidenciaRegulacionUpdate
+         * @description All fields optional for partial updates.
+         */
+        EvidenciaRegulacionUpdate: {
+            /** Control Id */
+            control_id?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Filename */
+            filename?: string | null;
+            /** Sha256 */
+            sha256?: string | null;
+            /** Fecha */
+            fecha?: string | null;
+        };
+        /**
+         * EvidenciaRemediacionCreate
+         * @description Campos para registrar evidencia. user_id se toma del contexto de auth.
+         *     sha256 y file_size se calculan en el service al procesar el archivo.
+         */
+        EvidenciaRemediacionCreate: {
+            /**
+             * Vulnerabilidad Id
+             * Format: uuid
+             */
+            vulnerabilidad_id: string;
+            /** Descripcion */
+            descripcion: string;
+            /** Filename */
+            filename?: string | null;
+            /** Content Type */
+            content_type?: string | null;
+            /** Sha256 */
+            sha256?: string | null;
+            /** File Size */
+            file_size?: number | null;
+        };
+        /**
+         * EvidenciaRemediacionUpdate
+         * @description Solo descripción es actualizable — el archivo y hash son inmutables.
+         */
+        EvidenciaRemediacionUpdate: {
+            /** Descripcion */
+            descripcion?: string | null;
+        };
+        /**
+         * ExcepcionVulnerabilidadCreate
+         * @description Campos para crear una excepción. user_id se toma del contexto de auth.
+         *
+         *     El servicio valida SoD: aprobador_id != user_id cuando la regla está activa.
+         */
+        ExcepcionVulnerabilidadCreate: {
+            /**
+             * Vulnerabilidad Id
+             * Format: uuid
+             */
+            vulnerabilidad_id: string;
+            /** Justificacion */
+            justificacion: string;
+            /**
+             * Fecha Limite
+             * Format: date-time
+             */
+            fecha_limite: string;
+            /**
+             * Estado
+             * @default Pendiente
+             */
+            estado: string;
+            /** Aprobador Id */
+            aprobador_id?: string | null;
+            /** Fecha Aprobacion */
+            fecha_aprobacion?: string | null;
+            /** Notas Aprobador */
+            notas_aprobador?: string | null;
+        };
+        /**
+         * ExcepcionVulnerabilidadUpdate
+         * @description Todos los campos opcionales para actualizaciones parciales.
+         */
+        ExcepcionVulnerabilidadUpdate: {
+            /** Justificacion */
+            justificacion?: string | null;
+            /** Fecha Limite */
+            fecha_limite?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Aprobador Id */
+            aprobador_id?: string | null;
+            /** Fecha Aprobacion */
+            fecha_aprobacion?: string | null;
+            /** Notas Aprobador */
+            notas_aprobador?: string | null;
+        };
+        /**
+         * FiltroGuardadoCreate
+         * @description Schema for creating FiltroGuardado.
+         */
+        FiltroGuardadoCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Modulo */
+            modulo: string;
+            /** Parametros */
+            parametros: Record<string, never>;
+            /**
+             * Compartido
+             * @default false
+             */
+            compartido: boolean;
+        };
+        /**
+         * FiltroGuardadoUpdate
+         * @description Schema for updating FiltroGuardado (all fields optional).
+         */
+        FiltroGuardadoUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Modulo */
+            modulo?: string | null;
+            /** Parametros */
+            parametros?: Record<string, never> | null;
+            /** Compartido */
+            compartido?: boolean | null;
+        };
+        /**
+         * FlujoEstatusCreate
+         * @description Schema for creating FlujoEstatus.
+         */
+        FlujoEstatusCreate: {
+            /** Entity Type */
+            entity_type: string;
+            /** From Status */
+            from_status: string;
+            /** To Status */
+            to_status: string;
+            /**
+             * Allowed
+             * @default true
+             */
+            allowed: boolean;
+            /**
+             * Requires Justification
+             * @default false
+             */
+            requires_justification: boolean;
+            /**
+             * Requires Approval
+             * @default false
+             */
+            requires_approval: boolean;
+        };
+        /**
+         * FlujoEstatusUpdate
+         * @description Schema for updating FlujoEstatus (all fields optional).
+         */
+        FlujoEstatusUpdate: {
+            /** Entity Type */
+            entity_type?: string | null;
+            /** From Status */
+            from_status?: string | null;
+            /** To Status */
+            to_status?: string | null;
+            /** Allowed */
+            allowed?: boolean | null;
+            /** Requires Justification */
+            requires_justification?: boolean | null;
+            /** Requires Approval */
+            requires_approval?: boolean | null;
+        };
+        /**
+         * GerenciaCreate
+         * @description Fields required to create a gerencia. user_id is set from auth context.
+         */
+        GerenciaCreate: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Subdireccion Id
+             * Format: uuid
+             */
+            subdireccion_id: string;
+            /** Descripcion */
+            descripcion: string;
+        };
+        /**
+         * GerenciaUpdate
+         * @description All fields optional for partial updates.
+         */
+        GerenciaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Subdireccion Id */
+            subdireccion_id?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HallazgoAuditoriaCreate
+         * @description Schema for creating HallazgoAuditoria.
+         */
+        HallazgoAuditoriaCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion: string;
+            /** Severidad */
+            severidad: string;
+            /**
+             * Auditoria Id
+             * Format: uuid
+             */
+            auditoria_id: string;
+        };
+        /**
+         * HallazgoAuditoriaUpdate
+         * @description Schema for updating HallazgoAuditoria (all fields optional).
+         */
+        HallazgoAuditoriaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+        };
+        /**
+         * HallazgoDastCreate
+         * @description Fields required to create a hallazgo_dast. user_id is set from auth context.
+         */
+        HallazgoDastCreate: {
+            /**
+             * Ejecucion Dast Id
+             * Format: uuid
+             */
+            ejecucion_dast_id: string;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Severidad
+             * @description Critica | Alta | Media | Baja
+             */
+            severidad: string;
+            /** Url */
+            url?: string | null;
+            /** Parametro */
+            parametro?: string | null;
+            /**
+             * Estado
+             * @description Abierto | Cerrado | Falso Positivo | Aceptado | En Remediacion
+             */
+            estado: string;
+        };
+        /**
+         * HallazgoDastUpdate
+         * @description All fields optional for partial updates.
+         */
+        HallazgoDastUpdate: {
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Parametro */
+            parametro?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * HallazgoMASTCreate
+         * @description Fields required to create hallazgo MAST. user_id is set from auth context.
+         */
+        HallazgoMASTCreate: {
+            /**
+             * Ejecucion Mast Id
+             * Format: uuid
+             */
+            ejecucion_mast_id: string;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad: string;
+            /** Cwe */
+            cwe?: string | null;
+            /** Owasp Categoria */
+            owasp_categoria?: string | null;
+        };
+        /**
+         * HallazgoMASTUpdate
+         * @description All fields optional for partial updates.
+         */
+        HallazgoMASTUpdate: {
+            /** Ejecucion Mast Id */
+            ejecucion_mast_id?: string | null;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Nombre */
+            nombre?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Cwe */
+            cwe?: string | null;
+            /** Owasp Categoria */
+            owasp_categoria?: string | null;
+        };
+        /**
+         * HallazgoPipelineCreate
+         * @description Fields required to create a hallazgo_pipeline. user_id is set from auth context.
+         */
+        HallazgoPipelineCreate: {
+            /**
+             * Pipeline Release Id
+             * Format: uuid
+             */
+            pipeline_release_id: string;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad: string;
+            /** Archivo */
+            archivo?: string | null;
+            /** Linea */
+            linea?: number | null;
+            /** Regla */
+            regla?: string | null;
+            /**
+             * Estado
+             * @default Abierto
+             */
+            estado: string;
+        };
+        /**
+         * HallazgoPipelineUpdate
+         * @description All fields optional for partial updates.
+         */
+        HallazgoPipelineUpdate: {
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Archivo */
+            archivo?: string | null;
+            /** Linea */
+            linea?: number | null;
+            /** Regla */
+            regla?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * HallazgoSastCreate
+         * @description Fields required to create a hallazgo_sast. user_id is set from auth context.
+         */
+        HallazgoSastCreate: {
+            /**
+             * Actividad Sast Id
+             * Format: uuid
+             */
+            actividad_sast_id: string;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Severidad
+             * @description Critica | Alta | Media | Baja
+             */
+            severidad: string;
+            /** Herramienta */
+            herramienta?: string | null;
+            /** Regla */
+            regla?: string | null;
+            /** Archivo */
+            archivo?: string | null;
+            /** Linea */
+            linea?: number | null;
+            /**
+             * Estado
+             * @description Abierto | Cerrado | Falso Positivo | Aceptado | En Remediacion
+             */
+            estado: string;
+        };
+        /**
+         * HallazgoSastUpdate
+         * @description All fields optional for partial updates.
+         */
+        HallazgoSastUpdate: {
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Herramienta */
+            herramienta?: string | null;
+            /** Regla */
+            regla?: string | null;
+            /** Archivo */
+            archivo?: string | null;
+            /** Linea */
+            linea?: number | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * HallazgoTerceroCreate
+         * @description Fields required to create a hallazgo_tercero. user_id is set from auth context.
+         */
+        HallazgoTerceroCreate: {
+            /**
+             * Revision Tercero Id
+             * Format: uuid
+             */
+            revision_tercero_id: string;
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad: string;
+            /** Cvss Score */
+            cvss_score?: number | null;
+            /** Cwe Id */
+            cwe_id?: string | null;
+            /**
+             * Estado
+             * @default Abierto
+             */
+            estado: string;
+        };
+        /**
+         * HallazgoTerceroUpdate
+         * @description All fields optional for partial updates.
+         */
+        HallazgoTerceroUpdate: {
+            /** Vulnerabilidad Id */
+            vulnerabilidad_id?: string | null;
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Cvss Score */
+            cvss_score?: number | null;
+            /** Cwe Id */
+            cwe_id?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * HerramientaExternaCreate
+         * @description Fields required to create a herramienta_externa. user_id is set from auth context.
+         */
+        HerramientaExternaCreate: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "SAST" | "DAST" | "SCA" | "TM" | "MAST" | "Terceros" | "CI/CD" | "BugBounty" | "VulnerabilityManager";
+            /** Url Base */
+            url_base?: string | null;
+            /** Api Token */
+            api_token?: string | null;
+        };
+        /**
+         * HerramientaExternaUpdate
+         * @description All fields optional for partial updates.
+         */
+        HerramientaExternaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Tipo */
+            tipo?: ("SAST" | "DAST" | "SCA" | "TM" | "MAST" | "Terceros" | "CI/CD" | "BugBounty" | "VulnerabilityManager") | null;
+            /** Url Base */
+            url_base?: string | null;
+            /** Api Token */
+            api_token?: string | null;
+        };
+        /**
+         * HistorialVulnerabilidadCreate
+         * @description Campos para registrar un evento de historial. user_id se toma del contexto de auth.
+         */
+        HistorialVulnerabilidadCreate: {
+            /**
+             * Vulnerabilidad Id
+             * Format: uuid
+             */
+            vulnerabilidad_id: string;
+            /** Estado Anterior */
+            estado_anterior?: string | null;
+            /** Estado Nuevo */
+            estado_nuevo?: string | null;
+            /** Responsable Id */
+            responsable_id?: string | null;
+            /** Justificacion */
+            justificacion?: string | null;
+            /** Comentario */
+            comentario?: string | null;
+        };
+        /**
+         * HitoIniciativaCreate
+         * @description Schema for creating HitoIniciativa.
+         */
+        HitoIniciativaCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Fecha Objetivo
+             * Format: date-time
+             */
+            fecha_objetivo: string;
+            /**
+             * Iniciativa Id
+             * Format: uuid
+             */
+            iniciativa_id: string;
+        };
+        /**
+         * HitoIniciativaUpdate
+         * @description Schema for updating HitoIniciativa (all fields optional).
+         */
+        HitoIniciativaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Fecha Objetivo */
+            fecha_objetivo?: string | null;
+        };
+        /**
+         * IndicadorFormulaCreate
+         * @description Schema for creating IndicadorFormula.
+         */
+        IndicadorFormulaCreate: {
+            /** Code */
+            code: string;
+            /** Nombre */
+            nombre: string;
+            /** Motor */
+            motor: string;
+            /** Formula */
+            formula: Record<string, never>;
+            /** Sla Config */
+            sla_config?: {
+                [key: string]: number;
+            } | null;
+            /** Threshold Green */
+            threshold_green?: number | null;
+            /** Threshold Yellow */
+            threshold_yellow?: number | null;
+            /** Threshold Red */
+            threshold_red?: number | null;
+            /** Periodicidad */
+            periodicidad: string;
+        };
+        /**
+         * IndicadorFormulaUpdate
+         * @description Schema for updating IndicadorFormula (all fields optional).
+         */
+        IndicadorFormulaUpdate: {
+            /** Code */
+            code?: string | null;
+            /** Nombre */
+            nombre?: string | null;
+            /** Motor */
+            motor?: string | null;
+            /** Formula */
+            formula?: Record<string, never> | null;
+            /** Sla Config */
+            sla_config?: {
+                [key: string]: number;
+            } | null;
+            /** Threshold Green */
+            threshold_green?: number | null;
+            /** Threshold Yellow */
+            threshold_yellow?: number | null;
+            /** Threshold Red */
+            threshold_red?: number | null;
+            /** Periodicidad */
+            periodicidad?: string | null;
+        };
+        /**
+         * IniciativaCreate
+         * @description Fields required to create a iniciativa. user_id is set from auth context.
+         */
+        IniciativaCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo */
+            tipo: string;
+            /** Estado */
+            estado: string;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin Estimada */
+            fecha_fin_estimada?: string | null;
+        };
+        /**
+         * IniciativaUpdate
+         * @description All fields optional for partial updates.
+         */
+        IniciativaUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin Estimada */
+            fecha_fin_estimada?: string | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1238,12 +5120,116 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * OrganizacionCreate
+         * @description Fields required to create a organizacion. user_id is set from auth context.
+         */
+        OrganizacionCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Codigo */
+            codigo: string;
+            /** Descripcion */
+            descripcion: string;
+        };
+        /**
+         * OrganizacionUpdate
+         * @description All fields optional for partial updates.
+         */
+        OrganizacionUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Codigo */
+            codigo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+        };
         /** PasswordChange */
         PasswordChange: {
             /** Current Password */
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /**
+         * PipelineReleaseCreate
+         * @description Fields required to create a pipeline_release. user_id is set from auth context.
+         */
+        PipelineReleaseCreate: {
+            /** Service Release Id */
+            service_release_id?: string | null;
+            /**
+             * Repositorio Id
+             * Format: uuid
+             */
+            repositorio_id: string;
+            /** Rama */
+            rama: string;
+            /** Commit Sha */
+            commit_sha?: string | null;
+            /** Tipo */
+            tipo: string;
+            /**
+             * Resultado
+             * @default Pendiente
+             */
+            resultado: string;
+            /** Herramienta */
+            herramienta?: string | null;
+        };
+        /**
+         * PipelineReleaseUpdate
+         * @description All fields optional for partial updates.
+         */
+        PipelineReleaseUpdate: {
+            /** Rama */
+            rama?: string | null;
+            /** Commit Sha */
+            commit_sha?: string | null;
+            /** Resultado */
+            resultado?: string | null;
+            /** Herramienta */
+            herramienta?: string | null;
+        };
+        /**
+         * PlanRemediacionCreate
+         * @description Schema for creating PlanRemediacion.
+         */
+        PlanRemediacionCreate: {
+            /** Descripcion */
+            descripcion: string;
+            /** Acciones Recomendadas */
+            acciones_recomendadas: string;
+            /** Responsable */
+            responsable: string;
+            /**
+             * Fecha Limite
+             * Format: date-time
+             */
+            fecha_limite: string;
+            /** Estado */
+            estado: string;
+            /**
+             * Auditoria Id
+             * Format: uuid
+             */
+            auditoria_id: string;
+        };
+        /**
+         * PlanRemediacionUpdate
+         * @description Schema for updating PlanRemediacion (all fields optional).
+         */
+        PlanRemediacionUpdate: {
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Acciones Recomendadas */
+            acciones_recomendadas?: string | null;
+            /** Responsable */
+            responsable?: string | null;
+            /** Fecha Limite */
+            fecha_limite?: string | null;
+            /** Estado */
+            estado?: string | null;
         };
         /**
          * ProfileUpdate
@@ -1254,6 +5240,159 @@ export interface components {
             full_name?: string | null;
             /** Email */
             email?: string | null;
+        };
+        /**
+         * ProgramaDastCreate
+         * @description Fields required to create a programa_dast. user_id is set from auth context.
+         */
+        ProgramaDastCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Ano */
+            ano: number;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Activo Web Id
+             * Format: uuid
+             */
+            activo_web_id: string;
+            /**
+             * Estado
+             * @description Activo | Inactivo | Completado | Cancelado
+             */
+            estado: string;
+        };
+        /**
+         * ProgramaDastUpdate
+         * @description All fields optional for partial updates.
+         */
+        ProgramaDastUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * ProgramaSastCreate
+         * @description Fields required to create a programa_sast. user_id is set from auth context.
+         */
+        ProgramaSastCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Ano */
+            ano: number;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Repositorio Id
+             * Format: uuid
+             */
+            repositorio_id: string;
+            /**
+             * Estado
+             * @description Activo | Inactivo | Completado | Cancelado
+             */
+            estado: string;
+        };
+        /**
+         * ProgramaSastUpdate
+         * @description All fields optional for partial updates.
+         */
+        ProgramaSastUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * ProgramaSourceCodeCreate
+         * @description Fields required to create a programa_source_code. user_id is set from auth context.
+         */
+        ProgramaSourceCodeCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Ano */
+            ano: number;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Repositorio Id
+             * Format: uuid
+             */
+            repositorio_id: string;
+            /**
+             * Estado
+             * @description Activo | Inactivo | Completado | Cancelado
+             */
+            estado: string;
+        };
+        /**
+         * ProgramaSourceCodeUpdate
+         * @description All fields optional for partial updates.
+         */
+        ProgramaSourceCodeUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
+         * ProgramaThreatModelingCreate
+         * @description Fields required to create a programa_threat_modeling. user_id is set from auth context.
+         */
+        ProgramaThreatModelingCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Ano */
+            ano: number;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /**
+             * Estado
+             * @description Activo | Inactivo | Completado | Cancelado
+             */
+            estado: string;
+        };
+        /**
+         * ProgramaThreatModelingUpdate
+         * @description All fields optional for partial updates.
+         */
+        ProgramaThreatModelingUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /** Estado */
+            estado?: string | null;
         };
         /**
          * ProjectCreate
@@ -1318,6 +5457,37 @@ export interface components {
             alcance?: string | null;
         };
         /**
+         * RegulacionControlCreate
+         * @description Fields required to create a regulacion_control. user_id is set from auth context.
+         */
+        RegulacionControlCreate: {
+            /** Nombre Regulacion */
+            nombre_regulacion: string;
+            /** Nombre Control */
+            nombre_control: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Obligatorio
+             * @default true
+             */
+            obligatorio: boolean;
+        };
+        /**
+         * RegulacionControlUpdate
+         * @description All fields optional for partial updates.
+         */
+        RegulacionControlUpdate: {
+            /** Nombre Regulacion */
+            nombre_regulacion?: string | null;
+            /** Nombre Control */
+            nombre_control?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Obligatorio */
+            obligatorio?: boolean | null;
+        };
+        /**
          * RepositorioCreate
          * @description Fields required to create a repositorio. user_id is set from auth context.
          */
@@ -1359,6 +5529,111 @@ export interface components {
             /** Celula Id */
             celula_id?: string | null;
         };
+        /**
+         * RevisionSourceCodeCreate
+         * @description Fields required to create a revision_source_code. user_id is set from auth context.
+         */
+        RevisionSourceCodeCreate: {
+            /**
+             * Programa Sc Id
+             * Format: uuid
+             */
+            programa_sc_id: string;
+            /**
+             * Control Sc Id
+             * Format: uuid
+             */
+            control_sc_id: string;
+            /**
+             * Fecha Revision
+             * Format: date-time
+             */
+            fecha_revision: string;
+            /**
+             * Resultado
+             * @description Cumple | No Cumple | Parcial | No Aplica
+             */
+            resultado: string;
+            /** Evidencia Filename */
+            evidencia_filename?: string | null;
+            /**
+             * Evidencia Sha256
+             * @description SHA-256 hex del archivo (A3)
+             */
+            evidencia_sha256?: string | null;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * RevisionSourceCodeUpdate
+         * @description All fields optional for partial updates.
+         */
+        RevisionSourceCodeUpdate: {
+            /** Fecha Revision */
+            fecha_revision?: string | null;
+            /** Resultado */
+            resultado?: string | null;
+            /** Evidencia Filename */
+            evidencia_filename?: string | null;
+            /** Evidencia Sha256 */
+            evidencia_sha256?: string | null;
+            /** Notas */
+            notas?: string | null;
+        };
+        /**
+         * RevisionTerceroCreate
+         * @description Fields required to create a revision_tercero. user_id is set from auth context.
+         */
+        RevisionTerceroCreate: {
+            /** Nombre Empresa */
+            nombre_empresa: string;
+            /** Tipo */
+            tipo: string;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /**
+             * Fecha Inicio
+             * Format: date-time
+             */
+            fecha_inicio: string;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /**
+             * Estado
+             * @default Planificada
+             */
+            estado: string;
+            /** Informe Filename */
+            informe_filename?: string | null;
+            /** Informe Sha256 */
+            informe_sha256?: string | null;
+        };
+        /**
+         * RevisionTerceroUpdate
+         * @description All fields optional for partial updates.
+         */
+        RevisionTerceroUpdate: {
+            /** Nombre Empresa */
+            nombre_empresa?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Informe Filename */
+            informe_filename?: string | null;
+            /** Informe Sha256 */
+            informe_sha256?: string | null;
+        };
         /** RoleCreate */
         RoleCreate: {
             /** Name */
@@ -1374,6 +5649,46 @@ export interface components {
             description?: string | null;
             /** Permissions */
             permissions?: string[] | null;
+        };
+        /**
+         * ServiceReleaseCreate
+         * @description Fields required to create a service_release. user_id is set from auth context.
+         */
+        ServiceReleaseCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Version */
+            version: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Servicio Id
+             * Format: uuid
+             */
+            servicio_id: string;
+            /**
+             * Estado Actual
+             * @default Borrador
+             */
+            estado_actual: string;
+            /** Jira Referencia */
+            jira_referencia?: string | null;
+        };
+        /**
+         * ServiceReleaseUpdate
+         * @description All fields optional for partial updates.
+         */
+        ServiceReleaseUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Version */
+            version?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Estado Actual */
+            estado_actual?: string | null;
+            /** Jira Referencia */
+            jira_referencia?: string | null;
         };
         /**
          * ServicioCreate
@@ -1395,6 +5710,46 @@ export interface components {
             celula_id: string;
         };
         /**
+         * ServicioReguladoRegistroCreate
+         * @description Fields required to create a servicio_regulado_registro. user_id is set from auth context.
+         */
+        ServicioReguladoRegistroCreate: {
+            /**
+             * Servicio Id
+             * Format: uuid
+             */
+            servicio_id: string;
+            /** Nombre Regulacion */
+            nombre_regulacion: string;
+            /**
+             * Ciclo
+             * @description Q1 | Q2 | Q3 | Q4 | Anual
+             */
+            ciclo: string;
+            /** Ano */
+            ano: number;
+            /**
+             * Estado
+             * @description Pendiente | En Revision | Cumplido | No Cumplido | Parcial
+             * @default Pendiente
+             */
+            estado: string;
+        };
+        /**
+         * ServicioReguladoRegistroUpdate
+         * @description All fields optional for partial updates.
+         */
+        ServicioReguladoRegistroUpdate: {
+            /** Nombre Regulacion */
+            nombre_regulacion?: string | null;
+            /** Ciclo */
+            ciclo?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Estado */
+            estado?: string | null;
+        };
+        /**
          * ServicioUpdate
          * @description All fields optional for partial updates.
          */
@@ -1409,6 +5764,52 @@ export interface components {
             tecnologia_stack?: string | null;
             /** Celula Id */
             celula_id?: string | null;
+        };
+        /**
+         * SesionThreatModelingCreate
+         * @description Fields required to create a sesion_threat_modeling. user_id is set from auth context.
+         */
+        SesionThreatModelingCreate: {
+            /**
+             * Programa Tm Id
+             * Format: uuid
+             */
+            programa_tm_id: string;
+            /**
+             * Fecha
+             * Format: date-time
+             */
+            fecha: string;
+            /** Participantes */
+            participantes?: string | null;
+            /** Contexto */
+            contexto?: string | null;
+            /**
+             * Estado
+             * @description Planificada | En Progreso | Completada | Cancelada
+             */
+            estado: string;
+            /**
+             * Ia Utilizada
+             * @default false
+             */
+            ia_utilizada: boolean;
+        };
+        /**
+         * SesionThreatModelingUpdate
+         * @description All fields optional for partial updates.
+         */
+        SesionThreatModelingUpdate: {
+            /** Fecha */
+            fecha?: string | null;
+            /** Participantes */
+            participantes?: string | null;
+            /** Contexto */
+            contexto?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Ia Utilizada */
+            ia_utilizada?: boolean | null;
         };
         /**
          * SubdireccionCreate
@@ -1478,6 +5879,42 @@ export interface components {
             status?: string | null;
             /** Project Id */
             project_id?: string | null;
+        };
+        /**
+         * TemaEmergenteCreate
+         * @description Schema for creating TemaEmergente.
+         */
+        TemaEmergenteCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion: string;
+            /** Tipo */
+            tipo: string;
+            /** Impacto */
+            impacto: string;
+            /** Estado */
+            estado: string;
+            /** Fuente */
+            fuente: string;
+        };
+        /**
+         * TemaEmergenteUpdate
+         * @description Schema for updating TemaEmergente (all fields optional).
+         */
+        TemaEmergenteUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo */
+            tipo?: string | null;
+            /** Impacto */
+            impacto?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Fuente */
+            fuente?: string | null;
         };
         /**
          * TipoPruebaCreate
@@ -1577,6 +6014,77 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * VulnerabilidadCreate
+         * @description Campos requeridos para crear una vulnerabilidad. user_id se toma del contexto de auth.
+         *
+         *     Exactamente uno de repositorio_id / activo_web_id / servicio_id / aplicacion_movil_id
+         *     debe estar presente (validado en el router).
+         */
+        VulnerabilidadCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Fuente */
+            fuente: string;
+            /** Severidad */
+            severidad: string;
+            /** Estado */
+            estado: string;
+            /** Cvss Score */
+            cvss_score?: number | null;
+            /** Cwe Id */
+            cwe_id?: string | null;
+            /** Owasp Categoria */
+            owasp_categoria?: string | null;
+            /** Responsable Id */
+            responsable_id?: string | null;
+            /** Fecha Limite Sla */
+            fecha_limite_sla?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /** Aplicacion Movil Id */
+            aplicacion_movil_id?: string | null;
+        };
+        /**
+         * VulnerabilidadUpdate
+         * @description Todos los campos opcionales para actualizaciones parciales.
+         */
+        VulnerabilidadUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Fuente */
+            fuente?: string | null;
+            /** Severidad */
+            severidad?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Cvss Score */
+            cvss_score?: number | null;
+            /** Cwe Id */
+            cwe_id?: string | null;
+            /** Owasp Categoria */
+            owasp_categoria?: string | null;
+            /** Responsable Id */
+            responsable_id?: string | null;
+            /** Fecha Limite Sla */
+            fecha_limite_sla?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
+            /** Servicio Id */
+            servicio_id?: string | null;
+            /** Aplicacion Movil Id */
+            aplicacion_movil_id?: string | null;
         };
     };
     responses: never;
@@ -3224,6 +7732,190 @@ export interface operations {
             };
         };
     };
+    list_herramientas_api_v1_admin_herramientas_externas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_herramienta_api_v1_admin_herramientas_externas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HerramientaExternaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_herramienta_api_v1_admin_herramientas_externas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_herramienta_api_v1_admin_herramientas_externas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_herramienta_api_v1_admin_herramientas_externas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HerramientaExternaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     root_api_v1__get: {
         parameters: {
             query?: never;
@@ -4645,6 +9337,8419 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ControlSeguridadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_vulnerabilidads_api_v1_vulnerabilidads_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_vulnerabilidad_api_v1_vulnerabilidads_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VulnerabilidadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_vulnerabilidad_api_v1_vulnerabilidads__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_vulnerabilidad_api_v1_vulnerabilidads__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_vulnerabilidad_api_v1_vulnerabilidads__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VulnerabilidadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_historial_api_v1_historial_vulnerabilidads_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por vulnerabilidad */
+                vulnerabilidad_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_historial_api_v1_historial_vulnerabilidads_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HistorialVulnerabilidadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_historial_api_v1_historial_vulnerabilidads__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_excepciones_api_v1_excepcion_vulnerabilidads_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_excepcion_api_v1_excepcion_vulnerabilidads_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExcepcionVulnerabilidadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_excepcion_api_v1_excepcion_vulnerabilidads__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_excepcion_api_v1_excepcion_vulnerabilidads__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_excepcion_api_v1_excepcion_vulnerabilidads__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExcepcionVulnerabilidadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    aprobar_excepcion_api_v1_excepcion_vulnerabilidads__id__aprobar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_aprobar_excepcion_api_v1_excepcion_vulnerabilidads__id__aprobar_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_aceptaciones_api_v1_aceptacion_riesgos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_aceptacion_api_v1_aceptacion_riesgos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AceptacionRiesgoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_aceptacion_api_v1_aceptacion_riesgos__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_aceptacion_api_v1_aceptacion_riesgos__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_aceptacion_api_v1_aceptacion_riesgos__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AceptacionRiesgoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    aprobar_aceptacion_api_v1_aceptacion_riesgos__id__aprobar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_aprobar_aceptacion_api_v1_aceptacion_riesgos__id__aprobar_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidencias_api_v1_evidencia_remediacions_get: {
+        parameters: {
+            query?: {
+                /** @description Filtrar por vulnerabilidad */
+                vulnerabilidad_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_evidencia_api_v1_evidencia_remediacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaRemediacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evidencia_api_v1_evidencia_remediacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidencia_api_v1_evidencia_remediacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_evidencia_api_v1_evidencia_remediacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaRemediacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_service_releases_api_v1_service_releases_get: {
+        parameters: {
+            query?: {
+                servicio_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_service_release_api_v1_service_releases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceReleaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_service_release_api_v1_service_releases__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_service_release_api_v1_service_releases__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_service_release_api_v1_service_releases__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceReleaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_etapa_releases_api_v1_etapa_releases_get: {
+        parameters: {
+            query?: {
+                service_release_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_etapa_release_api_v1_etapa_releases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EtapaReleaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_etapa_release_api_v1_etapa_releases__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_etapa_release_api_v1_etapa_releases__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_etapa_release_api_v1_etapa_releases__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EtapaReleaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    aprobar_etapa_api_v1_etapa_releases__id__aprobar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EtapaAprobarRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rechazar_etapa_api_v1_etapa_releases__id__rechazar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EtapaRechazarRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pipeline_releases_api_v1_pipeline_releases_get: {
+        parameters: {
+            query?: {
+                repositorio_id?: string | null;
+                service_release_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_pipeline_release_api_v1_pipeline_releases_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineReleaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pipeline_release_api_v1_pipeline_releases__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_pipeline_release_api_v1_pipeline_releases__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_pipeline_release_api_v1_pipeline_releases__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineReleaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_pipelines_api_v1_hallazgo_pipelines_get: {
+        parameters: {
+            query?: {
+                pipeline_release_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_pipeline_api_v1_hallazgo_pipelines_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoPipelineCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoPipelineUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_revision_terceros_api_v1_revision_terceros_get: {
+        parameters: {
+            query?: {
+                servicio_id?: string | null;
+                activo_web_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_revision_tercero_api_v1_revision_terceros_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionTerceroCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_revision_tercero_api_v1_revision_terceros__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_revision_tercero_api_v1_revision_terceros__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_revision_tercero_api_v1_revision_terceros__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionTerceroUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_terceros_api_v1_hallazgo_terceros_get: {
+        parameters: {
+            query?: {
+                revision_tercero_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_tercero_api_v1_hallazgo_terceros_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoTerceroCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_tercero_api_v1_hallazgo_terceros__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_tercero_api_v1_hallazgo_terceros__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_tercero_api_v1_hallazgo_terceros__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoTerceroUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_programa_sasts_api_v1_programa_sasts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_programa_sast_api_v1_programa_sasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaSastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_programa_sast_api_v1_programa_sasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_programa_sast_api_v1_programa_sasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_programa_sast_api_v1_programa_sasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaSastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_actividad_mensual_sasts_api_v1_actividad_mensual_sasts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by programa_sast_id */
+                programa_sast_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_actividad_mensual_sast_api_v1_actividad_mensual_sasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActividadMensualSastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActividadMensualSastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_sasts_api_v1_hallazgo_sasts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by actividad_sast_id */
+                actividad_sast_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_sast_api_v1_hallazgo_sasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoSastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_sast_api_v1_hallazgo_sasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_sast_api_v1_hallazgo_sasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_sast_api_v1_hallazgo_sasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoSastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_programa_dasts_api_v1_programa_dasts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_programa_dast_api_v1_programa_dasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaDastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_programa_dast_api_v1_programa_dasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_programa_dast_api_v1_programa_dasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_programa_dast_api_v1_programa_dasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaDastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_ejecucion_dasts_api_v1_ejecucion_dasts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by programa_dast_id */
+                programa_dast_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_ejecucion_dast_api_v1_ejecucion_dasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjecucionDastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ejecucion_dast_api_v1_ejecucion_dasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_ejecucion_dast_api_v1_ejecucion_dasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ejecucion_dast_api_v1_ejecucion_dasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjecucionDastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_dasts_api_v1_hallazgo_dasts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by ejecucion_dast_id */
+                ejecucion_dast_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_dast_api_v1_hallazgo_dasts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoDastCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_dast_api_v1_hallazgo_dasts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_dast_api_v1_hallazgo_dasts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_dast_api_v1_hallazgo_dasts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoDastUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_programa_threat_modelings_api_v1_programa_threat_modelings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_programa_threat_modeling_api_v1_programa_threat_modelings_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaThreatModelingCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_programa_threat_modeling_api_v1_programa_threat_modelings__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_programa_threat_modeling_api_v1_programa_threat_modelings__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_programa_threat_modeling_api_v1_programa_threat_modelings__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaThreatModelingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sesion_threat_modelings_api_v1_sesion_threat_modelings_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by programa_tm_id */
+                programa_tm_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_sesion_threat_modeling_api_v1_sesion_threat_modelings_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SesionThreatModelingCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_sesion_threat_modeling_api_v1_sesion_threat_modelings__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SesionThreatModelingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_amenazas_api_v1_amenazas_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by sesion_id */
+                sesion_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_amenaza_api_v1_amenazas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmenazaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_amenaza_api_v1_amenazas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_amenaza_api_v1_amenazas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_amenaza_api_v1_amenazas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmenazaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_control_mitigacions_api_v1_control_mitigacions_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by amenaza_id */
+                amenaza_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_control_mitigacion_api_v1_control_mitigacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlMitigacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_control_mitigacion_api_v1_control_mitigacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_control_mitigacion_api_v1_control_mitigacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_control_mitigacion_api_v1_control_mitigacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlMitigacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_programa_source_codes_api_v1_programa_source_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_programa_source_code_api_v1_programa_source_codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaSourceCodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_programa_source_code_api_v1_programa_source_codes__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_programa_source_code_api_v1_programa_source_codes__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_programa_source_code_api_v1_programa_source_codes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaSourceCodeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_control_source_codes_api_v1_control_source_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_control_source_code_api_v1_control_source_codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlSourceCodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_control_source_code_api_v1_control_source_codes__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_control_source_code_api_v1_control_source_codes__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_control_source_code_api_v1_control_source_codes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ControlSourceCodeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_revision_source_codes_api_v1_revision_source_codes_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by programa_sc_id */
+                programa_sc_id?: string | null;
+                /** @description Filter by control_sc_id */
+                control_sc_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_revision_source_code_api_v1_revision_source_codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionSourceCodeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_revision_source_code_api_v1_revision_source_codes__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_revision_source_code_api_v1_revision_source_codes__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_revision_source_code_api_v1_revision_source_codes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionSourceCodeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_servicio_regulado_registros_api_v1_servicio_regulado_registros_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_servicio_regulado_registro_api_v1_servicio_regulado_registros_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioReguladoRegistroCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_servicio_regulado_registro_api_v1_servicio_regulado_registros__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioReguladoRegistroUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_regulacion_controls_api_v1_regulacion_controls_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_regulacion_control_api_v1_regulacion_controls_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegulacionControlCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_regulacion_control_api_v1_regulacion_controls__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_regulacion_control_api_v1_regulacion_controls__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_regulacion_control_api_v1_regulacion_controls__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegulacionControlUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidencia_regulacions_api_v1_evidencia_regulacions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_evidencia_regulacion_api_v1_evidencia_regulacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaRegulacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evidencia_regulacion_api_v1_evidencia_regulacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidencia_regulacion_api_v1_evidencia_regulacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_evidencia_regulacion_api_v1_evidencia_regulacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaRegulacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_estado_cumplimientos_api_v1_estado_cumplimientos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_estado_cumplimiento_api_v1_estado_cumplimientos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstadoCumplimientoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_estado_cumplimiento_api_v1_estado_cumplimientos__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_estado_cumplimiento_api_v1_estado_cumplimientos__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_estado_cumplimiento_api_v1_estado_cumplimientos__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstadoCumplimientoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_ejecucion_masts_api_v1_ejecucion_masts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by aplicacion_movil_id */
+                aplicacion_movil_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_ejecucion_mast_api_v1_ejecucion_masts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjecucionMASTCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ejecucion_mast_api_v1_ejecucion_masts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_ejecucion_mast_api_v1_ejecucion_masts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ejecucion_mast_api_v1_ejecucion_masts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjecucionMASTUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_masts_api_v1_hallazgo_masts_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by ejecucion_mast_id */
+                ejecucion_mast_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_mast_api_v1_hallazgo_masts_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoMASTCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_mast_api_v1_hallazgo_masts__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_mast_api_v1_hallazgo_masts__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_mast_api_v1_hallazgo_masts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoMASTUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_organizacions_api_v1_organizacions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_organizacion_api_v1_organizacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_organizacion_api_v1_organizacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_organizacion_api_v1_organizacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_organizacion_api_v1_organizacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gerencias_api_v1_gerencias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gerencia_api_v1_gerencias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GerenciaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_gerencia_api_v1_gerencias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_gerencia_api_v1_gerencias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_gerencia_api_v1_gerencias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GerenciaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_iniciativas_api_v1_iniciativas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_iniciativa_api_v1_iniciativas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IniciativaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_iniciativa_api_v1_iniciativas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_iniciativa_api_v1_iniciativas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_iniciativa_api_v1_iniciativas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IniciativaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hito_iniciativas_api_v1_hito_iniciativas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hito_iniciativa_api_v1_hito_iniciativas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HitoIniciativaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hito_iniciativa_api_v1_hito_iniciativas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hito_iniciativa_api_v1_hito_iniciativas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hito_iniciativa_api_v1_hito_iniciativas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HitoIniciativaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_actualizacion_iniciativas_api_v1_actualizacion_iniciativas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_actualizacion_iniciativa_api_v1_actualizacion_iniciativas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizacionIniciativaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizacionIniciativaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_auditorias_api_v1_auditorias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_auditoria_api_v1_auditorias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditoriaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_auditoria_api_v1_auditorias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_auditoria_api_v1_auditorias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_auditoria_api_v1_auditorias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditoriaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hallazgo_auditorias_api_v1_hallazgo_auditorias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_hallazgo_auditoria_api_v1_hallazgo_auditorias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoAuditoriaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_hallazgo_auditoria_api_v1_hallazgo_auditorias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HallazgoAuditoriaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidencia_auditorias_api_v1_evidencia_auditorias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_evidencia_auditoria_api_v1_evidencia_auditorias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaAuditoriaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_evidencia_auditoria_api_v1_evidencia_auditorias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidencia_auditoria_api_v1_evidencia_auditorias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_evidencia_auditoria_api_v1_evidencia_auditorias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenciaAuditoriaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plan_remediaciones_api_v1_plan_remediacions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_remediacion_api_v1_plan_remediacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanRemediacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_remediacion_api_v1_plan_remediacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_plan_remediacion_api_v1_plan_remediacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_plan_remediacion_api_v1_plan_remediacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanRemediacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_temas_emergentes_api_v1_temas_emergentes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tema_emergente_api_v1_temas_emergentes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemaEmergenteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tema_emergente_api_v1_temas_emergentes__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_tema_emergente_api_v1_temas_emergentes__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tema_emergente_api_v1_temas_emergentes__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemaEmergenteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_actualizacion_temas_api_v1_actualizacion_temas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_actualizacion_tema_api_v1_actualizacion_temas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizacionTemaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_actualizacion_tema_api_v1_actualizacion_temas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_actualizacion_tema_api_v1_actualizacion_temas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_actualizacion_tema_api_v1_actualizacion_temas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizacionTemaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cierre_conclusiones_api_v1_cierre_conclusiones_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_cierre_conclusion_api_v1_cierre_conclusiones_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CierreConclusionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cierre_conclusion_api_v1_cierre_conclusiones__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_cierre_conclusion_api_v1_cierre_conclusiones__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_cierre_conclusion_api_v1_cierre_conclusiones__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CierreConclusionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_flujos_estatus_api_v1_flujos_estatus_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_flujo_estatus_api_v1_flujos_estatus_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FlujoEstatusCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_flujo_estatus_api_v1_flujos_estatus__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_flujo_estatus_api_v1_flujos_estatus__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_flujo_estatus_api_v1_flujos_estatus__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FlujoEstatusUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_indicador_formulas_api_v1_indicadores_formulas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_indicador_formula_api_v1_indicadores_formulas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicadorFormulaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_indicador_formula_api_v1_indicadores_formulas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_indicador_formula_api_v1_indicadores_formulas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_indicador_formula_api_v1_indicadores_formulas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicadorFormulaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_filtros_guardados_api_v1_filtros_guardados_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_filtro_guardado_api_v1_filtros_guardados_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FiltroGuardadoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_filtro_guardado_api_v1_filtros_guardados__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_filtro_guardado_api_v1_filtros_guardados__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_filtro_guardado_api_v1_filtros_guardados__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FiltroGuardadoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_dashboard_configs_api_v1_dashboard_configs_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_dashboard_config_api_v1_dashboard_configs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardConfigCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_config_api_v1_dashboard_configs__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_dashboard_config_api_v1_dashboard_configs__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_dashboard_config_api_v1_dashboard_configs__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardConfigUpdate"];
             };
         };
         responses: {

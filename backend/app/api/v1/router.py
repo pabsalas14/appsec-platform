@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from app.api.v1 import (
+    dashboard_config,
     activo_web,
     aplicacion_movil,
     audit_logs,
@@ -183,3 +184,4 @@ api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones
 api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
 api_router.include_router(indicador_formula.router, prefix="/indicadores_formulas", tags=["Indicador_formula"])
 api_router.include_router(filtro_guardado.router, prefix="/filtros_guardados", tags=["Filtro_guardado"])
+api_router.include_router(dashboard_config.router, prefix="/dashboard_configs", tags=["Dashboard_config"])
