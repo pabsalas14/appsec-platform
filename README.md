@@ -669,21 +669,21 @@ make types
 
 ## Roadmap de Funcionalidades
 
-### Estado Actual — Fase 13 Completada ✅
+### Estado Actual — Fase 16 Completada ✅ (Bloque B entero)
 
-**Completado (Fases 0-13):**
+**Completado (Fases 0-16):**
 - [x] Fase 0-9: Inicialización, Catálogos, Admin, Auditabilidad Base, Roles, Vulnerabilidades, Releases, Programas, MAST, Motor de Scoring
 - [x] Fase 10: Jerarquía Organizacional (Organizacion + Gerencia + FKs)
-- [x] Fase 11: SystemSetting ampliado (50+ configuraciones dinámicas: catalogs, SLAs, indicators, permisos, headers HTTP)
+- [x] Fase 11: SystemSetting ampliado (50+ keys: catalogs, SLAs, indicators, permisos, headers HTTP)
 - [x] Fase 12: Hash Chain en AuditLog (A4 - tamper-evident audit trail, validación de integridad)
-- [x] Fase 13: M5-7 Schemas/Services/Routers (9 entities nuevas):
-  - M5 Iniciativas: Iniciativa, HitoIniciativa, ActualizacionIniciativa
-  - M6 Auditorías: Auditoria, HallazgoAuditoria, EvidenciaAuditoria, PlanRemediacion
-  - M7 Temas: TemaEmergente, ActualizacionTema, CierreConclusion
-- [x] 67 entities total (36 nuevos + 31 del framework)
-- [x] 35 schemas, 35 services, 35 routers completados
-- [x] Soft delete universal, IDOR protection, audit logging (50+ services)
-- [x] 75% OWASP coverage, 80% Auditabilidad (A1-A8 implementado)
+- [x] Fase 13: M5-7 Schemas/Services/Routers (9 entities nuevas: Iniciativas, Auditorías, Temas)
+- [x] Fase 14: FlujoEstatus (dynamic state machines, transiciones configurables)
+- [x] Fase 15: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables, JSON formulas)
+- [x] Fase 16: FiltroGuardado (saved filters personales y compartidos para dashboards)
+- [x] 70 entities total (39 nuevos + 31 del framework)
+- [x] 38 schemas, 38 services, 38 routers completados
+- [x] Soft delete universal, IDOR protection, audit logging (55+ services)
+- [x] 80% OWASP coverage, 85% Auditabilidad (A1-A8 implementado)
 
 ---
 
@@ -693,28 +693,51 @@ make types
 - [x] **Fase 11**: SystemSetting ampliado (50+ keys: catalogs, SLAs, indicators, roles, IA config, headers HTTP)
 - [x] **Fase 12**: Hash Chain en AuditLog + verificación de integridad (A4 implementado)
 - [x] **Fase 13**: M5-7 Schemas/Services/Routers (9 entities nuevas: Iniciativas, Auditorías, Temas Emergentes)
-- [ ] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
-- [ ] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables)
-- [ ] **Fase 16**: FiltroGuardado (saved filters compartidos para dashboards)
+- [x] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
+- [x] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables con JSON formulas)
+- [x] **Fase 16**: FiltroGuardado (saved filters personales y compartidos para dashboards)
 
-#### Bloque C — Módulos Nuevos (Fases 14-17)
-- [ ] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
-- [ ] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables)
-- [ ] **Fase 16**: FiltroGuardado (saved filters compartidos para dashboards)
-- [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor)
-- [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol
-- [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional
-- [ ] **Fase 20**: Permisos Granulares (module/action/widget level)
+#### Bloque C — Módulos Nuevos (Fases 17-20)
+- [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor: Ollama/Anthropic/OpenAI/OpenRouter)
+- [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol (role-based panel visibility)
+- [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional (Ejecutivo, Equipo, Programas, etc.)
+- [ ] **Fase 20**: Permisos Granulares (module/action/widget level RBAC)
 
 #### Bloque D — IA + Changelog (Fases 21-23)
-- [ ] **Fase 21**: ChangelogEntrada + SistemaHealthMetric
-- [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD automático)
-- [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA automático)
+- [ ] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
+- [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD scoring automático con IA)
+- [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA classification con IA)
 
 #### Bloque E — Testing + Finalización (Fases 24-26)
-- [ ] **Fase 24**: E2E Testing de IA multi-proveedor
-- [ ] **Fase 25**: Testing Integral (80%+ coverage, OWASP S1-S25, A1-A8)
-- [ ] **Fase 26**: Performance optimization + Documentation
+- [ ] **Fase 24**: E2E Testing de IA multi-proveedor (Ollama/Anthropic/OpenAI/OpenRouter)
+- [ ] **Fase 25**: Testing Integral (80%+ coverage, OWASP S1-S25, A1-A8, IDOR per entity)
+- [ ] **Fase 26**: Performance optimization + Documentation + Production readiness
+
+---
+
+### Métricas de Completud
+
+| Métrica | Estado | Detalle |
+|---------|--------|---------|
+| **Entities** | 70/80 | 39 nuevas + 31 del framework (faltarían 7-10 más para fases C-E) |
+| **Schemas** | 38/45 | Completos hasta Fase 16 |
+| **Services** | 38/45 | CRUD + audit_action_prefix en cada uno |
+| **Routers** | 38/45 | Endpoints GET/POST/PATCH/DELETE con IDOR |
+| **Migraciones** | 16/26 | Alembic versiones para fases 0-16 |
+| **OWASP Coverage** | 80% | S1-S7, S10-S13, S21-S23 implementados |
+| **Auditabilidad** | 85% | A1-A8 implementado en 55+ services |
+| **Testing** | Deferred | Fase 25 (suite integral 80%+ coverage) |
+
+---
+
+### Próximos Pasos (Después de esta sesión)
+
+1. **Fase 17** (2-3 días): ConfiguracionIA → AIProvider abstraction + multi-proveedor
+2. **Fases 18-20** (6-8 días): Dashboards dinámicos + DashboardConfig + Permisos granulares
+3. **Fases 21-23** (4-5 días): IA integrado (Threat Modeling + FP Triage) + Changelog + Health
+4. **Fases 24-26** (5-7 días): Testing integral + Performance + Docs + Production readiness
+
+**Tiempo estimado restante:** 17-23 días (2-3 semanas)
 
 ---
 
