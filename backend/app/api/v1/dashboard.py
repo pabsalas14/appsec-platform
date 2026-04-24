@@ -578,15 +578,87 @@ async def dashboard_executive(
 
 @router.get("/programs")
 async def dashboard_programs(
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 3: Programas Consolidado - Progress placeholder."""
+    """Dashboard 3: Programas consolidado usando datos reales de vulnerabilidades."""
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    hierarchy_filter = _vulnerability_hierarchy_filter(
+        subdireccion_id=subdireccion_id,
+        gerencia_id=gerencia_id,
+        organizacion_id=organizacion_id,
+        celula_id=celula_id,
+    )
+    rows = (
+        await db.execute(
+            select(
+                Vulnerabilidad.fuente,
+                func.count().label("total"),
+                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label(
+                    "closed"
+                ),
+            )
+            .where(
+                Vulnerabilidad.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
+            )
+            .group_by(Vulnerabilidad.fuente)
+        )
+    ).all()
+
+    total_programs = len(rows)
+    if total_programs == 0:
+        return success(
+            {
+                "total_programs": 0,
+                "avg_completion": 0,
+                "programs_at_risk": 0,
+                "program_breakdown": [],
+                "applied_filters": _hierarchy_filter_dict(
+                    subdireccion_id=subdireccion_id,
+                    gerencia_id=gerencia_id,
+                    organizacion_id=organizacion_id,
+                    celula_id=celula_id,
+                ),
+            }
+        )
+
+    breakdown: list[dict] = []
+    completion_values: list[int] = []
+    at_risk = 0
+    for fuente, total, closed in rows:
+        total_i = int(total or 0)
+        closed_i = int(closed or 0)
+        completion = int((closed_i / total_i * 100) if total_i else 0)
+        if completion < 60:
+            at_risk += 1
+        completion_values.append(completion)
+        breakdown.append(
+            {
+                "program": fuente,
+                "total_findings": total_i,
+                "closed_findings": closed_i,
+                "completion_percentage": completion,
+            }
+        )
+
     return success(
         {
-            "total_programs": 8,
-            "avg_completion": 65,
-            "programs_at_risk": 2,
+            "total_programs": total_programs,
+            "avg_completion": int(sum(completion_values) / total_programs),
+            "programs_at_risk": at_risk,
+            "program_breakdown": breakdown,
+            "applied_filters": _hierarchy_filter_dict(
+                subdireccion_id=subdireccion_id,
+                gerencia_id=gerencia_id,
+                organizacion_id=organizacion_id,
+                celula_id=celula_id,
+            ),
         }
     )
 

@@ -753,6 +753,7 @@ make types
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
 - **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.
 - **Dashboards dedicados con drill-down:** rutas `/dashboards/team` y `/dashboards/releases` reutilizan filtros jerárquicos persistidos y consumen endpoints filtrados.
+- **Cobertura de vistas dedicadas:** rutas `/dashboards/*` para Ejecutivo, Vulnerabilidades, Equipo, Releases, Programas, Detalle de Programa, Iniciativas y Temas Emergentes.
 - **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
 

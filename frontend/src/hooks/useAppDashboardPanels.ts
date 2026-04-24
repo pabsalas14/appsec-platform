@@ -43,18 +43,27 @@ export type DashboardInitiativesData = {
   in_progress: number;
   completed: number;
   completion_percentage: number;
+  applied_filters?: Record<string, string>;
 };
 
 export type DashboardEmergingThemesData = {
   total_themes: number;
   unmoved_7_days: number;
   active: number;
+  applied_filters?: Record<string, string>;
 };
 
 export type DashboardProgramsData = {
   total_programs: number;
   avg_completion: number;
   programs_at_risk?: number;
+  program_breakdown?: Array<{
+    program: string;
+    total_findings: number;
+    closed_findings: number;
+    completion_percentage: number;
+  }>;
+  applied_filters?: Record<string, string>;
 };
 
 export type DashboardTeamData = {
@@ -159,10 +168,11 @@ export function useDashboardEmergingThemes() {
   });
 }
 
-export function useDashboardPrograms() {
+export function useDashboardPrograms(filters?: HierarchyFilters) {
   return useQuery({
-    queryKey: ['dashboard', 'programs'],
-    queryFn: () => fetchDashboard<DashboardProgramsData>('/dashboard/programs'),
+    queryKey: ['dashboard', 'programs', filters ?? {}],
+    queryFn: () =>
+      fetchDashboard<DashboardProgramsData>(withHierarchy('/dashboard/programs', filters)),
     staleTime: 60_000,
   });
 }

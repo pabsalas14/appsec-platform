@@ -102,6 +102,20 @@ async def test_dashboard_programs_endpoint(client: AsyncClient, auth_headers: di
     # Check structure
     assert "total_programs" in data["data"]
     assert "avg_completion" in data["data"]
+    assert "programs_at_risk" in data["data"]
+    assert "program_breakdown" in data["data"]
+
+
+@pytest.mark.asyncio
+async def test_dashboard_programs_accepts_hierarchy_filters(
+    client: AsyncClient, auth_headers: dict
+):
+    gid = uuid4()
+    endpoint = f"/api/v1/dashboard/programs?gerencia_id={gid}"
+    response = await client.get(endpoint, headers=auth_headers)
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+    assert data["applied_filters"]["gerencia_id"] == str(gid)
 
 
 @pytest.mark.asyncio

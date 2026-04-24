@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   FolderKanban,
   Layers,
   LayoutDashboard,
@@ -95,11 +96,32 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/uploads'))}>
               <Upload className="mr-2 h-4 w-4" /> Uploads
             </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/executive'))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Ejecutivo
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/vulnerabilities'))}>
+              <AlertTriangle className="mr-2 h-4 w-4" /> Dashboard Vulnerabilidades
+            </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/team'))}>
               <Users className="mr-2 h-4 w-4" /> Dashboard Team
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/releases'))}>
               <Layers className="mr-2 h-4 w-4" /> Dashboard Releases
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/programs'))}>
+              <Layers className="mr-2 h-4 w-4" /> Dashboard Programas
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/program-detail'))}>
+              <Layers className="mr-2 h-4 w-4" /> Dashboard Detalle Programa
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/initiatives'))}>
+              <Layers className="mr-2 h-4 w-4" /> Dashboard Iniciativas
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/emerging-themes'))}>
+              <AlertTriangle className="mr-2 h-4 w-4" /> Dashboard Temas Emergentes
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/profile'))}>
               <UserCircle className="mr-2 h-4 w-4" /> Profile
