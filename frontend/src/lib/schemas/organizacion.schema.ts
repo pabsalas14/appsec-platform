@@ -19,7 +19,7 @@ export const OrganizacionCreateSchema = z.object({
   codigo: z.string(),
   descripcion: z.string().nullable().optional(),
   gerencia_id: z.string().uuid(),
-  plataforma: z.string().default('GitHub'),
+  plataforma: z.string().min(1),
   url_base: z.string().nullable().optional(),
   responsable: z.string().nullable().optional(),
 });

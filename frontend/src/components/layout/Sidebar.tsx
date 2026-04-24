@@ -4,7 +4,9 @@ import {
   AppWindow,
   Building2,
   Bug,
+  Briefcase,
   ChevronLeft,
+  Globe2,
   ChevronRight,
   ClipboardList,
   FolderKanban,
@@ -62,6 +64,9 @@ const SECTIONS: NavSection[] = [
     title: 'Organización (BRD)',
     items: [
       { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
+      { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
+      { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
+      { href: '/celulas', label: 'Células', icon: Users },
     ],
   },
   {

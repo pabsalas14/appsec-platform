@@ -3,8 +3,11 @@
 import {
   AlertTriangle,
   Bug,
+  Briefcase,
   Building2,
   ClipboardList,
+  Globe2,
+  Users,
   FolderKanban,
   Layers,
   LayoutDashboard,
@@ -17,7 +20,6 @@ import {
   Sun,
   Upload,
   UserCircle,
-  Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -105,6 +107,15 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/subdireccions'))}>
               <Building2 className="mr-2 h-4 w-4" /> Subdirecciones
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/gerencias'))}>
+              <Briefcase className="mr-2 h-4 w-4" /> Gerencias
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/organizacions'))}>
+              <Globe2 className="mr-2 h-4 w-4" /> Organizaciones
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/celulas'))}>
+              <Users className="mr-2 h-4 w-4" /> Células
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
