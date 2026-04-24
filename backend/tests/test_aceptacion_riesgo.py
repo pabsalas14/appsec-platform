@@ -178,3 +178,40 @@ async def test_aprobar_aceptacion_success_with_admin(
     )
     assert approved.status_code == 200, approved.text
     assert approved.json()["data"]["estado"] == "Aprobada"
+
+
+@pytest.mark.asyncio
+async def test_aceptacion_export_requires_permission(
+    client: AsyncClient, auth_headers: dict
+):
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert resp.status_code == 403
+    assert "vulnerabilities.export" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_aceptacion_export_csv_success(
+    client: AsyncClient, admin_auth_headers: dict
+):
+    vuln_id = await _create_vuln(client, admin_auth_headers)
+    user_info = await client.get("/api/v1/auth/me", headers=admin_auth_headers)
+    assert user_info.status_code == 200, user_info.text
+    owner_id = user_info.json()["data"]["id"]
+
+    created = await client.post(
+        BASE_URL,
+        headers=admin_auth_headers,
+        json={
+            "vulnerabilidad_id": vuln_id,
+            "justificacion_negocio": "Riesgo aceptado temporalmente por impacto residual controlado",
+            "propietario_riesgo_id": owner_id,
+            "fecha_revision_obligatoria": "2027-11-01T00:00:00Z",
+        },
+    )
+    assert created.status_code == 201, created.text
+
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("content-type", "").startswith("text/csv")
+    assert "vulnerabilidad_id,propietario_riesgo_id,estado" in resp.text
+    assert "Riesgo aceptado temporalmente por impacto residual controlado" in resp.text

@@ -1,8 +1,14 @@
 """ExcepcionVulnerabilidad endpoints — CRUD + flujo de aprobación con SoD (A6)."""
 
+from __future__ import annotations
+
+import csv
+import hashlib
+from io import StringIO
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -18,8 +24,50 @@ from app.schemas.excepcion_vulnerabilidad import (
     ExcepcionVulnerabilidadUpdate,
 )
 from app.services.excepcion_vulnerabilidad_service import excepcion_vulnerabilidad_svc
+from app.services.audit_service import record as audit_record
 
 router = APIRouter()
+
+
+@router.get("/export.csv")
+async def export_excepciones_csv(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.EXPORT)),
+):
+    """Exporta excepciones del usuario a CSV y registra auditoría A7."""
+    items = await excepcion_vulnerabilidad_svc.list(
+        db, filters={"user_id": current_user.id}
+    )
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        ["id", "vulnerabilidad_id", "estado", "justificacion", "fecha_limite", "created_at"]
+    )
+    for item in items:
+        writer.writerow(
+            [
+                str(item.id),
+                str(item.vulnerabilidad_id),
+                item.estado,
+                item.justificacion,
+                item.fecha_limite.isoformat() if item.fecha_limite else "",
+                item.created_at.isoformat() if item.created_at else "",
+            ]
+        )
+    body = buf.getvalue()
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    await audit_record(
+        db,
+        action="excepcion_vulnerabilidad.export_csv",
+        entity_type="excepcion_vulnerabilidad",
+        entity_id=current_user.id,
+        metadata={"rows": len(items), "sha256": digest, "format": "csv"},
+    )
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="excepciones_vulnerabilidad.csv"'},
+    )
 
 
 @router.get("")

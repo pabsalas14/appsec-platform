@@ -1,8 +1,14 @@
 """AceptacionRiesgo endpoints — CRUD + flujo de aprobación con SoD (A6)."""
 
+from __future__ import annotations
+
+import csv
+import hashlib
+from io import StringIO
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -18,8 +24,61 @@ from app.schemas.aceptacion_riesgo import (
     AceptacionRiesgoUpdate,
 )
 from app.services.aceptacion_riesgo_service import aceptacion_riesgo_svc
+from app.services.audit_service import record as audit_record
 
 router = APIRouter()
+
+
+@router.get("/export.csv")
+async def export_aceptaciones_csv(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.EXPORT)),
+):
+    """Exporta aceptaciones de riesgo del usuario a CSV y registra auditoría A7."""
+    items = await aceptacion_riesgo_svc.list(db, filters={"user_id": current_user.id})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        [
+            "id",
+            "vulnerabilidad_id",
+            "propietario_riesgo_id",
+            "estado",
+            "justificacion_negocio",
+            "fecha_revision_obligatoria",
+            "created_at",
+        ]
+    )
+    for item in items:
+        writer.writerow(
+            [
+                str(item.id),
+                str(item.vulnerabilidad_id),
+                str(item.propietario_riesgo_id),
+                item.estado,
+                item.justificacion_negocio,
+                (
+                    item.fecha_revision_obligatoria.isoformat()
+                    if item.fecha_revision_obligatoria
+                    else ""
+                ),
+                item.created_at.isoformat() if item.created_at else "",
+            ]
+        )
+    body = buf.getvalue()
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    await audit_record(
+        db,
+        action="aceptacion_riesgo.export_csv",
+        entity_type="aceptacion_riesgo",
+        entity_id=current_user.id,
+        metadata={"rows": len(items), "sha256": digest, "format": "csv"},
+    )
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="aceptaciones_riesgo.csv"'},
+    )
 
 
 @router.get("")
