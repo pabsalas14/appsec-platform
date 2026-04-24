@@ -26,7 +26,7 @@ async def list_filtros_guardados(
 
 @router.get("/{id}")
 async def get_filtro_guardado(
-    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc)),
+    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc, owner_field="usuario_id")),
 ):
     """Get a single owned filtro guardado by ID (404 if not owned)."""
     return success(FiltroGuardadoRead.model_validate(entity).model_dump(mode="json"))
@@ -48,7 +48,7 @@ async def update_filtro_guardado(
     entity_in: FiltroGuardadoUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc)),
+    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc, owner_field="usuario_id")),
 ):
     """Partially update an owned filtro guardado (404 if not owned)."""
     updated = await filtro_guardado_svc.update(
@@ -61,7 +61,7 @@ async def update_filtro_guardado(
 async def delete_filtro_guardado(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc)),
+    entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc, owner_field="usuario_id")),
 ):
     """Delete an owned filtro guardado (404 if not owned)."""
     await filtro_guardado_svc.delete(db, entity.id, scope={"usuario_id": current_user.id})

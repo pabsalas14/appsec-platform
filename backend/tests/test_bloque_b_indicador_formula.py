@@ -82,7 +82,7 @@ async def test_indicador_formula_thresholds(client: AsyncClient, auth_headers: d
 
 
 @pytest.mark.asyncio
-async def test_idor_protection_indicador_formula(client: AsyncClient, auth_headers: dict, other_user_headers: dict):
+async def test_idor_protection_indicador_formula(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     """Test IDOR protection for indicador formula."""
     payload = {
         "code": "TEST-001",
@@ -93,7 +93,7 @@ async def test_idor_protection_indicador_formula(client: AsyncClient, auth_heade
     }
     response = await client.post("/api/v1/indicadores_formulas", json=payload, headers=auth_headers)
     formula_id = response.json()["data"]["id"]
-    
+
     # Try to access as different user
-    response = await client.get(f"/api/v1/indicadores_formulas/{formula_id}", headers=other_user_headers)
+    response = await client.get(f"/api/v1/indicadores_formulas/{formula_id}", headers=other_auth_headers)
     assert response.status_code == 404

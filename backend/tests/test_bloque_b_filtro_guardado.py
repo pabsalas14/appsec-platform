@@ -89,7 +89,7 @@ async def test_filtro_guardado_multiple_modulos(client: AsyncClient, auth_header
 
 
 @pytest.mark.asyncio
-async def test_idor_protection_filtro_guardado(client: AsyncClient, auth_headers: dict, other_user_headers: dict):
+async def test_idor_protection_filtro_guardado(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     """Test IDOR protection for filtro guardado."""
     payload = {
         "nombre": "Mi Filtro Personal",
@@ -98,9 +98,9 @@ async def test_idor_protection_filtro_guardado(client: AsyncClient, auth_headers
     }
     response = await client.post("/api/v1/filtros_guardados", json=payload, headers=auth_headers)
     filtro_id = response.json()["data"]["id"]
-    
+
     # Try to access as different user
-    response = await client.get(f"/api/v1/filtros_guardados/{filtro_id}", headers=other_user_headers)
+    response = await client.get(f"/api/v1/filtros_guardados/{filtro_id}", headers=other_auth_headers)
     assert response.status_code == 404
 
 

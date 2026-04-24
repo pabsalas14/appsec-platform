@@ -75,7 +75,7 @@ async def test_flujo_estatus_requires_justification(client: AsyncClient, auth_he
 
 
 @pytest.mark.asyncio
-async def test_idor_protection_flujo_estatus(client: AsyncClient, auth_headers: dict, other_user_headers: dict):
+async def test_idor_protection_flujo_estatus(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     """Test IDOR protection for flujo estatus."""
     payload = {
         "entity_type": "TemaEmergente",
@@ -85,7 +85,7 @@ async def test_idor_protection_flujo_estatus(client: AsyncClient, auth_headers: 
     }
     response = await client.post("/api/v1/flujos_estatus", json=payload, headers=auth_headers)
     flujo_id = response.json()["data"]["id"]
-    
+
     # Try to access as different user
-    response = await client.get(f"/api/v1/flujos_estatus/{flujo_id}", headers=other_user_headers)
+    response = await client.get(f"/api/v1/flujos_estatus/{flujo_id}", headers=other_auth_headers)
     assert response.status_code == 404
