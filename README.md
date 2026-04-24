@@ -714,7 +714,7 @@ make types
 
 #### Bloque D — IA + Changelog (Fases 21-23)
 - [x] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
-- [~] **Fase 22**: Threat Modeling Asistido (endpoint IA estructurado con creación opcional de amenazas; pendiente UI dedicada)
+- [x] **Fase 22**: Threat Modeling Asistido (endpoint IA estructurado + UI: `/sesion_threat_modelings` y detalle con `ia/suggest`, simulación y amenazas por sesión)
 - [~] **Fase 23**: Triaje de Falsos Positivos (endpoint IA implementado para vulnerabilidades; pendiente ampliar cobertura por motores)
 
 #### Bloque E — Testing + Finalización (Fases 24-26)
@@ -733,7 +733,7 @@ make types
 | **Services** | 41/41 | ✅ CRUD + audit_action_prefix en cada uno |
 | **Routers** | 41/41 | ✅ Endpoints GET/POST/PATCH/DELETE con IDOR |
 | **Migraciones** | 18/27 | En progreso (Fase 18 completada, Bloque C iniciado) |
-| **Testing** | ~391 | ✅ Suite `pytest` en Docker (`make test`); incluye dashboards, permisos, export CSV, jerarquía BRD |
+| **Testing** | ~436 | ✅ Suite `pytest` en Docker (`make test`); incluye dashboards, permisos, export CSV, jerarquía BRD, sesión TM + IA |
 | **OWASP Coverage** | 80% | S1-S7, S10-S13, S21-S23 implementados |
 | **Auditabilidad** | 85% | A1-A8 implementado en 55+ services |
 
@@ -750,7 +750,7 @@ make types
 - **Visibilidad por rol en widgets:** `GET /api/v1/dashboard_configs/my-visibility` entrega overrides por rol para cada widget; la home y dashboards dedicados aplican estas reglas para mostrar/ocultar tarjetas y paneles.
 - **Configuración IA administrable:** `GET/PUT /api/v1/admin/ia-config` para proveedor activo, modelo, temperatura, tokens y timeout (persistido en `system_settings` con auditoría).
 - **Ejecución IA en flujo real:** `POST /api/v1/sesion_threat_modelings/{id}/ia/suggest` usa `AIProvider`, requiere permiso `ia.execute`, audita la invocación y puede marcar la sesión con `ia_utilizada=true`.
-- **Threat Modeling asistido (Fase 22 parcial):** el endpoint IA ya entrega salida JSON estructurada STRIDE/DREAD y puede crear amenazas en la sesión cuando `crear_amenazas=true`.
+- **Threat Modeling asistido (Fase 22):** el endpoint `ia/suggest` entrega JSON estructurado STRIDE/DREAD y puede crear amenazas cuando `crear_amenazas=true`; el frontend incluye listado, detalle, panel IA y listado de amenazas filtrado por `sesion_id` (navegación en sidebar y Ctrl+K).
 - **Triaje IA de falsos positivos (Fase 23 parcial):** `POST /api/v1/vulnerabilidads/{id}/ia/triage-fp` clasifica `false_positive|likely_real|needs_review`, devuelve confianza/racional, y deja auditoría por invocación.
 - **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
