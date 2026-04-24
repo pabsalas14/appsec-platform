@@ -1,10 +1,10 @@
-"""Subdireccion model — owned per-user entity."""
+"""Organizacion model — top-level organizational hierarchy."""
 
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, String, ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,12 +12,11 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.celula import Celula
-    from app.models.organizacion import Organizacion
+    from app.models.subdireccion import Subdireccion
 
 
-class Subdireccion(SoftDeleteMixin, Base):
-    __tablename__ = "subdireccions"
+class Organizacion(SoftDeleteMixin, Base):
+    __tablename__ = "organizacions"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -25,12 +24,6 @@ class Subdireccion(SoftDeleteMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    organizacion_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organizacions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -46,8 +39,7 @@ class Subdireccion(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    organizacion: Mapped["Organizacion"] = relationship(back_populates="subdirecciones")
-    celulas: Mapped[list["Celula"]] = relationship(
-        back_populates="subdireccion",
+    subdirecciones: Mapped[list["Subdireccion"]] = relationship(
+        back_populates="organizacion",
         cascade="all, delete-orphan",
     )

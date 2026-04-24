@@ -1,10 +1,10 @@
-"""Subdireccion model — owned per-user entity."""
+"""Gerencia model — middle organizational hierarchy level."""
 
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, String, ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,11 +13,11 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
-    from app.models.organizacion import Organizacion
+    from app.models.subdireccion import Subdireccion
 
 
-class Subdireccion(SoftDeleteMixin, Base):
-    __tablename__ = "subdireccions"
+class Gerencia(SoftDeleteMixin, Base):
+    __tablename__ = "gerencias"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -28,14 +28,13 @@ class Subdireccion(SoftDeleteMixin, Base):
         nullable=False,
         index=True,
     )
-    organizacion_id: Mapped[uuid.UUID] = mapped_column(
+    subdireccion_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("organizacions.id", ondelete="CASCADE"),
+        ForeignKey("subdireccions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
-    codigo: Mapped[str] = mapped_column(String(255), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), nullable=False
@@ -46,8 +45,8 @@ class Subdireccion(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    organizacion: Mapped["Organizacion"] = relationship(back_populates="subdirecciones")
+    subdireccion: Mapped["Subdireccion"] = relationship()
     celulas: Mapped[list["Celula"]] = relationship(
-        back_populates="subdireccion",
+        back_populates="gerencia",
         cascade="all, delete-orphan",
     )

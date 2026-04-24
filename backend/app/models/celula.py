@@ -14,6 +14,7 @@ from app.models.mixins import SoftDeleteMixin
 if TYPE_CHECKING:
     from app.models.activo_web import ActivoWeb
     from app.models.aplicacion_movil import AplicacionMovil
+    from app.models.gerencia import Gerencia
     from app.models.repositorio import Repositorio
     from app.models.servicio import Servicio
     from app.models.subdireccion import Subdireccion
@@ -40,6 +41,12 @@ class Celula(SoftDeleteMixin, Base):
         nullable=False,
         index=True,
     )
+    gerencia_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gerencias.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), nullable=False
     )
@@ -50,6 +57,7 @@ class Celula(SoftDeleteMixin, Base):
     )
 
     subdireccion: Mapped["Subdireccion"] = relationship(back_populates="celulas")
+    gerencia: Mapped["Gerencia"] = relationship(back_populates="celulas")
     repositorios: Mapped[list["Repositorio"]] = relationship(back_populates="celula")
     activo_webs: Mapped[list["ActivoWeb"]] = relationship(back_populates="celula")
     servicios: Mapped[list["Servicio"]] = relationship(back_populates="celula")

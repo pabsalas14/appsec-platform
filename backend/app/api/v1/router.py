@@ -1,7 +1,7 @@
 """API v1 router — aggregates all endpoint modules."""
 
 from fastapi import APIRouter
-from app.api.v1 import (, ejecucion_mast, hallazgo_mast, iniciativa
+from app.api.v1 import (, ejecucion_mast, hallazgo_mast, iniciativa, organizacion, gerencia
     activo_web,
     aplicacion_movil,
     audit_logs,
@@ -136,3 +136,5 @@ api_router.include_router(estado_cumplimiento.router, prefix="/estado_cumplimien
 api_router.include_router(ejecucion_mast.router, prefix="/ejecucion_masts", tags=["Ejecucion_mast"])
 api_router.include_router(hallazgo_mast.router, prefix="/hallazgo_masts", tags=["Hallazgo_mast"])
 api_router.include_router(iniciativa.router, prefix="/iniciativas", tags=["Iniciativa"])
+api_router.include_router(organizacion.router, prefix="/organizacions", tags=["Organizacion"])
+api_router.include_router(gerencia.router, prefix="/gerencias", tags=["Gerencia"])

@@ -117,6 +117,10 @@ import app.models.hallazgo_mast   # noqa: F401
 
 import app.models.iniciativa   # noqa: F401
 
+import app.models.organizacion   # noqa: F401
+
+import app.models.gerencia   # noqa: F401
+
 target_metadata = Base.metadata
 
 
