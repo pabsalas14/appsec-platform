@@ -115,6 +115,8 @@ import app.models.ejecucion_mast   # noqa: F401
 
 import app.models.hallazgo_mast   # noqa: F401
 
+import app.models.iniciativa   # noqa: F401
+
 target_metadata = Base.metadata
 
 
