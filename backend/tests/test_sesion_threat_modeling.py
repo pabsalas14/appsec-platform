@@ -5,7 +5,8 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from tests.graph_helpers import create_programa_tm_id
+from app.services.ia_provider import IAResult
+from tests.graph_helpers import create_programa_tm_id, create_sesion_tm_id
 
 
 BASE_URL = "/api/v1/sesion_threat_modelings"
@@ -67,3 +68,71 @@ async def test_sesion_threat_modeling_idor_protected(
             method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
         )
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_sesion_threat_modeling_ia_suggest_requires_permission(
+    client: AsyncClient,
+    auth_headers: dict,
+):
+    sid = await create_sesion_tm_id(client, auth_headers)
+    resp = await client.post(
+        f"{BASE_URL}/{sid}/ia/suggest",
+        headers=auth_headers,
+        json={"dry_run": True},
+    )
+    assert resp.status_code == 403
+    assert "ia.execute" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_sesion_threat_modeling_ia_suggest_dry_run_success(
+    client: AsyncClient,
+    admin_auth_headers: dict,
+):
+    sid = await create_sesion_tm_id(client, admin_auth_headers)
+    resp = await client.post(
+        f"{BASE_URL}/{sid}/ia/suggest",
+        headers=admin_auth_headers,
+        json={"dry_run": True, "contexto_adicional": "API financiera"},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["dry_run"] is True
+    assert "provider" in data
+    assert "model" in data
+    assert "content" in data
+    assert isinstance(data["suggested_threats"], list)
+
+
+@pytest.mark.asyncio
+async def test_sesion_threat_modeling_ia_suggest_marks_session_as_ai_used(
+    client: AsyncClient,
+    admin_auth_headers: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    sid = await create_sesion_tm_id(client, admin_auth_headers)
+
+    async def _fake_run_prompt(*args, **kwargs):
+        return IAResult(
+            provider="openai",
+            model="gpt-4o-mini",
+            content="- Spoofing por token expirado\n- Tampering en payload de webhook",
+            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+        )
+
+    monkeypatch.setattr("app.api.v1.sesion_threat_modeling.run_prompt", _fake_run_prompt)
+
+    resp = await client.post(
+        f"{BASE_URL}/{sid}/ia/suggest",
+        headers=admin_auth_headers,
+        json={"dry_run": False},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["dry_run"] is False
+    assert len(data["suggested_threats"]) >= 1
+
+    session_resp = await client.get(f"{BASE_URL}/{sid}", headers=admin_auth_headers)
+    assert session_resp.status_code == 200
+    assert session_resp.json()["data"]["ia_utilizada"] is True

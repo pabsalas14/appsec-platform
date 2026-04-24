@@ -686,7 +686,7 @@ make types
 - [x] Fase 14: FlujoEstatus (dynamic state machines, transiciones configurables)
 - [x] Fase 15: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables, JSON formulas)
 - [x] Fase 16: FiltroGuardado (saved filters personales y compartidos para dashboards)
-- [~] Fase 17: ConfiguracionIA — endpoint admin implementado (`/api/v1/admin/ia-config`), pendiente capa de ejecución AIProvider
+- [x] Fase 17: ConfiguracionIA — endpoint admin + ejecución AIProvider integrada en flujo de Threat Modeling (`POST /api/v1/sesion_threat_modelings/{id}/ia/suggest`)
 - [~] Fase 18: DashboardConfig + visibilidad de widgets por rol — backend completo + aplicación UI en home y dashboards dedicados
 - [~] Fase 19: Dashboards dinámicos — endpoints de 9 vistas + filtros jerárquicos (`subdireccion/gerencia/organizacion/celula`) en las 9 vistas dedicadas; pendiente cerrar exportación por vista y presets compartidos end-to-end
 - [x] 71 entities total (40 nuevos + 31 del framework)
@@ -707,7 +707,7 @@ make types
 - [x] **Fase 16**: FiltroGuardado (saved filters personales y compartidos para dashboards)
 
 #### Bloque C — Módulos Nuevos (Fases 17-20)
-- [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor: Ollama/Anthropic/OpenAI/OpenRouter)
+- [x] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor: Ollama/Anthropic/OpenAI/OpenRouter)
 - [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol (role-based panel visibility)
 - [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional (Ejecutivo, Equipo, Programas, etc.)
 - [x] **Fase 20**: Permisos Granulares (module/action/widget level RBAC)
@@ -729,7 +729,7 @@ make types
 | Métrica | Estado | Detalle |
 |---------|--------|---------|
 | **Entities** | 67/67 | ✅ 36 nuevas + 31 del framework (Bloque A-B completados) |
-| **Schemas** | 41/41 | ✅ Bloque A-B completo; ConfiguracionIA pendiente |
+| **Schemas** | 41/41 | ✅ Bloque A-B completo + schemas de ConfiguracionIA y ejecución asistida |
 | **Services** | 41/41 | ✅ CRUD + audit_action_prefix en cada uno |
 | **Routers** | 41/41 | ✅ Endpoints GET/POST/PATCH/DELETE con IDOR |
 | **Migraciones** | 18/27 | En progreso (Fase 18 completada, Bloque C iniciado) |
@@ -749,6 +749,7 @@ make types
 - **Permisos en dashboards:** todos los `GET /api/v1/dashboard/*` exigen `dashboards.view`. Si la tabla `roles` está vacía tras un `TRUNCATE` de tests, se hace **bootstrap** automático del catálogo de permisos y roles (`app/services/permission_seed.py`).
 - **Visibilidad por rol en widgets:** `GET /api/v1/dashboard_configs/my-visibility` entrega overrides por rol para cada widget; la home y dashboards dedicados aplican estas reglas para mostrar/ocultar tarjetas y paneles.
 - **Configuración IA administrable:** `GET/PUT /api/v1/admin/ia-config` para proveedor activo, modelo, temperatura, tokens y timeout (persistido en `system_settings` con auditoría).
+- **Ejecución IA en flujo real:** `POST /api/v1/sesion_threat_modelings/{id}/ia/suggest` usa `AIProvider`, requiere permiso `ia.execute`, audita la invocación y puede marcar la sesión con `ia_utilizada=true`.
 - **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
 - **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.

@@ -48,3 +48,20 @@ class SesionThreatModelingRead(SesionThreatModelingBase):
     user_id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class SesionThreatModelingIASuggestRequest(BaseModel):
+    """Payload for AI-assisted threat suggestions."""
+
+    contexto_adicional: Optional[str] = Field(default=None, max_length=4000)
+    dry_run: bool = True
+
+
+class SesionThreatModelingIASuggestRead(BaseModel):
+    """Response returned by IA suggestion endpoint."""
+
+    provider: str
+    model: str
+    dry_run: bool
+    content: str
+    suggested_threats: list[str]
