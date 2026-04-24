@@ -732,16 +732,26 @@ make types
 
 ### Próximos Pasos (Bloque C en progreso)
 
-**Estado actual (24-04-2026):** Bloque A-B completados ✅, iniciando Bloque C
+**Estado actual (24-04-2026, final de sesión):** Bloque A-B ✅ completados, Bloque C iniciado
 
-1. **Fase 18** (EN PROGRESO): DashboardConfig + 9 dashboards dinámicos con drill-down
-2. **Fase 19** (Próxima): Permisos granulares (module/action/widget level)
-3. **Fase 20** (Próxima): ChangelogEntrada (platform changelog)
-4. **Fase 21** (Próxima): SistemaHealthMetric (system health dashboard)
-5. **Bloque D** (Fases 22-24): IA multi-proveedor (Threat Modeling + FP Triage)
-6. **Bloque E** (Fases 25-27): Testing integral + Performance + Documentación
+#### Completado esta sesión:
+1. **Bloque B tests** ✅ : Todos los 23 tests pasando (M5, FlujoEstatus, IndicadorFormula, FiltroGuardado)
+2. **Fase 18 (Parcial)** 🔄 : 
+   - ✅ DashboardConfig entity scaffold + modelo + servicios + router
+   - ✅ Migración Alembic generada y aplicada
+   - ✅ /dashboard/vulnerabilities endpoint (multidimensional view)
+   - ✅ /dashboard/releases endpoint (status distribution)
+   - 🔲 Falta: Dashboards 1-4, 8-9 + drill-down + export + filtros guardados
 
-**Tiempo estimado restante:** 10-15 días (1.5-2 semanas)
+#### Próximas fases:
+3. **Fase 18 (Continuación)**: Completar 7 dashboards restantes + drill-down + exports
+4. **Fase 19**: Permisos granulares (module/action/widget level)
+5. **Fase 20**: ChangelogEntrada (platform changelog)
+6. **Fase 21**: SistemaHealthMetric (system health dashboard)
+7. **Bloque D** (Fases 22-24): IA multi-proveedor (Threat Modeling + FP Triage)
+8. **Bloque E** (Fases 25-27): Testing integral + Performance + Documentación
+
+**Tiempo estimado restante:** 10-14 días (1.5-2 semanas)
 
 ---
 
