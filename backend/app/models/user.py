@@ -15,6 +15,7 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.flujo_estatus import FlujoEstatus
     from app.models.indicador_formula import IndicadorFormula
+    from app.models.filtro_guardado import FiltroGuardado
 
 
 class User(Base):
@@ -49,4 +50,7 @@ class User(Base):
     )
     indicadores_formulas: Mapped[list["IndicadorFormula"]] = relationship(
         back_populates="user", lazy="noload"
+    )
+    filtros_guardados: Mapped[list["FiltroGuardado"]] = relationship(
+        back_populates="usuario", lazy="noload"
     )
