@@ -715,7 +715,7 @@ make types
 #### Bloque D — IA + Changelog (Fases 21-23)
 - [x] **Fase 21**: ChangelogEntrada (platform changelog) + SistemaHealthMetric (system health dashboard)
 - [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD scoring automático con IA)
-- [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA classification con IA)
+- [~] **Fase 23**: Triaje de Falsos Positivos (endpoint IA implementado para vulnerabilidades; pendiente ampliar cobertura por motores)
 
 #### Bloque E — Testing + Finalización (Fases 24-26)
 - [ ] **Fase 24**: E2E Testing de IA multi-proveedor (Ollama/Anthropic/OpenAI/OpenRouter)
@@ -750,6 +750,7 @@ make types
 - **Visibilidad por rol en widgets:** `GET /api/v1/dashboard_configs/my-visibility` entrega overrides por rol para cada widget; la home y dashboards dedicados aplican estas reglas para mostrar/ocultar tarjetas y paneles.
 - **Configuración IA administrable:** `GET/PUT /api/v1/admin/ia-config` para proveedor activo, modelo, temperatura, tokens y timeout (persistido en `system_settings` con auditoría).
 - **Ejecución IA en flujo real:** `POST /api/v1/sesion_threat_modelings/{id}/ia/suggest` usa `AIProvider`, requiere permiso `ia.execute`, audita la invocación y puede marcar la sesión con `ia_utilizada=true`.
+- **Triaje IA de falsos positivos (Fase 23 parcial):** `POST /api/v1/vulnerabilidads/{id}/ia/triage-fp` clasifica `false_positive|likely_real|needs_review`, devuelve confianza/racional, y deja auditoría por invocación.
 - **Dashboards fase 19 (base):** se agregaron endpoints para `team`, `program-detail`, `releases-table` y `releases-kanban` bajo `/api/v1/dashboard/*`, todos protegidos con `dashboards.view`.
 - **Drill-down jerárquico BRD (backend):** dashboards de vulnerabilidades, ejecutivo, equipo, detalle de programa y releases aceptan filtros por jerarquía (`subdireccion_id`, `gerencia_id`, `organizacion_id`, `celula_id`) y devuelven `applied_filters`.
 - **Drill-down jerárquico UI (dashboard home):** selector en cascada Subdirección→Gerencia→Organización→Célula persistido en `localStorage`, conectado a paneles ejecutivos, vulnerabilidades, equipo y releases.

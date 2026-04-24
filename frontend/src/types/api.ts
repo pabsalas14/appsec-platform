@@ -1448,6 +1448,26 @@ export interface paths {
         patch: operations["update_vulnerabilidad_api_v1_vulnerabilidads__id__patch"];
         trace?: never;
     };
+    "/api/v1/vulnerabilidads/{id}/ia/triage-fp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Triage Vulnerabilidad False Positive
+         * @description IA-assisted triage for potential false positives.
+         */
+        post: operations["triage_vulnerabilidad_false_positive_api_v1_vulnerabilidads__id__ia_triage_fp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historial_vulnerabilidads": {
         parameters: {
             query?: never;
@@ -6684,6 +6704,19 @@ export interface components {
             aplicacion_movil_id?: string | null;
         };
         /**
+         * VulnerabilidadIATriageRequest
+         * @description Payload for IA-assisted false-positive triage.
+         */
+        VulnerabilidadIATriageRequest: {
+            /** Contexto Adicional */
+            contexto_adicional?: string | null;
+            /**
+             * Dry Run
+             * @default true
+             */
+            dry_run: boolean;
+        };
+        /**
          * VulnerabilidadUpdate
          * @description Todos los campos opcionales para actualizaciones parciales.
          */
@@ -10750,6 +10783,46 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VulnerabilidadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    triage_vulnerabilidad_false_positive_api_v1_vulnerabilidads__id__ia_triage_fp_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VulnerabilidadIATriageRequest"];
             };
         };
         responses: {

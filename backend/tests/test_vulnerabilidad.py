@@ -5,6 +5,8 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from app.services.ia_provider import IAResult
+
 
 BASE_URL = "/api/v1/vulnerabilidads"
 
@@ -139,3 +141,76 @@ async def test_export_csv_success_records_audit(
     assert "titulo" in r.text
     assert SAMPLE_PAYLOAD["titulo"] in r.text
     assert r.headers.get("content-type", "").startswith("text/csv")
+
+
+@pytest.mark.asyncio
+async def test_triage_fp_requires_ia_execute_permission(
+    client: AsyncClient, auth_headers: dict
+):
+    create = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
+    assert create.status_code == 201, create.text
+    vid = create.json()["data"]["id"]
+
+    r = await client.post(
+        f"{BASE_URL}/{vid}/ia/triage-fp",
+        headers=auth_headers,
+        json={"dry_run": True},
+    )
+    assert r.status_code == 403
+    assert "ia.execute" in r.text
+
+
+@pytest.mark.asyncio
+async def test_triage_fp_dry_run_success(
+    client: AsyncClient, admin_auth_headers: dict
+):
+    create = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
+    assert create.status_code == 201, create.text
+    vid = create.json()["data"]["id"]
+
+    r = await client.post(
+        f"{BASE_URL}/{vid}/ia/triage-fp",
+        headers=admin_auth_headers,
+        json={"dry_run": True, "contexto_adicional": "Escaneo CI con reglas custom"},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()["data"]
+    assert data["dry_run"] is True
+    assert data["verdict"] in {"false_positive", "likely_real", "needs_review"}
+    assert 0 <= data["confidence"] <= 1
+
+
+@pytest.mark.asyncio
+async def test_triage_fp_parses_json_output(
+    client: AsyncClient,
+    admin_auth_headers: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    create = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
+    assert create.status_code == 201, create.text
+    vid = create.json()["data"]["id"]
+
+    async def _fake_run_prompt(*args, **kwargs):
+        return IAResult(
+            provider="openai",
+            model="gpt-4o-mini",
+            content=(
+                '{"verdict":"false_positive","confidence":0.92,'
+                '"rationale":"No hay ruta explotable en runtime.",'
+                '"suggested_state":"En Revision"}'
+            ),
+            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+        )
+
+    monkeypatch.setattr("app.api.v1.vulnerabilidad.run_prompt", _fake_run_prompt)
+
+    r = await client.post(
+        f"{BASE_URL}/{vid}/ia/triage-fp",
+        headers=admin_auth_headers,
+        json={"dry_run": False},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()["data"]
+    assert data["verdict"] == "false_positive"
+    assert data["confidence"] == pytest.approx(0.92)
+    assert data["suggested_state"] == "En Revision"

@@ -105,3 +105,23 @@ class VulnerabilidadRead(VulnerabilidadBase):
     updated_at: datetime
     # SLA semáforo calculado dinámicamente (no almacenado, derivado en response)
     # deleted_at no se expone
+
+
+class VulnerabilidadIATriageRequest(BaseModel):
+    """Payload for IA-assisted false-positive triage."""
+
+    contexto_adicional: Optional[str] = Field(default=None, max_length=4000)
+    dry_run: bool = True
+
+
+class VulnerabilidadIATriageRead(BaseModel):
+    """Response returned by IA false-positive triage endpoint."""
+
+    provider: str
+    model: str
+    dry_run: bool
+    verdict: Literal["false_positive", "likely_real", "needs_review"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    rationale: str
+    suggested_state: Optional[str] = None
+    raw_content: str

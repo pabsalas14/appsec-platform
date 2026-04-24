@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 from io import StringIO
+from typing import Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
@@ -12,15 +15,59 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.exceptions import NotFoundException
 from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.vulnerabilidad import Vulnerabilidad
-from app.schemas.vulnerabilidad import VulnerabilidadCreate, VulnerabilidadRead, VulnerabilidadUpdate
+from app.schemas.vulnerabilidad import (
+    VulnerabilidadCreate,
+    VulnerabilidadIATriageRead,
+    VulnerabilidadIATriageRequest,
+    VulnerabilidadRead,
+    VulnerabilidadUpdate,
+)
 from app.services.audit_service import record as audit_record
+from app.services.ia_provider import run_prompt
 from app.services.vulnerabilidad_service import vulnerabilidad_svc
 
 router = APIRouter()
+
+
+def _parse_triage_output(
+    content: str,
+) -> tuple[Literal["false_positive", "likely_real", "needs_review"], float, str, str | None]:
+    """Parse model output into normalized triage fields."""
+    verdict = "needs_review"
+    confidence = 0.5
+    rationale = content.strip()[:1200] or "Sin detalle."
+    suggested_state: str | None = None
+
+    try:
+        data = json.loads(content)
+        if isinstance(data, dict):
+            raw_verdict = str(data.get("verdict", "")).strip().lower()
+            if raw_verdict in {"false_positive", "likely_real", "needs_review"}:
+                verdict = raw_verdict
+            raw_conf = data.get("confidence")
+            if isinstance(raw_conf, (int, float)):
+                confidence = max(0.0, min(1.0, float(raw_conf)))
+            raw_rationale = data.get("rationale")
+            if isinstance(raw_rationale, str) and raw_rationale.strip():
+                rationale = raw_rationale.strip()[:1200]
+            raw_state = data.get("suggested_state")
+            if isinstance(raw_state, str) and raw_state.strip():
+                suggested_state = raw_state.strip()[:128]
+            return verdict, confidence, rationale, suggested_state
+    except json.JSONDecodeError:
+        pass
+
+    lowered = content.lower()
+    if "false_positive" in lowered or "falso positivo" in lowered:
+        verdict = "false_positive"
+    elif "likely_real" in lowered or "real vulnerability" in lowered:
+        verdict = "likely_real"
+    return verdict, confidence, rationale, suggested_state
 
 
 @router.get("/export.csv")
@@ -106,6 +153,61 @@ async def create_vulnerabilidad(
     """Create a new vulnerabilidad for the current user."""
     entity = await vulnerabilidad_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(VulnerabilidadRead.model_validate(entity).model_dump(mode="json"))
+
+
+@router.post("/{id}/ia/triage-fp")
+async def triage_vulnerabilidad_false_positive(
+    id: UUID,
+    payload: VulnerabilidadIATriageRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.IA.EXECUTE)),
+):
+    """IA-assisted triage for potential false positives."""
+    vuln = await vulnerabilidad_svc.get(db, id, scope={"user_id": current_user.id})
+    if vuln is None:
+        raise NotFoundException("Vulnerabilidad not found")
+
+    prompt = (
+        "Eres un analista AppSec. Evalúa si el hallazgo podría ser falso positivo.\n"
+        f"Titulo: {vuln.titulo}\n"
+        f"Descripcion: {vuln.descripcion or 'N/A'}\n"
+        f"Fuente: {vuln.fuente}\n"
+        f"Severidad: {vuln.severidad}\n"
+        f"Estado: {vuln.estado}\n"
+        f"CVSS: {vuln.cvss_score if vuln.cvss_score is not None else 'N/A'}\n"
+        f"CWE: {vuln.cwe_id or 'N/A'}\n"
+        f"OWASP: {vuln.owasp_categoria or 'N/A'}\n"
+        f"Contexto adicional: {payload.contexto_adicional or 'N/A'}\n\n"
+        "Responde SOLO JSON con campos: "
+        '{"verdict":"false_positive|likely_real|needs_review","confidence":0.0,"rationale":"...","suggested_state":"..."}'
+    )
+    result = await run_prompt(db, prompt=prompt, dry_run=payload.dry_run)
+    verdict, confidence, rationale, suggested_state = _parse_triage_output(result.content)
+
+    await audit_record(
+        db,
+        action="vulnerabilidad.ia_triage_fp",
+        entity_type="vulnerabilidad",
+        entity_id=vuln.id,
+        metadata={
+            "provider": result.provider,
+            "model": result.model,
+            "dry_run": payload.dry_run,
+            "verdict": verdict,
+            "confidence": confidence,
+        },
+    )
+    response = VulnerabilidadIATriageRead(
+        provider=result.provider,
+        model=result.model,
+        dry_run=payload.dry_run,
+        verdict=verdict,
+        confidence=confidence,
+        rationale=rationale,
+        suggested_state=suggested_state,
+        raw_content=result.content,
+    )
+    return success(response.model_dump())
 
 
 @router.patch("/{id}")
