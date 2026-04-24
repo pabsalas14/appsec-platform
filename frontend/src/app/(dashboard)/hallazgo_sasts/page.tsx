@@ -1,23 +1,605 @@
 'use client';
 
-import { useHallazgoSasts } from '@/hooks/useHallazgoSasts';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Bug, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableRow,
+  DataTableTh,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  PageHeader,
+  PageWrapper,
+  Select,
+  Textarea,
+} from '@/components/ui';
+import {
+  ESTADOS_HALLAZGO_SAST_DAST,
+  SEVERIDADES_HALLAZGO,
+  vulnerabilidadOptions,
+} from '@/lib/hallazgo-constants';
+import {
+  useCreateHallazgoSast,
+  useDeleteHallazgoSast,
+  useHallazgoSasts,
+  useUpdateHallazgoSast,
+} from '@/hooks/useHallazgoSasts';
+import { useActividadMensualSasts } from '@/hooks/useActividadMensualSasts';
+import { useProgramaSasts } from '@/hooks/useProgramaSasts';
+import { useVulnerabilidads } from '@/hooks/useVulnerabilidads';
+import { logger } from '@/lib/logger';
+import {
+  HallazgoSastCreateSchema,
+  HallazgoSastFormCreateSchema,
+  HallazgoSastUpdateSchema,
+  type HallazgoSast,
+  type HallazgoSastUpdate,
+} from '@/lib/schemas/hallazgo_sast.schema';
+import { extractErrorMessage, formatDate } from '@/lib/utils';
+
+const ALL = '' as const;
+const sevE = z.enum(SEVERIDADES_HALLAZGO);
+const estSd = z.enum(ESTADOS_HALLAZGO_SAST_DAST);
+type FormCreateInput = z.infer<typeof HallazgoSastFormCreateSchema>;
+const formEdit = z.object({
+  vulnerabilidad_id: z.string().optional(),
+  titulo: z.string().min(1).max(255),
+  descripcion: z.string().nullable().optional(),
+  severidad: sevE,
+  herramienta: z.string().max(100).nullable().optional(),
+  regla: z.string().max(255).nullable().optional(),
+  archivo: z.string().max(500).nullable().optional(),
+  linea: z.string().optional(),
+  estado: estSd,
+});
+type FormEdit = z.infer<typeof formEdit>;
+
+function parseLinea(s: string | undefined): number | null | false {
+  const lineaStr = s?.trim() ?? '';
+  if (lineaStr === '') return null;
+  const n = parseInt(lineaStr, 10);
+  if (Number.isNaN(n) || n < 1) return false;
+  return n;
+}
 
 export default function HallazgoSastsPage() {
-  const { data, isLoading, error } = useHallazgoSasts();
+  const { data: rows, isLoading, isError } = useHallazgoSasts();
+  const { data: actividades } = useActividadMensualSasts();
+  const { data: programas } = useProgramaSasts();
+  const { data: vulns } = useVulnerabilidads();
+  const [q, setQ] = useState('');
+  const [actF, setActF] = useState<string>(ALL);
+  const [sevF, setSevF] = useState<string>(ALL);
+  const [estF, setEstF] = useState<string>(ALL);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [edit, setEdit] = useState<HallazgoSast | null>(null);
+  const createMut = useCreateHallazgoSast();
+  const updateMut = useUpdateHallazgoSast();
+  const deleteMut = useDeleteHallazgoSast();
 
-  if (isLoading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error loading hallazgo_sasts</div>;
+  const vOpts = useMemo(() => vulnerabilidadOptions(vulns), [vulns]);
+
+  const actLabel = useCallback(
+    (id: string) => {
+      const a = (actividades ?? []).find((x) => x.id === id);
+      if (!a) return id.slice(0, 8);
+      const p = (programas ?? []).find((pr) => pr.id === a.programa_sast_id);
+      const nm = p?.nombre ?? '—';
+      return `${nm} · ${a.mes}/${a.ano}`;
+    },
+    [actividades, programas],
+  );
+
+  const actividadOptions = useMemo(
+    () =>
+      (actividades ?? []).map((a) => {
+        const p = (programas ?? []).find((pr) => pr.id === a.programa_sast_id);
+        const nm = p?.nombre ?? '—';
+        return { value: a.id, label: `${nm} · ${a.mes}/${a.ano}` };
+      }),
+    [actividades, programas],
+  );
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return (rows || [])
+      .filter((r) => (actF === ALL ? true : r.actividad_sast_id === actF))
+      .filter((r) => (sevF === ALL ? true : r.severidad === sevF))
+      .filter((r) => (estF === ALL ? true : r.estado === estF))
+      .filter((r) => {
+        if (!s) return true;
+        return (
+          r.titulo.toLowerCase().includes(s) ||
+          (r.descripcion && r.descripcion.toLowerCase().includes(s)) ||
+          actLabel(r.actividad_sast_id).toLowerCase().includes(s)
+        );
+      });
+  }, [rows, q, actF, sevF, estF, actLabel]);
+
+  const formC = useForm<FormCreateInput>({
+    resolver: zodResolver(HallazgoSastFormCreateSchema),
+    defaultValues: {
+      actividad_sast_id: actividadOptions[0]?.value ?? '',
+      vulnerabilidad_id: '',
+      titulo: '',
+      descripcion: null,
+      severidad: 'Media',
+      herramienta: null,
+      regla: null,
+      archivo: null,
+      linea: '',
+      estado: 'Abierto',
+    },
+  });
+  const formE = useForm<FormEdit>({
+    resolver: zodResolver(formEdit),
+    defaultValues: {
+      vulnerabilidad_id: '',
+      titulo: '',
+      descripcion: null,
+      severidad: 'Media',
+      herramienta: null,
+      regla: null,
+      archivo: null,
+      linea: '',
+      estado: 'Abierto',
+    },
+  });
+  useEffect(() => {
+    if (!edit) return;
+    formE.reset({
+      vulnerabilidad_id: edit.vulnerabilidad_id ?? '',
+      titulo: edit.titulo,
+      descripcion: edit.descripcion ?? null,
+      severidad: edit.severidad as (typeof SEVERIDADES_HALLAZGO)[number],
+      herramienta: edit.herramienta ?? null,
+      regla: edit.regla ?? null,
+      archivo: edit.archivo ?? null,
+      linea: edit.linea != null ? String(edit.linea) : '',
+      estado: edit.estado as (typeof ESTADOS_HALLAZGO_SAST_DAST)[number],
+    });
+  }, [edit, formE]);
+
+  const onCreate = formC.handleSubmit((d) => {
+    const lineaN = parseLinea(d.linea);
+    if (lineaN === false) {
+      toast.error('Línea debe ser un entero ≥ 1');
+      return;
+    }
+    const out = HallazgoSastCreateSchema.parse({
+      ...d,
+      descripcion: d.descripcion?.trim() || null,
+      herramienta: d.herramienta?.trim() || null,
+      regla: d.regla?.trim() || null,
+      archivo: d.archivo?.trim() || null,
+      vulnerabilidad_id: d.vulnerabilidad_id && d.vulnerabilidad_id.length > 0 ? d.vulnerabilidad_id : null,
+      linea: lineaN,
+    });
+    createMut.mutate(out, {
+      onSuccess: () => {
+        toast.success('Hallazgo creado');
+        setCreateOpen(false);
+        formC.reset();
+      },
+      onError: (e) => {
+        logger.error('hallazgo_sast.create.failed', { error: e });
+        toast.error(extractErrorMessage(e, 'Error al crear'));
+      },
+    });
+  });
+
+  const onEdit = formE.handleSubmit((d) => {
+    if (!edit) return;
+    const lineaN = parseLinea(d.linea);
+    if (lineaN === false) {
+      toast.error('Línea debe ser un entero ≥ 1');
+      return;
+    }
+    const parsed = HallazgoSastUpdateSchema.safeParse({
+      ...d,
+      descripcion: d.descripcion?.trim() || null,
+      herramienta: d.herramienta?.trim() || null,
+      regla: d.regla?.trim() || null,
+      archivo: d.archivo?.trim() || null,
+      linea: lineaN,
+      vulnerabilidad_id: d.vulnerabilidad_id && d.vulnerabilidad_id.length > 0 ? d.vulnerabilidad_id : null,
+    });
+    if (!parsed.success) {
+      toast.error('Revisa el formulario');
+      return;
+    }
+    const patch: HallazgoSastUpdate = {};
+    const p0 = parsed.data;
+    if ((p0.vulnerabilidad_id ?? null) !== (edit.vulnerabilidad_id ?? null)) patch.vulnerabilidad_id = p0.vulnerabilidad_id;
+    if (p0.titulo !== edit.titulo) patch.titulo = p0.titulo;
+    if ((p0.descripcion ?? null) !== (edit.descripcion ?? null)) patch.descripcion = p0.descripcion;
+    if (p0.severidad !== edit.severidad) patch.severidad = p0.severidad;
+    if ((p0.herramienta ?? null) !== (edit.herramienta ?? null)) patch.herramienta = p0.herramienta;
+    if ((p0.regla ?? null) !== (edit.regla ?? null)) patch.regla = p0.regla;
+    if ((p0.archivo ?? null) !== (edit.archivo ?? null)) patch.archivo = p0.archivo;
+    if ((p0.linea ?? null) !== (edit.linea ?? null)) patch.linea = p0.linea;
+    if (p0.estado !== edit.estado) patch.estado = p0.estado;
+    if (Object.keys(patch).length === 0) {
+      setEdit(null);
+      return;
+    }
+    updateMut.mutate(
+      { id: edit.id, ...patch },
+      {
+        onSuccess: () => {
+          toast.success('Guardado');
+          setEdit(null);
+        },
+        onError: (e) => {
+          logger.error('hallazgo_sast.update.failed', { id: String(edit.id), error: e });
+          toast.error(extractErrorMessage(e, 'Error al guardar'));
+        },
+      },
+    );
+  });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">HallazgoSasts</h1>
-      <ul className="space-y-2">
-        {data?.map((item) => (
-          <li key={item.id} className="border rounded px-3 py-2">
-            <pre className="text-xs">{JSON.stringify(item, null, 2)}</pre>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <PageWrapper className="space-y-6 p-6">
+      <PageHeader
+        title="Hallazgos SAST"
+        description="Vinculados a una actividad mensual SAST del programa."
+      >
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button disabled={!actividadOptions.length}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nuevo hallazgo (SAST)</DialogTitle>
+            </DialogHeader>
+            <form className="space-y-3" onSubmit={onCreate}>
+              <div>
+                <label className="text-sm font-medium">Actividad SAST *</label>
+                <Select
+                  className="mt-1"
+                  value={formC.watch('actividad_sast_id')}
+                  onChange={(e) => formC.setValue('actividad_sast_id', e.target.value, { shouldValidate: true })}
+                  options={actividadOptions}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Vulnerabilidad (opcional)</label>
+                <Select
+                  className="mt-1"
+                  value={formC.watch('vulnerabilidad_id') || ''}
+                  onChange={(e) => formC.setValue('vulnerabilidad_id', e.target.value, { shouldValidate: true })}
+                  options={vOpts}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Título *</label>
+                <Input className="mt-1" maxLength={255} {...formC.register('titulo')} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Descripción</label>
+                <Textarea
+                  className="mt-1"
+                  rows={2}
+                  value={formC.watch('descripcion') ?? ''}
+                  onChange={(e) => formC.setValue('descripcion', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Severidad *</label>
+                  <Select
+                    className="mt-1"
+                    value={formC.watch('severidad')}
+                    onChange={(e) =>
+                      formC.setValue('severidad', e.target.value as (typeof SEVERIDADES_HALLAZGO)[number], {
+                        shouldValidate: true,
+                      })
+                    }
+                    options={SEVERIDADES_HALLAZGO.map((x) => ({ value: x, label: x }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Estado *</label>
+                  <Select
+                    className="mt-1"
+                    value={formC.watch('estado')}
+                    onChange={(e) =>
+                      formC.setValue('estado', e.target.value as (typeof ESTADOS_HALLAZGO_SAST_DAST)[number], {
+                        shouldValidate: true,
+                      })
+                    }
+                    options={ESTADOS_HALLAZGO_SAST_DAST.map((x) => ({ value: x, label: x }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Herramienta</label>
+                <Input
+                  className="mt-1"
+                  value={formC.watch('herramienta') ?? ''}
+                  onChange={(e) => formC.setValue('herramienta', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Archivo</label>
+                <Input
+                  className="mt-1"
+                  value={formC.watch('archivo') ?? ''}
+                  onChange={(e) => formC.setValue('archivo', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Línea</label>
+                  <Input
+                    className="mt-1"
+                    value={formC.watch('linea') ?? ''}
+                    onChange={(e) => formC.setValue('linea', e.target.value, { shouldValidate: true })}
+                    placeholder="número"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Regla</label>
+                  <Input
+                    className="mt-1"
+                    value={formC.watch('regla') ?? ''}
+                    onChange={(e) => formC.setValue('regla', e.target.value || null, { shouldValidate: true })}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Cancelar
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={createMut.isPending}>
+                  {createMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Crear
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </PageHeader>
+
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            <Bug className="inline h-4 w-4 mr-1 align-text-bottom" />
+            {rows?.length ?? 0} registro(s)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 max-w-4xl">
+            <Select
+              value={actF}
+              onChange={(e) => setActF(e.target.value)}
+              options={[{ value: ALL, label: 'Todas las actividades' }, ...actividadOptions]}
+            />
+            <Select
+              value={sevF}
+              onChange={(e) => setSevF(e.target.value)}
+              options={[{ value: ALL, label: 'Severidad' }, ...SEVERIDADES_HALLAZGO.map((x) => ({ value: x, label: x }))]}
+            />
+            <Select
+              value={estF}
+              onChange={(e) => setEstF(e.target.value)}
+              options={[
+                { value: ALL, label: 'Estado' },
+                ...ESTADOS_HALLAZGO_SAST_DAST.map((x) => ({ value: x, label: x })),
+              ]}
+            />
+            <Input placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+
+          {isLoading && <Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}
+          {isError && <p className="text-destructive">Error al cargar.</p>}
+          {filtered && filtered.length > 0 && (
+            <DataTable>
+              <DataTableHead>
+                <tr>
+                  <DataTableTh>Actividad / título</DataTableTh>
+                  <DataTableTh>Severidad</DataTableTh>
+                  <DataTableTh>Estado</DataTableTh>
+                  <DataTableTh>Actualizado</DataTableTh>
+                  <DataTableTh className="w-[100px]"> </DataTableTh>
+                </tr>
+              </DataTableHead>
+              <DataTableBody>
+                {filtered.map((r) => (
+                  <DataTableRow key={r.id}>
+                    <DataTableCell>
+                      <div className="text-xs text-muted-foreground mb-0.5">{actLabel(r.actividad_sast_id)}</div>
+                      <div className="font-medium line-clamp-2">{r.titulo}</div>
+                    </DataTableCell>
+                    <DataTableCell>
+                      <Badge variant="primary">{r.severidad}</Badge>
+                    </DataTableCell>
+                    <DataTableCell>
+                      <Badge variant="default">{r.estado}</Badge>
+                    </DataTableCell>
+                    <DataTableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(r.updated_at)}
+                    </DataTableCell>
+                    <DataTableCell>
+                      <div className="flex gap-1">
+                        <Button type="button" size="xs" variant="ghost" onClick={() => setEdit(r)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button type="button" size="xs" variant="ghost">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar hallazgo?</AlertDialogTitle>
+                              <AlertDialogDescription>Acción permanente.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() =>
+                                  deleteMut.mutate(r.id, {
+                                    onSuccess: () => toast.success('Eliminado'),
+                                    onError: (e) => {
+                                      logger.error('hallazgo_sast.delete.failed', { id: r.id, error: e });
+                                      toast.error(extractErrorMessage(e, 'Error'));
+                                    },
+                                  })
+                                }
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </DataTableCell>
+                  </DataTableRow>
+                ))}
+              </DataTableBody>
+            </DataTable>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!edit} onOpenChange={() => setEdit(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar hallazgo (SAST)</DialogTitle>
+          </DialogHeader>
+          {edit && (
+            <form className="space-y-3" onSubmit={onEdit}>
+              <p className="text-xs text-muted-foreground">Actividad: {actLabel(edit.actividad_sast_id)}</p>
+              <div>
+                <label className="text-sm font-medium">Vulnerabilidad</label>
+                <Select
+                  className="mt-1"
+                  value={formE.watch('vulnerabilidad_id') || ''}
+                  onChange={(e) => formE.setValue('vulnerabilidad_id', e.target.value, { shouldValidate: true })}
+                  options={vOpts}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Título *</label>
+                <Input className="mt-1" maxLength={255} {...formE.register('titulo')} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Descripción</label>
+                <Textarea
+                  className="mt-1"
+                  rows={2}
+                  value={formE.watch('descripcion') ?? ''}
+                  onChange={(e) => formE.setValue('descripcion', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Severidad *</label>
+                  <Select
+                    className="mt-1"
+                    value={formE.watch('severidad')}
+                    onChange={(e) =>
+                      formE.setValue('severidad', e.target.value as (typeof SEVERIDADES_HALLAZGO)[number], {
+                        shouldValidate: true,
+                      })
+                    }
+                    options={SEVERIDADES_HALLAZGO.map((x) => ({ value: x, label: x }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Estado *</label>
+                  <Select
+                    className="mt-1"
+                    value={formE.watch('estado')}
+                    onChange={(e) =>
+                      formE.setValue('estado', e.target.value as (typeof ESTADOS_HALLAZGO_SAST_DAST)[number], {
+                        shouldValidate: true,
+                      })
+                    }
+                    options={ESTADOS_HALLAZGO_SAST_DAST.map((x) => ({ value: x, label: x }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Herramienta</label>
+                <Input
+                  className="mt-1"
+                  value={formE.watch('herramienta') ?? ''}
+                  onChange={(e) => formE.setValue('herramienta', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Archivo</label>
+                <Input
+                  className="mt-1"
+                  value={formE.watch('archivo') ?? ''}
+                  onChange={(e) => formE.setValue('archivo', e.target.value || null, { shouldValidate: true })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium">Línea</label>
+                  <Input
+                    className="mt-1"
+                    value={formE.watch('linea') ?? ''}
+                    onChange={(e) => formE.setValue('linea', e.target.value, { shouldValidate: true })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Regla</label>
+                  <Input
+                    className="mt-1"
+                    value={formE.watch('regla') ?? ''}
+                    onChange={(e) => formE.setValue('regla', e.target.value || null, { shouldValidate: true })}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Cerrar
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={updateMut.isPending}>
+                  {updateMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Guardar
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </PageWrapper>
   );
 }

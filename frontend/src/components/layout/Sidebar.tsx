@@ -9,6 +9,7 @@ import {
   Globe2,
   ChevronRight,
   ClipboardList,
+  FileSearch,
   FolderKanban,
   GitBranch,
   LayoutDashboard,
@@ -24,6 +25,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Smartphone,
   Upload,
   UserCircle,
   Users,
@@ -91,6 +93,17 @@ const SECTIONS: NavSection[] = [
       { href: '/etapa_releases', label: 'Etapas de liberación', icon: ListChecks },
       { href: '/pipeline_releases', label: 'Pipelines', icon: Workflow },
       { href: '/iniciativas', label: 'Iniciativas', icon: Target },
+    ],
+  },
+  {
+    title: 'Hallazgos (BRD)',
+    items: [
+      { href: '/hallazgo_sasts', label: 'Hallazgos SAST', icon: Bug },
+      { href: '/hallazgo_dasts', label: 'Hallazgos DAST', icon: Globe2 },
+      { href: '/hallazgo_masts', label: 'Hallazgos MAST', icon: Smartphone },
+      { href: '/hallazgo_pipelines', label: 'Hallazgos pipeline', icon: Workflow },
+      { href: '/hallazgo_terceros', label: 'Hallazgos tercero', icon: Building2 },
+      { href: '/hallazgo_auditorias', label: 'Hallazgos auditoría', icon: FileSearch },
     ],
   },
   {

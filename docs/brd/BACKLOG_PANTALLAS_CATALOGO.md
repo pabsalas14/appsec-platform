@@ -8,6 +8,8 @@
 
 **Entrega y plan:** `servicios/` · `service_releases/` · `etapa_releases/` (etapas y estados al API) · `pipeline_releases/` (SAST/DAST/SCA, repositorio + liberación opcional) · `iniciativas/` — CRUD donde aplica, sección «Entrega y plan (BRD)» en la barra y palette.
 
-Rutas aún en formato debug `JSON` (sustituir de a una o por lote, priorizando BRD §3): ver búsqueda en repo: `JSON.stringify` bajo `frontend/src/app/(dashboard)`.
+**Estado (2026-04-24):** resueltos los listados con `JSON.stringify` bajo `frontend/src/app/(dashboard)/**/page.tsx`. Enfoque unificado: `PageWrapper` / `PageHeader`, búsqueda en cliente, `DataTable` (columnas principales + `updated_at` + acciones), diálogos crear/editar, eliminación con `AlertDialog`, `react-hook-form` + `zodResolver` con esquemas `*CreateSchema` en `@/lib/schemas`, hooks `@/hooks`, `toast`, `extractErrorMessage`, `formatDate`, `logger` en errores.
 
-Incluye (no exhaustivo): `hallazgo_*`, `programa_*`, `control_*`, etc. (excl. jerarquía, inventario §3.2–3.3, entrega y plan arriba si migrado).
+**Caso especial `historial_vulnerabilidads`:** el backend solo lista y crea (sin PATCH/DELETE); la UI no expone editar ni eliminar.
+
+**Nuevos:** `hallazgo_auditorias` (ruta, sidebar sección Hallazgos, breadcrumbs, command palette) con `useAuditorias` / `useHallazgoAuditorias` y `auditoria.schema` + `hallazgo_auditoria.schema`. Utilidades compartidas opcionales: `@/components/crud` (helpers de fechas `datetime-local` ↔ ISO).

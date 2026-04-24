@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import api from '@/lib/api';
-import type { HistorialVulnerabilidad, HistorialVulnerabilidadCreate, HistorialVulnerabilidadUpdate } from '@/lib/schemas/historial_vulnerabilidad.schema';
+import type { HistorialVulnerabilidad, HistorialVulnerabilidadCreate } from '@/lib/schemas/historial_vulnerabilidad.schema';
 
 type Envelope<T> = { status: 'success'; data: T };
 
@@ -28,23 +28,4 @@ export function useCreateHistorialVulnerabilidad() {
   });
 }
 
-export function useUpdateHistorialVulnerabilidad() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...payload }: HistorialVulnerabilidadUpdate & { id: string }) => {
-      const { data } = await api.patch<Envelope<HistorialVulnerabilidad>>(`/historial_vulnerabilidads/${id}`, payload);
-      return data.data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export function useDeleteHistorialVulnerabilidad() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/historial_vulnerabilidads/${id}`);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
+/** El backend no expone PATCH/DELETE en historial (inmutable). No hay hooks de update/delete. */

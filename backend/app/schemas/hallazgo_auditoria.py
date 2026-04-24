@@ -16,6 +16,8 @@ class HallazgoAuditoriaBase(BaseModel):
     descripcion: str = Field(..., min_length=1)
     severidad: str = Field(..., min_length=1, max_length=50)
     auditoria_id: UUID = Field(...)
+    categoria: str = Field(default="General", min_length=1, max_length=100)
+    estado: str = Field(default="Abierto", min_length=1, max_length=100)
 
 
 class HallazgoAuditoriaCreate(HallazgoAuditoriaBase):
@@ -30,6 +32,8 @@ class HallazgoAuditoriaUpdate(BaseModel):
     titulo: Optional[str] = Field(None, min_length=1, max_length=255)
     descripcion: Optional[str] = Field(None, min_length=1)
     severidad: Optional[str] = Field(None, min_length=1, max_length=50)
+    categoria: Optional[str] = Field(None, min_length=1, max_length=100)
+    estado: Optional[str] = Field(None, min_length=1, max_length=100)
 
 
 class HallazgoAuditoriaRead(HallazgoAuditoriaBase):

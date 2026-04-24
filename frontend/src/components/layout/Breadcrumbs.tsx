@@ -40,6 +40,12 @@ const LABELS: Record<string, string> = {
   'service_releases': 'Liberaciones de servicio',
   'etapa_releases': 'Etapas de liberación',
   'pipeline_releases': 'Pipelines',
+  hallazgo_sasts: 'Hallazgos SAST',
+  hallazgo_dasts: 'Hallazgos DAST',
+  hallazgo_masts: 'Hallazgos MAST',
+  hallazgo_pipelines: 'Hallazgos pipeline',
+  hallazgo_terceros: 'Hallazgos tercero',
+  hallazgo_auditorias: 'Hallazgos auditoría',
   amenazas: 'Amenazas',
   iniciativas: 'Iniciativas',
 };

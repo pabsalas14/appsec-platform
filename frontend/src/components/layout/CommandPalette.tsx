@@ -6,6 +6,7 @@ import {
   Briefcase,
   Building2,
   ClipboardList,
+  FileSearch,
   GitBranch,
   Globe2,
   Link2,
@@ -23,6 +24,7 @@ import {
   Plus,
   ScrollText,
   Settings,
+  Smartphone,
   Sun,
   Upload,
   UserCircle,
@@ -144,6 +146,24 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/iniciativas'))}>
               <Target className="mr-2 h-4 w-4" /> Iniciativas
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_sasts'))}>
+              <Bug className="mr-2 h-4 w-4" /> Hallazgos SAST
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_dasts'))}>
+              <Globe2 className="mr-2 h-4 w-4" /> Hallazgos DAST
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_masts'))}>
+              <Smartphone className="mr-2 h-4 w-4" /> Hallazgos MAST
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_pipelines'))}>
+              <Workflow className="mr-2 h-4 w-4" /> Hallazgos pipeline
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_terceros'))}>
+              <Building2 className="mr-2 h-4 w-4" /> Hallazgos tercero
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/hallazgo_auditorias'))}>
+              <FileSearch className="mr-2 h-4 w-4" /> Hallazgos auditoría
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
