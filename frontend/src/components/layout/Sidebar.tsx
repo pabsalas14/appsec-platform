@@ -2,6 +2,7 @@
 
 import {
   AppWindow,
+  Building2,
   Bug,
   ChevronLeft,
   ChevronRight,
@@ -55,6 +56,12 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/vulnerabilities', label: 'Dashboard Vulnerabilidades', icon: ShieldCheck },
       { href: '/dashboards/team', label: 'Dashboard Team', icon: Users },
       { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
+    ],
+  },
+  {
+    title: 'Organización (BRD)',
+    items: [
+      { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
     ],
   },
   {

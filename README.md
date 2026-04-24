@@ -673,6 +673,11 @@ make types
 
 ---
 
+## Cumplimiento del BRD (100 % requisitos de negocio)
+
+Gobierno y trazabilidad: **[`docs/brd/`](docs/brd/)** — plan por fases, matriz requisito→estado, criterios de aceptación.  
+El BRD no se cierra con un solo incremento: el plan desglosa **Fases A–H** (catálogos → operación → dashboards → cierre de calidad).
+
 ## Roadmap de Funcionalidades
 
 ### Estado Actual — Bloque C en ejecución (Fases 17-19)
