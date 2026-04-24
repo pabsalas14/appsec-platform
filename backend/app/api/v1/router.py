@@ -69,6 +69,7 @@ from app.api.v1 import (
     cierre_conclusion,
     # ── Módulo 2 — Panel de Administración (transversal) ──────────────────────
     flujo_estatus,
+    indicador_formula,
 )
 from app.api.v1.admin.router import admin_router
 
@@ -179,3 +180,4 @@ api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones
 
 # ─── Módulo 2 — Panel de Administración (transversal) ─────────────────────────
 api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
+api_router.include_router(indicador_formula.router, prefix="/indicadores_formulas", tags=["Indicador_formula"])
