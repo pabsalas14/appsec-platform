@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -111,5 +111,136 @@ async def dashboard_stats(
             "users_by_role": users_by_role,
             "activity": activity,
             "recent_audit_logs": recent,
+        }
+    )
+
+
+@router.get("/vulnerabilities")
+async def dashboard_vulnerabilities(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Dashboard 5: Vulnerabilities multidimensional view (org→subdireccion→celula)."""
+    from app.models.vulnerabilidad import Vulnerabilidad
+    from sqlalchemy import and_
+
+    # Count vulnerabilities by severity
+    severities = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
+    severity_counts = {}
+    for sev in severities:
+        count = await (
+            db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(Vulnerabilidad.severidad == sev, Vulnerabilidad.deleted_at.is_(None))
+            )
+        )
+        severity_counts[sev] = int(count.scalar_one() or 0)
+
+    # Count by state
+    states = ["Abierta", "En Progreso", "Remediada", "Cerrada"]
+    state_counts = {}
+    for state in states:
+        count = await (
+            db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(Vulnerabilidad.estado == state, Vulnerabilidad.deleted_at.is_(None))
+            )
+        )
+        state_counts[state] = int(count.scalar_one() or 0)
+
+    total = sum(severity_counts.values())
+    overdue = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.fecha_vencimiento < datetime.now(timezone.utc),
+                    Vulnerabilidad.estado != "Cerrada",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    return success(
+        {
+            "total_vulnerabilities": total,
+            "by_severity": severity_counts,
+            "by_state": state_counts,
+            "overdue_count": overdue,
+            "sla_status": {
+                "green": total - overdue if overdue < total / 2 else 0,
+                "yellow": overdue,
+                "red": 0,
+            },
+        }
+    )
+
+
+@router.get("/releases")
+async def dashboard_releases(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Dashboard 6-7: Releases (table + kanban) view."""
+    from app.models.service_release import ServiceRelease
+
+    # Count releases by status
+    total = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(ServiceRelease)
+                .where(ServiceRelease.deleted_at.is_(None))
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    pending_approval = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(ServiceRelease)
+                .where(
+                    ServiceRelease.estado == "Pendiente Aprobación",
+                    ServiceRelease.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    in_progress = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(ServiceRelease)
+                .where(
+                    ServiceRelease.estado.in_(["Design Review", "Security Validation"]),
+                    ServiceRelease.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    completed = total - pending_approval - in_progress
+
+    return success(
+        {
+            "total_releases": total,
+            "pending_approval": pending_approval,
+            "in_progress": in_progress,
+            "completed": completed,
+            "status_distribution": {
+                "pending_approval": pending_approval,
+                "in_progress": in_progress,
+                "completed": completed,
+            },
         }
     )
