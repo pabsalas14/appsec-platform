@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardSavedHierarchyPresets } from '@/components/dashboard/DashboardSavedHierarchyPresets';
 import { Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/components/ui';
 import { useCelulas } from '@/hooks/useCelulas';
 import { useGerencias } from '@/hooks/useGerencias';
@@ -12,9 +13,19 @@ type Props = {
   filters: HierarchyFilters;
   onChange: (key: keyof HierarchyFilters, value: string) => void;
   onClear: () => void;
+  /** Si se indica, muestra presets de FiltroGuardado para este módulo (drill-down JSON). */
+  savedModulo?: string;
+  onApplyFilters?: (f: HierarchyFilters) => void;
 };
 
-export function HierarchyFiltersBar({ title = 'Drill-down organizacional', filters, onChange, onClear }: Props) {
+export function HierarchyFiltersBar({
+  title = 'Drill-down organizacional',
+  filters,
+  onChange,
+  onClear,
+  savedModulo,
+  onApplyFilters,
+}: Props) {
   const { data: subdireccions } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: organizacions } = useOrganizacions();
@@ -36,6 +47,13 @@ export function HierarchyFiltersBar({ title = 'Drill-down organizacional', filte
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {savedModulo && onApplyFilters && (
+          <DashboardSavedHierarchyPresets
+            modulo={savedModulo}
+            currentFilters={filters}
+            onApply={onApplyFilters}
+          />
+        )}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <Select
             label="Subdirección"

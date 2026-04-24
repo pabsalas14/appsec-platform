@@ -8,9 +8,10 @@ import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardInitiatives } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 
 export default function InitiativesDashboardPage() {
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data, isLoading } = useDashboardInitiatives(filters);
   const { data: visibility } = useMyDashboardVisibility('initiatives');
   const isVisible = (widgetId: string) =>
@@ -29,7 +30,13 @@ export default function InitiativesDashboardPage() {
           />
         }
       />
-      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
+      <HierarchyFiltersBar
+        filters={filters}
+        onChange={updateFilter}
+        onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.initiatives}
+        onApplyFilters={applyFilters}
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {isVisible('dashboard.initiatives.card.total') && (
           <StatCard

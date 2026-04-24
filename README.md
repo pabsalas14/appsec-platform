@@ -762,6 +762,7 @@ make types
 - **Exportación con auditoría (A7):** habilitada en `vulnerabilidads`, `service_releases`, `iniciativas`, `etapa_releases`, `excepcion_vulnerabilidads` y `aceptacion_riesgos` vía `GET /export.csv` con permisos granulares (`vulnerabilities.export`/`releases.export`/`initiatives.export`) y registro de auditoría con filas + hash SHA-256.
 - **Frontend:** hooks TanStack Query en `useAppDashboardPanels.ts` y tarjetas AppSec en la home (`/` del dashboard) consumiendo `/dashboard/executive` y `/dashboard/vulnerabilities`.
 - **Exportación desde dashboards (Fase 19):** botones de descarga CSV en `/dashboards/vulnerabilities` (`/vulnerabilidads/export.csv`), `/dashboards/releases` (`/service_releases/export.csv`) e `/dashboards/initiatives` (`/iniciativas/export.csv`) con `fetch` credentialed; respeta permisos granulares de export.
+- **Presets de drill-down (Fase 16 + dashboards):** en cada `HierarchyFiltersBar` se puede guardar y cargar la jerarquía (Subdirección→Célula) vía `FiltroGuardado` con `modulo` `dashboard:…` (p. ej. `dashboard:vulnerabilities`); carga/elimina presets y mantiene `localStorage` al aplicar.
 
 #### Completado esta sesión (histórico):
 1. **Bloque B tests** ✅ : Todos los 23 tests pasando

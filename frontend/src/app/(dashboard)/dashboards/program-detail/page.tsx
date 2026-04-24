@@ -6,6 +6,7 @@ import { Circle, Layers } from 'lucide-react';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { Card, CardContent, PageHeader, PageWrapper, Select, StatCard } from '@/components/ui';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useDashboardProgramDetail } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 
@@ -21,7 +22,7 @@ const PROGRAM_OPTIONS = [
 
 export default function ProgramDetailDashboardPage() {
   const [program, setProgram] = useState('sast');
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data, isLoading } = useDashboardProgramDetail(program, filters);
   const { data: visibility } = useMyDashboardVisibility('program-detail');
   const isVisible = (widgetId: string) =>
@@ -30,7 +31,13 @@ export default function ProgramDetailDashboardPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader title="Dashboard · Detalle Programa" description="Zoom por motor/fuente." />
-      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
+      <HierarchyFiltersBar
+        filters={filters}
+        onChange={updateFilter}
+        onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.programDetail}
+        onApplyFilters={applyFilters}
+      />
       {isVisible('dashboard.program-detail.filter.program') && (
         <Card>
           <CardContent className="pt-6">

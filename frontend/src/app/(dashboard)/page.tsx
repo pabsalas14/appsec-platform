@@ -31,13 +31,14 @@ import {
 } from '@/hooks/useAppDashboardPanels';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function DashboardHomePage() {
   const { data: user } = useCurrentUser();
   const { data: stats, isLoading } = useDashboardStats();
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data: exec, isLoading: execLoading } = useDashboardExecutive(filters);
   const { data: vulnDash, isLoading: vulnDashLoading } = useDashboardVulnerabilities(filters);
   const { data: releasesDash, isLoading: releasesLoading } = useDashboardReleases(filters);
@@ -59,7 +60,13 @@ export default function DashboardHomePage() {
         }
       />
 
-      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
+      <HierarchyFiltersBar
+        filters={filters}
+        onChange={updateFilter}
+        onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.home}
+        onApplyFilters={applyFilters}
+      />
 
       {/* ─── Stat cards ── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

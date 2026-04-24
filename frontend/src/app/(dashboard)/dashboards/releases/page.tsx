@@ -14,11 +14,12 @@ import {
   PageWrapper,
 } from '@/components/ui';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useDashboardReleasesKanban, useDashboardReleasesTable } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 
 export default function ReleasesDashboardPage() {
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data: tableData, isLoading: tableLoading } = useDashboardReleasesTable(50, filters);
   const { data: kanbanData, isLoading: kanbanLoading } = useDashboardReleasesKanban(filters);
   const { data: visibility } = useMyDashboardVisibility('releases');
@@ -44,6 +45,8 @@ export default function ReleasesDashboardPage() {
         filters={filters}
         onChange={updateFilter}
         onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.releases}
+        onApplyFilters={applyFilters}
       />
 
       {isVisible('dashboard.releases.panel.table') && (

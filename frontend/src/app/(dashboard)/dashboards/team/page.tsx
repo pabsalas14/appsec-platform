@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, EmptyState, PageHeader, PageW
 import { useDashboardTeam } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 
 export default function TeamDashboardPage() {
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data, isLoading } = useDashboardTeam(filters);
   const { data: visibility } = useMyDashboardVisibility('team');
   const isVisible = (widgetId: string) =>
@@ -27,6 +28,8 @@ export default function TeamDashboardPage() {
         filters={filters}
         onChange={updateFilter}
         onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.team}
+        onApplyFilters={applyFilters}
       />
 
       {isVisible('dashboard.team.card.summary') && (

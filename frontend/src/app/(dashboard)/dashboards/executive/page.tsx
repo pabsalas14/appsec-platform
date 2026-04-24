@@ -7,9 +7,10 @@ import { Card, CardContent, PageHeader, PageWrapper, StatCard } from '@/componen
 import { useDashboardExecutive } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 
 export default function ExecutiveDashboardPage() {
-  const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
+  const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data, isLoading } = useDashboardExecutive(filters);
   const { data: visibility } = useMyDashboardVisibility('executive');
   const isVisible = (widgetId: string) =>
@@ -18,7 +19,13 @@ export default function ExecutiveDashboardPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader title="Dashboard · Ejecutivo" description="KPIs estratégicos de AppSec." />
-      <HierarchyFiltersBar filters={filters} onChange={updateFilter} onClear={clearFilters} />
+      <HierarchyFiltersBar
+        filters={filters}
+        onChange={updateFilter}
+        onClear={clearFilters}
+        savedModulo={DASHBOARD_FILTER_MODULO.executive}
+        onApplyFilters={applyFilters}
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {isVisible('dashboard.executive.card.total_vulnerabilities') && (
           <StatCard

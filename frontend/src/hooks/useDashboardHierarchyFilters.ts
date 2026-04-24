@@ -62,5 +62,20 @@ export function useDashboardHierarchyFilters() {
     }
   }, []);
 
-  return { filters, updateFilter, clearFilters } as const;
+  /** Aplica un preset completo (p. ej. FiltroGuardado) y persiste en localStorage. */
+  const applyFilters = useCallback((next: HierarchyFilters) => {
+    setFilters({ ...next });
+    try {
+      const serialized = Object.keys(next).length ? JSON.stringify(next) : '';
+      if (serialized) {
+        window.localStorage.setItem(STORAGE_KEY, serialized);
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  return { filters, updateFilter, clearFilters, applyFilters } as const;
 }
