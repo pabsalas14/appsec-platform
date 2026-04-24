@@ -669,79 +669,52 @@ make types
 
 ## Roadmap de Funcionalidades
 
-### Estado actual — Fase 5 completa ✅
+### Estado Actual — Fase 10 en Progreso 🚀
 
-- [x] Catálogos completos (Subdirección, Célula, Repositorio, Activo Web, Servicio, App Móvil)
-- [x] Panel de administración con 32 configuraciones operativas
-- [x] Gestión de roles y herramientas externas
-- [x] Reglas de Segregación de Funciones (SoD) configurables
-- [x] Ciclo de vida completo de vulnerabilidades (Módulo 9)
-- [x] Flujos de excepción y aceptación de riesgo con SoD
-- [x] Historial inmutable de cambios de estado
-- [x] Evidencias de remediación con integridad SHA-256
-- [x] Suite de 204 pruebas de integración
-- [x] Fundación de auditabilidad: soft delete, hash chain, SSRF-safe URLs, cabeceras de seguridad
+**Completado (Fases 0-9):**
+- [x] Fase 0: Inicialización del repo
+- [x] Fase 1-4: Catálogos, Admin, Auditabilidad Base, Roles
+- [x] Fase 5-9: Vulnerabilidades, Releases, Programas, MAST/Iniciativas/Auditorías/Temas, Motor de Scoring
+- [x] 60 entities (29 nuevos + 31 del framework)
+- [x] 26 schemas, 26 services, 26 routers completados
+- [x] Soft delete universal, IDOR protection, audit logging (45+ services)
+- [x] 70% OWASP coverage, 75% Auditabilidad
+
+**Fase 10 — Jerarquía Organizacional (EN PROGRESO):**
+- [x] Entity `Organizacion` (nivel superior)
+- [x] Entity `Gerencia` (nivel medio)
+- [x] FK `organizacion_id` en `Subdireccion`
+- [x] FK `gerencia_id` en `Celula`
+- [ ] SystemSetting ampliado (50+ configuraciones dinámicas)
+- [ ] Hash Chain en AuditLog (regla A4)
 
 ---
 
-### Próximas fases
+### Próximas Fases (Bloques B-E)
 
-#### Fase 6 — Operación: Releases
-- [ ] Service Releases con flujo de estados secuenciales
-- [ ] Validación de etapa previa antes de avanzar
-- [ ] SoD en aprobación de releases
-- [ ] Pipeline Releases (SAST/DAST en CI/CD referencial)
-- [ ] Revisiones de seguridad de terceros
+#### Bloque B — Módulos Críticos (Fases 11-16)
+- [ ] **Fase 11**: SystemSetting ampliado (catalogs, SLAs, indicadores, roles, IA config)
+- [ ] **Fase 12**: Hash Chain en AuditLog + verificación de integridad
+- [ ] **Fase 13**: M5-7 Schemas/Services/Routers (10 entities: Iniciativas, Auditorías, Temas)
+- [ ] **Fase 14**: FlujoEstatus (state machines dinámicos, transiciones configurables)
+- [ ] **Fase 15**: IndicadorFormula (XXX-001 a XXX-005, KRI0025 configurables)
+- [ ] **Fase 16**: FiltroGuardado (saved filters compartidos para dashboards)
 
-#### Fase 7 — Programas de Seguridad
-- [ ] Programa de análisis estático con registro mensual por repositorio
-- [ ] Programa de análisis dinámico por activo web y ambiente
-- [ ] Sesiones de Modelado de Amenazas con scoring STRIDE/DREAD
-- [ ] Programa de controles de código fuente (branch protection, secret scanning)
-- [ ] Servicios bajo regulación con ciclos de cumplimiento
+#### Bloque C — Módulos Nuevos (Fases 17-20)
+- [ ] **Fase 17**: ConfiguracionIA (AIProvider abstraction, multi-proveedor)
+- [ ] **Fase 18**: DashboardConfig + visibilidad de widgets por rol
+- [ ] **Fase 19**: 9 Dashboards dinámicos con drill-down multidimensional
+- [ ] **Fase 20**: Permisos Granulares (module/action/widget level)
 
-#### Fase 8 — Análisis Móvil, Iniciativas, Auditorías y Temas Emergentes
-- [ ] Ejecuciones MAST sobre apps móviles registradas
-- [ ] Iniciativas de mejora con hitos y actualizaciones
-- [ ] Auditorías con evidencias y plan de remediación
-- [ ] Seguimiento de temas emergentes de seguridad
+#### Bloque D — Integración IA (Fases 21-23)
+- [ ] **Fase 21**: ChangelogEntrada + SistemaHealthMetric
+- [ ] **Fase 22**: Threat Modeling Asistido (STRIDE/DREAD automático)
+- [ ] **Fase 23**: Triaje de Falsos Positivos (SAST/DAST/SCA automático)
 
-#### Fase 9 — Motor de Scoring
-- [ ] Cálculo mensual automático de madurez por célula y subdirección
-- [ ] Histórico de scores con tendencias
-- [ ] Pesos configurables por categoría y motor de análisis
-
-#### Fase 10 — Indicadores y Métricas
-- [ ] Indicadores internos calculados automáticamente desde programas
-- [ ] Índice de madurez de seguridad con drill-down organizacional
-- [ ] Indicador de cumplimiento regulatorio trimestral
-- [ ] Semáforos con umbrales configurables
-
-#### Fase 11 — Dashboards y Exportación
-- [ ] 9 dashboards especializados con drill-down multidimensional
-- [ ] Exportación CSV / Excel / PDF con trazabilidad de auditoría
-- [ ] Filtros guardados personales y compartidos
-- [ ] Operaciones masivas sobre vulnerabilidades (asignación, cambio de estado, excepción)
-- [ ] Importación CSV con mapeo configurable de columnas y deduplicación
-
-#### Fase 12 — Notificaciones y Permisos Granulares
-- [ ] Centro de notificaciones internas (SLA, asignaciones, aprobaciones pendientes)
-- [ ] Permisos hasta nivel de widget configurables por rol
-- [ ] Alertas de patrones sospechosos para el administrador
-
-#### Fase 13 — Cumplimiento, Auditoría y Salud del Sistema
-- [ ] Buscador de eventos con filtros avanzados (usuario, fecha, entidad, acción)
-- [ ] Timeline de auditoría por entidad
-- [ ] Verificación de integridad de la cadena de hashes del log
-- [ ] Dashboard de salud del sistema (jobs, espacio en BD, sesiones, IA)
-- [ ] Changelog interno de la plataforma visible para usuarios
-
-#### Fase 14 — Integración de Inteligencia Artificial
-- [ ] Abstracción `AIProvider` intercambiable (Ollama / Claude / GPT / OpenRouter)
-- [ ] Panel de configuración del proveedor de IA en el admin (con prueba de conectividad)
-- [ ] Threat Modeling asistido: generación automática de amenazas STRIDE con scoring DREAD
-- [ ] Triaje asistido de falsos positivos SAST/DAST/SCA
-- [ ] Política configurable de sanitización de datos antes de enviar a proveedores de pago
+#### Bloque E — Testing + Finalización (Fases 24-26)
+- [ ] **Fase 24**: E2E Testing de IA multi-proveedor
+- [ ] **Fase 25**: Testing Integral (80%+ coverage, OWASP S1-S25, A1-A8)
+- [ ] **Fase 26**: Performance optimization + Documentation
 
 ---
 
