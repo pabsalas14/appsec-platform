@@ -5,11 +5,15 @@ import { Users } from 'lucide-react';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
 import { Card, CardContent, CardHeader, CardTitle, EmptyState, PageHeader, PageWrapper } from '@/components/ui';
 import { useDashboardTeam } from '@/hooks/useAppDashboardPanels';
+import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 
 export default function TeamDashboardPage() {
   const { filters, updateFilter, clearFilters } = useDashboardHierarchyFilters();
   const { data, isLoading } = useDashboardTeam(filters);
+  const { data: visibility } = useMyDashboardVisibility('team');
+  const isVisible = (widgetId: string) =>
+    visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
 
   return (
     <PageWrapper className="space-y-6 p-6">
@@ -25,16 +29,18 @@ export default function TeamDashboardPage() {
         onClear={clearFilters}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Resumen de equipo</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          {isLoading ? 'Cargando...' : `Analistas visibles: ${data?.team_size ?? 0}`}
-        </CardContent>
-      </Card>
+      {isVisible('dashboard.team.card.summary') && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Resumen de equipo</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            {isLoading ? 'Cargando...' : `Analistas visibles: ${data?.team_size ?? 0}`}
+          </CardContent>
+        </Card>
+      )}
 
-      {!isLoading && (data?.analysts.length ?? 0) === 0 ? (
+      {!isVisible('dashboard.team.panel.analysts') ? null : !isLoading && (data?.analysts.length ?? 0) === 0 ? (
         <EmptyState
           icon={Users}
           title="Sin datos para este filtro"
