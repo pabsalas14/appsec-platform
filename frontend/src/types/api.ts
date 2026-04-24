@@ -6433,6 +6433,11 @@ export interface components {
              * @default true
              */
             dry_run: boolean;
+            /**
+             * Crear Amenazas
+             * @default false
+             */
+            crear_amenazas: boolean;
         };
         /**
          * SesionThreatModelingUpdate

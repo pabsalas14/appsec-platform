@@ -55,6 +55,7 @@ class SesionThreatModelingIASuggestRequest(BaseModel):
 
     contexto_adicional: Optional[str] = Field(default=None, max_length=4000)
     dry_run: bool = True
+    crear_amenazas: bool = False
 
 
 class SesionThreatModelingIASuggestRead(BaseModel):
@@ -65,3 +66,4 @@ class SesionThreatModelingIASuggestRead(BaseModel):
     dry_run: bool
     content: str
     suggested_threats: list[str]
+    created_amenaza_ids: list[str] = []

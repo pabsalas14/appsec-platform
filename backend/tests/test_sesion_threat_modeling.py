@@ -136,3 +136,43 @@ async def test_sesion_threat_modeling_ia_suggest_marks_session_as_ai_used(
     session_resp = await client.get(f"{BASE_URL}/{sid}", headers=admin_auth_headers)
     assert session_resp.status_code == 200
     assert session_resp.json()["data"]["ia_utilizada"] is True
+
+
+@pytest.mark.asyncio
+async def test_sesion_threat_modeling_ia_suggest_creates_amenazas_when_requested(
+    client: AsyncClient,
+    admin_auth_headers: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    sid = await create_sesion_tm_id(client, admin_auth_headers)
+
+    async def _fake_run_prompt(*args, **kwargs):
+        return IAResult(
+            provider="openai",
+            model="gpt-4o-mini",
+            content=(
+                '{"threats":[{"titulo":"Replay en callback","descripcion":"Sin nonce",'
+                '"categoria_stride":"Tampering","dread_damage":7,"dread_reproducibility":8,'
+                '"dread_exploitability":7,"dread_affected_users":6,"dread_discoverability":6,'
+                '"estado":"Abierta"}]}'
+            ),
+            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+        )
+
+    monkeypatch.setattr("app.api.v1.sesion_threat_modeling.run_prompt", _fake_run_prompt)
+
+    resp = await client.post(
+        f"{BASE_URL}/{sid}/ia/suggest",
+        headers=admin_auth_headers,
+        json={"dry_run": False, "crear_amenazas": True},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert len(data["created_amenaza_ids"]) == 1
+    assert "Replay en callback" in data["suggested_threats"]
+
+    amenazas_resp = await client.get(f"/api/v1/amenazas?sesion_id={sid}", headers=admin_auth_headers)
+    assert amenazas_resp.status_code == 200
+    amenazas = amenazas_resp.json()["data"]
+    assert len(amenazas) == 1
+    assert amenazas[0]["titulo"] == "Replay en callback"
