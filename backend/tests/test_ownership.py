@@ -165,7 +165,9 @@ OWNED_ENTITIES = [
         "subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", {"nombre": "PwnN"}, id="subdireccions"
     ),
     pytest.param("celulas", _create_celula, "/api/v1/celulas/{id}", {"nombre": "PwnC"}, id="celulas"),
-    pytest.param("repositorios", _create_repositorio, "/api/v1/repositorios/{id}", {"nombre": "PwnR"}, id="repositorios"),
+    pytest.param(
+        "repositorios", _create_repositorio, "/api/v1/repositorios/{id}", {"nombre": "PwnR"}, id="repositorios"
+    ),
     pytest.param("activo_webs", _create_activo_web, "/api/v1/activo_webs/{id}", {"nombre": "PwnA"}, id="activo_webs"),
     pytest.param("servicios", _create_servicio, "/api/v1/servicios/{id}", {"nombre": "PwnS"}, id="servicios"),
     pytest.param(
@@ -175,7 +177,9 @@ OWNED_ENTITIES = [
         {"nombre": "PwnM"},
         id="aplicacion_movils",
     ),
-    pytest.param("tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", {"nombre": "PwnT"}, id="tipo_pruebas"),
+    pytest.param(
+        "tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", {"nombre": "PwnT"}, id="tipo_pruebas"
+    ),
     pytest.param(
         "control_seguridads",
         _create_control_seguridad,

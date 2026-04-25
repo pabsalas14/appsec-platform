@@ -114,9 +114,7 @@ async def test_service_release_idor_protected(client: AsyncClient, auth_headers:
 
 
 @pytest.mark.asyncio
-async def test_service_release_export_requires_permission(
-    client: AsyncClient, readonly_auth_headers: dict[str, str]
-):
+async def test_service_release_export_requires_permission(client: AsyncClient, readonly_auth_headers: dict[str, str]):
     """Rol readonly (sin releases.export) no puede exportar."""
     resp = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert resp.status_code == 403

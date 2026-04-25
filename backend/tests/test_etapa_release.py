@@ -173,9 +173,7 @@ async def test_etapa_release_idor_protected(client: AsyncClient, auth_headers: d
 
 
 @pytest.mark.asyncio
-async def test_etapa_release_export_requires_permission(
-    client: AsyncClient, readonly_auth_headers: dict[str, str]
-):
+async def test_etapa_release_export_requires_permission(client: AsyncClient, readonly_auth_headers: dict[str, str]):
     resp = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert resp.status_code == 403
     assert "releases.export" in resp.text

@@ -95,9 +95,7 @@ async def import_repositorios_csv(
     err_list: list[dict] = []
     created = 0
     seen_urls: dict[str, int] = {}
-    existing = {
-        str(x.url) for x in await repositorio_svc.list(db, filters={"user_id": current_user.id})
-    }
+    existing = {str(x.url) for x in await repositorio_svc.list(db, filters={"user_id": current_user.id})}
 
     for line_no, d in enumerate(rows, start=2):
         parsed, perr = repositorio_row_to_create(d, row=line_no)

@@ -39,6 +39,7 @@ def _payload(pipeline_id: str) -> dict:
         "archivo": "app/api/users.py",
         "linea": 42,
         "regla": "sql-injection",
+        "scan_id": "scan-owasp-2025-01",
         "estado": "Abierto",
     }
 
@@ -54,6 +55,20 @@ async def test_create_hallazgo_pipeline(client: AsyncClient, auth_headers: dict)
     data = resp.json()["data"]
     assert data["severidad"] == "Alta"
     assert data["estado"] == "Abierto"
+    assert data["scan_id"] == "scan-owasp-2025-01"
+
+
+@pytest.mark.asyncio
+async def test_filter_hallazgo_by_scan_id(client: AsyncClient, auth_headers: dict):
+    pid = await _create_pipeline_release(client, auth_headers)
+    await client.post(BASE_URL, headers=auth_headers, json=_payload(pid))
+    resp = await client.get(
+        f"{BASE_URL}?scan_id=scan-owasp-2025-01",
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert len(resp.json()["data"]) == 1
+    assert resp.json()["data"][0]["scan_id"] == "scan-owasp-2025-01"
 
 
 @pytest.mark.asyncio

@@ -40,9 +40,7 @@ async def export_activo_webs_csv(
     writer = csv.writer(buf)
     writer.writerow(["id", "nombre", "url", "ambiente", "tipo", "celula_id"])
     for a in items:
-        writer.writerow(
-            [str(a.id), a.nombre, a.url, a.ambiente, a.tipo, str(a.celula_id)]
-        )
+        writer.writerow([str(a.id), a.nombre, a.url, a.ambiente, a.tipo, str(a.celula_id)])
     body = buf.getvalue()
     digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
     await audit_record(
@@ -87,9 +85,7 @@ async def import_activo_webs_csv(
     err_list: list[dict] = []
     created = 0
     seen_urls: dict[str, int] = {}
-    existing = {
-        str(x.url) for x in await activo_web_svc.list(db, filters={"user_id": current_user.id})
-    }
+    existing = {str(x.url) for x in await activo_web_svc.list(db, filters={"user_id": current_user.id})}
 
     for line_no, d in enumerate(rows, start=2):
         parsed, perr = activo_web_row_to_create(d, row=line_no)

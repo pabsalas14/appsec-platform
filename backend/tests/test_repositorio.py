@@ -92,9 +92,7 @@ async def test_repositorio_export_and_import_template(client: AsyncClient, auth_
 
 
 @pytest.mark.asyncio
-async def test_repositorio_import_csv_creates(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_repositorio_import_csv_creates(client: AsyncClient, auth_headers: dict):
     cel_id = await create_celula_id(client, auth_headers)
     csv_text = "\n".join(
         [
@@ -116,8 +114,6 @@ async def test_repositorio_import_csv_creates(
 
 
 @pytest.mark.asyncio
-async def test_repositorio_export_forbidden_readonly(
-    client: AsyncClient, readonly_auth_headers: dict
-):
+async def test_repositorio_export_forbidden_readonly(client: AsyncClient, readonly_auth_headers: dict):
     r = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert r.status_code == 403, r.text

@@ -23,9 +23,7 @@ async def test_create_tema_emergente(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_temas_emergentes_export_forbidden_user(
-    client: AsyncClient, readonly_auth_headers: dict[str, str]
-):
+async def test_temas_emergentes_export_forbidden_user(client: AsyncClient, readonly_auth_headers: dict[str, str]):
     resp = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert resp.status_code == 403
     assert "emerging_themes.export" in resp.text

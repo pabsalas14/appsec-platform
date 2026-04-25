@@ -85,12 +85,14 @@
 ## 3. Ejecución inmediata (en curso en repo)
 
 - Documentación: este plan + matriz (actualizar filas al cerrar entregas).  
-- **Cerrado reciente (API):** permisos `catalogs.*` en §3.1; exports CSV con `audit_record` (auditorías, temas emergentes; **export** dedicado de programa SAST aún no — prioridad tras estabilidad del teardown de tests con FKs a `repositorios`); tests de regresión (readonly, exports, triaje IA `super_admin`). `tests/conftest.py`: `TRUNCATE` abarca cadenas SAST/pipeline/revisión de código; reintentos ante **deadlock** en PostgreSQL. *Desarrollo con Docker (sin bind-mount del backend):* tras tocar `backend/tests/`, `docker compose build backend` (o `make test` con imagen al día) para que el contenedor use el código.  
+- **Avance fases A–D (incremental, 2026-04-25):** **A2/A3** — import + plantilla + export ya en `repositorios` / `activo_webs` (`inventory.*`); **P5** — export CSV **programas DAST** (`GET /programa_dasts/export.csv`, `programs.export`, A7). **C2 (P14)** — columna y filtro `scan_id` en `hallazgo_pipelines` (rama sigue en `pipeline_releases`). **B1–B4** y **D1–D2** (pesos configurables UI, estatus globales admin, reglas SLA) siguen en backlog.  
+- **Cerrado reciente (API):** permisos `catalogs.*` en §3.1; exports CSV con `audit_record` (auditorías, temas emergentes, programas SAST/DAST); tests de regresión (readonly, exports, triaje IA `super_admin`). `tests/conftest.py`: `TRUNCATE` abarca cadenas SAST/pipeline/revisión de código; reintentos ante **deadlock** en PostgreSQL. *Desarrollo con Docker (sin bind-mount del backend):* tras tocar `backend/`, `docker compose build backend` (o `make test` con imagen al día).  
 - **Siguiente prioridad (huecos mayores):**  
-  1. **A2** — import + plantilla descargable en catálogos BRD que lo exijan (un flujo piloto reutilizable).  
-  2. **A3** — extender exports a inventario (`repositorios`, `activo_webs`) definiendo permiso (p. ej. ampliar `catalogs` o `programs` según decisión en ADR breve).  
-  3. **F2/F3** — drill-down y filtros §13.2 en dashboards existentes; breadcrumbs §13 ya parcialmente en UI.  
-  4. **G2** — notificaciones §14.3 (modelo mínimo + bell).  
+  1. **A2** — extender import + plantilla a más catálogos BRD (reutilizar patrón inventario).  
+  2. **B1** — actividades/pesos en settings o entidad de config, reflejados en scoring mensual.  
+  3. **D1** — matriz de estatus de vulnerabilidad **admin** (no solo `flujo_estatus` por usuario).  
+  4. **F2/F3** — drill-down y filtros §13.2 en dashboards.  
+  5. **G2** — notificaciones §14.3 (umbrales).  
 - Ejecutar `make types` tras cambios de OpenAPI y commitear `frontend/src/types/api.ts`.
 
 ---

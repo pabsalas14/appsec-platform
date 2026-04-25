@@ -63,9 +63,7 @@ async def update_notificacion(
     entity: Notificacion = Depends(require_ownership(notificacion_svc)),
 ):
     """Partially update an owned notificacion (404 if not owned)."""
-    updated = await notificacion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await notificacion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(NotificacionRead.model_validate(updated).model_dump(mode="json"))
 
 

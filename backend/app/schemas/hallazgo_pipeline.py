@@ -24,6 +24,7 @@ class HallazgoPipelineBase(BaseModel):
     archivo: str | None = None
     linea: int | None = None
     regla: str | None = None
+    scan_id: str | None = None
     estado: str = "Abierto"
 
     @field_validator("severidad")
@@ -57,6 +58,7 @@ class HallazgoPipelineUpdate(BaseModel):
     archivo: str | None = None
     linea: int | None = None
     regla: str | None = None
+    scan_id: str | None = None
     estado: str | None = None
 
     @field_validator("severidad")

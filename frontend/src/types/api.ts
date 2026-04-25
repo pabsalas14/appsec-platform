@@ -2168,7 +2168,7 @@ export interface paths {
         };
         /**
          * List Hallazgo Pipelines
-         * @description Lista hallazgos de pipeline. Filtrar por ?pipeline_release_id=<uuid>.
+         * @description Lista hallazgos de pipeline. Filtrar por ``pipeline_release_id`` y/u optional ``scan_id``.
          */
         get: operations["list_hallazgo_pipelines_api_v1_hallazgo_pipelines_get"];
         put?: never;
@@ -2453,6 +2453,26 @@ export interface paths {
          * @description Partially update an owned hallazgo SAST.
          */
         patch: operations["update_hallazgo_sast_api_v1_hallazgo_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_dasts/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Programa Dasts Csv
+         * @description Exporta programas DAST del usuario a CSV; auditoría A7 (BRD §5.2 / P5).
+         */
+        get: operations["export_programa_dasts_csv_api_v1_programa_dasts_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/programa_dasts": {
@@ -5669,6 +5689,8 @@ export interface components {
             linea?: number | null;
             /** Regla */
             regla?: string | null;
+            /** Scan Id */
+            scan_id?: string | null;
             /**
              * Estado
              * @default Abierto
@@ -5694,6 +5716,8 @@ export interface components {
             linea?: number | null;
             /** Regla */
             regla?: string | null;
+            /** Scan Id */
+            scan_id?: string | null;
             /** Estado */
             estado?: string | null;
         };
@@ -12954,6 +12978,8 @@ export interface operations {
         parameters: {
             query?: {
                 pipeline_release_id?: string | null;
+                /** @description Correlación con ID de scan en la herramienta (BRD C2, junto a rama en pipeline_release). */
+                scan_id?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -14044,6 +14070,40 @@ export interface operations {
                 "application/json": components["schemas"]["HallazgoSastUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_programa_dasts_csv_api_v1_programa_dasts_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

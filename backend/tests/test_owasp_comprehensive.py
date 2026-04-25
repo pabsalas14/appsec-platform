@@ -329,9 +329,7 @@ class TestAuditabilityA7Export:
     """A7: Export logging."""
 
     @pytest.mark.asyncio
-    async def test_a7_export_requires_permission(
-        self, client: AsyncClient, readonly_auth_headers: dict[str, str]
-    ):
+    async def test_a7_export_requires_permission(self, client: AsyncClient, readonly_auth_headers: dict[str, str]):
         """Export exige `vulnerabilities.export`; rol sin permiso recibe 403."""
         resp = await client.get(
             "/api/v1/vulnerabilidads/export.csv",

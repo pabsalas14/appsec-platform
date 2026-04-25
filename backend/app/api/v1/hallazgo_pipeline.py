@@ -23,13 +23,20 @@ router = APIRouter()
 @router.get("")
 async def list_hallazgo_pipelines(
     pipeline_release_id: UUID | None = Query(default=None),
+    scan_id: str | None = Query(
+        default=None,
+        max_length=255,
+        description="Correlación con ID de scan en la herramienta (BRD C2, junto a rama en pipeline_release).",
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lista hallazgos de pipeline. Filtrar por ?pipeline_release_id=<uuid>."""
+    """Lista hallazgos de pipeline. Filtrar por ``pipeline_release_id`` y/u optional ``scan_id``."""
     filters: dict = {"user_id": current_user.id}
     if pipeline_release_id:
         filters["pipeline_release_id"] = pipeline_release_id
+    if scan_id:
+        filters["scan_id"] = scan_id
     items = await hallazgo_pipeline_svc.list(db, filters=filters)
     return success([HallazgoPipelineRead.model_validate(x).model_dump(mode="json") for x in items])
 

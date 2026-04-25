@@ -52,6 +52,8 @@ class HallazgoPipeline(SoftDeleteMixin, Base):
     archivo: Mapped[str | None] = mapped_column(String(500), nullable=True)
     linea: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     regla: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # ID de ejecución/scan en la herramienta (match BRD C2 con rama vía pipeline_release)
+    scan_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # estado: Abierto | Falso Positivo | Aceptado | Remediado
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Abierto")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)

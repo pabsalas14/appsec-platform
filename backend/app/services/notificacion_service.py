@@ -16,9 +16,7 @@ notificacion_svc = BaseService[Notificacion, NotificacionCreate, NotificacionUpd
 )
 
 
-async def marcar_todas_leidas_for_user(
-    db: AsyncSession, user_id: uuid.UUID
-) -> int:
+async def marcar_todas_leidas_for_user(db: AsyncSession, user_id: uuid.UUID) -> int:
     """Marca como leídas todas las notificaciones del usuario. Devuelve filas afectadas."""
     stmt = (
         update(Notificacion)

@@ -33,6 +33,13 @@ async def test_list_programa_dasts_empty(client: AsyncClient, auth_headers: dict
 
 
 @pytest.mark.asyncio
+async def test_programa_dast_export_csv(client: AsyncClient, auth_headers: dict):
+    r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    assert "activo_web_id" in r.text
+
+
+@pytest.mark.asyncio
 async def test_programa_dast_requires_auth(client: AsyncClient):
     assert (await client.get(BASE_URL)).status_code == 401
     assert (await client.get(f"{BASE_URL}/{uuid4()}")).status_code == 401
