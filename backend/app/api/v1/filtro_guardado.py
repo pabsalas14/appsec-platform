@@ -25,6 +25,10 @@ async def list_filtros_guardados(
     from sqlalchemy import select, func
     from app.core.response import paginated
 
+    # Enforce pagination limits (S4: Rate limiting)
+    page = max(1, page)
+    page_size = min(max(1, page_size), 100)  # Cap at 100
+
     # Get paginated items
     stmt = select(FiltroGuardado).where(
         FiltroGuardado.usuario_id == current_user.id,
