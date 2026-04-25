@@ -12,13 +12,9 @@ Tests:
 import uuid
 
 import pytest
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from app.main import app
-
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 

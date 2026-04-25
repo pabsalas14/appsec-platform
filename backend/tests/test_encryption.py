@@ -1,11 +1,10 @@
 """Tests for A5 At-Rest Encryption implementations in SQLAlchemy."""
 
 import pytest
-from sqlalchemy import Column, Integer, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.encryption import EncryptedString, encrypt_string, decrypt_string
+from sqlalchemy import Column, Integer
 from sqlalchemy.orm import declarative_base
+
+from app.core.encryption import EncryptedString, decrypt_string, encrypt_string
 
 DummyBase = declarative_base()
 

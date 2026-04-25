@@ -22,13 +22,14 @@ from httpx import AsyncClient
 from app.config import settings
 from app.core.logging import (
     REDACTED_KEYS,
-    _JsonFormatter,
     ContextFilter,
     RedactFilter,
+    _JsonFormatter,
     configure_logging,
     logger,
 )
-from app.core.logging_context import bind as bind_ctx, clear as clear_ctx
+from app.core.logging_context import bind as bind_ctx
+from app.core.logging_context import clear as clear_ctx
 
 
 def _install_capture_handler() -> tuple[logging.Handler, io.StringIO]:

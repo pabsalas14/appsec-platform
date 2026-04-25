@@ -1,12 +1,8 @@
 """Tests for M5 (Iniciativas) — Bloque B, Fase 13."""
 
+
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
-
-from app.models.iniciativa import Iniciativa
-from app.schemas.iniciativa import IniciativaCreate, IniciativaUpdate
 
 
 @pytest.mark.asyncio
@@ -49,7 +45,7 @@ async def test_get_iniciativa(client: AsyncClient, auth_headers: dict):
     }
     response = await client.post("/api/v1/iniciativas", json=payload, headers=auth_headers)
     iniciativa_id = response.json()["data"]["id"]
-    
+
     # Get it
     response = await client.get(f"/api/v1/iniciativas/{iniciativa_id}", headers=auth_headers)
     assert response.status_code == 200
@@ -69,7 +65,7 @@ async def test_update_iniciativa(client: AsyncClient, auth_headers: dict):
     }
     response = await client.post("/api/v1/iniciativas", json=payload, headers=auth_headers)
     iniciativa_id = response.json()["data"]["id"]
-    
+
     # Update
     update_payload = {"estado": "Completada"}
     response = await client.patch(
@@ -93,11 +89,11 @@ async def test_delete_iniciativa(client: AsyncClient, auth_headers: dict):
     }
     response = await client.post("/api/v1/iniciativas", json=payload, headers=auth_headers)
     iniciativa_id = response.json()["data"]["id"]
-    
+
     # Delete
     response = await client.delete(f"/api/v1/iniciativas/{iniciativa_id}", headers=auth_headers)
     assert response.status_code == 200
-    
+
     # Verify deleted (404 on get)
     response = await client.get(f"/api/v1/iniciativas/{iniciativa_id}", headers=auth_headers)
     assert response.status_code == 404
@@ -115,7 +111,7 @@ async def test_idor_protection_iniciativa(client: AsyncClient, auth_headers: dic
     }
     response = await client.post("/api/v1/iniciativas", json=payload, headers=auth_headers)
     iniciativa_id = response.json()["data"]["id"]
-    
+
     # Try to access as user 2 (should fail with 404)
     response = await client.get(f"/api/v1/iniciativas/{iniciativa_id}", headers=other_auth_headers)
     assert response.status_code == 404

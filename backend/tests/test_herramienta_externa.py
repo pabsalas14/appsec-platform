@@ -4,11 +4,10 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import text
 
 from app.core.encryption import decrypt_string
 from app.database import async_session
-from app.models.herramienta_externa import HerramientaExterna
-from sqlalchemy import select, text
 
 BASE_URL = "/api/v1/admin/herramientas-externas"
 
@@ -26,7 +25,7 @@ async def test_create_and_mask_herramienta_externa(client: AsyncClient, admin_au
     resp = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     data = resp.json()["data"]
-    
+
     assert data["nombre"] == SAMPLE_PAYLOAD["nombre"]
     # [A7] Data Masking Verification — API Token MUST be masked in response
     assert data["api_token"] == "********"
@@ -37,7 +36,7 @@ async def test_create_and_mask_herramienta_externa(client: AsyncClient, admin_au
         stmt = text("SELECT api_token FROM herramienta_externas WHERE id = :id")
         result = await db.execute(stmt, {"id": resource_id})
         raw_db_value = result.scalar_one()
-        
+
         # Raw value on disk MUST NOT be plaintext and MUST start with Fernet signature
         assert raw_db_value != SAMPLE_PAYLOAD["api_token"]
         assert raw_db_value.startswith("gAAAAA")

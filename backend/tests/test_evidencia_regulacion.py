@@ -10,7 +10,6 @@ from tests.graph_helpers import (
     create_servicio_regulado_registro_id,
 )
 
-
 BASE_URL = "/api/v1/evidencia_regulacions"
 
 

@@ -13,8 +13,6 @@ Tests:
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 
 CHANGELOG_URL = "/api/v1/changelog_entradas"
 

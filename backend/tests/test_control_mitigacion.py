@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from tests.graph_helpers import create_sesion_tm_id
 
-
 BASE_URL = "/api/v1/control_mitigacions"
 
 

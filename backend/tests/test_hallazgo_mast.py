@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from tests.graph_helpers import create_ejecucion_mast_id
 
-
 BASE_URL = "/api/v1/hallazgo_masts"
 
 

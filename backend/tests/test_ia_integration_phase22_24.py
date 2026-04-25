@@ -8,8 +8,8 @@ Tests for:
   - Fase 24: E2E IA integration tests
 """
 
+
 import pytest
-import json
 from httpx import AsyncClient
 
 

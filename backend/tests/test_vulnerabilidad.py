@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from app.services.ia_provider import IAResult
 
-
 BASE_URL = "/api/v1/vulnerabilidads"
 
 # Payload mínimo válido — solo fuente/severidad/estado correctos, un activo opcional (todos null OK en DB)

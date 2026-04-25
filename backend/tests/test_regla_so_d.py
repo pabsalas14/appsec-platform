@@ -1,10 +1,8 @@
 """Tests for ReglaSoD — SoD rules are admin-only config."""
 
-from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
-
 
 BASE_URL = "/api/v1/admin/regla-sods"
 

@@ -6,9 +6,9 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
+from app.core.rate_limit import reset_rate_limit_state
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.core.rate_limit import reset_rate_limit_state
 
 
 @pytest.mark.asyncio

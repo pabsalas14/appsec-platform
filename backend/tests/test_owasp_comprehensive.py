@@ -12,10 +12,10 @@ Valida cumplimiento de OWASP S1-S25:
   - A1-A8: Auditability rules
 """
 
+import uuid
+
 import pytest
 from httpx import AsyncClient
-import json
-import uuid
 
 
 async def _create_activo_web_for_test(client: AsyncClient, headers: dict) -> str:
@@ -240,7 +240,7 @@ class TestAuditabilityA1:
         )
         assert "justificacion" in resp_close.json()["detail"].lower() or \
                "required" in resp_close.json()["detail"].lower(), \
-            f"A1 FAILED: Error message doesn't mention justificacion"
+            "A1 FAILED: Error message doesn't mention justificacion"
 
 
 class TestAuditabilityA2SoftDelete:

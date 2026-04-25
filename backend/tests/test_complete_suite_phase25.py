@@ -13,14 +13,10 @@ This suite must pass with ≥80% coverage before proceeding to production.
 NO TESTS RUN UNTIL ALL PHASES 10-27 CODE IS COMPLETE.
 """
 
-import pytest
 import uuid
-import csv
-import hashlib
-from io import StringIO
-from datetime import datetime, timedelta
-from httpx import AsyncClient
 
+import pytest
+from httpx import AsyncClient
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FIXTURES: Common test data and helpers
@@ -129,7 +125,7 @@ class TestOWASPS1IDOR:
 
         # User B tries to GET it
         resp_b = await client.get(f"/api/v1/{endpoint}/{resource_id}", headers=other_auth_headers)
-        assert resp_b.status_code in (404, 403), f"IDOR FAILED: User B accessed User A's resource"
+        assert resp_b.status_code in (404, 403), "IDOR FAILED: User B accessed User A's resource"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES,
@@ -156,7 +152,7 @@ class TestOWASPS1IDOR:
         resource_id = resp_a.json()["data"]["id"]
 
         resp_b = await client.patch(f"/api/v1/{endpoint}/{resource_id}", json=update_payload, headers=other_auth_headers)
-        assert resp_b.status_code in (403, 404), f"IDOR FAILED: User B modified User A's resource"
+        assert resp_b.status_code in (403, 404), "IDOR FAILED: User B modified User A's resource"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES,
@@ -183,7 +179,7 @@ class TestOWASPS1IDOR:
         resource_id = resp_a.json()["data"]["id"]
 
         resp_b = await client.delete(f"/api/v1/{endpoint}/{resource_id}", headers=other_auth_headers)
-        assert resp_b.status_code in (403, 404), f"IDOR FAILED: User B deleted User A's resource"
+        assert resp_b.status_code in (403, 404), "IDOR FAILED: User B deleted User A's resource"
 
     @pytest.mark.asyncio
     async def test_s1_idor_list_only_own_resources(
@@ -338,7 +334,7 @@ class TestOWASPS7SSRF:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422), f"S7 FAILED: 127.0.0.1 not blocked"
+        assert resp.status_code in (400, 422), "S7 FAILED: 127.0.0.1 not blocked"
 
     @pytest.mark.asyncio
     async def test_s7_private_ip_10_blocked(self, client: AsyncClient, auth_headers: dict):
@@ -355,7 +351,7 @@ class TestOWASPS7SSRF:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422), f"S7 FAILED: 10.0.0.1 not blocked"
+        assert resp.status_code in (400, 422), "S7 FAILED: 10.0.0.1 not blocked"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -477,7 +473,7 @@ class TestAuditabilityA7Export:
         resp = await client.get("/api/v1/iniciativas/export.csv", headers=auth_headers)
 
         # If endpoint exists, it should return CSV or 404
-        assert resp.status_code in (200, 404), f"A7: Unexpected status for export"
+        assert resp.status_code in (200, 404), "A7: Unexpected status for export"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

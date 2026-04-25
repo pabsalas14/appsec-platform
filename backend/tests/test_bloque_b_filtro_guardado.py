@@ -76,7 +76,7 @@ async def test_filtro_guardado_shared_flag(client: AsyncClient, auth_headers: di
 async def test_filtro_guardado_multiple_modulos(client: AsyncClient, auth_headers: dict):
     """Test that filtro guardado supports different modulos."""
     modulos = ["vulnerabilities", "releases", "initiatives", "auditorias", "temas_emergentes"]
-    
+
     for modulo in modulos:
         payload = {
             "nombre": f"Filtro {modulo}",
@@ -115,7 +115,7 @@ async def test_update_filtro_guardado(client: AsyncClient, auth_headers: dict):
     }
     response = await client.post("/api/v1/filtros_guardados", json=payload, headers=auth_headers)
     filtro_id = response.json()["data"]["id"]
-    
+
     # Update
     update_payload = {
         "nombre": "Updated Name",

@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from tests.graph_helpers import create_servicio_id
 
-
 BASE_URL = "/api/v1/servicio_regulado_registros"
 
 

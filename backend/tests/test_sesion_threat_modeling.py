@@ -8,7 +8,6 @@ from httpx import AsyncClient
 from app.services.ia_provider import IAResult
 from tests.graph_helpers import create_programa_tm_id, create_sesion_tm_id
 
-
 BASE_URL = "/api/v1/sesion_threat_modelings"
 
 

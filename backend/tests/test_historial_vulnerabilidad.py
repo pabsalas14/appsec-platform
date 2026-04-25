@@ -5,7 +5,6 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-
 BASE_URL = "/api/v1/historial_vulnerabilidads"
 VULN_URL = "/api/v1/vulnerabilidads"
 

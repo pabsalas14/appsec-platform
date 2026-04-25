@@ -28,6 +28,7 @@ line-length = 120
 #   RUF      : ruff-specific gotchas.
 select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "ASYNC", "S", "T20", "RUF"]
 ignore = [
+    "B008",  # FastAPI requires `Depends()` calls in function defaults
     "E712",  # `== True` required by SQLAlchemy column expressions
     "S101",  # asserts in tests are fine
     "S104",  # 0.0.0.0 bind is intentional in docker dev
@@ -36,14 +37,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Tests may use asserts, hardcoded test passwords, and request timeouts don't
-# apply to ASGITransport clients.
-"tests/**/*.py" = ["S101", "S105", "S106", "S311", "ASYNC109", "T201"]
-# Alembic migrations are generated boilerplate.
-"alembic/**/*.py" = ["E501", "I", "UP"]
-# Seed script is an ops entrypoint — prints are OK, and it is the sole
-# writer outside `get_db`.
-"app/seed.py" = ["S608", "T201"]
+# Tests may use asserts, hardcoded test passwords, request timeouts, and long lines.
+"tests/**/*.py" = ["S101", "S105", "S106", "S311", "ASYNC109", "T201", "E501"]
+# Alembic migrations are generated boilerplate and env.py has special import requirements.
+"alembic/**/*.py" = ["E501", "I", "UP", "E402", "F401", "RUF100"]
+# Seed script is an ops entrypoint — prints are OK, and it contains configuration data.
+"app/seed.py" = ["S608", "T201", "E501"]
+# Settings contain configuration data with long lines.
+"app/api/v1/admin/settings.py" = ["E501", "RUF001"]
 # Management scripts may print to stdout for CLI UX.
 "scripts/**/*.py" = ["T201"]
 

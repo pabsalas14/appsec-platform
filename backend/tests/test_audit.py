@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models.audit_log import AuditLog
 from app.models.task import Task

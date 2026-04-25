@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from tests.graph_helpers import create_org_hierarchy
 
-
 BASE_URL = "/api/v1/organizacions"
 
 

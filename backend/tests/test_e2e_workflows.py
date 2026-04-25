@@ -7,8 +7,9 @@ Valida que workflows completos funcionan correctamente:
   - (Future) Threat modeling with IA
 """
 
-import pytest
 import uuid
+
+import pytest
 from httpx import AsyncClient
 
 
@@ -80,7 +81,7 @@ class TestE2EVulnerabilityLifecycle:
 
         # 3. Submit remediation evidence
         resp_evidence = await client.post(
-            f"/api/v1/evidencia_remediacions",
+            "/api/v1/evidencia_remediacions",
             json={
                 "vulnerabilidad_id": vuln_id,
                 "descripcion": "Applied parameterized queries to prevent SQL injection",

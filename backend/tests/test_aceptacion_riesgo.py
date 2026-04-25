@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-
 BASE_URL = "/api/v1/aceptacion_riesgos"
 VULN_URL = "/api/v1/vulnerabilidads"
 

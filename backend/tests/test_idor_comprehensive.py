@@ -9,12 +9,9 @@ Valida que TODAS las entities con user_id/usuario_id:
 """
 
 import uuid
+
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database import get_db
-
 
 # ─── IDOR Test Matrix ────────────────────────────────────────────────────────
 
@@ -245,7 +242,7 @@ async def test_idor_list_only_own_resources(
 
     # User A's vulnerability should NOT be in User B's list
     assert user_a_vuln_id not in user_b_ids, (
-        f"IDOR FAILED: User B can see User A's vulnerability in list"
+        "IDOR FAILED: User B can see User A's vulnerability in list"
     )
 
 

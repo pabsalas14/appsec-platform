@@ -24,7 +24,7 @@ here.
 
 import asyncio
 import uuid
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import asyncpg.exceptions
 import pytest_asyncio
@@ -43,7 +43,6 @@ from app.config import settings
 from app.core.rate_limit import reset_rate_limit_state
 from app.database import get_db
 from app.main import app
-
 
 # ─── Engine & session factory (session-scoped, loop-safe) ────────────────────
 
