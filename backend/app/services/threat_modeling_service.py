@@ -5,19 +5,16 @@ Generates STRIDE threats with DREAD scoring
 
 import json
 import logging
-from typing import Optional
 from datetime import datetime
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import SesionThreatModeling, Amenaza, ControlMitigacion
-from app.schemas.amenaza import AmenazaCreate, AmenazaRead
+from app.models import Amenaza
+from app.schemas.amenaza import AmenazaRead
 from app.services.ia_provider import (
     AIProvider,
     AmenazaResponse,
-    AIProviderType,
-    get_ai_provider,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,23 +47,27 @@ class ThreatModelingService:
     ) -> list[AmenazaRead]:
         """Generate threat modeling suggestions from IA"""
 
-        system_prompt = """You are a threat modeling expert specializing in STRIDE and DREAD analysis.
-        For the given technology stack, identify potential security threats.
-        Return a JSON array with threats, each containing:
-        - stride: STRIDE category (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege)
-        - threat: Description of the threat
-        - dread_damage: Potential damage (1-10)
-        - dread_reproducibility: How easily reproducible (1-10)
-        - dread_exploitability: How easily exploitable (1-10)
-        - dread_affected_users: Number of affected users (1-10)
-        - dread_discoverability: How easily discoverable (1-10)
-        - mitigations: List of suggested controls"""
+        system_prompt = (
+            "You are a threat modeling expert specializing in STRIDE and DREAD analysis.\n"
+            "For the given technology stack, identify potential security threats.\n"
+            "Return a JSON array with threats, each containing:\n"
+            "- stride: STRIDE category (Spoofing, Tampering, Repudiation, Information "
+            "Disclosure, Denial of Service, Elevation of Privilege)\n"
+            "- threat: Description of the threat\n"
+            "- dread_damage: Potential damage (1-10)\n"
+            "- dread_reproducibility: How easily reproducible (1-10)\n"
+            "- dread_exploitability: How easily exploitable (1-10)\n"
+            "- dread_affected_users: Number of affected users (1-10)\n"
+            "- dread_discoverability: How easily discoverable (1-10)\n"
+            "- mitigations: List of suggested controls"
+        )
 
-        user_prompt = f"""Analyze the following technology stack for STRIDE threats:
-
-Technology Stack: {technology_stack}
-
-Identify 3-5 critical threats. Return ONLY valid JSON array with threat objects."""
+        user_prompt = (
+            f"Analyze the following technology stack for STRIDE threats:\n\n"
+            f"Technology Stack: {technology_stack}\n\n"
+            "Identify 3-5 critical threats. Return ONLY valid JSON array with threat "
+            "objects."
+        )
 
         try:
             response = await self.ai_provider.generate(
@@ -143,19 +144,6 @@ Identify 3-5 critical threats. Return ONLY valid JSON array with threat objects.
 
         self.db.add(amenaza)
         await self.db.flush()
-
-        # Add suggested mitigations as controls
-        if threat_data.mitigations:
-            for mitigation_text in threat_data.mitigations[:5]:  # Max 5 per threat
-                control = ControlMitigacion(
-                    amenaza_id=amenaza.id,
-                    titulo=mitigation_text[:100],
-                    descripcion=mitigation_text,
-                    estado="Sugerido",
-                )
-                self.db.add(control)
-
-        await self.db.commit()
         return AmenazaRead.from_orm(amenaza)
 
     def _parse_threats_from_response(self, response_text: str) -> list[AmenazaResponse]:
@@ -187,16 +175,16 @@ Identify 3-5 critical threats. Return ONLY valid JSON array with threat objects.
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
-            raise ValueError(f"Invalid JSON in IA response: {e}")
+            raise ValueError(f"Invalid JSON in IA response: {e}") from e
 
     async def approve_threat(
         self,
         amenaza_id: str,
-        dread_damage: Optional[int] = None,
-        dread_reproducibility: Optional[int] = None,
-        dread_exploitability: Optional[int] = None,
-        dread_affected_users: Optional[int] = None,
-        dread_discoverability: Optional[int] = None,
+        dread_damage: int | None = None,
+        dread_reproducibility: int | None = None,
+        dread_exploitability: int | None = None,
+        dread_affected_users: int | None = None,
+        dread_discoverability: int | None = None,
     ) -> AmenazaRead:
         """Analyst approves/modifies threat after IA generation"""
 
@@ -247,7 +235,7 @@ Identify 3-5 critical threats. Return ONLY valid JSON array with threat objects.
     async def get_threats(
         self,
         sesion_id: str,
-        filter_approved: Optional[bool] = None,
+        filter_approved: bool | None = None,
     ) -> list[AmenazaRead]:
         """Get threats for session with optional filtering"""
 

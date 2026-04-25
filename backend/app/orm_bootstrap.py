@@ -7,69 +7,69 @@ cruzadas resuelvan sin cargar toda la app FastAPI.
 
 
 def import_all_orm() -> None:
-    import app.models.user  # noqa: F401
-    import app.models.task  # noqa: F401
-    import app.models.refresh_token  # noqa: F401
-    import app.models.audit_log  # noqa: F401
-    import app.models.project  # noqa: F401
-    import app.models.role  # noqa: F401
-    import app.models.system_setting  # noqa: F401
-    import app.models.attachment  # noqa: F401
-    import app.models.subdireccion  # noqa: F401
-    import app.models.celula  # noqa: F401
-    import app.models.repositorio  # noqa: F401
-    import app.models.activo_web  # noqa: F401
-    import app.models.servicio  # noqa: F401
-    import app.models.aplicacion_movil  # noqa: F401
-    import app.models.tipo_prueba  # noqa: F401
-    import app.models.control_seguridad  # noqa: F401
-    import app.models.regla_so_d  # noqa: F401
-    import app.models.herramienta_externa  # noqa: F401
+    import app.models.aceptacion_riesgo
+    import app.models.actividad_mensual_sast
+    import app.models.activo_web
+    import app.models.actualizacion_iniciativa
+    import app.models.actualizacion_tema
+    import app.models.amenaza
+    import app.models.aplicacion_movil
+    import app.models.attachment
+    import app.models.audit_log
+    import app.models.auditoria
+    import app.models.celula
+    import app.models.changelog_entrada
+    import app.models.cierre_conclusion
+    import app.models.control_mitigacion
+    import app.models.control_seguridad
+    import app.models.control_source_code
+    import app.models.dashboard_config
+    import app.models.ejecucion_dast
+    import app.models.ejecucion_mast
+    import app.models.estado_cumplimiento
+    import app.models.etapa_release
+    import app.models.evidencia_auditoria
+    import app.models.evidencia_regulacion
+    import app.models.evidencia_remediacion
+    import app.models.excepcion_vulnerabilidad
+    import app.models.filtro_guardado
+    import app.models.flujo_estatus
+    import app.models.gerencia
+    import app.models.hallazgo_auditoria
+    import app.models.hallazgo_dast
+    import app.models.hallazgo_mast
+    import app.models.hallazgo_pipeline
+    import app.models.hallazgo_sast
+    import app.models.hallazgo_tercero
+    import app.models.herramienta_externa
+    import app.models.historial_vulnerabilidad
+    import app.models.hito_iniciativa
+    import app.models.indicador_formula
+    import app.models.iniciativa
+    import app.models.notificacion
+    import app.models.organizacion
+    import app.models.pipeline_release
+    import app.models.plan_remediacion
+    import app.models.programa_dast
+    import app.models.programa_sast
+    import app.models.programa_source_code
+    import app.models.programa_threat_modeling
+    import app.models.project
+    import app.models.refresh_token
+    import app.models.regla_so_d
+    import app.models.regulacion_control
+    import app.models.repositorio
+    import app.models.revision_source_code
+    import app.models.revision_tercero
+    import app.models.role
+    import app.models.service_release
+    import app.models.servicio
+    import app.models.servicio_regulado_registro
+    import app.models.sesion_threat_modeling
+    import app.models.subdireccion
+    import app.models.system_setting
+    import app.models.task
+    import app.models.tema_emergente
+    import app.models.tipo_prueba
+    import app.models.user
     import app.models.vulnerabilidad  # noqa: F401
-    import app.models.historial_vulnerabilidad  # noqa: F401
-    import app.models.excepcion_vulnerabilidad  # noqa: F401
-    import app.models.aceptacion_riesgo  # noqa: F401
-    import app.models.evidencia_remediacion  # noqa: F401
-    import app.models.service_release  # noqa: F401
-    import app.models.etapa_release  # noqa: F401
-    import app.models.pipeline_release  # noqa: F401
-    import app.models.hallazgo_pipeline  # noqa: F401
-    import app.models.revision_tercero  # noqa: F401
-    import app.models.hallazgo_tercero  # noqa: F401
-    import app.models.programa_sast  # noqa: F401
-    import app.models.actividad_mensual_sast  # noqa: F401
-    import app.models.hallazgo_sast  # noqa: F401
-    import app.models.programa_dast  # noqa: F401
-    import app.models.ejecucion_dast  # noqa: F401
-    import app.models.hallazgo_dast  # noqa: F401
-    import app.models.programa_threat_modeling  # noqa: F401
-    import app.models.sesion_threat_modeling  # noqa: F401
-    import app.models.amenaza  # noqa: F401
-    import app.models.control_mitigacion  # noqa: F401
-    import app.models.programa_source_code  # noqa: F401
-    import app.models.control_source_code  # noqa: F401
-    import app.models.revision_source_code  # noqa: F401
-    import app.models.servicio_regulado_registro  # noqa: F401
-    import app.models.regulacion_control  # noqa: F401
-    import app.models.evidencia_regulacion  # noqa: F401
-    import app.models.estado_cumplimiento  # noqa: F401
-    import app.models.ejecucion_mast  # noqa: F401
-    import app.models.hallazgo_mast  # noqa: F401
-    import app.models.iniciativa  # noqa: F401
-    import app.models.organizacion  # noqa: F401
-    import app.models.gerencia  # noqa: F401
-    import app.models.hito_iniciativa  # noqa: F401
-    import app.models.actualizacion_iniciativa  # noqa: F401
-    import app.models.auditoria  # noqa: F401
-    import app.models.hallazgo_auditoria  # noqa: F401
-    import app.models.evidencia_auditoria  # noqa: F401
-    import app.models.plan_remediacion  # noqa: F401
-    import app.models.tema_emergente  # noqa: F401
-    import app.models.actualizacion_tema  # noqa: F401
-    import app.models.cierre_conclusion  # noqa: F401
-    import app.models.flujo_estatus  # noqa: F401
-    import app.models.indicador_formula  # noqa: F401
-    import app.models.filtro_guardado  # noqa: F401
-    import app.models.dashboard_config  # noqa: F401
-    import app.models.changelog_entrada  # noqa: F401
-    import app.models.notificacion  # noqa: F401

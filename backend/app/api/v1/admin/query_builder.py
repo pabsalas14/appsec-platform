@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.core.logging import logger
 from app.core.response import paginated, success
-from app.models.user import User
 from app.models.saved_widget import SavedWidget
-from app.schemas.saved_widget import SavedWidgetCreate, SavedWidgetUpdate, SavedWidgetRead
+from app.models.user import User
+from app.schemas.saved_widget import SavedWidgetCreate, SavedWidgetRead, SavedWidgetUpdate
 from app.services.base import BaseService
 from app.services.query_builder_service import QueryBuilderService
 
@@ -40,7 +40,7 @@ async def validate_query(
         return success(validation)
     except Exception as e:
         logger.exception(f"Query validation error: {e}")
-        raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {e!s}") from e
 
 
 @router.post("/execute")
@@ -73,7 +73,7 @@ async def execute_query(
         raise
     except Exception as e:
         logger.exception(f"Query execution error: {e}")
-        raise HTTPException(status_code=500, detail=f"Execution error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Execution error: {e!s}") from e
 
 
 @router.post("/schema-info")
@@ -86,7 +86,6 @@ async def get_schema_info(
     Lists all tables, columns, and relationships.
     """
     try:
-        from sqlalchemy import inspect
 
         from app.database import Base
 
@@ -132,7 +131,7 @@ async def get_schema_info(
 
     except Exception as e:
         logger.exception(f"Schema info error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.post("/save")
@@ -165,7 +164,7 @@ async def save_widget(
         raise
     except Exception as e:
         logger.exception(f"Save widget error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.get("/widgets")
@@ -191,7 +190,7 @@ async def list_widgets(
 
     except Exception as e:
         logger.exception(f"List widgets error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.get("/widgets/{widget_id}")
@@ -216,13 +215,13 @@ async def get_widget(
 
         return success(SavedWidgetRead.model_validate(widget))
 
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid widget ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid widget ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Get widget error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.patch("/widgets/{widget_id}")
@@ -263,13 +262,13 @@ async def update_widget(
 
         return success(SavedWidgetRead.model_validate(updated))
 
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid widget ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid widget ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Update widget error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.delete("/widgets/{widget_id}")
@@ -295,10 +294,10 @@ async def delete_widget(
 
         return success({"message": "Widget deleted"})
 
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid widget ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid widget ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Delete widget error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e

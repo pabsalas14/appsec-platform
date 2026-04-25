@@ -36,7 +36,7 @@ async def get_service_release_operacion_config(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """C1–C3: transiciones, orden kanban y ajuste de flujo (lectura) desde system_settings."""
+    """C1-C3: transiciones, orden kanban y ajuste de flujo (lectura) desde system_settings."""
     tr = await get_json_setting(db, "flujo.transiciones_liberacion", None)
     kn = await get_json_setting(db, "kanban.liberacion", None)
     return success(
@@ -100,6 +100,7 @@ async def list_service_releases(
 ):
     """Lista releases del usuario. Filtros §13.2 (liberaciones flujo)."""
     from sqlalchemy import and_
+
     from app.models.service_release import ServiceRelease
 
     cond = [

@@ -5,10 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.logging import logger
 from app.database import Base
 
 
@@ -104,7 +102,7 @@ class QueryValidator:
             # Validate on_field is a valid FK or common field
             # (simplified: we're checking it looks like a field name)
             if not on_field or not isinstance(on_field, str):
-                self.errors.append(f"Invalid join condition: on_field must be a string")
+                self.errors.append("Invalid join condition: on_field must be a string")
                 return False
 
         return True
@@ -169,10 +167,7 @@ class QueryValidator:
             return False
 
         # Allow: alphanumeric, parentheses, commas, spaces, underscores, quotes
-        if not re.match(r"^[a-zA-Z0-9_\(\),\s\-\+\*/\.\"']+$", formula):
-            return False
-
-        return True
+        return re.match(r"^[a-zA-Z0-9_\(\),\s\-\+\*/\.\"']+$", formula)
 
     async def _validate_filters(self, base_table: str, filters: list[dict[str, Any]]) -> bool:
         """Validate filter conditions (field exists, operator valid, value type check)."""
@@ -195,7 +190,7 @@ class QueryValidator:
         for filter_item in filters:
             field = filter_item.get("field")
             operator = filter_item.get("operator", "=").upper()
-            value = filter_item.get("value")
+            filter_item.get("value")
 
             if field not in valid_columns:
                 self.errors.append(f"Filter field '{field}' does not exist in table '{base_table}'")

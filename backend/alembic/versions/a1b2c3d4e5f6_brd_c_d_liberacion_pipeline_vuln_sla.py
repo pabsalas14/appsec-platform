@@ -1,4 +1,4 @@
-"""BRD fases C–D: contexto liberación Jira, pipeline L1 (scan, mes, DAST) y D2 soporta métricas.
+"""BRD fases C-D: contexto liberación Jira, pipeline L1 (scan, mes, DAST) y D2 soporta métricas.
 
 - service_releases: `contexto_liberacion` (JSONB), `fecha_entrada` (tz)
 - pipeline_releases: `scan_id`, `mes`, `activo_web_id` (DAST vía activo web), `liberado_con_vulns_criticas_o_altas` (bool)

@@ -9,12 +9,11 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Optional, cast
+from enum import Enum, StrEnum
+from typing import Any, cast
 
-import aiohttp
 import httpx
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.ia_config import IAConfigRead, IAProvider
@@ -23,7 +22,7 @@ from app.services.json_setting import get_json_setting
 logger = logging.getLogger(__name__)
 
 
-class AIProviderType(str, Enum):
+class AIProviderType(StrEnum):
     OLLAMA = "ollama"
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
@@ -33,7 +32,7 @@ class AIProviderType(str, Enum):
 class AIResponse(BaseModel):
     """Unified response from any AI provider"""
     content: str
-    tokens_used: Optional[int] = None
+    tokens_used: int | None = None
     provider: str
     timestamp: Any
 
@@ -68,9 +67,9 @@ class AIProvider(ABC):
     async def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate response from prompt"""
         pass
@@ -92,7 +91,7 @@ class AIProvider(ABC):
     async def _retry_with_backoff(
         self,
         coro: Any,
-        max_retries: int = None,
+        max_retries: int | None = None,
     ) -> Any:
         """Retry with exponential backoff"""
         retries = max_retries or self.max_retries
@@ -101,7 +100,7 @@ class AIProvider(ABC):
         for attempt in range(retries):
             try:
                 return await asyncio.wait_for(coro, timeout=self.timeout_seconds)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(f"Attempt {attempt + 1} timeout - provider took > {self.timeout_seconds}s")
                 if attempt == retries - 1:
                     raise
@@ -132,9 +131,9 @@ class OllamaProvider(AIProvider):
     async def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate using Ollama"""
 
@@ -210,9 +209,9 @@ class AnthropicProvider(AIProvider):
     async def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate using Anthropic"""
 
@@ -297,9 +296,9 @@ class OpenAIProvider(AIProvider):
     async def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate using OpenAI"""
 
@@ -379,9 +378,9 @@ class OpenRouterProvider(AIProvider):
     async def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
     ) -> AIResponse:
         """Generate using OpenRouter"""
 
@@ -533,7 +532,7 @@ async def run_prompt(
                 temperature=cfg.temperatura,
                 max_tokens=cfg.max_tokens,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("ia.run_prompt.ollama_failed", extra={"event": "ia.run_prompt.ollama_failed"})
             raise IAProviderError(str(exc)) from exc
         return RunPromptResult(content=r.content, provider=r.provider, model=cfg.modelo)
@@ -558,7 +557,7 @@ async def run_prompt(
                 temperature=cfg.temperatura,
                 max_tokens=cfg.max_tokens,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("ia.run_prompt.remote_failed", extra={"event": "ia.run_prompt.remote_failed"})
             raise IAProviderError(str(exc)) from exc
         return RunPromptResult(content=r.content, provider=r.provider, model=cfg.modelo)

@@ -1,4 +1,4 @@
-"""BRD fases A–B: sub_estado SAST mensual, metadatos_motor SAST/DAST, campos MDA en sesión TM.
+"""BRD fases A-B: sub_estado SAST mensual, metadatos_motor SAST/DAST, campos MDA en sesión TM.
 
 Revision ID: d7e9a1b2c3f4
 Revises: b4c2d0e1f3a2

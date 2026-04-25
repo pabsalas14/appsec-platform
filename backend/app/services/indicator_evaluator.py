@@ -39,17 +39,11 @@ def _apply_filters(model_col: dict[str, InstrumentedAttribute], filters: list[di
             continue
         col = model_col[field]
         if op in ("in", "in_list") and isinstance(value, (list, tuple)) and value:
-            if field == "severidad":
-                vals = [_norm_sev(str(x)) for x in value]
-            else:
-                vals = [str(x) for x in value]
+            vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(col.in_(vals))
             continue
         if op in ("not_in", "not_in_list") and isinstance(value, (list, tuple)) and value:
-            if field == "severidad":
-                vals = [_norm_sev(str(x)) for x in value]
-            else:
-                vals = [str(x) for x in value]
+            vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(~col.in_(vals))
             continue
         if op == "eq" and isinstance(value, (list, tuple)) and value and field in (
@@ -57,10 +51,7 @@ def _apply_filters(model_col: dict[str, InstrumentedAttribute], filters: list[di
             "estado",
             "fuente",
         ):
-            if field == "severidad":
-                vals = [_norm_sev(str(x)) for x in value]
-            else:
-                vals = [str(x) for x in value]
+            vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(col.in_(vals))
             continue
         if field in ("severidad", "estado", "fuente"):

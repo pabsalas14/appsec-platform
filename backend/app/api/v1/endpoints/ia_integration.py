@@ -3,29 +3,28 @@ Phase 22-24: IA Integration Endpoints
 Threat Modeling (STRIDE/DREAD) and FP Triage
 """
 
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.api.deps_ownership import require_role
-from app.core.response import success, error
+from app.core.response import error, success
 from app.models.sesion_threat_modeling import SesionThreatModeling
-from app.models.system_setting import SystemSetting as ConfiguracionIA
 from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas import (
+    AmenazaRead,
     ConfiguracionIARead,
     ConfiguracionIAUpdate,
-    AmenazaRead,
     VulnerabilidadRead,
 )
+from app.services.fp_triage_service import FPTriageService
+from app.services.ia_config_service import ConfiguracionIAService
 from app.services.ia_provider import (
     AIProviderType,
     get_ai_provider,
 )
 from app.services.threat_modeling_service import ThreatModelingService
-from app.services.fp_triage_service import FPTriageService
-from app.services.ia_config_service import ConfiguracionIAService
 
 router = APIRouter()
 
@@ -42,7 +41,7 @@ router = APIRouter()
 )
 async def suggest_threats_ia(
     sesion_id: str,
-    contexto_adicional: Optional[str] = None,
+    contexto_adicional: str | None = None,
     dry_run: bool = False,
     db: AsyncSession = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
@@ -92,7 +91,7 @@ async def suggest_threats_ia(
         )
 
     except Exception as e:
-        return error(status_code=500, message=f"IA threat generation failed: {str(e)}")
+        return error(status_code=500, message=f"IA threat generation failed: {e!s}")
 
 
 @router.post(
@@ -102,8 +101,8 @@ async def suggest_threats_ia(
 )
 async def classify_finding_fp(
     vuln_id: str,
-    code_snippet: Optional[str] = None,
-    repo_context: Optional[str] = None,
+    code_snippet: str | None = None,
+    repo_context: str | None = None,
     dry_run: bool = False,
     db: AsyncSession = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
@@ -153,7 +152,7 @@ async def classify_finding_fp(
         )
 
     except Exception as e:
-        return error(status_code=500, message=f"FP triage failed: {str(e)}")
+        return error(status_code=500, message=f"FP triage failed: {e!s}")
 
 
 @router.post(
@@ -197,7 +196,7 @@ async def approve_triage_suggestion(
         )
 
     except Exception as e:
-        return error(status_code=500, message=f"Failed to approve triage: {str(e)}")
+        return error(status_code=500, message=f"Failed to approve triage: {e!s}")
 
 
 @router.get(

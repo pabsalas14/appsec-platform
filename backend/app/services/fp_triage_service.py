@@ -5,18 +5,14 @@ IA-assisted classification of SAST/DAST findings
 
 import json
 import logging
-from typing import Optional
 from datetime import datetime
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Vulnerabilidad, HistorialVulnerabilidad
+from app.models import HistorialVulnerabilidad, Vulnerabilidad
 from app.schemas.vulnerabilidad import VulnerabilidadRead
-from app.services.ia_provider import (
-    AIProvider,
-    ClassificationResponse,
-)
+from app.services.ia_provider import AIProvider
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +33,8 @@ class FPTriageService:
     async def classify_finding(
         self,
         vulnerabilidad_id: str,
-        code_snippet: Optional[str] = None,
-        repo_context: Optional[str] = None,
+        code_snippet: str | None = None,
+        repo_context: str | None = None,
         dry_run: bool = False,
     ) -> dict:
         """Use IA to classify finding as FP/Review/Confirmed"""
@@ -107,8 +103,8 @@ class FPTriageService:
     def _build_triage_prompt(
         self,
         vulnerability: Vulnerabilidad,
-        code_snippet: Optional[str],
-        repo_context: Optional[str],
+        code_snippet: str | None,
+        repo_context: str | None,
     ) -> str:
         """Build prompt for FP triage"""
 
@@ -231,7 +227,7 @@ class FPTriageService:
                 estado_anterior=vulnerability.estado,
                 estado_nuevo="Cerrada",
                 usuario_id=user_id,
-                comentario=f"Closed as False Positive (confirmed by analyst)",
+                comentario="Closed as False Positive (confirmed by analyst)",
                 tipo_cambio="FP_CLOSURE",
             )
 
@@ -244,7 +240,7 @@ class FPTriageService:
                 estado_anterior=vulnerability.estado,
                 estado_nuevo=vulnerability.estado,
                 usuario_id=user_id,
-                comentario=f"Confirmed as real vulnerability by analyst",
+                comentario="Confirmed as real vulnerability by analyst",
                 tipo_cambio="TRIAGE_CONFIRMED",
             )
 
@@ -256,8 +252,8 @@ class FPTriageService:
     async def batch_triage_findings(
         self,
         vulnerabilidad_ids: list[str],
-        code_snippets: Optional[dict[str, str]] = None,
-        repo_context: Optional[str] = None,
+        code_snippets: dict[str, str] | None = None,
+        repo_context: str | None = None,
     ) -> list[dict]:
         """Batch classify multiple findings"""
 

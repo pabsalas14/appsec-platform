@@ -1,7 +1,7 @@
 """Add CustomDashboard, CustomDashboardAccess, DashboardConfig (Fase 2)
 
 Revision ID: b2c3d4e5f6a7
-Revises: a1b2c3d4e5f6
+Revises: b2c3d4e5f6a8
 Create Date: 2026-04-25 16:30:00.000000
 """
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "b2c3d4e5f6a7"
-down_revision = "a1b2c3d4e5f6"
+down_revision = "b2c3d4e5f6a8"
 branch_labels = None
 depends_on = None
 
@@ -84,11 +84,11 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_dashboard_config_role_id"), table_name="dashboard_config")
     op.drop_index(op.f("ix_dashboard_config_dashboard_id"), table_name="dashboard_config")
     op.drop_table("dashboard_config")
-    
+
     op.drop_index(op.f("ix_custom_dashboard_access_user_id"), table_name="custom_dashboard_access")
     op.drop_index(op.f("ix_custom_dashboard_access_role_id"), table_name="custom_dashboard_access")
     op.drop_index(op.f("ix_custom_dashboard_access_dashboard_id"), table_name="custom_dashboard_access")
     op.drop_table("custom_dashboard_access")
-    
+
     op.drop_index(op.f("ix_custom_dashboards_created_by"), table_name="custom_dashboards")
     op.drop_table("custom_dashboards")

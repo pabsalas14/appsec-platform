@@ -46,9 +46,9 @@ from app.api.v1 import (
     hito_iniciativa,
     indicador_formula,
     indicadores,
-    madurez,
     # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
     iniciativa,
+    madurez,
     notificacion,
     # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
     organizacion,

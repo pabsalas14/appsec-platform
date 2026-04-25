@@ -1,6 +1,5 @@
 """Dashboard Builder router — endpoints for custom dashboard creation and management (Fase 2)."""
 
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,14 +9,11 @@ from app.api.deps import get_current_user, get_db
 from app.core.logging import logger
 from app.core.response import paginated, success
 from app.models.user import User
-from app.models.custom_dashboard import CustomDashboard
-from app.models.custom_dashboard_access import CustomDashboardAccess
-from app.models.dashboard_config import DashboardConfig
-from app.schemas.custom_dashboard import CustomDashboardCreate, CustomDashboardUpdate, CustomDashboardRead
-from app.schemas.custom_dashboard_access import CustomDashboardAccessCreate, CustomDashboardAccessUpdate, CustomDashboardAccessRead
-from app.schemas.dashboard_config import DashboardConfigCreate, DashboardConfigUpdate, DashboardConfigRead
-from app.services.custom_dashboard_service import custom_dashboard_svc
+from app.schemas.custom_dashboard import CustomDashboardCreate, CustomDashboardRead, CustomDashboardUpdate
+from app.schemas.custom_dashboard_access import CustomDashboardAccessCreate, CustomDashboardAccessRead
+from app.schemas.dashboard_config import DashboardConfigCreate, DashboardConfigRead
 from app.services.custom_dashboard_access_service import custom_dashboard_access_svc
+from app.services.custom_dashboard_service import custom_dashboard_svc
 from app.services.dashboard_config_service import dashboard_config_svc
 
 router = APIRouter(prefix="/dashboard-builder", tags=["Admin · Dashboard Builder"])
@@ -43,7 +39,7 @@ async def create_dashboard(
         return success(CustomDashboardRead.model_validate(result))
     except Exception as e:
         logger.exception(f"Create dashboard error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.get("/dashboards")
@@ -61,7 +57,7 @@ async def list_dashboards(
         return paginated(items, total, skip, limit)
     except Exception as e:
         logger.exception(f"List dashboards error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.get("/dashboards/{dashboard_id}")
@@ -77,13 +73,13 @@ async def get_dashboard(
         if not dashboard:
             raise HTTPException(status_code=404, detail="Dashboard not found")
         return success(CustomDashboardRead.model_validate(dashboard))
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid dashboard ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid dashboard ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Get dashboard error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.patch("/dashboards/{dashboard_id}")
@@ -101,7 +97,7 @@ async def update_dashboard(
             raise HTTPException(status_code=404, detail="Dashboard not found")
         if dashboard.created_by != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
-        
+
         updated = await custom_dashboard_svc.update(
             db=db,
             actor_id=current_user.id,
@@ -109,13 +105,13 @@ async def update_dashboard(
             data=data,
         )
         return success(CustomDashboardRead.model_validate(updated))
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid dashboard ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid dashboard ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Update dashboard error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 @router.delete("/dashboards/{dashboard_id}")
@@ -132,16 +128,16 @@ async def delete_dashboard(
             raise HTTPException(status_code=404, detail="Dashboard not found")
         if dashboard.created_by != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
-        
+
         await custom_dashboard_svc.delete(db=db, actor_id=current_user.id, id=dashboard_uuid)
         return success({"message": "Dashboard deleted"})
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid dashboard ID")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid dashboard ID") from e
     except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Delete dashboard error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 # ─── DASHBOARD ACCESS ENDPOINTS ───
@@ -164,7 +160,7 @@ async def grant_access(
         return success(CustomDashboardAccessRead.model_validate(result))
     except Exception as e:
         logger.exception(f"Grant access error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
 
 
 # ─── DASHBOARD CONFIG ENDPOINTS ───
@@ -187,4 +183,4 @@ async def configure_widget(
         return success(DashboardConfigRead.model_validate(result))
     except Exception as e:
         logger.exception(f"Configure widget error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e

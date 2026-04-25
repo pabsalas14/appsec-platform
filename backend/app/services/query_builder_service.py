@@ -7,7 +7,6 @@ from typing import Any
 
 from sqlalchemy import and_, inspect, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
 from sqlalchemy.sql import ColumnElement
 
 from app.core.logging import logger
@@ -27,7 +26,7 @@ class QueryBuilderService:
 
     async def validate_query(self, config: dict[str, Any]) -> dict[str, Any]:
         """Validate a query configuration before execution."""
-        is_valid = await self.validator.validate(config)
+        await self.validator.validate(config)
         return self.validator.get_validation_result()
 
     async def build_query(self, config: dict[str, Any]) -> select:
@@ -116,7 +115,7 @@ class QueryBuilderService:
 
             # Convert to dicts for JSON serialization
             row_dicts = [
-                {col: getattr(row, col) for col in inspect(row.__class__).columns.keys()}
+                {col: getattr(row, col) for col in inspect(row.__class__).columns}
                 for row in rows
                 if row is not None
             ]
@@ -131,7 +130,7 @@ class QueryBuilderService:
                 },
             }
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {
                 "rows": [],
                 "labels": [],
