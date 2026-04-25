@@ -335,6 +335,41 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 | **Performance** | ✅ 100% | Indexing, caching, code splitting, compression, monitoring (targets: <2.5s LCP, <200ms API) |
 | **Auditoría** | ✅ 100% | Soft delete universal, hash chain verificable, 45+ servicios logueados, A1-A8 rules |
 
+### 🚀 En Desarrollo (Fases 1-2, Abril 2026)
+
+| Fase | Componente | Estado | Avance |
+|------|-----------|--------|--------|
+| **FASE 1: Query Builder** | Backend | ✅ DONE | 100% — SavedWidget model, QueryValidator service, endpoints (/validate, /execute, /schema-info) |
+| **FASE 1: Query Builder** | Frontend | ✅ DONE | 100% — QueryBuilder.tsx, QueryBuilderForm.tsx, hooks (useQueryBuilder, useQueryValidation), formula-engine.ts, tests (3 archivos), page (/dashboard/query-builder) |
+| **FASE 1: Query Builder** | Integration | ✅ DONE | 100% — Models exported, routers registered, Alembic migrations, soft delete configured |
+| **FASE 2: Dashboard Builder** | Backend | 🔄 PENDING | 0% — Endpoints needed (~35 total) para 9 dashboards |
+| **FASE 2: Dashboard Builder** | Frontend Base | 🚀 IN PROGRESS | 80% — Schemas (✅), Hooks (✅), 10 componentes UI (✅), DashboardBuilder editor (✅), Pages (✅) |
+| **FASE 2: Dashboard Builder** | UI Components | ✅ DONE | 100% — GaugeChart, SemaforoSla, HistoricoMensualGrid, HorizontalBarRanking, DrilldownBreadcrumb, SeverityChip, StatusChip, ProgressBarSemaforo, SidePanel, AreaLineChart |
+| **FASE 2: Dashboard Builder** | Pages | ✅ DONE | 100% — /dashboards (list), /dashboards/builder (create), /dashboards/[id] (view), /dashboards/[id]/edit (edit) |
+| **FASE 2: 9 Dashboards** | Dashboard 1-9 | 🔄 PENDING | 0% — Implementations (Ejecutivo, Equipo, Programas, Vulns 4-drill, Concentrado, Operación, Kanban, Iniciativas, Temas) |
+
+### 📊 Progreso Detallado — Sesión Actual
+
+**Sesión 2 (Fase 2 Frontend Base):**
+- [✅] `frontend/src/schemas/dashboard-schema.ts` — Validaciones zod
+- [✅] `frontend/src/hooks/useDashboard.ts` — CRUD dashboard
+- [✅] `frontend/src/hooks/useDrilldown.ts` — Multi-level navigation
+- [✅] `frontend/src/hooks/useWidgetData.ts` — Widget data fetching
+- [✅] `frontend/src/components/charts/` — 10 componentes (GaugeChart, SemaforoSla, HistoricoMensualGrid, HorizontalBarRanking, DrilldownBreadcrumb, SeverityChip, StatusChip, ProgressBarSemaforo, SidePanel, AreaLineChart)
+- [✅] `frontend/src/components/DashboardBuilder.tsx` — Drag-drop editor con react-grid-layout
+- [✅] `frontend/src/types/dashboard.ts` — Tipos compartidos
+- [✅] `frontend/src/app/(dashboard)/dashboards/page.tsx` — Lista de dashboards
+- [✅] `frontend/src/app/(dashboard)/dashboards/builder/page.tsx` — Crear nuevo
+- [✅] `frontend/src/app/(dashboard)/dashboards/[id]/page.tsx` — Ver dashboard
+- [✅] `frontend/src/app/(dashboard)/dashboards/[id]/edit/page.tsx` — Editar dashboard
+- [✅] Commit: `f9f5285` — "feat: Fase 2 Frontend - Dashboard Builder arquitectura base..."
+
+**Próximos pasos:**
+- Backend: Implementar endpoints para cada dashboard (~35 endpoints)
+- Frontend: Implementar 9 dashboard pages (Dashboard 1-9)
+- Testing: E2E tests con Playwright para cada dashboard
+- Optimization: Performance tuning, caching, code splitting
+
 ### 📋 Rama de Testing (frontend-testing)
 
 Rama paralela a `main` con:
