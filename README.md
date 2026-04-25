@@ -24,7 +24,7 @@
 | **Gobierno (BRD §3)** | Subdirección → Gerencia → Organización → Célula; inventario (repositorios, activos web, servicios, apps móviles, tipos de prueba, controles de seguridad). |
 | **Transversal** | Flujos de estatus, indicadores con fórmulas JSON, filtros guardados, configuración de widgets de dashboard, changelog, uploads por usuario. |
 | **Notificaciones in-app (G2)** | API `/notificacions` (listado, marcar leídas, PBAC `notifications.view` / `notifications.edit`) y campana en la barra superior. |
-| **Inventario CSV (A2/A3)** | En UI: exportar, descargar plantilla e importar en **Repositorios** y **Activos web**; permisos `inventory.repos.*` / `inventory.web_assets.*`. |
+| **Catálogos e inventario CSV (A2/A3)** | En UI: exportar, descargar plantilla e importar en `subdireccions`, `gerencias`, `organizacions`, `celulas`, `servicios`, `tipo_pruebas`, `control_seguridads`, `repositorios` y `activo_webs` (con permisos por dominio y auditoría). |
 | **Dashboard home** | Tarjetas métricas con enlace a detalle (tareas, vulnerabilidades con filtros en URL, releases, tableros); **filtros jerárquicos en la URL** (compartir vista / back-forward) además de localStorage; índice `/dashboards` reenvía la query a cada panel. |
 | **Audit logs (admin)** | Listado con **filtros y paginación reflejados en la URL** (`action`, `entity`, `actor`, fechas, `page`). |
 | **IA opcional** | Configuración global (`/api/v1/admin/ia-config`) y sugerencias en sesiones de threat modeling; el producto **funciona sin IA**. |
@@ -247,6 +247,18 @@ El servicio `backend` en Compose **no monta** el directorio `backend/` del host 
 ## API (envelope)
 
 Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (p. ej. `request_id`). Ver `app/core/response.py` y manejadores en `app/main.py`.
+
+---
+
+## Estado BRD (avance)
+
+| Fase | Estado | Evidencia técnica en repo |
+|------|--------|---------------------------|
+| **A — Catálogos e inventario (§2–§3)** | **Cerrada** | UI homogénea (tabla, búsqueda, orden, paginación), import/template/export CSV en catálogos de §3, y test de cadena org ampliado (`test_brd_a4_org_chain`). |
+| **B — Programas y scoring (§4–§5)** | **Cerrada** | Scoring mensual configurable + endpoint de config (`/actividad_mensual_sasts/config/scoring`), sync automático/manual con hallazgos SAST, `metadatos_motor` en programas SAST/DAST/Source Code, sesión TM con backlog/plan/activo secundario + activos múltiples y adjuntos JSON. |
+| **C → H** | En curso | Plan de trabajo y criterios de aceptación en `docs/brd/PLAN_CUMPLIMIENTO_100_BRD.md`. |
+
+Última corrida de referencia tras cierre A/B: `make test` -> **511 passed, 31 skipped, 1 warning**.
 
 ---
 
