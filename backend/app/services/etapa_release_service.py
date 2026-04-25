@@ -10,7 +10,7 @@ Reglas:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -99,7 +99,7 @@ class EtapaReleaseService(
 
         record.estado = "Aprobada"
         record.aprobador_id = aprobador_id
-        record.fecha_completada = datetime.now(timezone.utc)
+        record.fecha_completada = datetime.now(UTC)
         record.notas = notas
 
         await db.flush()
@@ -145,7 +145,7 @@ class EtapaReleaseService(
 
         record.estado = "Rechazada"
         record.aprobador_id = aprobador_id
-        record.fecha_completada = datetime.now(timezone.utc)
+        record.fecha_completada = datetime.now(UTC)
         record.justificacion = justificacion
         record.notas = notas
 

@@ -7,10 +7,10 @@ Aplica SoftDeleteMixin (A2) y audit trail (A5).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -62,11 +62,11 @@ class HallazgoPipeline(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    pipeline_release: Mapped["PipelineRelease"] = relationship(back_populates="hallazgos")
-    vulnerabilidad: Mapped["Vulnerabilidad | None"] = relationship(
+    pipeline_release: Mapped[PipelineRelease] = relationship(back_populates="hallazgos")
+    vulnerabilidad: Mapped[Vulnerabilidad | None] = relationship(
         "Vulnerabilidad", back_populates="hallazgos_pipeline", lazy="noload"
     )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, text
@@ -48,12 +48,12 @@ class TemaEmergente(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    actualizaciones: Mapped[list["ActualizacionTema"]] = relationship(
+    actualizaciones: Mapped[list[ActualizacionTema]] = relationship(
         "ActualizacionTema", back_populates="tema", lazy="noload"
     )
-    cierres: Mapped[list["CierreConclusion"]] = relationship(
+    cierres: Mapped[list[CierreConclusion]] = relationship(
         "CierreConclusion", back_populates="tema", lazy="noload"
     )

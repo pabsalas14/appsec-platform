@@ -1,6 +1,5 @@
 """HallazgoMAST CRUD endpoints — MAST findings (Módulo 4)."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -9,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.hallazgo_mast import HallazgoMAST
+from app.models.user import User
 from app.schemas.hallazgo_mast import HallazgoMASTCreate, HallazgoMASTRead, HallazgoMASTUpdate
 from app.services.hallazgo_mast_service import hallazgo_mast_svc
 
@@ -19,7 +18,7 @@ router = APIRouter()
 
 @router.get("")
 async def list_hallazgo_masts(
-    ejecucion_mast_id: Optional[UUID] = Query(None, description="Filter by ejecucion_mast_id"),
+    ejecucion_mast_id: UUID | None = Query(None, description="Filter by ejecucion_mast_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

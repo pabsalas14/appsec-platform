@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HitoIniciativaBase(BaseModel):
     """Base schema for HitoIniciativa."""
 
     nombre: str = Field(..., min_length=1, max_length=255)
-    descripcion: Optional[str] = Field(None, max_length=2000)
+    descripcion: str | None = Field(None, max_length=2000)
     fecha_objetivo: datetime = Field(...)
     iniciativa_id: UUID = Field(...)
 
@@ -27,9 +26,9 @@ class HitoIniciativaCreate(HitoIniciativaBase):
 class HitoIniciativaUpdate(BaseModel):
     """Schema for updating HitoIniciativa (all fields optional)."""
 
-    nombre: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = Field(None, max_length=2000)
-    fecha_objetivo: Optional[datetime] = None
+    nombre: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = Field(None, max_length=2000)
+    fecha_objetivo: datetime | None = None
 
 
 class HitoIniciativaRead(HitoIniciativaBase):

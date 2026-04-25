@@ -4,7 +4,7 @@ Enforces A5 compliance (Cifrado At-Rest para credenciales) by transparently
 encrypting values going into the database and decrypting them on load.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.types import String, TypeDecorator
@@ -15,7 +15,7 @@ from app.config import settings
 class _EncryptionProvider:
     """Lazy-loaded Fernet provider using the app config."""
 
-    _fernet: Optional[Fernet] = None
+    _fernet: Fernet | None = None
 
     @classmethod
     def get(cls) -> Fernet:
@@ -53,13 +53,13 @@ class EncryptedString(TypeDecorator):
     impl = String
     cache_ok = True
 
-    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[str]:
+    def process_bind_param(self, value: str | None, dialect: Any) -> str | None:
         """Convert from Python -> DB (Encrypts the value)"""
         if value is None:
             return None
         return encrypt_string(value)
 
-    def process_result_value(self, value: Optional[str], dialect: Any) -> Optional[str]:
+    def process_result_value(self, value: str | None, dialect: Any) -> str | None:
         """Convert from DB -> Python (Decrypts the value)"""
         if value is None:
             return None

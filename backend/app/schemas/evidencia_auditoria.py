@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EvidenciaAuditoriaBase(BaseModel):
@@ -28,10 +27,10 @@ class EvidenciaAuditoriaCreate(EvidenciaAuditoriaBase):
 class EvidenciaAuditoriaUpdate(BaseModel):
     """Schema for updating EvidenciaAuditoria (all fields optional)."""
 
-    nombre_archivo: Optional[str] = Field(None, min_length=1, max_length=255)
-    tipo_evidencia: Optional[str] = Field(None, min_length=1, max_length=100)
-    url_archivo: Optional[str] = Field(None, max_length=512)
-    hash_sha256: Optional[str] = Field(None, max_length=64)
+    nombre_archivo: str | None = Field(None, min_length=1, max_length=255)
+    tipo_evidencia: str | None = Field(None, min_length=1, max_length=100)
+    url_archivo: str | None = Field(None, max_length=512)
+    hash_sha256: str | None = Field(None, max_length=64)
 
 
 class EvidenciaAuditoriaRead(EvidenciaAuditoriaBase):

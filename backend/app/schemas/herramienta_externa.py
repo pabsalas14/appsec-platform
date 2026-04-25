@@ -1,11 +1,10 @@
 """HerramientaExterna schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-
 
 ValidTipos = Literal['SAST', 'DAST', 'SCA', 'TM', 'MAST', 'Terceros', 'CI/CD', 'BugBounty', 'VulnerabilityManager']
 
@@ -13,20 +12,20 @@ ValidTipos = Literal['SAST', 'DAST', 'SCA', 'TM', 'MAST', 'Terceros', 'CI/CD', '
 class HerramientaExternaBase(BaseModel):
     nombre: str = Field(..., max_length=255)
     tipo: ValidTipos
-    url_base: Optional[str] = Field(None, max_length=255)
+    url_base: str | None = Field(None, max_length=255)
 
 
 class HerramientaExternaCreate(HerramientaExternaBase):
     """Fields required to create a herramienta_externa. user_id is set from auth context."""
-    api_token: Optional[str] = Field(None, max_length=255)
+    api_token: str | None = Field(None, max_length=255)
 
 
 class HerramientaExternaUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = Field(None, max_length=255)
-    tipo: Optional[ValidTipos] = None
-    url_base: Optional[str] = Field(None, max_length=255)
-    api_token: Optional[str] = Field(None, max_length=255)
+    nombre: str | None = Field(None, max_length=255)
+    tipo: ValidTipos | None = None
+    url_base: str | None = Field(None, max_length=255)
+    api_token: str | None = Field(None, max_length=255)
 
 
 class HerramientaExternaRead(HerramientaExternaBase):
@@ -35,10 +34,10 @@ class HerramientaExternaRead(HerramientaExternaBase):
 
     id: UUID
     user_id: UUID
-    api_token: Optional[str] = None
+    api_token: str | None = None
     created_at: datetime
     updated_at: datetime
-    
+
     @model_validator(mode='after')
     def mask_api_token(self) -> 'HerramientaExternaRead':
         """[A7] Data Masking Frontend — Nunca exponer credenciales en crudo.

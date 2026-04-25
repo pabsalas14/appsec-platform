@@ -7,7 +7,6 @@ No se expone en Create — se calcula automáticamente.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -16,11 +15,11 @@ from pydantic import BaseModel, ConfigDict, Field
 class EvidenciaRemediacionBase(BaseModel):
     vulnerabilidad_id: UUID
     descripcion: str = Field(..., min_length=3)
-    filename: Optional[str] = Field(None, max_length=255)
-    content_type: Optional[str] = Field(None, max_length=128)
+    filename: str | None = Field(None, max_length=255)
+    content_type: str | None = Field(None, max_length=128)
     # sha256 es read-only desde la API (calculado en service, A3)
-    sha256: Optional[str] = Field(None, max_length=64)
-    file_size: Optional[int] = Field(None, ge=0)
+    sha256: str | None = Field(None, max_length=64)
+    file_size: int | None = Field(None, ge=0)
 
 
 class EvidenciaRemediacionCreate(BaseModel):
@@ -29,16 +28,16 @@ class EvidenciaRemediacionCreate(BaseModel):
     """
     vulnerabilidad_id: UUID
     descripcion: str = Field(..., min_length=3)
-    filename: Optional[str] = Field(None, max_length=255)
-    content_type: Optional[str] = Field(None, max_length=128)
+    filename: str | None = Field(None, max_length=255)
+    content_type: str | None = Field(None, max_length=128)
     # sha256 puede venir pre-calculado por el cliente o lo calcula el service
-    sha256: Optional[str] = Field(None, max_length=64)
-    file_size: Optional[int] = Field(None, ge=0)
+    sha256: str | None = Field(None, max_length=64)
+    file_size: int | None = Field(None, ge=0)
 
 
 class EvidenciaRemediacionUpdate(BaseModel):
     """Solo descripción es actualizable — el archivo y hash son inmutables."""
-    descripcion: Optional[str] = Field(None, min_length=3)
+    descripcion: str | None = Field(None, min_length=3)
 
 
 class EvidenciaRemediacionRead(EvidenciaRemediacionBase):

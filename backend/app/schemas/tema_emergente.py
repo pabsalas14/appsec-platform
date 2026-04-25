@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TemaEmergenteBase(BaseModel):
@@ -18,7 +17,7 @@ class TemaEmergenteBase(BaseModel):
     impacto: str = Field(..., min_length=1, max_length=50)
     estado: str = Field(..., min_length=1, max_length=100)
     fuente: str = Field(..., min_length=1, max_length=255)
-    celula_id: Optional[UUID] = None
+    celula_id: UUID | None = None
 
 
 class TemaEmergenteCreate(TemaEmergenteBase):
@@ -30,13 +29,13 @@ class TemaEmergenteCreate(TemaEmergenteBase):
 class TemaEmergenteUpdate(BaseModel):
     """Schema for updating TemaEmergente (all fields optional)."""
 
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = Field(None, min_length=1)
-    tipo: Optional[str] = Field(None, min_length=1, max_length=100)
-    impacto: Optional[str] = Field(None, min_length=1, max_length=50)
-    estado: Optional[str] = Field(None, min_length=1, max_length=100)
-    fuente: Optional[str] = Field(None, min_length=1, max_length=255)
-    celula_id: Optional[UUID] = None
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = Field(None, min_length=1)
+    tipo: str | None = Field(None, min_length=1, max_length=100)
+    impacto: str | None = Field(None, min_length=1, max_length=50)
+    estado: str | None = Field(None, min_length=1, max_length=100)
+    fuente: str | None = Field(None, min_length=1, max_length=255)
+    celula_id: UUID | None = None
 
 
 class TemaEmergenteRead(TemaEmergenteBase):
@@ -46,6 +45,6 @@ class TemaEmergenteRead(TemaEmergenteBase):
 
     id: UUID
     user_id: UUID
-    celula_id: Optional[UUID] = None
+    celula_id: UUID | None = None
     created_at: datetime
     updated_at: datetime

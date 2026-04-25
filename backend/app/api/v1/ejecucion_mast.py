@@ -1,6 +1,5 @@
 """EjecucionMAST CRUD endpoints — MAST execution (Módulo 4)."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -9,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.ejecucion_mast import EjecucionMAST
+from app.models.user import User
 from app.schemas.ejecucion_mast import EjecucionMASTCreate, EjecucionMASTRead, EjecucionMASTUpdate
 from app.services.ejecucion_mast_service import ejecucion_mast_svc
 
@@ -19,7 +18,7 @@ router = APIRouter()
 
 @router.get("")
 async def list_ejecucion_masts(
-    aplicacion_movil_id: Optional[UUID] = Query(None, description="Filter by aplicacion_movil_id"),
+    aplicacion_movil_id: UUID | None = Query(None, description="Filter by aplicacion_movil_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

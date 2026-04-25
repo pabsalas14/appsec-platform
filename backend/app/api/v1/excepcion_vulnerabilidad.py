@@ -23,8 +23,8 @@ from app.schemas.excepcion_vulnerabilidad import (
     ExcepcionVulnerabilidadRead,
     ExcepcionVulnerabilidadUpdate,
 )
-from app.services.excepcion_vulnerabilidad_service import excepcion_vulnerabilidad_svc
 from app.services.audit_service import record as audit_record
+from app.services.excepcion_vulnerabilidad_service import excepcion_vulnerabilidad_svc
 
 router = APIRouter()
 

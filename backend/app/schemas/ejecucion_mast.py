@@ -1,11 +1,9 @@
 """EjecucionMAST schemas — MAST execution for mobile app (Módulo 4)."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
-
 
 AMBIENTES = {"Desarrollo", "Staging", "QA", "Produccion"}
 RESULTADOS = {"Completada", "En Progreso", "Cancelada", "Error"}
@@ -17,7 +15,7 @@ class EjecucionMASTBase(BaseModel):
     fecha_inicio: datetime
     fecha_fin: datetime
     resultado: str
-    url_reporte: Optional[str] = None
+    url_reporte: str | None = None
 
     @field_validator("ambiente")
     @classmethod
@@ -48,23 +46,23 @@ class EjecucionMASTCreate(EjecucionMASTBase):
 
 class EjecucionMASTUpdate(BaseModel):
     """All fields optional for partial updates."""
-    aplicacion_movil_id: Optional[UUID] = None
-    ambiente: Optional[str] = None
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin: Optional[datetime] = None
-    resultado: Optional[str] = None
-    url_reporte: Optional[str] = None
+    aplicacion_movil_id: UUID | None = None
+    ambiente: str | None = None
+    fecha_inicio: datetime | None = None
+    fecha_fin: datetime | None = None
+    resultado: str | None = None
+    url_reporte: str | None = None
 
     @field_validator("ambiente")
     @classmethod
-    def validate_ambiente(cls, v: Optional[str]) -> Optional[str]:
+    def validate_ambiente(cls, v: str | None) -> str | None:
         if v is not None and v not in AMBIENTES:
             raise ValueError(f"ambiente debe ser uno de: {AMBIENTES}")
         return v
 
     @field_validator("resultado")
     @classmethod
-    def validate_resultado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_resultado(cls, v: str | None) -> str | None:
         if v is not None and v not in RESULTADOS:
             raise ValueError(f"resultado debe ser uno de: {RESULTADOS}")
         return v

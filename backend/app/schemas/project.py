@@ -1,7 +1,6 @@
 """Project schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -9,9 +8,9 @@ from pydantic import BaseModel, ConfigDict
 
 class ProjectBase(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str = "active"
-    color: Optional[str] = None
+    color: str | None = None
 
 
 class ProjectCreate(ProjectBase):
@@ -21,10 +20,10 @@ class ProjectCreate(ProjectBase):
 class ProjectUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    name: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
-    color: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+    color: str | None = None
 
 
 class ProjectRead(ProjectBase):

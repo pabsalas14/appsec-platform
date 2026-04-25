@@ -1,9 +1,9 @@
 import hashlib
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.config import settings
@@ -90,7 +90,7 @@ def hash_refresh_token(token: str) -> str:
 
 
 def create_access_token(user_id: UUID, role: str, session_id: UUID) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.JWT_ACCESS_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
         "role": role,
@@ -103,7 +103,7 @@ def create_access_token(user_id: UUID, role: str, session_id: UUID) -> str:
 
 
 def create_refresh_token(user_id: UUID) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS)
+    expire = datetime.now(UTC) + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS)
     payload = {
         "sub": str(user_id),
         "jti": str(uuid4()),

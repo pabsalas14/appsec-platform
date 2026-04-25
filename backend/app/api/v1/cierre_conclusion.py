@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.cierre_conclusion import CierreConclusion
+from app.models.user import User
 from app.schemas.cierre_conclusion import CierreConclusionCreate, CierreConclusionRead, CierreConclusionUpdate
 from app.services.cierre_conclusion_service import cierre_conclusion_svc
 

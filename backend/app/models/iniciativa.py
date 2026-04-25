@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, text
@@ -14,8 +14,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.hito_iniciativa import HitoIniciativa
     from app.models.actualizacion_iniciativa import ActualizacionIniciativa
+    from app.models.hito_iniciativa import HitoIniciativa
 
 
 class Iniciativa(SoftDeleteMixin, Base):
@@ -48,12 +48,12 @@ class Iniciativa(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    hitos: Mapped[list["HitoIniciativa"]] = relationship(
+    hitos: Mapped[list[HitoIniciativa]] = relationship(
         "HitoIniciativa", back_populates="iniciativa", lazy="noload"
     )
-    actualizaciones: Mapped[list["ActualizacionIniciativa"]] = relationship(
+    actualizaciones: Mapped[list[ActualizacionIniciativa]] = relationship(
         "ActualizacionIniciativa", back_populates="iniciativa", lazy="noload"
     )

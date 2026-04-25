@@ -1,6 +1,5 @@
 """HallazgoPipeline CRUD endpoints (Módulo 8 — Operación)."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -23,7 +22,7 @@ router = APIRouter()
 
 @router.get("")
 async def list_hallazgo_pipelines(
-    pipeline_release_id: Optional[UUID] = Query(default=None),
+    pipeline_release_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

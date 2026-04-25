@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.evidencia_auditoria import EvidenciaAuditoria
+from app.models.user import User
 from app.schemas.evidencia_auditoria import EvidenciaAuditoriaCreate, EvidenciaAuditoriaRead, EvidenciaAuditoriaUpdate
 from app.services.evidencia_auditoria_service import evidencia_auditoria_svc
 

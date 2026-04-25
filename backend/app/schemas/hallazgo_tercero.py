@@ -1,7 +1,6 @@
 """HallazgoTercero schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -18,12 +17,12 @@ ESTADOS_VALIDOS = [
 
 class HallazgoTerceroBase(BaseModel):
     revision_tercero_id: UUID
-    vulnerabilidad_id: Optional[UUID] = None
+    vulnerabilidad_id: UUID | None = None
     titulo: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     severidad: str
-    cvss_score: Optional[float] = Field(default=None, ge=0.0, le=10.0)
-    cwe_id: Optional[str] = None
+    cvss_score: float | None = Field(default=None, ge=0.0, le=10.0)
+    cwe_id: str | None = None
     estado: str = "Abierto"
 
     @field_validator("severidad")
@@ -52,17 +51,17 @@ class HallazgoTerceroCreate(HallazgoTerceroBase):
 
 class HallazgoTerceroUpdate(BaseModel):
     """All fields optional for partial updates."""
-    vulnerabilidad_id: Optional[UUID] = None
-    titulo: Optional[str] = None
-    descripcion: Optional[str] = None
-    severidad: Optional[str] = None
-    cvss_score: Optional[float] = Field(default=None, ge=0.0, le=10.0)
-    cwe_id: Optional[str] = None
-    estado: Optional[str] = None
+    vulnerabilidad_id: UUID | None = None
+    titulo: str | None = None
+    descripcion: str | None = None
+    severidad: str | None = None
+    cvss_score: float | None = Field(default=None, ge=0.0, le=10.0)
+    cwe_id: str | None = None
+    estado: str | None = None
 
     @field_validator("severidad")
     @classmethod
-    def validate_severidad(cls, v: Optional[str]) -> Optional[str]:
+    def validate_severidad(cls, v: str | None) -> str | None:
         if v is not None and v not in SEVERIDADES_VALIDAS:
             raise ValueError(
                 f"severidad '{v}' inválida. Valores permitidos: {SEVERIDADES_VALIDAS}"
@@ -71,7 +70,7 @@ class HallazgoTerceroUpdate(BaseModel):
 
     @field_validator("estado")
     @classmethod
-    def validate_estado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
             raise ValueError(
                 f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"

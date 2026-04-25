@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.plan_remediacion import PlanRemediacion
+from app.models.user import User
 from app.schemas.plan_remediacion import PlanRemediacionCreate, PlanRemediacionRead, PlanRemediacionUpdate
 from app.services.plan_remediacion_service import plan_remediacion_svc
 

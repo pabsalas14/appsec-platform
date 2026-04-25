@@ -1,6 +1,5 @@
 """RevisionTercero CRUD endpoints (Módulo 8 — Operación)."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -23,8 +22,8 @@ router = APIRouter()
 
 @router.get("")
 async def list_revision_terceros(
-    servicio_id: Optional[UUID] = Query(default=None),
-    activo_web_id: Optional[UUID] = Query(default=None),
+    servicio_id: UUID | None = Query(default=None),
+    activo_web_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

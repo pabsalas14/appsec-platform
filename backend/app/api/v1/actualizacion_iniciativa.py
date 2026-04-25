@@ -6,9 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.actualizacion_iniciativa import ActualizacionIniciativa
-from app.schemas.actualizacion_iniciativa import ActualizacionIniciativaCreate, ActualizacionIniciativaRead, ActualizacionIniciativaUpdate
+from app.models.user import User
+from app.schemas.actualizacion_iniciativa import (
+    ActualizacionIniciativaCreate,
+    ActualizacionIniciativaRead,
+    ActualizacionIniciativaUpdate,
+)
 from app.services.actualizacion_iniciativa_service import actualizacion_iniciativa_svc
 
 router = APIRouter()

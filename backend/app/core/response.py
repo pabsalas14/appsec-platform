@@ -5,13 +5,13 @@ All endpoints should return responses through these wrappers to ensure
 a consistent contract: ``{status, data, meta?, pagination?}``.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 
 def success(
     data: Any,
     *,
-    meta: Optional[dict] = None,
+    meta: dict | None = None,
 ) -> dict:
     """Wrap a successful response."""
     response: dict[str, Any] = {"status": "success", "data": data}
@@ -26,7 +26,7 @@ def paginated(
     page: int,
     page_size: int,
     total: int,
-    meta: Optional[dict] = None,
+    meta: dict | None = None,
 ) -> dict:
     """Wrap a paginated response."""
     total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0

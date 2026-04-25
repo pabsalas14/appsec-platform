@@ -11,7 +11,7 @@ import inspect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.permissions import DEFAULT_ROLE_PERMISSIONS, P, VALID_ROLES
+from app.core.permissions import DEFAULT_ROLE_PERMISSIONS, VALID_ROLES, P
 from app.models.role import Permission, Role
 
 

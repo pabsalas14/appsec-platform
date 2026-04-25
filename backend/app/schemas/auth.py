@@ -1,8 +1,7 @@
 """Authentication schemas — Pydantic v2."""
 
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -13,14 +12,14 @@ class LoginRequest(BaseModel):
 
 
 class TokenData(BaseModel):
-    user_id: Optional[UUID] = None
+    user_id: UUID | None = None
 
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=150)
     email: EmailStr
     password: str = Field(min_length=10, max_length=128)
-    full_name: Optional[str] = Field(default=None, max_length=255)
+    full_name: str | None = Field(default=None, max_length=255)
 
 
 class UserRead(BaseModel):
@@ -29,7 +28,7 @@ class UserRead(BaseModel):
     id: UUID
     username: str
     email: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     role: str
     is_active: bool
     created_at: datetime
@@ -43,8 +42,8 @@ class AuthSessionRead(BaseModel):
 class ProfileUpdate(BaseModel):
     """Self-service profile update — only non-privileged fields."""
 
-    full_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    full_name: str | None = None
+    email: EmailStr | None = None
 
 
 class PasswordChange(BaseModel):

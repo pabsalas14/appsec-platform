@@ -7,13 +7,13 @@ only needs to mount this single router.
 
 from fastapi import APIRouter
 
-from app.api.v1.admin import users as admin_users
+from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
+from app.api.v1.admin import ia_config as admin_ia_config
+from app.api.v1.admin import regla_sods as admin_regla_sods
 from app.api.v1.admin import roles as admin_roles
 from app.api.v1.admin import settings as admin_settings
-from app.api.v1.admin import regla_sods as admin_regla_sods
-from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 from app.api.v1.admin import system_health as admin_system_health
-from app.api.v1.admin import ia_config as admin_ia_config
+from app.api.v1.admin import users as admin_users
 
 admin_router = APIRouter()
 

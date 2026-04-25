@@ -1,7 +1,6 @@
 """EjecucionDast schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -13,11 +12,11 @@ RESULTADOS = {"Pendiente", "Exitosa", "Fallida", "En Progreso"}
 class EjecucionDastBase(BaseModel):
     programa_dast_id: UUID
     fecha_inicio: datetime
-    fecha_fin: Optional[datetime] = None
+    fecha_fin: datetime | None = None
     ambiente: str = Field(..., description="Desarrollo | Staging | QA | Produccion")
-    herramienta: Optional[str] = Field(None, max_length=100)
+    herramienta: str | None = Field(None, max_length=100)
     resultado: str = Field(..., description="Pendiente | Exitosa | Fallida | En Progreso")
-    notas: Optional[str] = None
+    notas: str | None = None
 
     @model_validator(mode="after")
     def validate_fechas(self) -> "EjecucionDastBase":
@@ -39,12 +38,12 @@ class EjecucionDastCreate(EjecucionDastBase):
 
 class EjecucionDastUpdate(BaseModel):
     """All fields optional for partial updates."""
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin: Optional[datetime] = None
-    ambiente: Optional[str] = None
-    herramienta: Optional[str] = Field(None, max_length=100)
-    resultado: Optional[str] = None
-    notas: Optional[str] = None
+    fecha_inicio: datetime | None = None
+    fecha_fin: datetime | None = None
+    ambiente: str | None = None
+    herramienta: str | None = Field(None, max_length=100)
+    resultado: str | None = None
+    notas: str | None = None
 
     def model_post_init(self, __context) -> None:
         if self.ambiente is not None and self.ambiente not in AMBIENTES:

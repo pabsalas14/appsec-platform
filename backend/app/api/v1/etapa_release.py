@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 import hashlib
 from io import StringIO
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -82,7 +81,7 @@ async def export_etapa_releases_csv(
 
 @router.get("")
 async def list_etapa_releases(
-    service_release_id: Optional[UUID] = Query(default=None),
+    service_release_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -37,7 +37,7 @@ from __future__ import annotations
 import logging
 import logging.config
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pythonjsonlogger import jsonlogger
@@ -138,7 +138,7 @@ class _JsonFormatter(jsonlogger.JsonFormatter):
     ) -> None:
         super().add_fields(log_record, record, message_dict)
         log_record["ts"] = datetime.fromtimestamp(
-            record.created, tz=timezone.utc
+            record.created, tz=UTC
         ).isoformat(timespec="milliseconds").replace("+00:00", "Z")
         log_record["level"] = record.levelname
         log_record["logger"] = record.name

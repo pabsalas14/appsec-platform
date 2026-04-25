@@ -1,18 +1,17 @@
 """Task schemas — Pydantic v2."""
 
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 
 class TaskBase(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     completed: bool = False
     status: str = "todo"
-    project_id: Optional[UUID] = None
+    project_id: UUID | None = None
 
 
 class TaskCreate(TaskBase):
@@ -22,11 +21,11 @@ class TaskCreate(TaskBase):
 class TaskUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    title: Optional[str] = None
-    description: Optional[str] = None
-    completed: Optional[bool] = None
-    status: Optional[str] = None
-    project_id: Optional[UUID] = None
+    title: str | None = None
+    description: str | None = None
+    completed: bool | None = None
+    status: str | None = None
+    project_id: UUID | None = None
 
 
 class TaskRead(TaskBase):

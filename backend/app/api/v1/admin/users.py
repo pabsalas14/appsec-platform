@@ -7,7 +7,6 @@ All routes require ``role=admin``. Mutations write audit entries via
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -46,9 +45,9 @@ def _ensure_valid_role(role: str) -> None:
 async def list_users(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_backoffice),
-    role: Optional[str] = Query(default=None),
-    is_active: Optional[bool] = Query(default=None),
-    q: Optional[str] = Query(default=None, description="Search by username/email"),
+    role: str | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
+    q: str | None = Query(default=None, description="Search by username/email"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
 ):

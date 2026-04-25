@@ -7,7 +7,7 @@ Row captures metadata only; served back via ``/api/v1/uploads/<id>/download``.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -44,5 +44,5 @@ class Attachment(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )

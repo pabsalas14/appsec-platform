@@ -7,8 +7,8 @@ from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
 from app.core.response import success
-from app.models.user import User
 from app.models.subdireccion import Subdireccion
+from app.models.user import User
 from app.schemas.subdireccion import SubdireccionCreate, SubdireccionRead, SubdireccionUpdate
 from app.services.subdireccion_service import subdireccion_svc
 

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,8 +14,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.programa_dast import ProgramaDast
     from app.models.hallazgo_dast import HallazgoDast
+    from app.models.programa_dast import ProgramaDast
 
 
 class EjecucionDast(SoftDeleteMixin, Base):
@@ -50,10 +50,10 @@ class EjecucionDast(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    programa_dast: Mapped["ProgramaDast"] = relationship(back_populates="ejecuciones")
-    hallazgos: Mapped[list["HallazgoDast"]] = relationship(
+    programa_dast: Mapped[ProgramaDast] = relationship(back_populates="ejecuciones")
+    hallazgos: Mapped[list[HallazgoDast]] = relationship(
         "HallazgoDast", back_populates="ejecucion_dast", lazy="noload"
     )

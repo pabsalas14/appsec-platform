@@ -1,7 +1,6 @@
 """EtapaRelease schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -27,10 +26,10 @@ class EtapaReleaseBase(BaseModel):
     service_release_id: UUID
     etapa: str
     estado: str = "Pendiente"
-    aprobador_id: Optional[UUID] = None
-    justificacion: Optional[str] = None
-    notas: Optional[str] = None
-    fecha_completada: Optional[datetime] = None
+    aprobador_id: UUID | None = None
+    justificacion: str | None = None
+    notas: str | None = None
+    fecha_completada: datetime | None = None
 
     @field_validator("etapa")
     @classmethod
@@ -58,15 +57,15 @@ class EtapaReleaseCreate(EtapaReleaseBase):
 
 class EtapaReleaseUpdate(BaseModel):
     """All fields optional for partial updates."""
-    etapa: Optional[str] = None
-    estado: Optional[str] = None
-    justificacion: Optional[str] = None
-    notas: Optional[str] = None
-    fecha_completada: Optional[datetime] = None
+    etapa: str | None = None
+    estado: str | None = None
+    justificacion: str | None = None
+    notas: str | None = None
+    fecha_completada: datetime | None = None
 
     @field_validator("etapa")
     @classmethod
-    def validate_etapa(cls, v: Optional[str]) -> Optional[str]:
+    def validate_etapa(cls, v: str | None) -> str | None:
         if v is not None and v not in ETAPAS_VALIDAS:
             raise ValueError(
                 f"etapa '{v}' inválida. Valores permitidos: {ETAPAS_VALIDAS}"
@@ -75,7 +74,7 @@ class EtapaReleaseUpdate(BaseModel):
 
     @field_validator("estado")
     @classmethod
-    def validate_estado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
             raise ValueError(
                 f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"
@@ -85,13 +84,13 @@ class EtapaReleaseUpdate(BaseModel):
 
 class EtapaAprobarRequest(BaseModel):
     """Body para aprobar una etapa."""
-    notas: Optional[str] = None
+    notas: str | None = None
 
 
 class EtapaRechazarRequest(BaseModel):
     """Body para rechazar una etapa (justificación obligatoria — A1)."""
     justificacion: str = Field(..., min_length=10)
-    notas: Optional[str] = None
+    notas: str | None = None
 
 
 class EtapaReleaseRead(EtapaReleaseBase):

@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.repositorio import Repositorio
+from app.models.user import User
 from app.schemas.repositorio import RepositorioCreate, RepositorioRead, RepositorioUpdate
 from app.services.repositorio_service import repositorio_svc
 

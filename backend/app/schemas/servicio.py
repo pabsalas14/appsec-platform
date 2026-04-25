@@ -1,17 +1,16 @@
 """Servicio schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 
 
 class ServicioBase(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     criticidad: str
-    tecnologia_stack: Optional[str] = None
+    tecnologia_stack: str | None = None
     celula_id: UUID
 
 
@@ -23,11 +22,11 @@ class ServicioCreate(ServicioBase):
 class ServicioUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    descripcion: Optional[str] = None
-    criticidad: Optional[str] = None
-    tecnologia_stack: Optional[str] = None
-    celula_id: Optional[UUID] = None
+    nombre: str | None = None
+    descripcion: str | None = None
+    criticidad: str | None = None
+    tecnologia_stack: str | None = None
+    celula_id: UUID | None = None
 
 
 class ServicioRead(ServicioBase):

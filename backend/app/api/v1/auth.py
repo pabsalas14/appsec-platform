@@ -1,8 +1,7 @@
 """Authentication endpoints — login, register, refresh, logout, me."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 from fastapi.responses import JSONResponse
@@ -27,7 +26,8 @@ from app.core.rate_limit import (
     enforce_rate_limit,
     register_login_failure,
 )
-from app.core.response import error as error_response, success
+from app.core.response import error as error_response
+from app.core.response import success
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -112,7 +112,7 @@ async def _issue_tokens(
             family_id=family_id,
             parent_token_id=parent_token_id,
             token_hash=hash_refresh_token(refresh),
-            expires_at=datetime.now(timezone.utc)
+            expires_at=datetime.now(UTC)
             + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS),
         )
     )
@@ -224,7 +224,7 @@ async def register(
 async def refresh(
     request: Request,
     response: Response,
-    refresh_token: Optional[str] = Cookie(None),
+    refresh_token: str | None = Cookie(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Rotate refresh token: validate, revoke old, emit new pair, set cookies.
@@ -256,7 +256,7 @@ async def refresh(
     )
     stored = result.scalar_one_or_none()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if stored is None:
         raise UnauthorizedException("Refresh token is revoked or expired")
 
@@ -329,12 +329,12 @@ async def refresh(
 @router.post("/logout")
 async def logout(
     response: Response,
-    refresh_token: Optional[str] = Cookie(None),
+    refresh_token: str | None = Cookie(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Invalidate the current session family (if any) and clear auth cookies."""
     if refresh_token:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await db.execute(
             select(RefreshToken).where(
                 RefreshToken.token_hash == hash_refresh_token(refresh_token)

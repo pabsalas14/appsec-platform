@@ -1,7 +1,6 @@
 """RevisionTercero schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -25,14 +24,14 @@ ESTADOS_VALIDOS = [
 class RevisionTerceroBase(BaseModel):
     nombre_empresa: str
     tipo: str
-    servicio_id: Optional[UUID] = None
-    activo_web_id: Optional[UUID] = None
+    servicio_id: UUID | None = None
+    activo_web_id: UUID | None = None
     fecha_inicio: datetime
-    fecha_fin: Optional[datetime] = None
+    fecha_fin: datetime | None = None
     estado: str = "Planificada"
-    informe_filename: Optional[str] = None
+    informe_filename: str | None = None
     # SHA-256 del informe para integridad (A3)
-    informe_sha256: Optional[str] = Field(default=None, max_length=64)
+    informe_sha256: str | None = Field(default=None, max_length=64)
 
     @field_validator("tipo")
     @classmethod
@@ -69,19 +68,19 @@ class RevisionTerceroCreate(RevisionTerceroBase):
 
 class RevisionTerceroUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre_empresa: Optional[str] = None
-    tipo: Optional[str] = None
-    servicio_id: Optional[UUID] = None
-    activo_web_id: Optional[UUID] = None
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin: Optional[datetime] = None
-    estado: Optional[str] = None
-    informe_filename: Optional[str] = None
-    informe_sha256: Optional[str] = Field(default=None, max_length=64)
+    nombre_empresa: str | None = None
+    tipo: str | None = None
+    servicio_id: UUID | None = None
+    activo_web_id: UUID | None = None
+    fecha_inicio: datetime | None = None
+    fecha_fin: datetime | None = None
+    estado: str | None = None
+    informe_filename: str | None = None
+    informe_sha256: str | None = Field(default=None, max_length=64)
 
     @field_validator("tipo")
     @classmethod
-    def validate_tipo(cls, v: Optional[str]) -> Optional[str]:
+    def validate_tipo(cls, v: str | None) -> str | None:
         if v is not None and v not in TIPOS_VALIDOS:
             raise ValueError(
                 f"tipo '{v}' inválido. Valores permitidos: {TIPOS_VALIDOS}"
@@ -90,7 +89,7 @@ class RevisionTerceroUpdate(BaseModel):
 
     @field_validator("estado")
     @classmethod
-    def validate_estado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
             raise ValueError(
                 f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"

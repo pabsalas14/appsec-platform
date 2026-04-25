@@ -6,10 +6,10 @@ Un programa agrupa las actividades mensuales de SAST/SCA/CDS de un repositorio.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,8 +17,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.repositorio import Repositorio
     from app.models.actividad_mensual_sast import ActividadMensualSast
+    from app.models.repositorio import Repositorio
 
 
 class ProgramaSast(SoftDeleteMixin, Base):
@@ -50,11 +50,11 @@ class ProgramaSast(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    repositorio: Mapped["Repositorio"] = relationship(back_populates="programas_sast")
-    actividades: Mapped[list["ActividadMensualSast"]] = relationship(
+    repositorio: Mapped[Repositorio] = relationship(back_populates="programas_sast")
+    actividades: Mapped[list[ActividadMensualSast]] = relationship(
         "ActividadMensualSast", back_populates="programa_sast", lazy="noload"
     )

@@ -12,15 +12,16 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.config import settings
 from app.api.v1.router import api_router
+from app.config import settings
 from app.core.csrf import csrf_is_valid, request_needs_csrf
 from app.core.logging import configure_logging, logger
-from app.core.logging_context import bind as bind_ctx, clear as clear_ctx
+from app.core.logging_context import bind as bind_ctx
+from app.core.logging_context import clear as clear_ctx
 from app.core.response import error as error_response
 
 # ─── Structured logging (dictConfig) ──────────────────────────────────────────

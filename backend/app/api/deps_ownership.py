@@ -10,7 +10,8 @@ This is the single, declarative way to prevent IDOR. See
 docs/adr/0004-ownership-isolation.md.
 """
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,7 +55,7 @@ def require_ownership(
     ):
         raw_id = request.path_params[id_param]
         entity = await service.get(
-            db, raw_id, scope={owner_field: getattr(current_user, "id")}
+            db, raw_id, scope={owner_field: current_user.id}
         )
         if entity is None:
             raise NotFoundException(f"{service.model.__name__} not found")

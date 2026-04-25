@@ -1,7 +1,6 @@
 """DashboardConfig schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -24,11 +23,11 @@ class DashboardConfigCreate(DashboardConfigBase):
 class DashboardConfigUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    dashboard_id: Optional[str] = None
-    widget_id: Optional[str] = None
-    role_id: Optional[UUID] = None
-    visible: Optional[bool] = None
-    editable_by_role: Optional[bool] = None
+    dashboard_id: str | None = None
+    widget_id: str | None = None
+    role_id: UUID | None = None
+    visible: bool | None = None
+    editable_by_role: bool | None = None
 
 
 class DashboardConfigRead(DashboardConfigBase):

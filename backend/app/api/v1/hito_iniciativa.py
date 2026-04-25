@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.hito_iniciativa import HitoIniciativa
+from app.models.user import User
 from app.schemas.hito_iniciativa import HitoIniciativaCreate, HitoIniciativaRead, HitoIniciativaUpdate
 from app.services.hito_iniciativa_service import hito_iniciativa_svc
 

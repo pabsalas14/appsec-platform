@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import os
 import uuid
+from datetime import UTC
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -174,9 +175,9 @@ async def delete_upload(
         raise NotFoundException("Attachment not found")
 
     # Soft-delete (A2): keep metadata & file for evidentiary integrity.
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    row.deleted_at = datetime.now(timezone.utc)
+    row.deleted_at = datetime.now(UTC)
     row.deleted_by = current_user.id
     await db.flush()
     await audit_record(

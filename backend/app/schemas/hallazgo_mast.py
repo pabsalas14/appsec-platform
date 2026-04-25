@@ -1,23 +1,21 @@
 """HallazgoMAST schemas — finding from MAST execution (Módulo 4)."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
-
 
 SEVERIDADES = {"Critica", "Alta", "Media", "Baja"}
 
 
 class HallazgoMASTBase(BaseModel):
     ejecucion_mast_id: UUID
-    vulnerabilidad_id: Optional[UUID] = None
+    vulnerabilidad_id: UUID | None = None
     nombre: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     severidad: str
-    cwe: Optional[str] = None
-    owasp_categoria: Optional[str] = None
+    cwe: str | None = None
+    owasp_categoria: str | None = None
 
     @field_validator("nombre")
     @classmethod
@@ -41,17 +39,17 @@ class HallazgoMASTCreate(HallazgoMASTBase):
 
 class HallazgoMASTUpdate(BaseModel):
     """All fields optional for partial updates."""
-    ejecucion_mast_id: Optional[UUID] = None
-    vulnerabilidad_id: Optional[UUID] = None
-    nombre: Optional[str] = None
-    descripcion: Optional[str] = None
-    severidad: Optional[str] = None
-    cwe: Optional[str] = None
-    owasp_categoria: Optional[str] = None
+    ejecucion_mast_id: UUID | None = None
+    vulnerabilidad_id: UUID | None = None
+    nombre: str | None = None
+    descripcion: str | None = None
+    severidad: str | None = None
+    cwe: str | None = None
+    owasp_categoria: str | None = None
 
     @field_validator("severidad")
     @classmethod
-    def validate_severidad(cls, v: Optional[str]) -> Optional[str]:
+    def validate_severidad(cls, v: str | None) -> str | None:
         if v is not None and v not in SEVERIDADES:
             raise ValueError(f"severidad debe ser uno de: {SEVERIDADES}")
         return v

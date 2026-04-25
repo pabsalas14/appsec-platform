@@ -1,7 +1,6 @@
 """ServicioReguladoRegistro schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,10 +30,10 @@ class ServicioReguladoRegistroCreate(ServicioReguladoRegistroBase):
 
 class ServicioReguladoRegistroUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre_regulacion: Optional[str] = Field(None, min_length=1, max_length=255)
-    ciclo: Optional[str] = None
-    ano: Optional[int] = Field(None, ge=2000, le=2100)
-    estado: Optional[str] = None
+    nombre_regulacion: str | None = Field(None, min_length=1, max_length=255)
+    ciclo: str | None = None
+    ano: int | None = Field(None, ge=2000, le=2100)
+    estado: str | None = None
 
     def model_post_init(self, __context) -> None:
         if self.ciclo is not None and self.ciclo not in CICLOS:

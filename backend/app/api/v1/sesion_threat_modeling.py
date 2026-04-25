@@ -1,7 +1,6 @@
 """SesionThreatModeling CRUD endpoints."""
 
 import json
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -23,9 +22,9 @@ from app.schemas.sesion_threat_modeling import (
     SesionThreatModelingRead,
     SesionThreatModelingUpdate,
 )
+from app.services.amenaza_service import amenaza_svc
 from app.services.audit_service import record as audit_record
 from app.services.ia_provider import run_prompt
-from app.services.amenaza_service import amenaza_svc
 from app.services.sesion_threat_modeling_service import sesion_threat_modeling_svc
 
 router = APIRouter()
@@ -100,7 +99,7 @@ def _extract_structured_threats(content: str) -> list[dict]:
 
 @router.get("")
 async def list_sesion_threat_modelings(
-    programa_tm_id: Optional[UUID] = Query(None, description="Filter by programa_tm_id"),
+    programa_tm_id: UUID | None = Query(None, description="Filter by programa_tm_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

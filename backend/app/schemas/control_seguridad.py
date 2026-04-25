@@ -1,7 +1,6 @@
 """ControlSeguridad schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -10,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 class ControlSeguridadBase(BaseModel):
     nombre: str
     tipo: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     obligatorio: bool = False
 
 
@@ -22,10 +21,10 @@ class ControlSeguridadCreate(ControlSeguridadBase):
 class ControlSeguridadUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    tipo: Optional[str] = None
-    descripcion: Optional[str] = None
-    obligatorio: Optional[bool] = None
+    nombre: str | None = None
+    tipo: str | None = None
+    descripcion: str | None = None
+    obligatorio: bool | None = None
 
 
 class ControlSeguridadRead(ControlSeguridadBase):

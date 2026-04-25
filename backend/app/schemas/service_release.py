@@ -1,7 +1,6 @@
 """ServiceRelease schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -22,10 +21,10 @@ ESTADOS_VALIDOS = [
 class ServiceReleaseBase(BaseModel):
     nombre: str
     version: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     servicio_id: UUID
     estado_actual: str = "Borrador"
-    jira_referencia: Optional[str] = None
+    jira_referencia: str | None = None
 
     @field_validator("estado_actual")
     @classmethod
@@ -44,15 +43,15 @@ class ServiceReleaseCreate(ServiceReleaseBase):
 
 class ServiceReleaseUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = None
-    version: Optional[str] = None
-    descripcion: Optional[str] = None
-    estado_actual: Optional[str] = None
-    jira_referencia: Optional[str] = None
+    nombre: str | None = None
+    version: str | None = None
+    descripcion: str | None = None
+    estado_actual: str | None = None
+    jira_referencia: str | None = None
 
     @field_validator("estado_actual")
     @classmethod
-    def validate_estado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
             raise ValueError(
                 f"estado_actual '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"

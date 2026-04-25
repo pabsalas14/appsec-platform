@@ -5,17 +5,14 @@ from __future__ import annotations
 import csv
 import hashlib
 from io import StringIO
-
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, require_permission
+from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
-from app.core.permissions import P
 from app.core.response import success
 from app.models.service_release import ServiceRelease
 from app.models.user import User
@@ -71,7 +68,7 @@ async def export_service_releases_csv(
 
 @router.get("")
 async def list_service_releases(
-    servicio_id: Optional[UUID] = Query(default=None),
+    servicio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

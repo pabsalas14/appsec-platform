@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.hallazgo_auditoria import HallazgoAuditoria
+from app.models.user import User
 from app.schemas.hallazgo_auditoria import HallazgoAuditoriaCreate, HallazgoAuditoriaRead, HallazgoAuditoriaUpdate
 from app.services.hallazgo_auditoria_service import hallazgo_auditoria_svc
 

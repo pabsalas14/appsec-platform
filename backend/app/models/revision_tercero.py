@@ -7,10 +7,10 @@ El informe tiene hash SHA-256 almacenado (A3).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,9 +18,9 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.servicio import Servicio
     from app.models.activo_web import ActivoWeb
     from app.models.hallazgo_tercero import HallazgoTercero
+    from app.models.servicio import Servicio
 
 
 class RevisionTercero(SoftDeleteMixin, Base):
@@ -72,14 +72,14 @@ class RevisionTercero(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    servicio: Mapped["Servicio | None"] = relationship(back_populates="revision_terceros")
-    activo_web: Mapped["ActivoWeb | None"] = relationship(
+    servicio: Mapped[Servicio | None] = relationship(back_populates="revision_terceros")
+    activo_web: Mapped[ActivoWeb | None] = relationship(
         back_populates="revision_terceros"
     )
-    hallazgos: Mapped[list["HallazgoTercero"]] = relationship(
+    hallazgos: Mapped[list[HallazgoTercero]] = relationship(
         "HallazgoTercero", back_populates="revision_tercero", lazy="noload"
     )

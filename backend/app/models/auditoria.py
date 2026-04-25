@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,8 +14,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.hallazgo_auditoria import HallazgoAuditoria
     from app.models.evidencia_auditoria import EvidenciaAuditoria
+    from app.models.hallazgo_auditoria import HallazgoAuditoria
     from app.models.plan_remediacion import PlanRemediacion
 
 
@@ -43,15 +43,15 @@ class Auditoria(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    hallazgos: Mapped[list["HallazgoAuditoria"]] = relationship(
+    hallazgos: Mapped[list[HallazgoAuditoria]] = relationship(
         "HallazgoAuditoria", back_populates="auditoria", lazy="noload"
     )
-    evidencias: Mapped[list["EvidenciaAuditoria"]] = relationship(
+    evidencias: Mapped[list[EvidenciaAuditoria]] = relationship(
         "EvidenciaAuditoria", back_populates="auditoria", lazy="noload"
     )
-    planes_remediacion: Mapped[list["PlanRemediacion"]] = relationship(
+    planes_remediacion: Mapped[list[PlanRemediacion]] = relationship(
         "PlanRemediacion", back_populates="auditoria", lazy="noload"
     )

@@ -7,8 +7,8 @@ from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
 from app.core.response import success
-from app.models.user import User
 from app.models.organizacion import Organizacion
+from app.models.user import User
 from app.schemas.organizacion import OrganizacionCreate, OrganizacionRead, OrganizacionUpdate
 from app.services.organizacion_service import organizacion_svc
 

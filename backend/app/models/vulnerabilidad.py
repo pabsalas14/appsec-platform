@@ -14,7 +14,7 @@ Aplica:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, Text, text
@@ -25,15 +25,15 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
+    from app.models.aceptacion_riesgo import AceptacionRiesgo
     from app.models.activo_web import ActivoWeb
     from app.models.aplicacion_movil import AplicacionMovil
-    from app.models.aceptacion_riesgo import AceptacionRiesgo
     from app.models.evidencia_remediacion import EvidenciaRemediacion
     from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
-    from app.models.hallazgo_pipeline import HallazgoPipeline
-    from app.models.hallazgo_tercero import HallazgoTercero
-    from app.models.hallazgo_sast import HallazgoSast
     from app.models.hallazgo_dast import HallazgoDast
+    from app.models.hallazgo_pipeline import HallazgoPipeline
+    from app.models.hallazgo_sast import HallazgoSast
+    from app.models.hallazgo_tercero import HallazgoTercero
     from app.models.historial_vulnerabilidad import HistorialVulnerabilidad
     from app.models.repositorio import Repositorio
     from app.models.servicio import Servicio
@@ -118,61 +118,61 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ── Relationships ────────────────────────────────────────────────────────
-    creator: Mapped["User"] = relationship(
+    creator: Mapped[User] = relationship(
         "User", foreign_keys=[user_id], lazy="noload"
     )
-    responsable: Mapped["User | None"] = relationship(
+    responsable: Mapped[User | None] = relationship(
         "User", foreign_keys=[responsable_id], lazy="noload"
     )
-    repositorio: Mapped["Repositorio | None"] = relationship(
+    repositorio: Mapped[Repositorio | None] = relationship(
         "Repositorio", back_populates="vulnerabilidades", lazy="noload"
     )
-    activo_web: Mapped["ActivoWeb | None"] = relationship(
+    activo_web: Mapped[ActivoWeb | None] = relationship(
         "ActivoWeb", back_populates="vulnerabilidades", lazy="noload"
     )
-    servicio: Mapped["Servicio | None"] = relationship(
+    servicio: Mapped[Servicio | None] = relationship(
         "Servicio", back_populates="vulnerabilidades", lazy="noload"
     )
-    aplicacion_movil: Mapped["AplicacionMovil | None"] = relationship(
+    aplicacion_movil: Mapped[AplicacionMovil | None] = relationship(
         "AplicacionMovil", back_populates="vulnerabilidades", lazy="noload"
     )
-    historial: Mapped[list["HistorialVulnerabilidad"]] = relationship(
+    historial: Mapped[list[HistorialVulnerabilidad]] = relationship(
         "HistorialVulnerabilidad",
         back_populates="vulnerabilidad",
         cascade="all, delete-orphan",
         lazy="noload",
     )
-    excepciones: Mapped[list["ExcepcionVulnerabilidad"]] = relationship(
+    excepciones: Mapped[list[ExcepcionVulnerabilidad]] = relationship(
         "ExcepcionVulnerabilidad",
         back_populates="vulnerabilidad",
         cascade="all, delete-orphan",
         lazy="noload",
     )
-    aceptaciones_riesgo: Mapped[list["AceptacionRiesgo"]] = relationship(
+    aceptaciones_riesgo: Mapped[list[AceptacionRiesgo]] = relationship(
         "AceptacionRiesgo",
         back_populates="vulnerabilidad",
         cascade="all, delete-orphan",
         lazy="noload",
     )
-    evidencias_remediacion: Mapped[list["EvidenciaRemediacion"]] = relationship(
+    evidencias_remediacion: Mapped[list[EvidenciaRemediacion]] = relationship(
         "EvidenciaRemediacion",
         back_populates="vulnerabilidad",
         cascade="all, delete-orphan",
         lazy="noload",
     )
-    hallazgos_pipeline: Mapped[list["HallazgoPipeline"]] = relationship(
+    hallazgos_pipeline: Mapped[list[HallazgoPipeline]] = relationship(
         "HallazgoPipeline", back_populates="vulnerabilidad", lazy="noload"
     )
-    hallazgos_tercero: Mapped[list["HallazgoTercero"]] = relationship(
+    hallazgos_tercero: Mapped[list[HallazgoTercero]] = relationship(
         "HallazgoTercero", back_populates="vulnerabilidad", lazy="noload"
     )
-    hallazgos_sast: Mapped[list["HallazgoSast"]] = relationship(
+    hallazgos_sast: Mapped[list[HallazgoSast]] = relationship(
         "HallazgoSast", back_populates="vulnerabilidad", lazy="noload"
     )
-    hallazgos_dast: Mapped[list["HallazgoDast"]] = relationship(
+    hallazgos_dast: Mapped[list[HallazgoDast]] = relationship(
         "HallazgoDast", back_populates="vulnerabilidad", lazy="noload"
     )

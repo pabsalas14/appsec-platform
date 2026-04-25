@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.filtro_guardado import FiltroGuardado
+from app.models.user import User
 from app.schemas.filtro_guardado import FiltroGuardadoCreate, FiltroGuardadoRead, FiltroGuardadoUpdate
 from app.services.filtro_guardado_service import filtro_guardado_svc
 
@@ -22,7 +22,8 @@ async def list_filtros_guardados(
     page_size: int = 50,
 ):
     """List filtros guardados owned by the current user (paginated)."""
-    from sqlalchemy import select, func
+    from sqlalchemy import func, select
+
     from app.core.response import paginated
 
     # Enforce pagination limits (S4: Rate limiting)

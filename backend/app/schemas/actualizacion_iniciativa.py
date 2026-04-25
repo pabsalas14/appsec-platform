@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ActualizacionIniciativaBase(BaseModel):
@@ -26,8 +25,8 @@ class ActualizacionIniciativaCreate(ActualizacionIniciativaBase):
 class ActualizacionIniciativaUpdate(BaseModel):
     """Schema for updating ActualizacionIniciativa (all fields optional)."""
 
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    contenido: Optional[str] = Field(None, min_length=1)
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    contenido: str | None = Field(None, min_length=1)
 
 
 class ActualizacionIniciativaRead(ActualizacionIniciativaBase):

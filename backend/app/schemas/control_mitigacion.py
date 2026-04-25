@@ -1,7 +1,6 @@
 """ControlMitigacion schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -13,10 +12,10 @@ ESTADOS_CONTROL = {"Pendiente", "Implementado", "En Progreso", "Descartado"}
 class ControlMitigacionBase(BaseModel):
     amenaza_id: UUID
     nombre: str = Field(..., min_length=1, max_length=255)
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     tipo: str = Field(..., description="Preventivo | Detectivo | Correctivo | Disuasivo")
     estado: str = Field(..., description="Pendiente | Implementado | En Progreso | Descartado")
-    responsable_id: Optional[UUID] = None
+    responsable_id: UUID | None = None
 
     def model_post_init(self, __context) -> None:
         if self.tipo not in TIPOS_CONTROL:
@@ -32,11 +31,11 @@ class ControlMitigacionCreate(ControlMitigacionBase):
 
 class ControlMitigacionUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = None
-    tipo: Optional[str] = None
-    estado: Optional[str] = None
-    responsable_id: Optional[UUID] = None
+    nombre: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = None
+    tipo: str | None = None
+    estado: str | None = None
+    responsable_id: UUID | None = None
 
     def model_post_init(self, __context) -> None:
         if self.tipo is not None and self.tipo not in TIPOS_CONTROL:

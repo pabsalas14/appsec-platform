@@ -1,7 +1,6 @@
 """Gerencia schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -12,7 +11,7 @@ class GerenciaBase(BaseModel):
 
     nombre: str
     subdireccion_id: UUID
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
 
 
 class GerenciaCreate(GerenciaBase):
@@ -23,9 +22,9 @@ class GerenciaCreate(GerenciaBase):
 class GerenciaUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    subdireccion_id: Optional[UUID] = None
-    descripcion: Optional[str] = None
+    nombre: str | None = None
+    subdireccion_id: UUID | None = None
+    descripcion: str | None = None
 
 
 class GerenciaRead(GerenciaBase):

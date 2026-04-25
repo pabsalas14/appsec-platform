@@ -5,7 +5,6 @@ El campo se omite en Create/Update y se incluye en Read (calculado por el servic
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,7 +16,7 @@ ESTADOS_AMENAZA = {"Abierta", "Mitigada", "Aceptada", "Transferida", "En Revisio
 class AmenazaBase(BaseModel):
     sesion_id: UUID
     titulo: str = Field(..., min_length=1, max_length=255)
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     categoria_stride: str = Field(..., description="STRIDE category")
     # DREAD scoring 1-10
     dread_damage: int = Field(..., ge=1, le=10, description="Damage potential (1-10)")
@@ -41,15 +40,15 @@ class AmenazaCreate(AmenazaBase):
 
 class AmenazaUpdate(BaseModel):
     """All fields optional for partial updates. score_total is recalculated automatically."""
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = None
-    categoria_stride: Optional[str] = None
-    dread_damage: Optional[int] = Field(None, ge=1, le=10)
-    dread_reproducibility: Optional[int] = Field(None, ge=1, le=10)
-    dread_exploitability: Optional[int] = Field(None, ge=1, le=10)
-    dread_affected_users: Optional[int] = Field(None, ge=1, le=10)
-    dread_discoverability: Optional[int] = Field(None, ge=1, le=10)
-    estado: Optional[str] = None
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = None
+    categoria_stride: str | None = None
+    dread_damage: int | None = Field(None, ge=1, le=10)
+    dread_reproducibility: int | None = Field(None, ge=1, le=10)
+    dread_exploitability: int | None = Field(None, ge=1, le=10)
+    dread_affected_users: int | None = Field(None, ge=1, le=10)
+    dread_discoverability: int | None = Field(None, ge=1, le=10)
+    estado: str | None = None
 
     def model_post_init(self, __context) -> None:
         if self.categoria_stride is not None and self.categoria_stride not in CATEGORIAS_STRIDE:
@@ -64,6 +63,6 @@ class AmenazaRead(AmenazaBase):
 
     id: UUID
     user_id: UUID
-    score_total: Optional[float] = None
+    score_total: float | None = None
     created_at: datetime
     updated_at: datetime

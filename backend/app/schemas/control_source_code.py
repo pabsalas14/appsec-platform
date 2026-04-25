@@ -5,7 +5,6 @@ code signing, secret scanning, dependency review, etc.).
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -24,7 +23,7 @@ TIPOS_CONTROL = {
 class ControlSourceCodeBase(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=255)
     tipo: str = Field(..., max_length=100)
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     obligatorio: bool = True
 
     def model_post_init(self, __context) -> None:
@@ -39,10 +38,10 @@ class ControlSourceCodeCreate(ControlSourceCodeBase):
 
 class ControlSourceCodeUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = Field(None, min_length=1, max_length=255)
-    tipo: Optional[str] = Field(None, max_length=100)
-    descripcion: Optional[str] = None
-    obligatorio: Optional[bool] = None
+    nombre: str | None = Field(None, min_length=1, max_length=255)
+    tipo: str | None = Field(None, max_length=100)
+    descripcion: str | None = None
+    obligatorio: bool | None = None
 
     def model_post_init(self, __context) -> None:
         if self.tipo is not None and self.tipo not in TIPOS_CONTROL:

@@ -1,6 +1,5 @@
 """HallazgoSast CRUD endpoints."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -19,7 +18,7 @@ router = APIRouter()
 
 @router.get("")
 async def list_hallazgo_sasts(
-    actividad_sast_id: Optional[UUID] = Query(None, description="Filter by actividad_sast_id"),
+    actividad_sast_id: UUID | None = Query(None, description="Filter by actividad_sast_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

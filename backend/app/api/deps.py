@@ -8,25 +8,24 @@ Provides:
 """
 
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Cookie, Depends, Header, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ForbiddenException, UnauthorizedException
+from app.core.logging_context import bind as bind_ctx
+from app.core.security import decode_token
 from app.database import get_db
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.core.logging_context import bind as bind_ctx
-from app.core.security import decode_token
-from app.core.exceptions import UnauthorizedException, ForbiddenException
-
 
 # ─── Authentication ─────────────────────────────────────────────────────────
 
 async def get_current_user(
-    authorization: Optional[str] = Header(None, description="Bearer <token>"),
-    access_token: Optional[str] = Cookie(None),
+    authorization: str | None = Header(None, description="Bearer <token>"),
+    access_token: str | None = Cookie(None),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Authenticate via Bearer header or HttpOnly cookie.

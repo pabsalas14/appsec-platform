@@ -7,8 +7,8 @@ from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
 from app.core.response import success
-from app.models.user import User
 from app.models.celula import Celula
+from app.models.user import User
 from app.schemas.celula import CelulaCreate, CelulaRead, CelulaUpdate
 from app.services.celula_service import celula_svc
 

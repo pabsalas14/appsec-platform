@@ -1,7 +1,6 @@
 """Iniciativa schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -11,12 +10,12 @@ class IniciativaBase(BaseModel):
     """Base schema for Iniciativa."""
 
     titulo: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     tipo: str
     estado: str
-    celula_id: Optional[UUID] = None
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin_estimada: Optional[datetime] = None
+    celula_id: UUID | None = None
+    fecha_inicio: datetime | None = None
+    fecha_fin_estimada: datetime | None = None
 
 
 class IniciativaCreate(IniciativaBase):
@@ -27,13 +26,13 @@ class IniciativaCreate(IniciativaBase):
 class IniciativaUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    titulo: Optional[str] = None
-    descripcion: Optional[str] = None
-    tipo: Optional[str] = None
-    estado: Optional[str] = None
-    celula_id: Optional[UUID] = None
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin_estimada: Optional[datetime] = None
+    titulo: str | None = None
+    descripcion: str | None = None
+    tipo: str | None = None
+    estado: str | None = None
+    celula_id: UUID | None = None
+    fecha_inicio: datetime | None = None
+    fecha_fin_estimada: datetime | None = None
 
 
 class IniciativaRead(IniciativaBase):
@@ -42,6 +41,6 @@ class IniciativaRead(IniciativaBase):
 
     id: UUID
     user_id: UUID
-    celula_id: Optional[UUID] = None
+    celula_id: UUID | None = None
     created_at: datetime
     updated_at: datetime

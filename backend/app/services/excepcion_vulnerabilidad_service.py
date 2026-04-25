@@ -9,6 +9,7 @@ Reglas:
 from __future__ import annotations
 
 import uuid
+from datetime import UTC
 from typing import Any
 
 from sqlalchemy import select
@@ -69,7 +70,8 @@ class ExcepcionVulnerabilidadService(
         scope: dict[str, Any] | None = None,
     ) -> ExcepcionVulnerabilidad | None:
         """Aprueba una excepción. Valida SoD: aprobador != creador si regla activa."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, excepcion_id)
@@ -85,7 +87,7 @@ class ExcepcionVulnerabilidadService(
 
         record.estado = "Aprobada"
         record.aprobador_id = aprobador_id
-        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
 
         await db.flush()
@@ -106,7 +108,8 @@ class ExcepcionVulnerabilidadService(
         scope: dict[str, Any] | None = None,
     ) -> ExcepcionVulnerabilidad | None:
         """Rechaza una excepción. Valida SoD: aprobador != creador si regla activa."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, excepcion_id)
@@ -122,7 +125,7 @@ class ExcepcionVulnerabilidadService(
 
         record.estado = "Rechazada"
         record.aprobador_id = aprobador_id
-        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
 
         await db.flush()

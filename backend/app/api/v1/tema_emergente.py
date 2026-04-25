@@ -10,12 +10,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, require_permission
+from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
-from app.core.permissions import P
 from app.core.response import success
-from app.models.user import User
 from app.models.tema_emergente import TemaEmergente
+from app.models.user import User
 from app.schemas.tema_emergente import TemaEmergenteCreate, TemaEmergenteRead, TemaEmergenteUpdate
 from app.services.audit_service import record as audit_record
 from app.services.tema_emergente_service import tema_emergente_svc
@@ -71,7 +70,8 @@ async def list_temas_emergentes(
     page_size: int = 50,
 ):
     """List temas emergentes owned by the current user (paginated)."""
-    from sqlalchemy import select, func
+    from sqlalchemy import func, select
+
     from app.core.response import paginated
 
     # Enforce pagination limits (S4: Rate limiting)

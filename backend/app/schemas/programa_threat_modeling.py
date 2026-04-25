@@ -1,7 +1,6 @@
 """ProgramaThreatModeling schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -12,9 +11,9 @@ ESTADOS_PROGRAMA = {"Activo", "Inactivo", "Completado", "Cancelado"}
 class ProgramaThreatModelingBase(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=255)
     ano: int = Field(..., ge=2000, le=2100)
-    descripcion: Optional[str] = None
-    activo_web_id: Optional[UUID] = None
-    servicio_id: Optional[UUID] = None
+    descripcion: str | None = None
+    activo_web_id: UUID | None = None
+    servicio_id: UUID | None = None
     estado: str = Field(..., description="Activo | Inactivo | Completado | Cancelado")
 
     @model_validator(mode="after")
@@ -35,12 +34,12 @@ class ProgramaThreatModelingCreate(ProgramaThreatModelingBase):
 
 class ProgramaThreatModelingUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = Field(None, min_length=1, max_length=255)
-    ano: Optional[int] = Field(None, ge=2000, le=2100)
-    descripcion: Optional[str] = None
-    activo_web_id: Optional[UUID] = None
-    servicio_id: Optional[UUID] = None
-    estado: Optional[str] = None
+    nombre: str | None = Field(None, min_length=1, max_length=255)
+    ano: int | None = Field(None, ge=2000, le=2100)
+    descripcion: str | None = None
+    activo_web_id: UUID | None = None
+    servicio_id: UUID | None = None
+    estado: str | None = None
 
     def model_post_init(self, __context) -> None:
         if self.estado is not None and self.estado not in ESTADOS_PROGRAMA:

@@ -9,7 +9,6 @@ Reglas de negocio:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -24,9 +23,9 @@ class AceptacionRiesgoBase(BaseModel):
     propietario_riesgo_id: UUID
     fecha_revision_obligatoria: datetime
     estado: str = "Pendiente"
-    aprobador_id: Optional[UUID] = None
-    fecha_aprobacion: Optional[datetime] = None
-    notas_aprobador: Optional[str] = None
+    aprobador_id: UUID | None = None
+    fecha_aprobacion: datetime | None = None
+    notas_aprobador: str | None = None
 
     @field_validator("estado")
     @classmethod
@@ -46,13 +45,13 @@ class AceptacionRiesgoCreate(AceptacionRiesgoBase):
 
 class AceptacionRiesgoUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
-    justificacion_negocio: Optional[str] = Field(None, min_length=10)
-    propietario_riesgo_id: Optional[UUID] = None
-    fecha_revision_obligatoria: Optional[datetime] = None
-    estado: Optional[str] = None
-    aprobador_id: Optional[UUID] = None
-    fecha_aprobacion: Optional[datetime] = None
-    notas_aprobador: Optional[str] = None
+    justificacion_negocio: str | None = Field(None, min_length=10)
+    propietario_riesgo_id: UUID | None = None
+    fecha_revision_obligatoria: datetime | None = None
+    estado: str | None = None
+    aprobador_id: UUID | None = None
+    fecha_aprobacion: datetime | None = None
+    notas_aprobador: str | None = None
 
     @field_validator("estado")
     @classmethod

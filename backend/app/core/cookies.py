@@ -46,7 +46,7 @@ def set_auth_cookie(
     path: str = "/",
 ) -> None:
     """Set an HttpOnly auth cookie using the framework-wide flags."""
-    response.set_cookie(  # noqa: S114  (single sanctioned call site)
+    response.set_cookie(
         key=key,
         value=value,
         max_age=max_age,
@@ -58,7 +58,7 @@ def set_auth_cookie(
 
 
 def set_csrf_cookie(response: Response, token: str) -> None:
-    response.set_cookie(  # noqa: S114  (single sanctioned call site)
+    response.set_cookie(
         key=CSRF_COOKIE,
         value=token,
         max_age=REFRESH_MAX_AGE,

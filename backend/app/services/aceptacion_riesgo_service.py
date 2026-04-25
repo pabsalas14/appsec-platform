@@ -9,6 +9,7 @@ Reglas:
 from __future__ import annotations
 
 import uuid
+from datetime import UTC
 from typing import Any
 
 from sqlalchemy import select
@@ -65,7 +66,8 @@ class AceptacionRiesgoService(
         scope: dict[str, Any] | None = None,
     ) -> AceptacionRiesgo | None:
         """Aprueba una aceptación de riesgo. Valida SoD: aprobador != creador."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, aceptacion_id)
@@ -81,7 +83,7 @@ class AceptacionRiesgoService(
 
         record.estado = "Aprobada"
         record.aprobador_id = aprobador_id
-        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
 
         await db.flush()
@@ -102,7 +104,8 @@ class AceptacionRiesgoService(
         scope: dict[str, Any] | None = None,
     ) -> AceptacionRiesgo | None:
         """Rechaza una aceptación de riesgo. Valida SoD: aprobador != creador."""
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, aceptacion_id)
@@ -118,7 +121,7 @@ class AceptacionRiesgoService(
 
         record.estado = "Rechazada"
         record.aprobador_id = aprobador_id
-        record.fecha_aprobacion = datetime.now(timezone.utc)
+        record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
 
         await db.flush()

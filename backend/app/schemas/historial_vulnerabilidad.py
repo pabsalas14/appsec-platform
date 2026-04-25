@@ -7,7 +7,6 @@ El historial es append-only: Create sí, Update/Delete no se exponen en la API
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,12 +14,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class HistorialVulnerabilidadBase(BaseModel):
     vulnerabilidad_id: UUID
-    estado_anterior: Optional[str] = Field(None, max_length=64)
-    estado_nuevo: Optional[str] = Field(None, max_length=64)
-    responsable_id: Optional[UUID] = None
+    estado_anterior: str | None = Field(None, max_length=64)
+    estado_nuevo: str | None = Field(None, max_length=64)
+    responsable_id: UUID | None = None
     # A1: justificacion requerida en transiciones críticas (validado en router/service)
-    justificacion: Optional[str] = None
-    comentario: Optional[str] = None
+    justificacion: str | None = None
+    comentario: str | None = None
 
 
 class HistorialVulnerabilidadCreate(HistorialVulnerabilidadBase):

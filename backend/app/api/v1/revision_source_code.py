@@ -1,6 +1,5 @@
 """RevisionSourceCode CRUD endpoints."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -23,8 +22,8 @@ router = APIRouter()
 
 @router.get("")
 async def list_revision_source_codes(
-    programa_sc_id: Optional[UUID] = Query(None, description="Filter by programa_sc_id"),
-    control_sc_id: Optional[UUID] = Query(None, description="Filter by control_sc_id"),
+    programa_sc_id: UUID | None = Query(None, description="Filter by programa_sc_id"),
+    control_sc_id: UUID | None = Query(None, description="Filter by control_sc_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -9,7 +9,6 @@ Reglas de negocio:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -23,9 +22,9 @@ class ExcepcionVulnerabilidadBase(BaseModel):
     justificacion: str = Field(..., min_length=10)
     fecha_limite: datetime
     estado: str = "Pendiente"
-    aprobador_id: Optional[UUID] = None
-    fecha_aprobacion: Optional[datetime] = None
-    notas_aprobador: Optional[str] = None
+    aprobador_id: UUID | None = None
+    fecha_aprobacion: datetime | None = None
+    notas_aprobador: str | None = None
 
     @field_validator("estado")
     @classmethod
@@ -45,12 +44,12 @@ class ExcepcionVulnerabilidadCreate(ExcepcionVulnerabilidadBase):
 
 class ExcepcionVulnerabilidadUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
-    justificacion: Optional[str] = Field(None, min_length=10)
-    fecha_limite: Optional[datetime] = None
-    estado: Optional[str] = None
-    aprobador_id: Optional[UUID] = None
-    fecha_aprobacion: Optional[datetime] = None
-    notas_aprobador: Optional[str] = None
+    justificacion: str | None = Field(None, min_length=10)
+    fecha_limite: datetime | None = None
+    estado: str | None = None
+    aprobador_id: UUID | None = None
+    fecha_aprobacion: datetime | None = None
+    notas_aprobador: str | None = None
 
     @field_validator("estado")
     @classmethod

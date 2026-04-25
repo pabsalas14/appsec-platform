@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -13,10 +13,10 @@ class SystemSettingRead(BaseModel):
 
     key: str
     value: Any
-    description: Optional[str] = None
+    description: str | None = None
     updated_at: datetime
 
 
 class SystemSettingUpsert(BaseModel):
     value: Any
-    description: Optional[str] = None
+    description: str | None = None

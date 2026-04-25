@@ -1,7 +1,6 @@
 """ActividadMensualSast schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,13 +10,13 @@ class ActividadMensualSastBase(BaseModel):
     programa_sast_id: UUID
     mes: int = Field(..., ge=1, le=12)
     ano: int = Field(..., ge=2000, le=2100)
-    total_hallazgos: Optional[int] = Field(None, ge=0)
-    criticos: Optional[int] = Field(None, ge=0)
-    altos: Optional[int] = Field(None, ge=0)
-    medios: Optional[int] = Field(None, ge=0)
-    bajos: Optional[int] = Field(None, ge=0)
-    score: Optional[float] = Field(None, ge=0.0, le=100.0)
-    notas: Optional[str] = None
+    total_hallazgos: int | None = Field(None, ge=0)
+    criticos: int | None = Field(None, ge=0)
+    altos: int | None = Field(None, ge=0)
+    medios: int | None = Field(None, ge=0)
+    bajos: int | None = Field(None, ge=0)
+    score: float | None = Field(None, ge=0.0, le=100.0)
+    notas: str | None = None
 
 
 class ActividadMensualSastCreate(ActividadMensualSastBase):
@@ -27,15 +26,15 @@ class ActividadMensualSastCreate(ActividadMensualSastBase):
 
 class ActividadMensualSastUpdate(BaseModel):
     """All fields optional for partial updates."""
-    mes: Optional[int] = Field(None, ge=1, le=12)
-    ano: Optional[int] = Field(None, ge=2000, le=2100)
-    total_hallazgos: Optional[int] = Field(None, ge=0)
-    criticos: Optional[int] = Field(None, ge=0)
-    altos: Optional[int] = Field(None, ge=0)
-    medios: Optional[int] = Field(None, ge=0)
-    bajos: Optional[int] = Field(None, ge=0)
-    score: Optional[float] = Field(None, ge=0.0, le=100.0)
-    notas: Optional[str] = None
+    mes: int | None = Field(None, ge=1, le=12)
+    ano: int | None = Field(None, ge=2000, le=2100)
+    total_hallazgos: int | None = Field(None, ge=0)
+    criticos: int | None = Field(None, ge=0)
+    altos: int | None = Field(None, ge=0)
+    medios: int | None = Field(None, ge=0)
+    bajos: int | None = Field(None, ge=0)
+    score: float | None = Field(None, ge=0.0, le=100.0)
+    notas: str | None = None
 
 
 class ActividadMensualSastRead(ActividadMensualSastBase):

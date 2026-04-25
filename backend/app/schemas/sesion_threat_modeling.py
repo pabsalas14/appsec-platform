@@ -1,7 +1,6 @@
 """SesionThreatModeling schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,8 +11,8 @@ ESTADOS_SESION = {"Planificada", "En Progreso", "Completada", "Cancelada"}
 class SesionThreatModelingBase(BaseModel):
     programa_tm_id: UUID
     fecha: datetime
-    participantes: Optional[str] = None
-    contexto: Optional[str] = None
+    participantes: str | None = None
+    contexto: str | None = None
     estado: str = Field(..., description="Planificada | En Progreso | Completada | Cancelada")
     ia_utilizada: bool = False
 
@@ -29,11 +28,11 @@ class SesionThreatModelingCreate(SesionThreatModelingBase):
 
 class SesionThreatModelingUpdate(BaseModel):
     """All fields optional for partial updates."""
-    fecha: Optional[datetime] = None
-    participantes: Optional[str] = None
-    contexto: Optional[str] = None
-    estado: Optional[str] = None
-    ia_utilizada: Optional[bool] = None
+    fecha: datetime | None = None
+    participantes: str | None = None
+    contexto: str | None = None
+    estado: str | None = None
+    ia_utilizada: bool | None = None
 
     def model_post_init(self, __context) -> None:
         if self.estado is not None and self.estado not in ESTADOS_SESION:
@@ -53,7 +52,7 @@ class SesionThreatModelingRead(SesionThreatModelingBase):
 class SesionThreatModelingIASuggestRequest(BaseModel):
     """Payload for AI-assisted threat suggestions."""
 
-    contexto_adicional: Optional[str] = Field(default=None, max_length=4000)
+    contexto_adicional: str | None = Field(default=None, max_length=4000)
     dry_run: bool = True
     crear_amenazas: bool = False
 

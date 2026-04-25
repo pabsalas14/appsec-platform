@@ -10,7 +10,7 @@ Provides operational health metrics:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select, text
@@ -31,7 +31,7 @@ async def system_health(
     _admin: User = Depends(require_role("super_admin", "admin")),
 ):
     """System health overview — super_admin only."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # ── Active users (logged in within last 24h based on audit logs) ──
     since_24h = now - timedelta(hours=24)

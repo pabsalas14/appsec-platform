@@ -6,10 +6,10 @@ Vincula un Servicio a una regulación en un ciclo (trimestre/año).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,9 +17,9 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.servicio import Servicio
-    from app.models.evidencia_regulacion import EvidenciaRegulacion
     from app.models.estado_cumplimiento import EstadoCumplimiento
+    from app.models.evidencia_regulacion import EvidenciaRegulacion
+    from app.models.servicio import Servicio
 
 
 class ServicioReguladoRegistro(SoftDeleteMixin, Base):
@@ -52,13 +52,13 @@ class ServicioReguladoRegistro(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    servicio: Mapped["Servicio"] = relationship(back_populates="registros_regulacion")
-    evidencias: Mapped[list["EvidenciaRegulacion"]] = relationship(
+    servicio: Mapped[Servicio] = relationship(back_populates="registros_regulacion")
+    evidencias: Mapped[list[EvidenciaRegulacion]] = relationship(
         "EvidenciaRegulacion", back_populates="registro", lazy="noload"
     )
-    estados_cumplimiento: Mapped[list["EstadoCumplimiento"]] = relationship(
+    estados_cumplimiento: Mapped[list[EstadoCumplimiento]] = relationship(
         "EstadoCumplimiento", back_populates="registro", lazy="noload"
     )

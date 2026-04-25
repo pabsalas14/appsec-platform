@@ -1,78 +1,79 @@
 """API v1 router — aggregates all endpoint modules."""
 
 from fastapi import APIRouter
+
 from app.api.v1 import (
-    changelog_entrada,
-    dashboard_config,
+    aceptacion_riesgo,
+    actividad_mensual_sast,
     activo_web,
+    actualizacion_iniciativa,
+    actualizacion_tema,
+    amenaza,
     aplicacion_movil,
     audit_logs,
+    # ── Módulo 6 — Auditorías ─────────────────────────────────────────────────
+    auditoria,
     auth,
     celula,
+    changelog_entrada,
+    cierre_conclusion,
     client_logs,
+    control_mitigacion,
     control_seguridad,
+    control_source_code,
     dashboard,
+    dashboard_config,
+    ejecucion_dast,
+    # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
+    ejecucion_mast,
+    estado_cumplimiento,
+    etapa_release,
+    evidencia_auditoria,
+    evidencia_regulacion,
+    evidencia_remediacion,
+    excepcion_vulnerabilidad,
+    filtro_guardado,
+    # ── Módulo 2 — Panel de Administración (transversal) ──────────────────────
+    flujo_estatus,
+    gerencia,
+    hallazgo_auditoria,
+    hallazgo_dast,
+    hallazgo_mast,
+    hallazgo_pipeline,
+    hallazgo_sast,
+    hallazgo_tercero,
+    historial_vulnerabilidad,
+    hito_iniciativa,
+    indicador_formula,
+    # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
+    iniciativa,
+    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
+    organizacion,
+    pipeline_release,
+    plan_remediacion,
+    programa_dast,
+    # ── Módulo 3 — Programas Anuales ────────────────────────────────────────
+    programa_sast,
+    programa_source_code,
+    programa_threat_modeling,
     projects,
+    regulacion_control,
     repositorio,
+    revision_source_code,
+    revision_tercero,
+    # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
+    service_release,
     servicio,
+    servicio_regulado_registro,
+    sesion_threat_modeling,
     subdireccion,
     tasks,
+    # ── Módulo 7 — Temas Emergentes ───────────────────────────────────────────
+    tema_emergente,
     tipo_prueba,
     uploads,
     # ── Módulo 9 — Gestión de Vulnerabilidades ─────────────────────────────
     vulnerabilidad,
-    historial_vulnerabilidad,
-    excepcion_vulnerabilidad,
-    aceptacion_riesgo,
-    evidencia_remediacion,
-    # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
-    service_release,
-    etapa_release,
-    pipeline_release,
-    hallazgo_pipeline,
-    revision_tercero,
-    hallazgo_tercero,
-    # ── Módulo 3 — Programas Anuales ────────────────────────────────────────
-    programa_sast,
-    actividad_mensual_sast,
-    hallazgo_sast,
-    programa_dast,
-    ejecucion_dast,
-    hallazgo_dast,
-    programa_threat_modeling,
-    sesion_threat_modeling,
-    amenaza,
-    control_mitigacion,
-    programa_source_code,
-    control_source_code,
-    revision_source_code,
-    servicio_regulado_registro,
-    regulacion_control,
-    evidencia_regulacion,
-    estado_cumplimiento,
-    # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
-    ejecucion_mast,
-    hallazgo_mast,
-    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
-    organizacion,
-    gerencia,
-    # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
-    iniciativa,
-    hito_iniciativa,
-    actualizacion_iniciativa,
-    # ── Módulo 6 — Auditorías ─────────────────────────────────────────────────
-    auditoria,
-    hallazgo_auditoria,
-    evidencia_auditoria,
-    plan_remediacion,
-    # ── Módulo 7 — Temas Emergentes ───────────────────────────────────────────
-    tema_emergente,
-    actualizacion_tema,
-    cierre_conclusion,
-    # ── Módulo 2 — Panel de Administración (transversal) ──────────────────────
-    flujo_estatus,
-    indicador_formula,
-    filtro_guardado,
 )
 from app.api.v1.admin.router import admin_router
 

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PlanRemediacionBase(BaseModel):
@@ -29,11 +28,11 @@ class PlanRemediacionCreate(PlanRemediacionBase):
 class PlanRemediacionUpdate(BaseModel):
     """Schema for updating PlanRemediacion (all fields optional)."""
 
-    descripcion: Optional[str] = Field(None, min_length=1)
-    acciones_recomendadas: Optional[str] = Field(None, min_length=1)
-    responsable: Optional[str] = Field(None, min_length=1, max_length=255)
-    fecha_limite: Optional[datetime] = None
-    estado: Optional[str] = Field(None, min_length=1, max_length=100)
+    descripcion: str | None = Field(None, min_length=1)
+    acciones_recomendadas: str | None = Field(None, min_length=1)
+    responsable: str | None = Field(None, min_length=1, max_length=255)
+    fecha_limite: datetime | None = None
+    estado: str | None = Field(None, min_length=1, max_length=100)
 
 
 class PlanRemediacionRead(PlanRemediacionBase):

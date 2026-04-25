@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Any, Dict
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class IndicadorFormulaBase(BaseModel):
@@ -15,11 +15,11 @@ class IndicadorFormulaBase(BaseModel):
     code: str = Field(..., min_length=1, max_length=50)
     nombre: str = Field(..., min_length=1, max_length=255)
     motor: str = Field(..., min_length=1, max_length=100)
-    formula: Dict[str, Any] = Field(...)
-    sla_config: Optional[Dict[str, int]] = Field(None)
-    threshold_green: Optional[float] = None
-    threshold_yellow: Optional[float] = None
-    threshold_red: Optional[float] = None
+    formula: dict[str, Any] = Field(...)
+    sla_config: dict[str, int] | None = Field(None)
+    threshold_green: float | None = None
+    threshold_yellow: float | None = None
+    threshold_red: float | None = None
     periodicidad: str = Field(..., min_length=1, max_length=50)
 
 
@@ -32,15 +32,15 @@ class IndicadorFormulaCreate(IndicadorFormulaBase):
 class IndicadorFormulaUpdate(BaseModel):
     """Schema for updating IndicadorFormula (all fields optional)."""
 
-    code: Optional[str] = Field(None, min_length=1, max_length=50)
-    nombre: Optional[str] = Field(None, min_length=1, max_length=255)
-    motor: Optional[str] = Field(None, min_length=1, max_length=100)
-    formula: Optional[Dict[str, Any]] = None
-    sla_config: Optional[Dict[str, int]] = None
-    threshold_green: Optional[float] = None
-    threshold_yellow: Optional[float] = None
-    threshold_red: Optional[float] = None
-    periodicidad: Optional[str] = Field(None, min_length=1, max_length=50)
+    code: str | None = Field(None, min_length=1, max_length=50)
+    nombre: str | None = Field(None, min_length=1, max_length=255)
+    motor: str | None = Field(None, min_length=1, max_length=100)
+    formula: dict[str, Any] | None = None
+    sla_config: dict[str, int] | None = None
+    threshold_green: float | None = None
+    threshold_yellow: float | None = None
+    threshold_red: float | None = None
+    periodicidad: str | None = Field(None, min_length=1, max_length=50)
 
 
 class IndicadorFormulaRead(IndicadorFormulaBase):

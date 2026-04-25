@@ -1,7 +1,6 @@
 """ReglaSoD schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -9,9 +8,9 @@ from pydantic import BaseModel, ConfigDict
 
 class ReglaSoDBase(BaseModel):
     accion: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     enabled: bool = True
-    alcance: Optional[str] = None
+    alcance: str | None = None
 
 
 class ReglaSoDCreate(ReglaSoDBase):
@@ -22,10 +21,10 @@ class ReglaSoDCreate(ReglaSoDBase):
 class ReglaSoDUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    accion: Optional[str] = None
-    descripcion: Optional[str] = None
-    enabled: Optional[bool] = None
-    alcance: Optional[str] = None
+    accion: str | None = None
+    descripcion: str | None = None
+    enabled: bool | None = None
+    alcance: str | None = None
 
 
 class ReglaSoDRead(ReglaSoDBase):

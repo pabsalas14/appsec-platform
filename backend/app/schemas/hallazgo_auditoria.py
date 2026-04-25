@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HallazgoAuditoriaBase(BaseModel):
@@ -29,11 +28,11 @@ class HallazgoAuditoriaCreate(HallazgoAuditoriaBase):
 class HallazgoAuditoriaUpdate(BaseModel):
     """Schema for updating HallazgoAuditoria (all fields optional)."""
 
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = Field(None, min_length=1)
-    severidad: Optional[str] = Field(None, min_length=1, max_length=50)
-    categoria: Optional[str] = Field(None, min_length=1, max_length=100)
-    estado: Optional[str] = Field(None, min_length=1, max_length=100)
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = Field(None, min_length=1)
+    severidad: str | None = Field(None, min_length=1, max_length=50)
+    categoria: str | None = Field(None, min_length=1, max_length=100)
+    estado: str | None = Field(None, min_length=1, max_length=100)
 
 
 class HallazgoAuditoriaRead(HallazgoAuditoriaBase):

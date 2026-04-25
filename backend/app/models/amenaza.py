@@ -7,10 +7,10 @@ Se calcula automáticamente en el service al crear/actualizar.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, Integer, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,8 +18,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.sesion_threat_modeling import SesionThreatModeling
     from app.models.control_mitigacion import ControlMitigacion
+    from app.models.sesion_threat_modeling import SesionThreatModeling
 
 
 class Amenaza(SoftDeleteMixin, Base):
@@ -60,10 +60,10 @@ class Amenaza(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    sesion: Mapped["SesionThreatModeling"] = relationship(back_populates="amenazas")
-    controles: Mapped[list["ControlMitigacion"]] = relationship(
+    sesion: Mapped[SesionThreatModeling] = relationship(back_populates="amenazas")
+    controles: Mapped[list[ControlMitigacion]] = relationship(
         "ControlMitigacion", back_populates="amenaza", lazy="noload"
     )

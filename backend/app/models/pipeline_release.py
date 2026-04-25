@@ -7,10 +7,10 @@ Los hallazgos que fallen pueden promover una Vulnerabilidad.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,9 +18,9 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.service_release import ServiceRelease
-    from app.models.repositorio import Repositorio
     from app.models.hallazgo_pipeline import HallazgoPipeline
+    from app.models.repositorio import Repositorio
+    from app.models.service_release import ServiceRelease
 
 
 class PipelineRelease(SoftDeleteMixin, Base):
@@ -63,14 +63,14 @@ class PipelineRelease(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    service_release: Mapped["ServiceRelease | None"] = relationship(
+    service_release: Mapped[ServiceRelease | None] = relationship(
         back_populates="pipelines"
     )
-    repositorio: Mapped["Repositorio"] = relationship(back_populates="pipeline_releases")
-    hallazgos: Mapped[list["HallazgoPipeline"]] = relationship(
+    repositorio: Mapped[Repositorio] = relationship(back_populates="pipeline_releases")
+    hallazgos: Mapped[list[HallazgoPipeline]] = relationship(
         "HallazgoPipeline", back_populates="pipeline_release", lazy="noload"
     )

@@ -9,10 +9,10 @@ Aplica:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,9 +20,9 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.servicio import Servicio
     from app.models.etapa_release import EtapaRelease
     from app.models.pipeline_release import PipelineRelease
+    from app.models.servicio import Servicio
 
 
 class ServiceRelease(SoftDeleteMixin, Base):
@@ -57,14 +57,14 @@ class ServiceRelease(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    servicio: Mapped["Servicio"] = relationship(back_populates="service_releases")
-    etapas: Mapped[list["EtapaRelease"]] = relationship(
+    servicio: Mapped[Servicio] = relationship(back_populates="service_releases")
+    etapas: Mapped[list[EtapaRelease]] = relationship(
         "EtapaRelease", back_populates="service_release", lazy="noload"
     )
-    pipelines: Mapped[list["PipelineRelease"]] = relationship(
+    pipelines: Mapped[list[PipelineRelease]] = relationship(
         "PipelineRelease", back_populates="service_release", lazy="noload"
     )

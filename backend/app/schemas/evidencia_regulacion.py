@@ -4,7 +4,6 @@ sha256 almacena el hash SHA-256 del archivo de evidencia (A3).
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -12,15 +11,15 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class EvidenciaRegulacionBase(BaseModel):
     registro_id: UUID
-    control_id: Optional[UUID] = None
+    control_id: UUID | None = None
     descripcion: str = Field(..., min_length=1)
-    filename: Optional[str] = Field(None, max_length=500)
-    sha256: Optional[str] = Field(None, max_length=64, description="SHA-256 hex del archivo (A3)")
+    filename: str | None = Field(None, max_length=500)
+    sha256: str | None = Field(None, max_length=64, description="SHA-256 hex del archivo (A3)")
     fecha: datetime
 
     @field_validator("sha256")
     @classmethod
-    def validate_sha256(cls, v: Optional[str]) -> Optional[str]:
+    def validate_sha256(cls, v: str | None) -> str | None:
         if v is not None and len(v) != 64:
             raise ValueError("sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v
@@ -33,15 +32,15 @@ class EvidenciaRegulacionCreate(EvidenciaRegulacionBase):
 
 class EvidenciaRegulacionUpdate(BaseModel):
     """All fields optional for partial updates."""
-    control_id: Optional[UUID] = None
-    descripcion: Optional[str] = Field(None, min_length=1)
-    filename: Optional[str] = Field(None, max_length=500)
-    sha256: Optional[str] = Field(None, max_length=64)
-    fecha: Optional[datetime] = None
+    control_id: UUID | None = None
+    descripcion: str | None = Field(None, min_length=1)
+    filename: str | None = Field(None, max_length=500)
+    sha256: str | None = Field(None, max_length=64)
+    fecha: datetime | None = None
 
     @field_validator("sha256")
     @classmethod
-    def validate_sha256(cls, v: Optional[str]) -> Optional[str]:
+    def validate_sha256(cls, v: str | None) -> str | None:
         if v is not None and len(v) != 64:
             raise ValueError("sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v

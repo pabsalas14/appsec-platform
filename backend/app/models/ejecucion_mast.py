@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -47,10 +47,10 @@ class EjecucionMAST(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    aplicacion_movil: Mapped["AplicacionMovil"] = relationship(back_populates="ejecuciones_mast")
-    hallazgos: Mapped[list["HallazgoMAST"]] = relationship(
+    aplicacion_movil: Mapped[AplicacionMovil] = relationship(back_populates="ejecuciones_mast")
+    hallazgos: Mapped[list[HallazgoMAST]] = relationship(
         "HallazgoMAST", back_populates="ejecucion", lazy="noload"
     )

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -51,8 +51,8 @@ class HallazgoMAST(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    ejecucion: Mapped["EjecucionMAST"] = relationship(back_populates="hallazgos")
+    ejecucion: Mapped[EjecucionMAST] = relationship(back_populates="hallazgos")
     # vulnerabilidad_id se vinculará en Módulo 9 cuando se complete la gestión de Vulnerabilidades

@@ -7,7 +7,6 @@ Separate from ``schemas/auth.py`` because the admin endpoints expose fields
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -36,7 +35,7 @@ class UserAdminCreate(BaseModel):
     username: str = Field(min_length=3, max_length=150)
     email: EmailStr
     password: str = Field(min_length=10, max_length=128)
-    full_name: Optional[str] = Field(default=None, max_length=255)
+    full_name: str | None = Field(default=None, max_length=255)
     role: str = Field(default="user")
     is_active: bool = True
 
@@ -44,10 +43,10 @@ class UserAdminCreate(BaseModel):
 class UserAdminUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = Field(default=None, max_length=255)
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
+    email: EmailStr | None = None
+    full_name: str | None = Field(default=None, max_length=255)
+    role: str | None = None
+    is_active: bool | None = None
 
 
 class UserPasswordReset(BaseModel):
@@ -57,9 +56,9 @@ class UserPasswordReset(BaseModel):
 
 
 __all__ = [
+    "VALID_ROLES",
     "UserAdminCreate",
     "UserAdminRead",
     "UserAdminUpdate",
     "UserPasswordReset",
-    "VALID_ROLES",
 ]

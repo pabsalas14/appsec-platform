@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.control_seguridad import ControlSeguridad
+from app.models.user import User
 from app.schemas.control_seguridad import ControlSeguridadCreate, ControlSeguridadRead, ControlSeguridadUpdate
 from app.services.control_seguridad_service import control_seguridad_svc
 

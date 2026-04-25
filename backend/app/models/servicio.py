@@ -1,10 +1,10 @@
 """Servicio model — owned per-user entity."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,9 +13,9 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
-    from app.models.service_release import ServiceRelease
-    from app.models.revision_tercero import RevisionTercero
     from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.revision_tercero import RevisionTercero
+    from app.models.service_release import ServiceRelease
     from app.models.servicio_regulado_registro import ServicioReguladoRegistro
 
 
@@ -47,7 +47,7 @@ class Servicio(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     celula: Mapped["Celula"] = relationship(back_populates="servicios")

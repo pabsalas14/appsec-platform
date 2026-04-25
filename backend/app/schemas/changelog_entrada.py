@@ -1,11 +1,10 @@
 """ChangelogEntrada schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 ValidTipos = Literal["feature", "bugfix", "improvement", "security", "breaking"]
 
@@ -15,7 +14,7 @@ class ChangelogEntradaBase(BaseModel):
     titulo: str = Field(..., max_length=255)
     descripcion: str
     tipo: ValidTipos
-    fecha_publicacion: Optional[datetime] = None
+    fecha_publicacion: datetime | None = None
     publicado: bool = False
 
 
@@ -26,12 +25,12 @@ class ChangelogEntradaCreate(ChangelogEntradaBase):
 
 class ChangelogEntradaUpdate(BaseModel):
     """All fields optional for partial updates."""
-    version: Optional[str] = Field(None, max_length=50)
-    titulo: Optional[str] = Field(None, max_length=255)
-    descripcion: Optional[str] = None
-    tipo: Optional[ValidTipos] = None
-    fecha_publicacion: Optional[datetime] = None
-    publicado: Optional[bool] = None
+    version: str | None = Field(None, max_length=50)
+    titulo: str | None = Field(None, max_length=255)
+    descripcion: str | None = None
+    tipo: ValidTipos | None = None
+    fecha_publicacion: datetime | None = None
+    publicado: bool | None = None
 
 
 class ChangelogEntradaRead(ChangelogEntradaBase):

@@ -1,7 +1,6 @@
 """HallazgoPipeline schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -18,13 +17,13 @@ ESTADOS_VALIDOS = [
 
 class HallazgoPipelineBase(BaseModel):
     pipeline_release_id: UUID
-    vulnerabilidad_id: Optional[UUID] = None
+    vulnerabilidad_id: UUID | None = None
     titulo: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     severidad: str
-    archivo: Optional[str] = None
-    linea: Optional[int] = None
-    regla: Optional[str] = None
+    archivo: str | None = None
+    linea: int | None = None
+    regla: str | None = None
     estado: str = "Abierto"
 
     @field_validator("severidad")
@@ -53,18 +52,18 @@ class HallazgoPipelineCreate(HallazgoPipelineBase):
 
 class HallazgoPipelineUpdate(BaseModel):
     """All fields optional for partial updates."""
-    vulnerabilidad_id: Optional[UUID] = None
-    titulo: Optional[str] = None
-    descripcion: Optional[str] = None
-    severidad: Optional[str] = None
-    archivo: Optional[str] = None
-    linea: Optional[int] = None
-    regla: Optional[str] = None
-    estado: Optional[str] = None
+    vulnerabilidad_id: UUID | None = None
+    titulo: str | None = None
+    descripcion: str | None = None
+    severidad: str | None = None
+    archivo: str | None = None
+    linea: int | None = None
+    regla: str | None = None
+    estado: str | None = None
 
     @field_validator("severidad")
     @classmethod
-    def validate_severidad(cls, v: Optional[str]) -> Optional[str]:
+    def validate_severidad(cls, v: str | None) -> str | None:
         if v is not None and v not in SEVERIDADES_VALIDAS:
             raise ValueError(
                 f"severidad '{v}' inválida. Valores permitidos: {SEVERIDADES_VALIDAS}"
@@ -73,7 +72,7 @@ class HallazgoPipelineUpdate(BaseModel):
 
     @field_validator("estado")
     @classmethod
-    def validate_estado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
             raise ValueError(
                 f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"

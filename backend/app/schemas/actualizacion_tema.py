@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ActualizacionTemaBase(BaseModel):
@@ -14,7 +13,7 @@ class ActualizacionTemaBase(BaseModel):
 
     titulo: str = Field(..., min_length=1, max_length=255)
     contenido: str = Field(..., min_length=1)
-    fuente: Optional[str] = Field(None, max_length=255)
+    fuente: str | None = Field(None, max_length=255)
     tema_id: UUID = Field(...)
 
 
@@ -27,9 +26,9 @@ class ActualizacionTemaCreate(ActualizacionTemaBase):
 class ActualizacionTemaUpdate(BaseModel):
     """Schema for updating ActualizacionTema (all fields optional)."""
 
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    contenido: Optional[str] = Field(None, min_length=1)
-    fuente: Optional[str] = Field(None, max_length=255)
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    contenido: str | None = Field(None, min_length=1)
+    fuente: str | None = Field(None, max_length=255)
 
 
 class ActualizacionTemaRead(ActualizacionTemaBase):

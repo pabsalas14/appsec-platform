@@ -1,7 +1,6 @@
 """HallazgoDast schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,12 +11,12 @@ ESTADOS_HALLAZGO = {"Abierto", "Cerrado", "Falso Positivo", "Aceptado", "En Reme
 
 class HallazgoDastBase(BaseModel):
     ejecucion_dast_id: UUID
-    vulnerabilidad_id: Optional[UUID] = None
+    vulnerabilidad_id: UUID | None = None
     titulo: str = Field(..., min_length=1, max_length=255)
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     severidad: str = Field(..., description="Critica | Alta | Media | Baja")
-    url: Optional[str] = Field(None, max_length=500)
-    parametro: Optional[str] = Field(None, max_length=255)
+    url: str | None = Field(None, max_length=500)
+    parametro: str | None = Field(None, max_length=255)
     estado: str = Field(..., description="Abierto | Cerrado | Falso Positivo | Aceptado | En Remediacion")
 
     def model_post_init(self, __context) -> None:
@@ -34,13 +33,13 @@ class HallazgoDastCreate(HallazgoDastBase):
 
 class HallazgoDastUpdate(BaseModel):
     """All fields optional for partial updates."""
-    vulnerabilidad_id: Optional[UUID] = None
-    titulo: Optional[str] = Field(None, min_length=1, max_length=255)
-    descripcion: Optional[str] = None
-    severidad: Optional[str] = None
-    url: Optional[str] = Field(None, max_length=500)
-    parametro: Optional[str] = Field(None, max_length=255)
-    estado: Optional[str] = None
+    vulnerabilidad_id: UUID | None = None
+    titulo: str | None = Field(None, min_length=1, max_length=255)
+    descripcion: str | None = None
+    severidad: str | None = None
+    url: str | None = Field(None, max_length=500)
+    parametro: str | None = Field(None, max_length=255)
+    estado: str | None = None
 
     def model_post_init(self, __context) -> None:
         if self.severidad is not None and self.severidad not in SEVERIDADES:

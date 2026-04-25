@@ -1,15 +1,15 @@
 """HerramientaExterna model — A5-compliant encrypted credentials and A2 soft delete."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, String, ForeignKey, text, CheckConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.encryption import EncryptedString
 from app.database import Base
 from app.models.mixins import SoftDeleteMixin
-from app.core.encryption import EncryptedString
 
 
 class HerramientaExterna(Base, SoftDeleteMixin):
@@ -27,17 +27,17 @@ class HerramientaExterna(Base, SoftDeleteMixin):
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
     tipo: Mapped[str] = mapped_column(String(255), nullable=False)
     url_base: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    
+
     # [A5] Mandatory At-Rest Encryption — Stored ciphertext, Loaded as plaintext
     api_token: Mapped[str | None] = mapped_column(EncryptedString, nullable=True)
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     __table_args__ = (

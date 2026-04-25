@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FlujoEstatusBase(BaseModel):
@@ -29,12 +28,12 @@ class FlujoEstatusCreate(FlujoEstatusBase):
 class FlujoEstatusUpdate(BaseModel):
     """Schema for updating FlujoEstatus (all fields optional)."""
 
-    entity_type: Optional[str] = Field(None, min_length=1, max_length=100)
-    from_status: Optional[str] = Field(None, min_length=1, max_length=100)
-    to_status: Optional[str] = Field(None, min_length=1, max_length=100)
-    allowed: Optional[bool] = None
-    requires_justification: Optional[bool] = None
-    requires_approval: Optional[bool] = None
+    entity_type: str | None = Field(None, min_length=1, max_length=100)
+    from_status: str | None = Field(None, min_length=1, max_length=100)
+    to_status: str | None = Field(None, min_length=1, max_length=100)
+    allowed: bool | None = None
+    requires_justification: bool | None = None
+    requires_approval: bool | None = None
 
 
 class FlujoEstatusRead(FlujoEstatusBase):

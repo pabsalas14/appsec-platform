@@ -1,7 +1,7 @@
 """ActivoWeb model — owned per-user entity."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, text
@@ -13,9 +13,9 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
-    from app.models.revision_tercero import RevisionTercero
     from app.models.programa_dast import ProgramaDast
     from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.revision_tercero import RevisionTercero
 
 
 class ActivoWeb(SoftDeleteMixin, Base):
@@ -49,7 +49,7 @@ class ActivoWeb(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     celula: Mapped["Celula"] = relationship(back_populates="activo_webs")

@@ -7,10 +7,10 @@ secret scanning, dependency review, etc. (no integración con APIs).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,10 +50,10 @@ class ProgramaSourceCode(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    repositorio: Mapped["Repositorio"] = relationship(back_populates="programas_source_code")
-    revisiones: Mapped[list["RevisionSourceCode"]] = relationship(
+    repositorio: Mapped[Repositorio] = relationship(back_populates="programas_source_code")
+    revisiones: Mapped[list[RevisionSourceCode]] = relationship(
         "RevisionSourceCode", back_populates="programa_sc", lazy="noload"
     )

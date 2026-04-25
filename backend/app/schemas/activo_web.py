@@ -1,10 +1,10 @@
 """ActivoWeb schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+
 from app.core.validators import SSRFHttpUrl
 
 
@@ -24,11 +24,11 @@ class ActivoWebCreate(ActivoWebBase):
 class ActivoWebUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    url: Optional[SSRFHttpUrl] = None
-    ambiente: Optional[str] = None
-    tipo: Optional[str] = None
-    celula_id: Optional[UUID] = None
+    nombre: str | None = None
+    url: SSRFHttpUrl | None = None
+    ambiente: str | None = None
+    tipo: str | None = None
+    celula_id: UUID | None = None
 
 
 class ActivoWebRead(ActivoWebBase):

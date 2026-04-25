@@ -1,6 +1,5 @@
 """Amenaza CRUD endpoints."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -19,7 +18,7 @@ router = APIRouter()
 
 @router.get("")
 async def list_amenazas(
-    sesion_id: Optional[UUID] = Query(None, description="Filter by sesion_id"),
+    sesion_id: UUID | None = Query(None, description="Filter by sesion_id"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

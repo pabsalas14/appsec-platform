@@ -11,7 +11,7 @@ from app.api.deps import get_db, require_backoffice
 from app.core.response import success
 from app.models.system_setting import SystemSetting
 from app.models.user import User
-from app.schemas.ia_config import IAConfigRead, IATestCallRead, IATestCallRequest, IAConfigUpdate
+from app.schemas.ia_config import IAConfigUpdate, IATestCallRead, IATestCallRequest
 from app.services.audit_service import record as audit_record
 from app.services.ia_provider import IAProviderError, read_ia_config, run_prompt
 

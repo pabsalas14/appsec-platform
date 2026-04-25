@@ -10,7 +10,6 @@ Add new permission modules here as you build on the framework.
 
 from enum import Enum
 
-
 # ─── Roles ───────────────────────────────────────────────────────────────────
 
 class RolEnum(str, Enum):

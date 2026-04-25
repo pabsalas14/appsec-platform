@@ -4,7 +4,6 @@ evidencia_sha256 almacena el hash SHA-256 del archivo de evidencia (A3).
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -17,13 +16,13 @@ class RevisionSourceCodeBase(BaseModel):
     control_sc_id: UUID
     fecha_revision: datetime
     resultado: str = Field(..., description="Cumple | No Cumple | Parcial | No Aplica")
-    evidencia_filename: Optional[str] = Field(None, max_length=500)
-    evidencia_sha256: Optional[str] = Field(None, max_length=64, description="SHA-256 hex del archivo (A3)")
-    notas: Optional[str] = None
+    evidencia_filename: str | None = Field(None, max_length=500)
+    evidencia_sha256: str | None = Field(None, max_length=64, description="SHA-256 hex del archivo (A3)")
+    notas: str | None = None
 
     @field_validator("evidencia_sha256")
     @classmethod
-    def validate_sha256(cls, v: Optional[str]) -> Optional[str]:
+    def validate_sha256(cls, v: str | None) -> str | None:
         if v is not None and len(v) != 64:
             raise ValueError("evidencia_sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v
@@ -40,15 +39,15 @@ class RevisionSourceCodeCreate(RevisionSourceCodeBase):
 
 class RevisionSourceCodeUpdate(BaseModel):
     """All fields optional for partial updates."""
-    fecha_revision: Optional[datetime] = None
-    resultado: Optional[str] = None
-    evidencia_filename: Optional[str] = Field(None, max_length=500)
-    evidencia_sha256: Optional[str] = Field(None, max_length=64)
-    notas: Optional[str] = None
+    fecha_revision: datetime | None = None
+    resultado: str | None = None
+    evidencia_filename: str | None = Field(None, max_length=500)
+    evidencia_sha256: str | None = Field(None, max_length=64)
+    notas: str | None = None
 
     @field_validator("evidencia_sha256")
     @classmethod
-    def validate_sha256(cls, v: Optional[str]) -> Optional[str]:
+    def validate_sha256(cls, v: str | None) -> str | None:
         if v is not None and len(v) != 64:
             raise ValueError("evidencia_sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v

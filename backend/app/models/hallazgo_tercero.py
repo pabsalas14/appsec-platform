@@ -7,10 +7,10 @@ Aplica SoftDeleteMixin (A2) y audit trail (A5).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, Float, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -61,13 +61,13 @@ class HallazgoTercero(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    revision_tercero: Mapped["RevisionTercero"] = relationship(
+    revision_tercero: Mapped[RevisionTercero] = relationship(
         back_populates="hallazgos"
     )
-    vulnerabilidad: Mapped["Vulnerabilidad | None"] = relationship(
+    vulnerabilidad: Mapped[Vulnerabilidad | None] = relationship(
         "Vulnerabilidad", back_populates="hallazgos_tercero", lazy="noload"
     )

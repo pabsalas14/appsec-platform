@@ -1,7 +1,6 @@
 """EstadoCumplimiento schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,10 +10,10 @@ ESTADOS_CUMPLIMIENTO = {"Cumple", "No Cumple", "Parcial", "No Aplica"}
 
 class EstadoCumplimientoBase(BaseModel):
     registro_id: UUID
-    control_id: Optional[UUID] = None
+    control_id: UUID | None = None
     estado: str = Field(..., description="Cumple | No Cumple | Parcial | No Aplica")
-    porcentaje: Optional[float] = Field(None, ge=0.0, le=100.0)
-    notas: Optional[str] = None
+    porcentaje: float | None = Field(None, ge=0.0, le=100.0)
+    notas: str | None = None
     fecha_evaluacion: datetime
 
     def model_post_init(self, __context) -> None:
@@ -29,11 +28,11 @@ class EstadoCumplimientoCreate(EstadoCumplimientoBase):
 
 class EstadoCumplimientoUpdate(BaseModel):
     """All fields optional for partial updates."""
-    control_id: Optional[UUID] = None
-    estado: Optional[str] = None
-    porcentaje: Optional[float] = Field(None, ge=0.0, le=100.0)
-    notas: Optional[str] = None
-    fecha_evaluacion: Optional[datetime] = None
+    control_id: UUID | None = None
+    estado: str | None = None
+    porcentaje: float | None = Field(None, ge=0.0, le=100.0)
+    notas: str | None = None
+    fecha_evaluacion: datetime | None = None
 
     def model_post_init(self, __context) -> None:
         if self.estado is not None and self.estado not in ESTADOS_CUMPLIMIENTO:

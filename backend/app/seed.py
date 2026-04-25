@@ -15,18 +15,17 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from app.api.v1.admin.settings import DEFAULT_SETTINGS
 from app.config import settings
 from app.core.logging import configure_logging, logger
 from app.core.security import hash_password, validate_password_strength
 from app.database import async_session
-from app.models.user import User
-from app.models.system_setting import SystemSetting
-from app.models.regla_so_d import ReglaSoD
-from app.models.tipo_prueba import TipoPrueba
 from app.models.control_seguridad import ControlSeguridad
 from app.models.herramienta_externa import HerramientaExterna
-from app.api.v1.admin.settings import DEFAULT_SETTINGS
-
+from app.models.regla_so_d import ReglaSoD
+from app.models.system_setting import SystemSetting
+from app.models.tipo_prueba import TipoPrueba
+from app.models.user import User
 
 # ─── Admin user ───────────────────────────────────────────────────────────────
 

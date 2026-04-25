@@ -8,18 +8,18 @@ son inmutables una vez creados (tamper-evident por diseño).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.vulnerabilidad import Vulnerabilidad
     from app.models.user import User
+    from app.models.vulnerabilidad import Vulnerabilidad
 
 
 class HistorialVulnerabilidad(Base):
@@ -68,16 +68,16 @@ class HistorialVulnerabilidad(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # ── Relationships ────────────────────────────────────────────────────────
-    vulnerabilidad: Mapped["Vulnerabilidad"] = relationship(
+    vulnerabilidad: Mapped[Vulnerabilidad] = relationship(
         "Vulnerabilidad", back_populates="historial", lazy="noload"
     )
-    actor: Mapped["User"] = relationship(
+    actor: Mapped[User] = relationship(
         "User", foreign_keys=[user_id], lazy="noload"
     )
-    responsable: Mapped["User | None"] = relationship(
+    responsable: Mapped[User | None] = relationship(
         "User", foreign_keys=[responsable_id], lazy="noload"
     )

@@ -1,7 +1,6 @@
 """PipelineRelease schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -18,13 +17,13 @@ RESULTADOS_VALIDOS = [
 
 
 class PipelineReleaseBase(BaseModel):
-    service_release_id: Optional[UUID] = None
+    service_release_id: UUID | None = None
     repositorio_id: UUID
     rama: str
-    commit_sha: Optional[str] = None
+    commit_sha: str | None = None
     tipo: str
     resultado: str = "Pendiente"
-    herramienta: Optional[str] = None
+    herramienta: str | None = None
 
     @field_validator("tipo")
     @classmethod
@@ -52,14 +51,14 @@ class PipelineReleaseCreate(PipelineReleaseBase):
 
 class PipelineReleaseUpdate(BaseModel):
     """All fields optional for partial updates."""
-    rama: Optional[str] = None
-    commit_sha: Optional[str] = None
-    resultado: Optional[str] = None
-    herramienta: Optional[str] = None
+    rama: str | None = None
+    commit_sha: str | None = None
+    resultado: str | None = None
+    herramienta: str | None = None
 
     @field_validator("resultado")
     @classmethod
-    def validate_resultado(cls, v: Optional[str]) -> Optional[str]:
+    def validate_resultado(cls, v: str | None) -> str | None:
         if v is not None and v not in RESULTADOS_VALIDOS:
             raise ValueError(
                 f"resultado '{v}' inválido. Valores permitidos: {RESULTADOS_VALIDOS}"

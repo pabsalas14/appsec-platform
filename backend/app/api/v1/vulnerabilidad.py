@@ -135,7 +135,8 @@ async def list_vulnerabilidads(
     page_size: int = 50,
 ):
     """List vulnerabilidads owned by the current user (paginated)."""
-    from sqlalchemy import select, func
+    from sqlalchemy import func, select
+
     from app.core.response import paginated
 
     # Enforce pagination limits (S4: Rate limiting)

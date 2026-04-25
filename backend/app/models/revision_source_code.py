@@ -6,10 +6,10 @@ La evidencia tiene hash SHA-256 para garantizar integridad (A3).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text, ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,8 +17,8 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
-    from app.models.programa_source_code import ProgramaSourceCode
     from app.models.control_source_code import ControlSourceCode
+    from app.models.programa_source_code import ProgramaSourceCode
 
 
 class RevisionSourceCode(SoftDeleteMixin, Base):
@@ -60,8 +60,8 @@ class RevisionSourceCode(SoftDeleteMixin, Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
-        onupdate=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(UTC),
     )
 
-    programa_sc: Mapped["ProgramaSourceCode"] = relationship(back_populates="revisiones")
-    control_sc: Mapped["ControlSourceCode"] = relationship(back_populates="revisiones")
+    programa_sc: Mapped[ProgramaSourceCode] = relationship(back_populates="revisiones")
+    control_sc: Mapped[ControlSourceCode] = relationship(back_populates="revisiones")

@@ -1,7 +1,6 @@
 """AplicacionMovil schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -22,10 +21,10 @@ class AplicacionMovilCreate(AplicacionMovilBase):
 class AplicacionMovilUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    plataforma: Optional[str] = None
-    bundle_id: Optional[str] = None
-    celula_id: Optional[UUID] = None
+    nombre: str | None = None
+    plataforma: str | None = None
+    bundle_id: str | None = None
+    celula_id: UUID | None = None
 
 
 class AplicacionMovilRead(AplicacionMovilBase):

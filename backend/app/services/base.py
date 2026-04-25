@@ -29,7 +29,8 @@ Usage::
 """
 
 import uuid
-from typing import Any, Generic, Sequence, Type, TypeVar
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -54,7 +55,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
 
     def __init__(
         self,
-        model: Type[ModelT],
+        model: type[ModelT],
         *,
         owner_field: str | None = None,
         default_order_by: str = "created_at",
@@ -231,9 +232,9 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             # Soft-delete (A2): keep row, mark as deleted.
             import datetime as _dt
 
-            setattr(record, "deleted_at", _dt.datetime.now(_dt.timezone.utc))
+            record.deleted_at = _dt.datetime.now(_dt.UTC)
             if hasattr(record, "deleted_by"):
-                setattr(record, "deleted_by", _coerce_uuid(actor_id))
+                record.deleted_by = _coerce_uuid(actor_id)
             await db.flush()
             await db.refresh(record)
         else:

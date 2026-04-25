@@ -4,7 +4,7 @@ categoria must be one of: SAST, DAST, SCA, TM, MAST.
 """
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -15,7 +15,7 @@ CategoriaValida = Literal["SAST", "DAST", "SCA", "TM", "MAST"]
 class TipoPruebaBase(BaseModel):
     nombre: str
     categoria: CategoriaValida
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
 
 
 class TipoPruebaCreate(TipoPruebaBase):
@@ -26,9 +26,9 @@ class TipoPruebaCreate(TipoPruebaBase):
 class TipoPruebaUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    nombre: Optional[str] = None
-    categoria: Optional[CategoriaValida] = None
-    descripcion: Optional[str] = None
+    nombre: str | None = None
+    categoria: CategoriaValida | None = None
+    descripcion: str | None = None
 
 
 class TipoPruebaRead(TipoPruebaBase):

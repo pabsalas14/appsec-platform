@@ -11,9 +11,8 @@ Validaciones de negocio:
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -24,20 +23,20 @@ SEVERIDADES_VALIDAS = {"Critica", "Alta", "Media", "Baja"}
 
 class VulnerabilidadBase(BaseModel):
     titulo: str = Field(..., min_length=3, max_length=255)
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     fuente: str
     severidad: str
     estado: str
-    cvss_score: Optional[float] = Field(None, ge=0.0, le=10.0)
-    cwe_id: Optional[str] = Field(None, max_length=16)
-    owasp_categoria: Optional[str] = Field(None, max_length=64)
-    responsable_id: Optional[UUID] = None
-    fecha_limite_sla: Optional[datetime] = None
+    cvss_score: float | None = Field(None, ge=0.0, le=10.0)
+    cwe_id: str | None = Field(None, max_length=16)
+    owasp_categoria: str | None = Field(None, max_length=64)
+    responsable_id: UUID | None = None
+    fecha_limite_sla: datetime | None = None
     # Polymorphic asset (exactamente uno requerido en Create)
-    repositorio_id: Optional[UUID] = None
-    activo_web_id: Optional[UUID] = None
-    servicio_id: Optional[UUID] = None
-    aplicacion_movil_id: Optional[UUID] = None
+    repositorio_id: UUID | None = None
+    activo_web_id: UUID | None = None
+    servicio_id: UUID | None = None
+    aplicacion_movil_id: UUID | None = None
 
     @field_validator("fuente")
     @classmethod
@@ -65,20 +64,20 @@ class VulnerabilidadCreate(VulnerabilidadBase):
 
 class VulnerabilidadUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
-    titulo: Optional[str] = Field(None, min_length=3, max_length=255)
-    descripcion: Optional[str] = None
-    fuente: Optional[str] = None
-    severidad: Optional[str] = None
-    estado: Optional[str] = None
-    cvss_score: Optional[float] = Field(None, ge=0.0, le=10.0)
-    cwe_id: Optional[str] = Field(None, max_length=16)
-    owasp_categoria: Optional[str] = Field(None, max_length=64)
-    responsable_id: Optional[UUID] = None
-    fecha_limite_sla: Optional[datetime] = None
-    repositorio_id: Optional[UUID] = None
-    activo_web_id: Optional[UUID] = None
-    servicio_id: Optional[UUID] = None
-    aplicacion_movil_id: Optional[UUID] = None
+    titulo: str | None = Field(None, min_length=3, max_length=255)
+    descripcion: str | None = None
+    fuente: str | None = None
+    severidad: str | None = None
+    estado: str | None = None
+    cvss_score: float | None = Field(None, ge=0.0, le=10.0)
+    cwe_id: str | None = Field(None, max_length=16)
+    owasp_categoria: str | None = Field(None, max_length=64)
+    responsable_id: UUID | None = None
+    fecha_limite_sla: datetime | None = None
+    repositorio_id: UUID | None = None
+    activo_web_id: UUID | None = None
+    servicio_id: UUID | None = None
+    aplicacion_movil_id: UUID | None = None
 
     @field_validator("fuente")
     @classmethod
@@ -110,7 +109,7 @@ class VulnerabilidadRead(VulnerabilidadBase):
 class VulnerabilidadIATriageRequest(BaseModel):
     """Payload for IA-assisted false-positive triage."""
 
-    contexto_adicional: Optional[str] = Field(default=None, max_length=4000)
+    contexto_adicional: str | None = Field(default=None, max_length=4000)
     dry_run: bool = True
 
 
@@ -123,5 +122,5 @@ class VulnerabilidadIATriageRead(BaseModel):
     verdict: Literal["false_positive", "likely_real", "needs_review"]
     confidence: float = Field(ge=0.0, le=1.0)
     rationale: str
-    suggested_state: Optional[str] = None
+    suggested_state: str | None = None
     raw_content: str

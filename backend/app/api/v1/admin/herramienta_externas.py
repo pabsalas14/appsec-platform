@@ -71,7 +71,7 @@ async def update_herramienta(
     existing = await herramienta_externa_svc.get(db, id)
     if not existing:
         raise NotFoundException("HerramientaExterna")
-    
+
     updated = await herramienta_externa_svc.update(db, id, entity_in)
     return success(HerramientaExternaRead.model_validate(updated).model_dump(mode="json"))
 
@@ -86,6 +86,6 @@ async def delete_herramienta(
     existing = await herramienta_externa_svc.get(db, id)
     if not existing:
         raise NotFoundException("HerramientaExterna")
-        
+
     await herramienta_externa_svc.delete(db, id, actor_id=current_user.id)
     return success(None, meta={"message": "HerramientaExterna deleted"})
