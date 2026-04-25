@@ -16,7 +16,7 @@ class EstadoCumplimientoBase(BaseModel):
     notas: str | None = None
     fecha_evaluacion: datetime
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_CUMPLIMIENTO:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_CUMPLIMIENTO)}")
 
@@ -34,7 +34,7 @@ class EstadoCumplimientoUpdate(BaseModel):
     notas: str | None = None
     fecha_evaluacion: datetime | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_CUMPLIMIENTO:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_CUMPLIMIENTO)}")
 

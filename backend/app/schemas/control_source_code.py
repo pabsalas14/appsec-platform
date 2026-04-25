@@ -26,7 +26,7 @@ class ControlSourceCodeBase(BaseModel):
     descripcion: str | None = None
     obligatorio: bool = True
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.tipo not in TIPOS_CONTROL:
             raise ValueError(f"tipo debe ser uno de {sorted(TIPOS_CONTROL)}")
 
@@ -43,7 +43,7 @@ class ControlSourceCodeUpdate(BaseModel):
     descripcion: str | None = None
     obligatorio: bool | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.tipo is not None and self.tipo not in TIPOS_CONTROL:
             raise ValueError(f"tipo debe ser uno de {sorted(TIPOS_CONTROL)}")
 

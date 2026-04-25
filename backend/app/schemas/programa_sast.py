@@ -15,7 +15,7 @@ class ProgramaSastBase(BaseModel):
     repositorio_id: UUID
     estado: str = Field(..., description="Activo | Inactivo | Completado | Cancelado")
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_PROGRAMA:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_PROGRAMA)}")
 
@@ -33,7 +33,7 @@ class ProgramaSastUpdate(BaseModel):
     repositorio_id: UUID | None = None
     estado: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_PROGRAMA:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_PROGRAMA)}")
 

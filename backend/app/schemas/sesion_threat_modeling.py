@@ -16,7 +16,7 @@ class SesionThreatModelingBase(BaseModel):
     estado: str = Field(..., description="Planificada | En Progreso | Completada | Cancelada")
     ia_utilizada: bool = False
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_SESION:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_SESION)}")
 
@@ -34,7 +34,7 @@ class SesionThreatModelingUpdate(BaseModel):
     estado: str | None = None
     ia_utilizada: bool | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_SESION:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_SESION)}")
 

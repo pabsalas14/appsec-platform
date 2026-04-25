@@ -19,7 +19,7 @@ class HallazgoDastBase(BaseModel):
     parametro: str | None = Field(None, max_length=255)
     estado: str = Field(..., description="Abierto | Cerrado | Falso Positivo | Aceptado | En Remediacion")
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.severidad not in SEVERIDADES:
             raise ValueError(f"severidad debe ser uno de {sorted(SEVERIDADES)}")
         if self.estado not in ESTADOS_HALLAZGO:
@@ -41,7 +41,7 @@ class HallazgoDastUpdate(BaseModel):
     parametro: str | None = Field(None, max_length=255)
     estado: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.severidad is not None and self.severidad not in SEVERIDADES:
             raise ValueError(f"severidad debe ser uno de {sorted(SEVERIDADES)}")
         if self.estado is not None and self.estado not in ESTADOS_HALLAZGO:

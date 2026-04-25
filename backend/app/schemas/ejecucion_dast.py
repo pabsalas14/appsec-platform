@@ -24,7 +24,7 @@ class EjecucionDastBase(BaseModel):
             raise ValueError("fecha_fin debe ser posterior a fecha_inicio")
         return self
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.ambiente not in AMBIENTES:
             raise ValueError(f"ambiente debe ser uno de {sorted(AMBIENTES)}")
         if self.resultado not in RESULTADOS:
@@ -45,7 +45,7 @@ class EjecucionDastUpdate(BaseModel):
     resultado: str | None = None
     notas: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.ambiente is not None and self.ambiente not in AMBIENTES:
             raise ValueError(f"ambiente debe ser uno de {sorted(AMBIENTES)}")
         if self.resultado is not None and self.resultado not in RESULTADOS:

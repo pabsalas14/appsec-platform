@@ -274,6 +274,6 @@ def configure_logging(settings) -> None:
             )
 
 
-def _sentry_before_send(event: dict, hint: dict) -> dict:  # pragma: no cover
+def _sentry_before_send(event: dict, _hint: dict) -> dict:  # pragma: no cover
     """Run Sentry events through the same redaction pipeline used for logs."""
     return _redact(event)  # type: ignore[return-value]

@@ -22,7 +22,7 @@ class ProgramaThreatModelingBase(BaseModel):
             raise ValueError("Debe especificar activo_web_id o servicio_id")
         return self
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_PROGRAMA:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_PROGRAMA)}")
 
@@ -41,7 +41,7 @@ class ProgramaThreatModelingUpdate(BaseModel):
     servicio_id: UUID | None = None
     estado: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_PROGRAMA:
             raise ValueError(f"estado debe ser uno de {sorted(ESTADOS_PROGRAMA)}")
 

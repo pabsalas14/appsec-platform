@@ -33,7 +33,7 @@ class AmenazaBase(BaseModel):
     dread_discoverability: int = Field(..., ge=1, le=10, description="Discoverability (1-10)")
     estado: str = Field(..., description="Abierta | Mitigada | Aceptada | Transferida | En Revision")
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.categoria_stride not in CATEGORIAS_STRIDE:
             raise ValueError(f"categoria_stride debe ser uno de {sorted(CATEGORIAS_STRIDE)}")
         if self.estado not in ESTADOS_AMENAZA:
@@ -57,7 +57,7 @@ class AmenazaUpdate(BaseModel):
     dread_discoverability: int | None = Field(None, ge=1, le=10)
     estado: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.categoria_stride is not None and self.categoria_stride not in CATEGORIAS_STRIDE:
             raise ValueError(f"categoria_stride debe ser uno de {sorted(CATEGORIAS_STRIDE)}")
         if self.estado is not None and self.estado not in ESTADOS_AMENAZA:

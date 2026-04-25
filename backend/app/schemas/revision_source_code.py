@@ -27,7 +27,7 @@ class RevisionSourceCodeBase(BaseModel):
             raise ValueError("evidencia_sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.resultado not in RESULTADOS:
             raise ValueError(f"resultado debe ser uno de {sorted(RESULTADOS)}")
 
@@ -52,7 +52,7 @@ class RevisionSourceCodeUpdate(BaseModel):
             raise ValueError("evidencia_sha256 debe ser un hash SHA-256 de 64 caracteres hex")
         return v
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.resultado is not None and self.resultado not in RESULTADOS:
             raise ValueError(f"resultado debe ser uno de {sorted(RESULTADOS)}")
 

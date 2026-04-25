@@ -17,7 +17,7 @@ class ControlMitigacionBase(BaseModel):
     estado: str = Field(..., description="Pendiente | Implementado | En Progreso | Descartado")
     responsable_id: UUID | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.tipo not in TIPOS_CONTROL:
             raise ValueError(f"tipo debe ser uno de {sorted(TIPOS_CONTROL)}")
         if self.estado not in ESTADOS_CONTROL:
@@ -37,7 +37,7 @@ class ControlMitigacionUpdate(BaseModel):
     estado: str | None = None
     responsable_id: UUID | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.tipo is not None and self.tipo not in TIPOS_CONTROL:
             raise ValueError(f"tipo debe ser uno de {sorted(TIPOS_CONTROL)}")
         if self.estado is not None and self.estado not in ESTADOS_CONTROL:

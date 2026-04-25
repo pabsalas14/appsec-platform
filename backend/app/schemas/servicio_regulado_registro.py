@@ -16,7 +16,7 @@ class ServicioReguladoRegistroBase(BaseModel):
     ano: int = Field(..., ge=2000, le=2100)
     estado: str = Field(default="Pendiente", description="Pendiente | En Revision | Cumplido | No Cumplido | Parcial")
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.ciclo not in CICLOS:
             raise ValueError(f"ciclo debe ser uno de {sorted(CICLOS)}")
         if self.estado not in ESTADOS_REGISTRO:
@@ -35,7 +35,7 @@ class ServicioReguladoRegistroUpdate(BaseModel):
     ano: int | None = Field(None, ge=2000, le=2100)
     estado: str | None = None
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, _: dict) -> None:
         if self.ciclo is not None and self.ciclo not in CICLOS:
             raise ValueError(f"ciclo debe ser uno de {sorted(CICLOS)}")
         if self.estado is not None and self.estado not in ESTADOS_REGISTRO:
