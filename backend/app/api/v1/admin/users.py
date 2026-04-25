@@ -36,9 +36,7 @@ router = APIRouter()
 
 def _ensure_valid_role(role: str) -> None:
     if role not in VALID_ROLES:
-        raise ConflictException(
-            f"Invalid role {role!r}. Valid roles: {', '.join(VALID_ROLES)}"
-        )
+        raise ConflictException(f"Invalid role {role!r}. Valid roles: {', '.join(VALID_ROLES)}")
 
 
 @router.get("")
@@ -59,9 +57,7 @@ async def list_users(
         filters.append(User.is_active.is_(is_active))
     if q:
         like = f"%{q.lower()}%"
-        filters.append(
-            func.lower(User.username).like(like) | func.lower(User.email).like(like)
-        )
+        filters.append(func.lower(User.username).like(like) | func.lower(User.email).like(like))
 
     count_stmt = select(func.count()).select_from(User)
     for f in filters:
@@ -71,11 +67,7 @@ async def list_users(
     stmt = select(User)
     for f in filters:
         stmt = stmt.where(f)
-    stmt = (
-        stmt.order_by(User.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
+    stmt = stmt.order_by(User.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     rows = (await db.execute(stmt)).scalars().all()
 
     return paginated(
@@ -113,9 +105,7 @@ async def create_user(
     """
     _ensure_valid_role(payload.role)
 
-    dup_stmt = select(User).where(
-        (User.username == payload.username) | (User.email == payload.email)
-    )
+    dup_stmt = select(User).where((User.username == payload.username) | (User.email == payload.email))
     if (await db.execute(dup_stmt)).scalar_one_or_none():
         raise ConflictException("Username or email already registered")
 
@@ -159,9 +149,7 @@ async def update_user(
         _ensure_valid_role(payload.role)
 
     if payload.email is not None and payload.email != user.email:
-        dup = await db.execute(
-            select(User).where(User.email == payload.email, User.id != user_id)
-        )
+        dup = await db.execute(select(User).where(User.email == payload.email, User.id != user_id))
         if dup.scalar_one_or_none():
             raise ConflictException("Email already in use")
 

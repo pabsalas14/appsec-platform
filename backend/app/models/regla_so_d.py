@@ -17,13 +17,9 @@ from app.models.mixins import SoftDeleteMixin
 
 class ReglaSoD(SoftDeleteMixin, Base):
     __tablename__ = "regla_sods"
-    __table_args__ = (
-        UniqueConstraint("accion", name="uq_regla_sods_accion"),
-    )
+    __table_args__ = (UniqueConstraint("accion", name="uq_regla_sods_accion"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -34,9 +30,7 @@ class ReglaSoD(SoftDeleteMixin, Base):
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=True)
     alcance: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

@@ -41,11 +41,13 @@ class EjecucionMASTBase(BaseModel):
 
 class EjecucionMASTCreate(EjecucionMASTBase):
     """Fields required to create ejecucion MAST. user_id is set from auth context."""
+
     pass
 
 
 class EjecucionMASTUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     aplicacion_movil_id: UUID | None = None
     ambiente: str | None = None
     fecha_inicio: datetime | None = None
@@ -70,6 +72,7 @@ class EjecucionMASTUpdate(BaseModel):
 
 class EjecucionMASTRead(EjecucionMASTBase):
     """Full ejecucion MAST representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

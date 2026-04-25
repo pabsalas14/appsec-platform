@@ -104,15 +104,9 @@ def _vulnerability_hierarchy_filter(
         celula_id=celula_id,
     )
     return or_(
-        Vulnerabilidad.servicio_id.in_(
-            select(Servicio.id).where(Servicio.celula_id.in_(celula_scope))
-        ),
-        Vulnerabilidad.repositorio_id.in_(
-            select(Repositorio.id).where(Repositorio.celula_id.in_(celula_scope))
-        ),
-        Vulnerabilidad.activo_web_id.in_(
-            select(ActivoWeb.id).where(ActivoWeb.celula_id.in_(celula_scope))
-        ),
+        Vulnerabilidad.servicio_id.in_(select(Servicio.id).where(Servicio.celula_id.in_(celula_scope))),
+        Vulnerabilidad.repositorio_id.in_(select(Repositorio.id).where(Repositorio.celula_id.in_(celula_scope))),
+        Vulnerabilidad.activo_web_id.in_(select(ActivoWeb.id).where(ActivoWeb.celula_id.in_(celula_scope))),
         Vulnerabilidad.aplicacion_movil_id.in_(
             select(AplicacionMovil.id).where(AplicacionMovil.celula_id.in_(celula_scope))
         ),
@@ -137,9 +131,7 @@ def _release_hierarchy_filter(
         organizacion_id=organizacion_id,
         celula_id=celula_id,
     )
-    return ServiceRelease.servicio_id.in_(
-        select(Servicio.id).where(Servicio.celula_id.in_(celula_scope))
-    )
+    return ServiceRelease.servicio_id.in_(select(Servicio.id).where(Servicio.celula_id.in_(celula_scope)))
 
 
 @router.get("/stats")
@@ -156,22 +148,14 @@ async def dashboard_stats(
     async def _count(stmt):
         return (await db.execute(stmt)).scalar_one()
 
-    total_tasks = await _count(
-        select(func.count()).select_from(Task).where(*task_filter)
-    )
-    completed_tasks = await _count(
-        select(func.count())
-        .select_from(Task)
-        .where(*task_filter, Task.completed.is_(True))
-    )
+    total_tasks = await _count(select(func.count()).select_from(Task).where(*task_filter))
+    completed_tasks = await _count(select(func.count()).select_from(Task).where(*task_filter, Task.completed.is_(True)))
     pending_tasks = int(total_tasks) - int(completed_tasks)
 
     # ─── Users counter (admin-only real number; users see themselves as 1) ──
     if is_admin:
         total_users = await _count(select(func.count()).select_from(User))
-        active_users = await _count(
-            select(func.count()).select_from(User).where(User.is_active.is_(True))
-        )
+        active_users = await _count(select(func.count()).select_from(User).where(User.is_active.is_(True)))
     else:
         total_users = 1
         active_users = 1
@@ -179,37 +163,25 @@ async def dashboard_stats(
     # ─── Users by role (admin only) ──
     users_by_role: list[dict] = []
     if is_admin:
-        res = await db.execute(
-            select(User.role, func.count()).group_by(User.role)
-        )
+        res = await db.execute(select(User.role, func.count()).group_by(User.role))
         users_by_role = [{"role": r, "count": int(c)} for r, c in res.all()]
 
     # ─── Activity time-series (last 14 days, audit-log count per day) ──
     since = datetime.now(UTC) - timedelta(days=14)
     day = func.date_trunc("day", AuditLog.ts).label("day")
-    activity_stmt = (
-        select(day, func.count())
-        .where(AuditLog.ts >= since)
-    )
+    activity_stmt = select(day, func.count()).where(AuditLog.ts >= since)
     if not is_admin:
         activity_stmt = activity_stmt.where(AuditLog.actor_user_id == current_user.id)
     activity_stmt = activity_stmt.group_by(day).order_by(day)
     activity_rows = (await db.execute(activity_stmt)).all()
-    activity = [
-        {"day": d.isoformat() if d else None, "count": int(c)}
-        for d, c in activity_rows
-    ]
+    activity = [{"day": d.isoformat() if d else None, "count": int(c)} for d, c in activity_rows]
 
     # ─── Recent audit entries (admin only) ──
     recent: list[dict] = []
     if is_admin:
-        recent_stmt = (
-            select(AuditLog).order_by(AuditLog.ts.desc()).limit(10)
-        )
+        recent_stmt = select(AuditLog).order_by(AuditLog.ts.desc()).limit(10)
         rows = (await db.execute(recent_stmt)).scalars().all()
-        recent = [
-            AuditLogRead.model_validate(r).model_dump(mode="json") for r in rows
-        ]
+        recent = [AuditLogRead.model_validate(r).model_dump(mode="json") for r in rows]
 
     return success(
         {
@@ -254,15 +226,13 @@ async def dashboard_vulnerabilities(
     severities = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
     severity_counts = {}
     for sev in severities:
-        count = await (
-            db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.severidad == sev,
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
-                )
+        count = await db.execute(
+            select(func.count())
+            .select_from(Vulnerabilidad)
+            .where(
+                Vulnerabilidad.severidad == sev,
+                Vulnerabilidad.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
             )
         )
         severity_counts[sev] = int(count.scalar_one() or 0)
@@ -271,15 +241,13 @@ async def dashboard_vulnerabilities(
     states = ["Abierta", "En Progreso", "Remediada", "Cerrada"]
     state_counts = {}
     for state in states:
-        count = await (
-            db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.estado == state,
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
-                )
+        count = await db.execute(
+            select(func.count())
+            .select_from(Vulnerabilidad)
+            .where(
+                Vulnerabilidad.estado == state,
+                Vulnerabilidad.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
             )
         )
         state_counts[state] = int(count.scalar_one() or 0)
@@ -294,7 +262,7 @@ async def dashboard_vulnerabilities(
                     Vulnerabilidad.fecha_limite_sla < datetime.now(UTC),
                     Vulnerabilidad.estado != "Cerrada",
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -348,7 +316,7 @@ async def dashboard_releases(
                 .select_from(ServiceRelease)
                 .where(
                     ServiceRelease.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -363,7 +331,7 @@ async def dashboard_releases(
                 .where(
                     ServiceRelease.estado_actual == "Pendiente Aprobación",
                     ServiceRelease.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -378,7 +346,7 @@ async def dashboard_releases(
                 .where(
                     ServiceRelease.estado_actual.in_(["Design Review", "Security Validation"]),
                     ServiceRelease.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -430,16 +398,7 @@ async def dashboard_initiatives(
         )
         filters.append(Iniciativa.celula_id.in_(celula_scope))
 
-    total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Iniciativa)
-                .where(*filters)
-            )
-        ).scalar_one()
-        or 0
-    )
+    total = int((await db.execute(select(func.count()).select_from(Iniciativa).where(*filters))).scalar_one() or 0)
 
     in_progress = int(
         (
@@ -509,16 +468,7 @@ async def dashboard_emerging_themes(
         )
         filters.append(TemaEmergente.celula_id.in_(celula_scope))
 
-    total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(TemaEmergente)
-                .where(*filters)
-            )
-        ).scalar_one()
-        or 0
-    )
+    total = int((await db.execute(select(func.count()).select_from(TemaEmergente).where(*filters))).scalar_one() or 0)
 
     # Unmoved for 7+ days
     old_date = datetime.now(UTC) - timedelta(days=7)
@@ -576,7 +526,7 @@ async def dashboard_executive(
                 .select_from(Vulnerabilidad)
                 .where(
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -591,7 +541,7 @@ async def dashboard_executive(
                 .where(
                     Vulnerabilidad.severidad == "CRITICA",
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -639,9 +589,7 @@ async def dashboard_programs(
             select(
                 Vulnerabilidad.fuente,
                 func.count().label("total"),
-                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label(
-                    "closed"
-                ),
+                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
             )
             .where(
                 Vulnerabilidad.deleted_at.is_(None),
@@ -725,13 +673,11 @@ async def dashboard_team(
         select(
             Vulnerabilidad.user_id,
             func.count().label("total"),
-            func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label(
-                "closed"
-            ),
+            func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
         )
         .where(
             Vulnerabilidad.deleted_at.is_(None),
-            *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+            *([hierarchy_filter] if hierarchy_filter is not None else []),
         )
         .group_by(Vulnerabilidad.user_id)
     )
@@ -802,7 +748,7 @@ async def dashboard_program_detail(
                 .where(
                     Vulnerabilidad.fuente == source,
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -817,7 +763,7 @@ async def dashboard_program_detail(
                     Vulnerabilidad.fuente == source,
                     Vulnerabilidad.estado == "Cerrada",
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -834,7 +780,7 @@ async def dashboard_program_detail(
                     Vulnerabilidad.fecha_limite_sla < datetime.now(UTC),
                     Vulnerabilidad.estado != "Cerrada",
                     Vulnerabilidad.deleted_at.is_(None),
-                    *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
         ).scalar_one()
@@ -880,16 +826,20 @@ async def dashboard_releases_table(
         celula_id=celula_id,
     )
     rows = (
-        await db.execute(
-            select(ServiceRelease)
-            .where(
-                ServiceRelease.deleted_at.is_(None),
-                *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+        (
+            await db.execute(
+                select(ServiceRelease)
+                .where(
+                    ServiceRelease.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+                .order_by(ServiceRelease.created_at.desc())
+                .limit(max(1, min(limit, 200)))
             )
-            .order_by(ServiceRelease.created_at.desc())
-            .limit(max(1, min(limit, 200)))
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return success(
         {
@@ -934,15 +884,19 @@ async def dashboard_releases_kanban(
         celula_id=celula_id,
     )
     rows = (
-        await db.execute(
-            select(ServiceRelease)
-            .where(
-                ServiceRelease.deleted_at.is_(None),
-                *( [hierarchy_filter] if hierarchy_filter is not None else [] ),
+        (
+            await db.execute(
+                select(ServiceRelease)
+                .where(
+                    ServiceRelease.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+                .order_by(ServiceRelease.created_at.desc())
             )
-            .order_by(ServiceRelease.created_at.desc())
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     board: dict[str, list[dict]] = {}
     for row in rows:

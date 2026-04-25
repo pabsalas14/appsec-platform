@@ -107,9 +107,7 @@ async def test_dashboard_programs_endpoint(client: AsyncClient, auth_headers: di
 
 
 @pytest.mark.asyncio
-async def test_dashboard_programs_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_programs_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     gid = uuid4()
     endpoint = f"/api/v1/dashboard/programs?gerencia_id={gid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -132,9 +130,7 @@ async def test_dashboard_team_endpoint(client: AsyncClient, auth_headers: dict):
 @pytest.mark.asyncio
 async def test_dashboard_program_detail_endpoint(client: AsyncClient, auth_headers: dict):
     """Test program detail dashboard structure."""
-    response = await client.get(
-        "/api/v1/dashboard/program-detail?program=sast", headers=auth_headers
-    )
+    response = await client.get("/api/v1/dashboard/program-detail?program=sast", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
@@ -166,9 +162,7 @@ async def test_dashboard_releases_kanban_endpoint(client: AsyncClient, auth_head
 
 
 @pytest.mark.asyncio
-async def test_dashboard_vulnerabilities_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_vulnerabilities_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     sid = uuid4()
     endpoint = f"/api/v1/dashboard/vulnerabilities?subdireccion_id={sid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -178,9 +172,7 @@ async def test_dashboard_vulnerabilities_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_releases_table_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_releases_table_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     gid = uuid4()
     endpoint = f"/api/v1/dashboard/releases-table?gerencia_id={gid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -190,9 +182,7 @@ async def test_dashboard_releases_table_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_executive_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_executive_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     oid = uuid4()
     endpoint = f"/api/v1/dashboard/executive?organizacion_id={oid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -202,9 +192,7 @@ async def test_dashboard_executive_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_team_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_team_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     cid = uuid4()
     endpoint = f"/api/v1/dashboard/team?celula_id={cid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -214,9 +202,7 @@ async def test_dashboard_team_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_initiatives_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_initiatives_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     oid = uuid4()
     endpoint = f"/api/v1/dashboard/initiatives?organizacion_id={oid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -226,9 +212,7 @@ async def test_dashboard_initiatives_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_emerging_themes_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_emerging_themes_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     gid = uuid4()
     endpoint = f"/api/v1/dashboard/emerging-themes?gerencia_id={gid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -238,9 +222,7 @@ async def test_dashboard_emerging_themes_accepts_hierarchy_filters(
 
 
 @pytest.mark.asyncio
-async def test_dashboard_releases_kanban_accepts_hierarchy_filters(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_releases_kanban_accepts_hierarchy_filters(client: AsyncClient, auth_headers: dict):
     sid = uuid4()
     endpoint = f"/api/v1/dashboard/releases-kanban?subdireccion_id={sid}"
     response = await client.get(endpoint, headers=auth_headers)
@@ -290,14 +272,8 @@ async def test_dashboard_forbidden_without_dashboards_view(
     """Usuario sin permiso dashboards.view recibe 403."""
     async with _session_factory() as session:
         await ensure_roles_permissions_seeded(session)
-        r_user = (
-            await session.execute(select(Role).where(Role.name == "user"))
-        ).scalar_one()
-        perm = (
-            await session.execute(
-                select(Permission).where(Permission.code == "dashboards.view")
-            )
-        ).scalar_one()
+        r_user = (await session.execute(select(Role).where(Role.name == "user"))).scalar_one()
+        perm = (await session.execute(select(Permission).where(Permission.code == "dashboards.view"))).scalar_one()
         await session.execute(
             delete(role_permissions).where(
                 role_permissions.c.role_id == r_user.id,

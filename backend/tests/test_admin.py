@@ -7,17 +7,13 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_non_admin_cannot_list_users(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_non_admin_cannot_list_users(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.get("/api/v1/admin/users", headers=auth_headers)
     assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_admin_can_list_users(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_list_users(client: AsyncClient, admin_auth_headers: dict[str, str]):
     resp = await client.get("/api/v1/admin/users", headers=admin_auth_headers)
     assert resp.status_code == 200
     body = resp.json()
@@ -39,9 +35,7 @@ async def test_super_admin_can_access_backoffice_admin_routes(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_upsert_system_setting(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_upsert_system_setting(client: AsyncClient, admin_auth_headers: dict[str, str]):
     list_resp = await client.get("/api/v1/admin/settings", headers=admin_auth_headers)
     assert list_resp.status_code == 200
     assert len(list_resp.json()["data"]) >= 1
@@ -56,9 +50,7 @@ async def test_admin_can_upsert_system_setting(
 
 
 @pytest.mark.asyncio
-async def test_admin_audit_logs_endpoint(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_audit_logs_endpoint(client: AsyncClient, admin_auth_headers: dict[str, str]):
     resp = await client.get("/api/v1/audit-logs", headers=admin_auth_headers)
     assert resp.status_code == 200
     body = resp.json()
@@ -67,29 +59,21 @@ async def test_admin_audit_logs_endpoint(
 
 
 @pytest.mark.asyncio
-async def test_non_admin_cannot_manage_ia_config(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_non_admin_cannot_manage_ia_config(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.get("/api/v1/admin/ia-config", headers=auth_headers)
     assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_super_admin_can_get_ia_config(
-    client: AsyncClient, super_admin_auth_headers: dict[str, str]
-):
+async def test_super_admin_can_get_ia_config(client: AsyncClient, super_admin_auth_headers: dict[str, str]):
     """Configuración IA vive bajo /admin/ia-config — accesible para backoffice (admin + super_admin)."""
-    get_resp = await client.get(
-        "/api/v1/admin/ia-config", headers=super_admin_auth_headers
-    )
+    get_resp = await client.get("/api/v1/admin/ia-config", headers=super_admin_auth_headers)
     assert get_resp.status_code == 200, get_resp.text
     assert "proveedor_activo" in get_resp.json()["data"]
 
 
 @pytest.mark.asyncio
-async def test_admin_can_get_and_update_ia_config(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_get_and_update_ia_config(client: AsyncClient, admin_auth_headers: dict[str, str]):
     get_resp = await client.get("/api/v1/admin/ia-config", headers=admin_auth_headers)
     assert get_resp.status_code == 200, get_resp.text
     assert get_resp.json()["data"]["proveedor_activo"] in {
@@ -118,9 +102,7 @@ async def test_admin_can_get_and_update_ia_config(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_ia_config_dry_run(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_ia_config_dry_run(client: AsyncClient, admin_auth_headers: dict[str, str]):
     resp = await client.post(
         "/api/v1/admin/ia-config/test-call",
         headers=admin_auth_headers,
@@ -135,9 +117,7 @@ async def test_admin_can_test_ia_config_dry_run(
 
 
 @pytest.mark.asyncio
-async def test_non_admin_cannot_test_ia_config(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_non_admin_cannot_test_ia_config(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.post(
         "/api/v1/admin/ia-config/test-call",
         headers=auth_headers,

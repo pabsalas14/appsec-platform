@@ -55,9 +55,7 @@ async def update_programa_threat_modeling(
     entity: ProgramaThreatModeling = Depends(require_ownership(programa_threat_modeling_svc)),
 ):
     """Partially update an owned programa_threat_modeling (404 if not owned)."""
-    updated = await programa_threat_modeling_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await programa_threat_modeling_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ProgramaThreatModelingRead.model_validate(updated).model_dump(mode="json"))
 
 

@@ -144,10 +144,14 @@ async def list_vulnerabilidads(
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
     # Get paginated items
-    stmt = select(Vulnerabilidad).where(
-        Vulnerabilidad.user_id == current_user.id,
-        Vulnerabilidad.deleted_at.is_(None),
-    ).order_by(Vulnerabilidad.created_at.desc())
+    stmt = (
+        select(Vulnerabilidad)
+        .where(
+            Vulnerabilidad.user_id == current_user.id,
+            Vulnerabilidad.deleted_at.is_(None),
+        )
+        .order_by(Vulnerabilidad.created_at.desc())
+    )
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -268,9 +272,7 @@ async def update_vulnerabilidad(
     entity: Vulnerabilidad = Depends(require_ownership(vulnerabilidad_svc)),
 ):
     """Partially update an owned vulnerabilidad (404 if not owned)."""
-    updated = await vulnerabilidad_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await vulnerabilidad_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(VulnerabilidadRead.model_validate(updated).model_dump(mode="json"))
 
 

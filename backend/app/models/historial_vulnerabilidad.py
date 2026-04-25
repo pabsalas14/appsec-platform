@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class HistorialVulnerabilidad(Base):
     __tablename__ = "historial_vulnerabilidads"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Analista que realizó el cambio
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -62,9 +60,7 @@ class HistorialVulnerabilidad(Base):
     comentario: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # ── Timestamp ───────────────────────────────────────────────────────────
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -72,12 +68,6 @@ class HistorialVulnerabilidad(Base):
     )
 
     # ── Relationships ────────────────────────────────────────────────────────
-    vulnerabilidad: Mapped[Vulnerabilidad] = relationship(
-        "Vulnerabilidad", back_populates="historial", lazy="noload"
-    )
-    actor: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], lazy="noload"
-    )
-    responsable: Mapped[User | None] = relationship(
-        "User", foreign_keys=[responsable_id], lazy="noload"
-    )
+    vulnerabilidad: Mapped[Vulnerabilidad] = relationship("Vulnerabilidad", back_populates="historial", lazy="noload")
+    actor: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")
+    responsable: Mapped[User | None] = relationship("User", foreign_keys=[responsable_id], lazy="noload")

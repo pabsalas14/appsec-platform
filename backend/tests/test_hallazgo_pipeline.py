@@ -12,11 +12,13 @@ BASE_URL = "/api/v1/hallazgo_pipelines"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_pipeline_release(client: AsyncClient, headers: dict) -> str:
     """Crea repositorio → pipeline_release. Retorna pipeline_id."""
     repo_id = await create_repositorio_id(client, headers)
     pipeline = await client.post(
-        "/api/v1/pipeline_releases", headers=headers,
+        "/api/v1/pipeline_releases",
+        headers=headers,
         json={
             "repositorio_id": repo_id,
             "rama": "main",
@@ -42,6 +44,7 @@ def _payload(pipeline_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_hallazgo_pipeline(client: AsyncClient, auth_headers: dict):
@@ -93,9 +96,7 @@ async def test_hallazgo_pipeline_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_hallazgo_pipeline_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_hallazgo_pipeline_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     pid = await _create_pipeline_release(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(pid))
     assert resp.status_code == 201, resp.text

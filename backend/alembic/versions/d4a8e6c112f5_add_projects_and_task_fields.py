@@ -5,6 +5,7 @@ Revises: c3e9d7a42b11
 Create Date: 2026-04-22 09:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -47,9 +48,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_projects_user_id"), "projects", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_projects_user_id"), "projects", ["user_id"], unique=False)
 
     # ─── Task — new columns ──
     op.add_column(
@@ -73,9 +72,7 @@ def upgrade() -> None:
         ["id"],
         ondelete="SET NULL",
     )
-    op.create_index(
-        op.f("ix_tasks_project_id"), "tasks", ["project_id"], unique=False
-    )
+    op.create_index(op.f("ix_tasks_project_id"), "tasks", ["project_id"], unique=False)
 
 
 def downgrade() -> None:

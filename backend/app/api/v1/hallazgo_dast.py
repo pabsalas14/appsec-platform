@@ -57,9 +57,7 @@ async def update_hallazgo_dast(
     entity: HallazgoDast = Depends(require_ownership(hallazgo_dast_svc)),
 ):
     """Partially update an owned hallazgo DAST."""
-    updated = await hallazgo_dast_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await hallazgo_dast_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(HallazgoDastRead.model_validate(updated).model_dump(mode="json"))
 
 

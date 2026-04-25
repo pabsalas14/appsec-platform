@@ -71,9 +71,7 @@ async def list_permissions(
     """List the full permission catalogue — used by the role editor."""
     await _ensure_seeded(db)
     perms = (await db.execute(select(Permission).order_by(Permission.code))).scalars().all()
-    return success(
-        [PermissionRead.model_validate(p).model_dump(mode="json") for p in perms]
-    )
+    return success([PermissionRead.model_validate(p).model_dump(mode="json") for p in perms])
 
 
 @router.get("/{role_id}")
@@ -103,15 +101,9 @@ async def create_role(
 
     perms = []
     if payload.permissions:
-        perms = (
-            await db.execute(
-                select(Permission).where(Permission.code.in_(payload.permissions))
-            )
-        ).scalars().all()
+        perms = (await db.execute(select(Permission).where(Permission.code.in_(payload.permissions)))).scalars().all()
 
-    role = Role(
-        name=payload.name, description=payload.description, permissions=list(perms)
-    )
+    role = Role(name=payload.name, description=payload.description, permissions=list(perms))
     db.add(role)
     await db.flush()
     await db.refresh(role)
@@ -142,13 +134,7 @@ async def update_role(
         role.description = payload.description
     if payload.permissions is not None:
         role.permissions = list(
-            (
-                await db.execute(
-                    select(Permission).where(Permission.code.in_(payload.permissions))
-                )
-            )
-            .scalars()
-            .all()
+            (await db.execute(select(Permission).where(Permission.code.in_(payload.permissions)))).scalars().all()
         )
 
     await db.flush()
@@ -180,7 +166,5 @@ async def delete_role(
     await db.delete(role)
     await db.flush()
 
-    await audit_record(
-        db, action="role.delete", entity_type="roles", entity_id=role_id
-    )
+    await audit_record(db, action="role.delete", entity_type="roles", entity_id=role_id)
     return success(None, meta={"message": "Role deleted"})

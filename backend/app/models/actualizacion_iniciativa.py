@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class ActualizacionIniciativa(SoftDeleteMixin, Base):
     __tablename__ = "actualizacion_iniciativas"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -38,9 +36,7 @@ class ActualizacionIniciativa(SoftDeleteMixin, Base):
     titulo: Mapped[str] = mapped_column(String(255), nullable=False)
     contenido: Mapped[str] = mapped_column(Text(), nullable=False)
     tipo_actualizacion: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

@@ -21,9 +21,7 @@ async def list_projects(
 ):
     """List projects owned by the current user."""
     items = await project_svc.list(db, filters={"user_id": current_user.id})
-    return success(
-        [ProjectRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([ProjectRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -41,9 +39,7 @@ async def create_project(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new project for the current user."""
-    entity = await project_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await project_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(ProjectRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -55,9 +51,7 @@ async def update_project(
     entity: Project = Depends(require_ownership(project_svc)),
 ):
     """Partially update an owned project (404 if not owned)."""
-    updated = await project_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await project_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ProjectRead.model_validate(updated).model_dump(mode="json"))
 
 

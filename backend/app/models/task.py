@@ -14,15 +14,11 @@ from app.models.mixins import SoftDeleteMixin
 class Task(SoftDeleteMixin, Base):
     __tablename__ = "tasks"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
-    status: Mapped[str] = mapped_column(
-        String(32), nullable=False, server_default=text("'todo'"), default="todo"
-    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default=text("'todo'"), default="todo")
 
     # ─── Ownership ───
     user_id: Mapped[uuid.UUID] = mapped_column(

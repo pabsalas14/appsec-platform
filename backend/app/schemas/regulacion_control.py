@@ -18,11 +18,13 @@ class RegulacionControlBase(BaseModel):
 
 class RegulacionControlCreate(RegulacionControlBase):
     """Fields required to create a regulacion_control. user_id is set from auth context."""
+
     pass
 
 
 class RegulacionControlUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre_regulacion: str | None = Field(None, min_length=1, max_length=255)
     nombre_control: str | None = Field(None, min_length=1, max_length=255)
     descripcion: str | None = None
@@ -31,6 +33,7 @@ class RegulacionControlUpdate(BaseModel):
 
 class RegulacionControlRead(RegulacionControlBase):
     """Full regulacion_control representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

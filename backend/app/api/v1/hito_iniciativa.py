@@ -51,9 +51,7 @@ async def update_hito_iniciativa(
     entity: HitoIniciativa = Depends(require_ownership(hito_iniciativa_svc)),
 ):
     """Partially update an owned hito iniciativa (404 if not owned)."""
-    updated = await hito_iniciativa_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await hito_iniciativa_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(HitoIniciativaRead.model_validate(updated).model_dump(mode="json"))
 
 

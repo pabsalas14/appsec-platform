@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class HallazgoTercero(SoftDeleteMixin, Base):
     __tablename__ = "hallazgo_terceros"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -55,9 +53,7 @@ class HallazgoTercero(SoftDeleteMixin, Base):
     cwe_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     # estado: Abierto | Falso Positivo | Aceptado | Remediado
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Abierto")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -65,9 +61,7 @@ class HallazgoTercero(SoftDeleteMixin, Base):
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    revision_tercero: Mapped[RevisionTercero] = relationship(
-        back_populates="hallazgos"
-    )
+    revision_tercero: Mapped[RevisionTercero] = relationship(back_populates="hallazgos")
     vulnerabilidad: Mapped[Vulnerabilidad | None] = relationship(
         "Vulnerabilidad", back_populates="hallazgos_tercero", lazy="noload"
     )

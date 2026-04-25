@@ -25,4 +25,3 @@ class SoftDeleteMixin:
         nullable=True,
         index=True,
     )
-

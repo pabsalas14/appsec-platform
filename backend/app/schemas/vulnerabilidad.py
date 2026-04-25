@@ -59,11 +59,13 @@ class VulnerabilidadCreate(VulnerabilidadBase):
     Exactamente uno de repositorio_id / activo_web_id / servicio_id / aplicacion_movil_id
     debe estar presente (validado en el router).
     """
+
     pass
 
 
 class VulnerabilidadUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
+
     titulo: str | None = Field(None, min_length=3, max_length=255)
     descripcion: str | None = None
     fuente: str | None = None
@@ -96,6 +98,7 @@ class VulnerabilidadUpdate(BaseModel):
 
 class VulnerabilidadRead(VulnerabilidadBase):
     """Representación completa de una vulnerabilidad retornada por la API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

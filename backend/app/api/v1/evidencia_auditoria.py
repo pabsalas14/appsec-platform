@@ -51,9 +51,7 @@ async def update_evidencia_auditoria(
     entity: EvidenciaAuditoria = Depends(require_ownership(evidencia_auditoria_svc)),
 ):
     """Partially update an owned evidencia auditoria (404 if not owned)."""
-    updated = await evidencia_auditoria_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await evidencia_auditoria_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EvidenciaAuditoriaRead.model_validate(updated).model_dump(mode="json"))
 
 

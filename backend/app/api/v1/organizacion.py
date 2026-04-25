@@ -53,9 +53,7 @@ async def update_organizacion(
     entity: Organizacion = Depends(require_ownership(organizacion_svc)),
 ):
     """Partially update an owned organizacion (404 if not owned)."""
-    updated = await organizacion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await organizacion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(OrganizacionRead.model_validate(updated).model_dump(mode="json"))
 
 

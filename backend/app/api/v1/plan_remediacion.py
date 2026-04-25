@@ -51,9 +51,7 @@ async def update_plan_remediacion(
     entity: PlanRemediacion = Depends(require_ownership(plan_remediacion_svc)),
 ):
     """Partially update an owned plan remediacion (404 if not owned)."""
-    updated = await plan_remediacion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await plan_remediacion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(PlanRemediacionRead.model_validate(updated).model_dump(mode="json"))
 
 

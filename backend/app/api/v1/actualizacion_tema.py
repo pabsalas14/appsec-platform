@@ -51,9 +51,7 @@ async def update_actualizacion_tema(
     entity: ActualizacionTema = Depends(require_ownership(actualizacion_tema_svc)),
 ):
     """Partially update an owned actualizacion tema (404 if not owned)."""
-    updated = await actualizacion_tema_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await actualizacion_tema_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ActualizacionTemaRead.model_validate(updated).model_dump(mode="json"))
 
 

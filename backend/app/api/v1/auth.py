@@ -86,9 +86,7 @@ async def _revoke_refresh_family(
     now: datetime,
 ) -> None:
     await db.execute(
-        update(RefreshToken)
-        .where(RefreshToken.family_id == family_id)
-        .values(revoked_at=now, session_revoked_at=now)
+        update(RefreshToken).where(RefreshToken.family_id == family_id).values(revoked_at=now, session_revoked_at=now)
     )
 
 
@@ -112,8 +110,7 @@ async def _issue_tokens(
             family_id=family_id,
             parent_token_id=parent_token_id,
             token_hash=hash_refresh_token(refresh),
-            expires_at=datetime.now(UTC)
-            + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS),
+            expires_at=datetime.now(UTC) + timedelta(days=settings.JWT_REFRESH_EXPIRE_DAYS),
         )
     )
     await db.flush()
@@ -187,11 +184,7 @@ async def register(
         key=_client_ip(request),
         limit=settings.AUTH_REGISTER_RATE_LIMIT_PER_MIN,
     )
-    existing = await db.execute(
-        select(User).where(
-            (User.username == user_in.username) | (User.email == user_in.email)
-        )
-    )
+    existing = await db.execute(select(User).where((User.username == user_in.username) | (User.email == user_in.email)))
     if existing.scalar_one_or_none():
         raise ConflictException("Username or email already registered")
 
@@ -251,9 +244,7 @@ async def refresh(
         raise UnauthorizedException("Invalid refresh token")
 
     token_hash = hash_refresh_token(refresh_token)
-    result = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_hash == token_hash)
-    )
+    result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
     stored = result.scalar_one_or_none()
 
     now = datetime.now(UTC)
@@ -295,16 +286,10 @@ async def refresh(
     if stored.expires_at < now:
         raise UnauthorizedException("Refresh token is revoked or expired")
 
-    await db.execute(
-        update(RefreshToken)
-        .where(RefreshToken.id == stored.id)
-        .values(revoked_at=now)
-    )
+    await db.execute(update(RefreshToken).where(RefreshToken.id == stored.id).values(revoked_at=now))
 
     user_id = uuid.UUID(payload["sub"])
-    user_res = await db.execute(
-        select(User).where(User.id == user_id, User.is_active.is_(True))
-    )
+    user_res = await db.execute(select(User).where(User.id == user_id, User.is_active.is_(True)))
     user = user_res.scalar_one_or_none()
     if not user:
         raise UnauthorizedException("User not found")
@@ -336,9 +321,7 @@ async def logout(
     if refresh_token:
         now = datetime.now(UTC)
         result = await db.execute(
-            select(RefreshToken).where(
-                RefreshToken.token_hash == hash_refresh_token(refresh_token)
-            )
+            select(RefreshToken).where(RefreshToken.token_hash == hash_refresh_token(refresh_token))
         )
         stored = result.scalar_one_or_none()
         if stored is not None:
@@ -373,9 +356,7 @@ async def update_me(
 ):
     """Self-service profile edit — full name and email only."""
     if payload.email is not None and payload.email != current_user.email:
-        existing = await db.execute(
-            select(User).where(User.email == payload.email, User.id != current_user.id)
-        )
+        existing = await db.execute(select(User).where(User.email == payload.email, User.id != current_user.id))
         if existing.scalar_one_or_none():
             raise ConflictException("Email already in use")
         current_user.email = payload.email

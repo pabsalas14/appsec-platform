@@ -51,9 +51,7 @@ async def update_cierre_conclusion(
     entity: CierreConclusion = Depends(require_ownership(cierre_conclusion_svc)),
 ):
     """Partially update an owned cierre conclusion (404 if not owned)."""
-    updated = await cierre_conclusion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await cierre_conclusion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(CierreConclusionRead.model_validate(updated).model_dump(mode="json"))
 
 

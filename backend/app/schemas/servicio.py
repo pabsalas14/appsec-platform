@@ -16,6 +16,7 @@ class ServicioBase(BaseModel):
 
 class ServicioCreate(ServicioBase):
     """Fields required to create a servicio. user_id is set from auth context."""
+
     pass
 
 
@@ -31,6 +32,7 @@ class ServicioUpdate(BaseModel):
 
 class ServicioRead(ServicioBase):
     """Full servicio representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

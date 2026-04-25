@@ -121,11 +121,7 @@ async def test_update_filtro_guardado(client: AsyncClient, auth_headers: dict):
         "nombre": "Updated Name",
         "parametros": {"test": "updated_value", "new_field": "new"},
     }
-    response = await client.patch(
-        f"/api/v1/filtros_guardados/{filtro_id}",
-        json=update_payload,
-        headers=auth_headers
-    )
+    response = await client.patch(f"/api/v1/filtros_guardados/{filtro_id}", json=update_payload, headers=auth_headers)
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["nombre"] == "Updated Name"

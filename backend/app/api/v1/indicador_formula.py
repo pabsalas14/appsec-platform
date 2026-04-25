@@ -51,9 +51,7 @@ async def update_indicador_formula(
     entity: IndicadorFormula = Depends(require_ownership(indicador_formula_svc)),
 ):
     """Partially update an owned indicador formula (404 if not owned)."""
-    updated = await indicador_formula_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await indicador_formula_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(IndicadorFormulaRead.model_validate(updated).model_dump(mode="json"))
 
 

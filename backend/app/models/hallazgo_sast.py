@@ -24,9 +24,7 @@ if TYPE_CHECKING:
 class HallazgoSast(SoftDeleteMixin, Base):
     __tablename__ = "hallazgo_sasts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -55,9 +53,7 @@ class HallazgoSast(SoftDeleteMixin, Base):
     linea: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     # estado: Abierto | Falso Positivo | Aceptado | Remediado
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Abierto")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -65,9 +61,7 @@ class HallazgoSast(SoftDeleteMixin, Base):
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    actividad_sast: Mapped[ActividadMensualSast] = relationship(
-        back_populates="hallazgos"
-    )
+    actividad_sast: Mapped[ActividadMensualSast] = relationship(back_populates="hallazgos")
     vulnerabilidad: Mapped[Vulnerabilidad | None] = relationship(
         "Vulnerabilidad", back_populates="hallazgos_sast", lazy="noload"
     )

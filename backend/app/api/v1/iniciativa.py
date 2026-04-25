@@ -85,10 +85,14 @@ async def list_iniciativas(
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
     # Get paginated items
-    stmt = select(Iniciativa).where(
-        Iniciativa.user_id == current_user.id,
-        Iniciativa.deleted_at.is_(None),
-    ).order_by(Iniciativa.created_at.desc())
+    stmt = (
+        select(Iniciativa)
+        .where(
+            Iniciativa.user_id == current_user.id,
+            Iniciativa.deleted_at.is_(None),
+        )
+        .order_by(Iniciativa.created_at.desc())
+    )
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -138,9 +142,7 @@ async def update_iniciativa(
     entity: Iniciativa = Depends(require_ownership(iniciativa_svc)),
 ):
     """Partially update an owned iniciativa (404 if not owned)."""
-    updated = await iniciativa_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await iniciativa_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(IniciativaRead.model_validate(updated).model_dump(mode="json"))
 
 

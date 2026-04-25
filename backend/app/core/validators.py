@@ -67,4 +67,3 @@ def validate_ssrf_safe_http_url(value: str) -> str:
 
 
 SSRFHttpUrl = Annotated[str, AfterValidator(validate_ssrf_safe_http_url)]
-

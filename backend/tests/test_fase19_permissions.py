@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+
 async def _register_user(client: AsyncClient, role: str = "user") -> dict:
     """Register a user with the given role. Returns {username, password, token}."""
     unique = uuid.uuid4().hex[:8]
@@ -108,13 +109,16 @@ async def test_all_platform_roles_seeded(
     role_names = {r["name"] for r in data}
 
     expected_roles = {
-        "super_admin", "chief_appsec", "lider_programa",
-        "analista", "auditor", "readonly",
-        "admin", "user",
+        "super_admin",
+        "chief_appsec",
+        "lider_programa",
+        "analista",
+        "auditor",
+        "readonly",
+        "admin",
+        "user",
     }
-    assert expected_roles.issubset(role_names), (
-        f"Missing roles: {expected_roles - role_names}"
-    )
+    assert expected_roles.issubset(role_names), f"Missing roles: {expected_roles - role_names}"
 
 
 @pytest.mark.asyncio

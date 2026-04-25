@@ -43,9 +43,7 @@ if TYPE_CHECKING:
 class Vulnerabilidad(SoftDeleteMixin, Base):
     __tablename__ = "vulnerabilidads"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # Dueño del registro (analista que lo creó / importó)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -73,9 +71,7 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
     owasp_categoria: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # SLA — calculado automáticamente en service.create() desde config
-    fecha_limite_sla: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, index=True
-    )
+    fecha_limite_sla: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
 
     # ── Responsable de remediación ──────────────────────────────────────────
     responsable_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -112,9 +108,7 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
     )
 
     # ── Timestamps ──────────────────────────────────────────────────────────
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -122,21 +116,13 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
     )
 
     # ── Relationships ────────────────────────────────────────────────────────
-    creator: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], lazy="noload"
-    )
-    responsable: Mapped[User | None] = relationship(
-        "User", foreign_keys=[responsable_id], lazy="noload"
-    )
+    creator: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")
+    responsable: Mapped[User | None] = relationship("User", foreign_keys=[responsable_id], lazy="noload")
     repositorio: Mapped[Repositorio | None] = relationship(
         "Repositorio", back_populates="vulnerabilidades", lazy="noload"
     )
-    activo_web: Mapped[ActivoWeb | None] = relationship(
-        "ActivoWeb", back_populates="vulnerabilidades", lazy="noload"
-    )
-    servicio: Mapped[Servicio | None] = relationship(
-        "Servicio", back_populates="vulnerabilidades", lazy="noload"
-    )
+    activo_web: Mapped[ActivoWeb | None] = relationship("ActivoWeb", back_populates="vulnerabilidades", lazy="noload")
+    servicio: Mapped[Servicio | None] = relationship("Servicio", back_populates="vulnerabilidades", lazy="noload")
     aplicacion_movil: Mapped[AplicacionMovil | None] = relationship(
         "AplicacionMovil", back_populates="vulnerabilidades", lazy="noload"
     )

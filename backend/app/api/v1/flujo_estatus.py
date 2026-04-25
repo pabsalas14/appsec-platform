@@ -51,9 +51,7 @@ async def update_flujo_estatus(
     entity: FlujoEstatus = Depends(require_ownership(flujo_estatus_svc)),
 ):
     """Partially update an owned flujo estatus (404 if not owned)."""
-    updated = await flujo_estatus_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await flujo_estatus_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(FlujoEstatusRead.model_validate(updated).model_dump(mode="json"))
 
 

@@ -58,7 +58,5 @@ async def create_historial(
     Normalmente esto lo hace el service de vulnerabilidades automáticamente
     al cambiar el estado. Solo usar para registros manuales.
     """
-    entity = await historial_vulnerabilidad_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await historial_vulnerabilidad_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(HistorialVulnerabilidadRead.model_validate(entity).model_dump(mode="json"))

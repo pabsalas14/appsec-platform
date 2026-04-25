@@ -62,9 +62,7 @@ async def test_servicio_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
 
 
@@ -81,9 +79,7 @@ async def test_servicio_update_and_delete(client: AsyncClient, auth_headers: dic
     rid = create_resp.json()["data"]["id"]
 
     # Update
-    patch_resp = await client.patch(
-        f"{BASE_URL}/{rid}", headers=auth_headers, json={"criticidad": "critica"}
-    )
+    patch_resp = await client.patch(f"{BASE_URL}/{rid}", headers=auth_headers, json={"criticidad": "critica"})
     assert patch_resp.status_code == 200
     assert patch_resp.json()["data"]["criticidad"] == "critica"
 

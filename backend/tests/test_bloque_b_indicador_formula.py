@@ -43,8 +43,8 @@ async def test_indicador_formula_json_formula(client: AsyncClient, auth_headers:
         "aggregation": "sum",
         "items": [
             {"type": "count", "entity": "hallazgo", "filters": [{"field": "severidad", "value": "CRITICA"}]},
-            {"type": "count", "entity": "hallazgo", "filters": [{"field": "severidad", "value": "ALTA"}]}
-        ]
+            {"type": "count", "entity": "hallazgo", "filters": [{"field": "severidad", "value": "ALTA"}]},
+        ],
     }
     payload = {
         "code": "KRI0025",

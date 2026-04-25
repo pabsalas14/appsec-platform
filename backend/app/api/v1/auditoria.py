@@ -31,9 +31,7 @@ async def export_auditorias_csv(
     items = await auditoria_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "titulo", "tipo", "estado", "fecha_inicio", "fecha_fin", "alcance"]
-    )
+    writer.writerow(["id", "titulo", "tipo", "estado", "fecha_inicio", "fecha_fin", "alcance"])
     for a in items:
         writer.writerow(
             [
@@ -99,9 +97,7 @@ async def update_auditoria(
     entity: Auditoria = Depends(require_ownership(auditoria_svc)),
 ):
     """Partially update an owned auditoria (404 if not owned)."""
-    updated = await auditoria_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await auditoria_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(AuditoriaRead.model_validate(updated).model_dump(mode="json"))
 
 

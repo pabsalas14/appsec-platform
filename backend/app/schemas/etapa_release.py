@@ -35,28 +35,26 @@ class EtapaReleaseBase(BaseModel):
     @classmethod
     def validate_etapa(cls, v: str) -> str:
         if v not in ETAPAS_VALIDAS:
-            raise ValueError(
-                f"etapa '{v}' inválida. Valores permitidos: {ETAPAS_VALIDAS}"
-            )
+            raise ValueError(f"etapa '{v}' inválida. Valores permitidos: {ETAPAS_VALIDAS}")
         return v
 
     @field_validator("estado")
     @classmethod
     def validate_estado(cls, v: str) -> str:
         if v not in ESTADOS_VALIDOS:
-            raise ValueError(
-                f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"
-            )
+            raise ValueError(f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}")
         return v
 
 
 class EtapaReleaseCreate(EtapaReleaseBase):
     """Fields required to create an etapa_release. user_id is set from auth context."""
+
     pass
 
 
 class EtapaReleaseUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     etapa: str | None = None
     estado: str | None = None
     justificacion: str | None = None
@@ -67,34 +65,33 @@ class EtapaReleaseUpdate(BaseModel):
     @classmethod
     def validate_etapa(cls, v: str | None) -> str | None:
         if v is not None and v not in ETAPAS_VALIDAS:
-            raise ValueError(
-                f"etapa '{v}' inválida. Valores permitidos: {ETAPAS_VALIDAS}"
-            )
+            raise ValueError(f"etapa '{v}' inválida. Valores permitidos: {ETAPAS_VALIDAS}")
         return v
 
     @field_validator("estado")
     @classmethod
     def validate_estado(cls, v: str | None) -> str | None:
         if v is not None and v not in ESTADOS_VALIDOS:
-            raise ValueError(
-                f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}"
-            )
+            raise ValueError(f"estado '{v}' inválido. Valores permitidos: {ESTADOS_VALIDOS}")
         return v
 
 
 class EtapaAprobarRequest(BaseModel):
     """Body para aprobar una etapa."""
+
     notas: str | None = None
 
 
 class EtapaRechazarRequest(BaseModel):
     """Body para rechazar una etapa (justificación obligatoria — A1)."""
+
     justificacion: str = Field(..., min_length=10)
     notas: str | None = None
 
 
 class EtapaReleaseRead(EtapaReleaseBase):
     """Full etapa_release representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

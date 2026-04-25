@@ -223,9 +223,7 @@ async def update_sesion_threat_modeling(
     entity: SesionThreatModeling = Depends(require_ownership(sesion_threat_modeling_svc)),
 ):
     """Partially update an owned sesion de threat modeling."""
-    updated = await sesion_threat_modeling_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await sesion_threat_modeling_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(SesionThreatModelingRead.model_validate(updated).model_dump(mode="json"))
 
 

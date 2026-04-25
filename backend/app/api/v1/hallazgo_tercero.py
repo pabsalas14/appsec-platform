@@ -31,9 +31,7 @@ async def list_hallazgo_terceros(
     if revision_tercero_id:
         filters["revision_tercero_id"] = revision_tercero_id
     items = await hallazgo_tercero_svc.list(db, filters=filters)
-    return success(
-        [HallazgoTerceroRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([HallazgoTerceroRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -49,9 +47,7 @@ async def create_hallazgo_tercero(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    entity = await hallazgo_tercero_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await hallazgo_tercero_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(HallazgoTerceroRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -62,9 +58,7 @@ async def update_hallazgo_tercero(
     current_user: User = Depends(get_current_user),
     entity: HallazgoTercero = Depends(require_ownership(hallazgo_tercero_svc)),
 ):
-    updated = await hallazgo_tercero_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await hallazgo_tercero_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(HallazgoTerceroRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -74,7 +68,5 @@ async def delete_hallazgo_tercero(
     current_user: User = Depends(get_current_user),
     entity: HallazgoTercero = Depends(require_ownership(hallazgo_tercero_svc)),
 ):
-    await hallazgo_tercero_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await hallazgo_tercero_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "HallazgoTercero eliminado"})

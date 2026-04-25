@@ -51,9 +51,7 @@ async def update_estado_cumplimiento(
     entity: EstadoCumplimiento = Depends(require_ownership(estado_cumplimiento_svc)),
 ):
     """Partially update an owned estado_cumplimiento (404 if not owned)."""
-    updated = await estado_cumplimiento_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await estado_cumplimiento_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EstadoCumplimientoRead.model_validate(updated).model_dump(mode="json"))
 
 

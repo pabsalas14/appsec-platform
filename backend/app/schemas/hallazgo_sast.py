@@ -30,11 +30,13 @@ class HallazgoSastBase(BaseModel):
 
 class HallazgoSastCreate(HallazgoSastBase):
     """Fields required to create a hallazgo_sast. user_id is set from auth context."""
+
     pass
 
 
 class HallazgoSastUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     vulnerabilidad_id: UUID | None = None
     titulo: str | None = Field(None, min_length=1, max_length=255)
     descripcion: str | None = None
@@ -54,6 +56,7 @@ class HallazgoSastUpdate(BaseModel):
 
 class HallazgoSastRead(HallazgoSastBase):
     """Full hallazgo_sast representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

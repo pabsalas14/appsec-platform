@@ -5,6 +5,7 @@ Revises: d4a8e6c112f5
 Create Date: 2026-04-22 10:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -28,9 +29,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code"),
     )
-    op.create_index(
-        op.f("ix_permissions_code"), "permissions", ["code"], unique=True
-    )
+    op.create_index(op.f("ix_permissions_code"), "permissions", ["code"], unique=True)
 
     # ─── roles ──
     op.create_table(
@@ -59,13 +58,9 @@ def upgrade() -> None:
     op.create_table(
         "role_permissions",
         sa.Column("role_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column(
-            "permission_id", postgresql.UUID(as_uuid=True), nullable=False
-        ),
+        sa.Column("permission_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(["role_id"], ["roles.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["permission_id"], ["permissions.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["permission_id"], ["permissions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("role_id", "permission_id"),
     )
 

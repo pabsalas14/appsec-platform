@@ -139,8 +139,7 @@ class AnthropicProvider(BaseIAProvider):
         usage = {
             "prompt_tokens": int(usage_raw.get("input_tokens", 0)),
             "completion_tokens": int(usage_raw.get("output_tokens", 0)),
-            "total_tokens": int(usage_raw.get("input_tokens", 0))
-            + int(usage_raw.get("output_tokens", 0)),
+            "total_tokens": int(usage_raw.get("input_tokens", 0)) + int(usage_raw.get("output_tokens", 0)),
         }
         return IAResult(
             provider=self.provider_name,
@@ -203,22 +202,18 @@ PROVIDER_MAP = {
 
 async def read_ia_config(db: AsyncSession) -> IAConfigRead:
     rows = (
-        await db.execute(
-            select(SystemSetting).where(SystemSetting.key.in_(list(IA_KEYS_DEFAULTS.keys())))
-        )
-    ).scalars().all()
+        (await db.execute(select(SystemSetting).where(SystemSetting.key.in_(list(IA_KEYS_DEFAULTS.keys())))))
+        .scalars()
+        .all()
+    )
     values = {row.key: row.value for row in rows}
     return IAConfigRead(
         proveedor_activo=values.get("ia.proveedor_activo", IA_KEYS_DEFAULTS["ia.proveedor_activo"]),
         modelo=values.get("ia.modelo", IA_KEYS_DEFAULTS["ia.modelo"]),
         temperatura=values.get("ia.temperatura", IA_KEYS_DEFAULTS["ia.temperatura"]),
         max_tokens=values.get("ia.max_tokens", IA_KEYS_DEFAULTS["ia.max_tokens"]),
-        timeout_segundos=values.get(
-            "ia.timeout_segundos", IA_KEYS_DEFAULTS["ia.timeout_segundos"]
-        ),
-        sanitizar_datos_paga=values.get(
-            "ia.sanitizar_datos_paga", IA_KEYS_DEFAULTS["ia.sanitizar_datos_paga"]
-        ),
+        timeout_segundos=values.get("ia.timeout_segundos", IA_KEYS_DEFAULTS["ia.timeout_segundos"]),
+        sanitizar_datos_paga=values.get("ia.sanitizar_datos_paga", IA_KEYS_DEFAULTS["ia.sanitizar_datos_paga"]),
     )
 
 

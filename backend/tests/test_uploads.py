@@ -27,9 +27,7 @@ async def _upload_png(client: AsyncClient, headers: dict[str, str]) -> dict:
 
 
 @pytest.mark.asyncio
-async def test_upload_and_list(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_upload_and_list(client: AsyncClient, auth_headers: dict[str, str]):
     attachment = await _upload_png(client, auth_headers)
     assert attachment["filename"] == "tiny.png"
     assert attachment["content_type"] == "image/png"
@@ -41,15 +39,11 @@ async def test_upload_and_list(
 
 
 @pytest.mark.asyncio
-async def test_upload_rejects_unsupported_type(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_upload_rejects_unsupported_type(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.post(
         "/api/v1/uploads",
         headers=auth_headers,
-        files={
-            "file": ("bad.bin", io.BytesIO(b"\x00\x01\x02"), "application/x-shellscript")
-        },
+        files={"file": ("bad.bin", io.BytesIO(b"\x00\x01\x02"), "application/x-shellscript")},
     )
     assert resp.status_code == 422
 
@@ -77,19 +71,13 @@ async def test_upload_idor_cross_user(
 
 
 @pytest.mark.asyncio
-async def test_download_nonexistent_404(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
-    resp = await client.get(
-        f"/api/v1/uploads/{uuid.uuid4()}/download", headers=auth_headers
-    )
+async def test_download_nonexistent_404(client: AsyncClient, auth_headers: dict[str, str]):
+    resp = await client.get(f"/api/v1/uploads/{uuid.uuid4()}/download", headers=auth_headers)
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_upload_delete_is_soft_delete_and_keeps_hash(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_upload_delete_is_soft_delete_and_keeps_hash(client: AsyncClient, auth_headers: dict[str, str]):
     attachment = await _upload_png(client, auth_headers)
     attachment_id = attachment["id"]
     assert attachment.get("sha256"), "upload response must expose attachment sha256"

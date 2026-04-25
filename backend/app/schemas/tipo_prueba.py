@@ -20,6 +20,7 @@ class TipoPruebaBase(BaseModel):
 
 class TipoPruebaCreate(TipoPruebaBase):
     """Fields required to create a tipo_prueba. user_id is set from auth context."""
+
     pass
 
 
@@ -33,6 +34,7 @@ class TipoPruebaUpdate(BaseModel):
 
 class TipoPruebaRead(TipoPruebaBase):
     """Full tipo_prueba representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

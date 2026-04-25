@@ -40,11 +40,13 @@ class AceptacionRiesgoCreate(AceptacionRiesgoBase):
 
     El servicio valida SoD: aprobador_id != user_id cuando la regla está activa.
     """
+
     pass
 
 
 class AceptacionRiesgoUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
+
     justificacion_negocio: str | None = Field(None, min_length=10)
     propietario_riesgo_id: UUID | None = None
     fecha_revision_obligatoria: datetime | None = None
@@ -63,6 +65,7 @@ class AceptacionRiesgoUpdate(BaseModel):
 
 class AceptacionRiesgoRead(AceptacionRiesgoBase):
     """Representación completa retornada por la API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

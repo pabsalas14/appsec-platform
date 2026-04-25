@@ -51,9 +51,7 @@ async def update_programa_sast(
     entity: ProgramaSast = Depends(require_ownership(programa_sast_svc)),
 ):
     """Partially update an owned programa_sast (404 if not owned)."""
-    updated = await programa_sast_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await programa_sast_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ProgramaSastRead.model_validate(updated).model_dump(mode="json"))
 
 

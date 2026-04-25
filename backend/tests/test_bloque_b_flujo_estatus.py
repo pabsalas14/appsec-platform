@@ -48,11 +48,7 @@ async def test_update_flujo_estatus_allowed_flag(client: AsyncClient, auth_heade
 
     # Update
     update_payload = {"allowed": False}
-    response = await client.patch(
-        f"/api/v1/flujos_estatus/{flujo_id}",
-        json=update_payload,
-        headers=auth_headers
-    )
+    response = await client.patch(f"/api/v1/flujos_estatus/{flujo_id}", json=update_payload, headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["data"]["allowed"] == False
 

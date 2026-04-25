@@ -53,9 +53,7 @@ async def update_celula(
     entity: Celula = Depends(require_ownership(celula_svc)),
 ):
     """Partially update an owned celula (404 if not owned)."""
-    updated = await celula_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await celula_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(CelulaRead.model_validate(updated).model_dump(mode="json"))
 
 

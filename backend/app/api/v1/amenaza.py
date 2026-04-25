@@ -57,9 +57,7 @@ async def update_amenaza(
     entity: Amenaza = Depends(require_ownership(amenaza_svc)),
 ):
     """Partially update an owned amenaza. score_total is recalculated automatically."""
-    updated = await amenaza_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await amenaza_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(AmenazaRead.model_validate(updated).model_dump(mode="json"))
 
 

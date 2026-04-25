@@ -16,6 +16,7 @@ class GerenciaBase(BaseModel):
 
 class GerenciaCreate(GerenciaBase):
     """Fields required to create a gerencia. user_id is set from auth context."""
+
     pass
 
 
@@ -29,6 +30,7 @@ class GerenciaUpdate(BaseModel):
 
 class GerenciaRead(GerenciaBase):
     """Full gerencia representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

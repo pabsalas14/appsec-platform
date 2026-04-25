@@ -23,6 +23,7 @@ from app.models.user import User
 
 # ─── Authentication ─────────────────────────────────────────────────────────
 
+
 async def get_current_user(
     authorization: str | None = Header(None, description="Bearer <token>"),
     access_token: str | None = Cookie(None),
@@ -66,9 +67,7 @@ async def get_current_user(
             raise UnauthorizedException("Session has been revoked")
 
     user_id = uuid.UUID(payload["sub"])
-    result = await db.execute(
-        select(User).where(User.id == user_id, User.is_active == True)
-    )
+    result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -83,6 +82,7 @@ async def get_current_user(
 
 # ─── Authorisation ───────────────────────────────────────────────────────────
 
+
 def require_role(*roles: str):
     """Dependency factory that restricts access to specific roles.
 
@@ -95,12 +95,14 @@ def require_role(*roles: str):
 
     If multiple roles are given, user needs **ANY** of them (OR logic).
     """
+
     async def role_checker(
         current_user: User = Depends(get_current_user),
     ) -> User:
         if current_user.role not in roles:
             raise ForbiddenException("You do not have permission for this action")
         return current_user
+
     return role_checker
 
 
@@ -123,6 +125,7 @@ def require_permission(*permission_codes: str):
     If the permissions table hasn't been seeded yet the check falls back to
     role-level access (backward compatible with pre-Fase 19 code).
     """
+
     async def permission_checker(
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
@@ -134,24 +137,18 @@ def require_permission(*permission_codes: str):
         # Query the role_permissions join table for the user's role
         from app.models.role import Permission, Role, role_permissions
 
-        role_result = await db.execute(
-            select(Role).where(Role.name == current_user.role)
-        )
+        role_result = await db.execute(select(Role).where(Role.name == current_user.role))
         role_obj = role_result.scalar_one_or_none()
 
         if role_obj is None:
             from app.services.permission_seed import ensure_roles_permissions_seeded
 
             await ensure_roles_permissions_seeded(db)
-            role_result = await db.execute(
-                select(Role).where(Role.name == current_user.role)
-            )
+            role_result = await db.execute(select(Role).where(Role.name == current_user.role))
             role_obj = role_result.scalar_one_or_none()
 
         if role_obj is None:
-            raise ForbiddenException(
-                "Your role has not been configured. Contact an administrator."
-            )
+            raise ForbiddenException("Your role has not been configured. Contact an administrator.")
 
         # Fetch permission codes for this role
         perm_result = await db.execute(
@@ -164,15 +161,15 @@ def require_permission(*permission_codes: str):
         # Check that the user has ALL required permission codes
         missing = set(permission_codes) - user_permissions
         if missing:
-            raise ForbiddenException(
-                f"Missing required permissions: {', '.join(sorted(missing))}"
-            )
+            raise ForbiddenException(f"Missing required permissions: {', '.join(sorted(missing))}")
 
         return current_user
+
     return permission_checker
 
 
 # ─── Shared helpers ──────────────────────────────────────────────────────────
+
 
 async def validate_fk_exists(
     db: AsyncSession,

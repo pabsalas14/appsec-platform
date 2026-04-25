@@ -13,6 +13,8 @@ concurrency:
 env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
+  # Settings + Alembic; Fernet 32-byte key (A5). Public CI-only; do not use in production.
+  APPSEC_MASTER_KEY: "bOEizITi-HIjCc8gIlF3FMfwidr6I0z7RFGXJdfizwU="
 
 jobs:
   # ─── Backend ─────────────────────────────────────────────────────────────
@@ -84,7 +86,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
       - run: pip install pip-audit
-      - run: pip-audit -r requirements.txt --disable-pip
+      - run: pip-audit -r requirements.txt
 
   dead-code-backend:
     name: Dead code backend (vulture)

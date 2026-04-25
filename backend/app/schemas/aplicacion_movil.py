@@ -15,6 +15,7 @@ class AplicacionMovilBase(BaseModel):
 
 class AplicacionMovilCreate(AplicacionMovilBase):
     """Fields required to create a aplicacion_movil. user_id is set from auth context."""
+
     pass
 
 
@@ -29,6 +30,7 @@ class AplicacionMovilUpdate(BaseModel):
 
 class AplicacionMovilRead(AplicacionMovilBase):
     """Full aplicacion_movil representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

@@ -8,7 +8,6 @@ Tests for:
   - Fase 24: E2E IA integration tests
 """
 
-
 import pytest
 from httpx import AsyncClient
 
@@ -78,8 +77,9 @@ class TestPhase22ThreatModeling:
             # Verify STRIDE categories are present
             if threats:
                 threat = threats[0]
-                assert "categoria_stride" in threat or "stride" in threat.get("titulo", "").lower(), \
+                assert "categoria_stride" in threat or "stride" in threat.get("titulo", "").lower(), (
                     "Threats should be categorized by STRIDE"
+                )
 
     @pytest.mark.asyncio
     async def test_threat_model_dread_scoring(
@@ -110,6 +110,7 @@ class TestPhase22ThreatModeling:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestPhase23FPTriage:
     """Fase 23: False Positive triage by IA."""
@@ -153,8 +154,9 @@ class TestPhase23FPTriage:
         )
 
         # Should succeed or return 404 if not yet implemented
-        assert resp_triage.status_code in (200, 404, 501), \
+        assert resp_triage.status_code in (200, 404, 501), (
             f"FP triage should exist or be deferred: {resp_triage.status_code}"
+        )
 
     @pytest.mark.asyncio
     async def test_fp_triage_classification(
@@ -197,11 +199,11 @@ class TestPhase23FPTriage:
         if resp_triage.status_code == 200:
             result = resp_triage.json()["data"]
             # Should have classification
-            assert "clasificacion" in result or "classification" in result, \
-                "Result should include classification"
+            assert "clasificacion" in result or "classification" in result, "Result should include classification"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestPhase24IAProviderSwitching:
     """Fase 24: E2E IA provider switching (multi-provider support)."""
@@ -224,8 +226,9 @@ class TestPhase24IAProviderSwitching:
         # Should have essential fields
         assert "proveedor_activo" in config, "Missing proveedor_activo"
         assert "modelo" in config, "Missing modelo"
-        assert config["proveedor_activo"] in ("ollama", "openai", "anthropic", "openrouter"), \
+        assert config["proveedor_activo"] in ("ollama", "openai", "anthropic", "openrouter"), (
             f"Invalid provider: {config['proveedor_activo']}"
+        )
 
     @pytest.mark.asyncio
     async def test_ia_config_update(
@@ -302,6 +305,7 @@ class TestPhase24IAProviderSwitching:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestPhase24IAErrorHandling:
     """Fase 24: IA provider error handling (S10 compliance)."""

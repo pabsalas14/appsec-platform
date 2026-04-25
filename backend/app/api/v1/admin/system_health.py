@@ -37,27 +37,17 @@ async def system_health(
     since_24h = now - timedelta(hours=24)
     active_users = int(
         (
-            await db.execute(
-                select(func.count(func.distinct(AuditLog.actor_user_id)))
-                .where(AuditLog.ts >= since_24h)
-            )
-        ).scalar_one() or 0
+            await db.execute(select(func.count(func.distinct(AuditLog.actor_user_id))).where(AuditLog.ts >= since_24h))
+        ).scalar_one()
+        or 0
     )
 
     total_users = int(
-        (
-            await db.execute(
-                select(func.count()).select_from(User).where(User.is_active.is_(True))
-            )
-        ).scalar_one() or 0
+        (await db.execute(select(func.count()).select_from(User).where(User.is_active.is_(True)))).scalar_one() or 0
     )
 
     # ── Audit log stats ──
-    total_audit_entries = int(
-        (
-            await db.execute(select(func.count()).select_from(AuditLog))
-        ).scalar_one() or 0
-    )
+    total_audit_entries = int((await db.execute(select(func.count()).select_from(AuditLog))).scalar_one() or 0)
 
     since_1h = now - timedelta(hours=1)
     recent_errors = int(
@@ -70,20 +60,22 @@ async def system_health(
                     AuditLog.action.like("%.error%"),
                 )
             )
-        ).scalar_one() or 0
+        ).scalar_one()
+        or 0
     )
 
     # ── Database size (pg_database_size) ──
-    db_size_result = await db.execute(
-        text("SELECT pg_database_size(current_database())")
-    )
+    db_size_result = await db.execute(text("SELECT pg_database_size(current_database())"))
     db_size_bytes = int(db_size_result.scalar_one() or 0)
     db_size_mb = round(db_size_bytes / (1024 * 1024), 2)
 
     # ── Table row counts for key tables ──
     key_tables = [
-        "users", "audit_logs", "vulnerabilidads",
-        "service_releases", "changelog_entradas",
+        "users",
+        "audit_logs",
+        "vulnerabilidads",
+        "service_releases",
+        "changelog_entradas",
     ]
     table_stats = []
     for table_name in key_tables:
@@ -91,16 +83,20 @@ async def system_health(
             count_result = await db.execute(
                 text(f"SELECT COUNT(*) FROM {table_name}")  # noqa: S608
             )
-            table_stats.append({
-                "table": table_name,
-                "row_count": int(count_result.scalar_one() or 0),
-            })
+            table_stats.append(
+                {
+                    "table": table_name,
+                    "row_count": int(count_result.scalar_one() or 0),
+                }
+            )
         except Exception:
-            table_stats.append({
-                "table": table_name,
-                "row_count": -1,
-                "error": "table_not_found",
-            })
+            table_stats.append(
+                {
+                    "table": table_name,
+                    "row_count": -1,
+                    "error": "table_not_found",
+                }
+            )
 
     # ── IA integration status (phase 17 admin-config-aware) ──
     ia_cfg = await read_ia_config(db)
@@ -112,23 +108,25 @@ async def system_health(
         "sanitizar_datos_paga": ia_cfg.sanitizar_datos_paga,
     }
 
-    return success({
-        "timestamp": now.isoformat(),
-        "users": {
-            "total_active": total_users,
-            "active_last_24h": active_users,
-        },
-        "audit": {
-            "total_entries": total_audit_entries,
-            "errors_last_hour": recent_errors,
-        },
-        "database": {
-            "size_mb": db_size_mb,
-            "table_stats": table_stats,
-        },
-        "ia_integration": ia_status,
-        "alerts": [],
-    })
+    return success(
+        {
+            "timestamp": now.isoformat(),
+            "users": {
+                "total_active": total_users,
+                "active_last_24h": active_users,
+            },
+            "audit": {
+                "total_entries": total_audit_entries,
+                "errors_last_hour": recent_errors,
+            },
+            "database": {
+                "size_mb": db_size_mb,
+                "table_stats": table_stats,
+            },
+            "ia_integration": ia_status,
+            "alerts": [],
+        }
+    )
 
 
 @router.post("/refresh")

@@ -11,7 +11,7 @@ SAMPLE_PAYLOAD = {
     "nombre_regulacion": "CNBV",
     "nombre_control": "Control 1.1",
     "descripcion": "Description",
-    "obligatorio": True
+    "obligatorio": True,
 }
 
 
@@ -49,7 +49,5 @@ async def test_regulacion_control_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

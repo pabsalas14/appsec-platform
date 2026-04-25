@@ -33,11 +33,13 @@ class EjecucionDastBase(BaseModel):
 
 class EjecucionDastCreate(EjecucionDastBase):
     """Fields required to create a ejecucion_dast. user_id is set from auth context."""
+
     pass
 
 
 class EjecucionDastUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     fecha_inicio: datetime | None = None
     fecha_fin: datetime | None = None
     ambiente: str | None = None
@@ -54,6 +56,7 @@ class EjecucionDastUpdate(BaseModel):
 
 class EjecucionDastRead(EjecucionDastBase):
     """Full ejecucion_dast representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

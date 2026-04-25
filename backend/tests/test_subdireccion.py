@@ -22,9 +22,7 @@ async def test_create_subdireccion(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_readonly_cannot_create_subdireccion(
-    client: AsyncClient, readonly_auth_headers: dict
-):
+async def test_readonly_cannot_create_subdireccion(client: AsyncClient, readonly_auth_headers: dict):
     resp = await client.post(BASE_URL, headers=readonly_auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 403
     assert "catalogs.create" in resp.text
@@ -57,7 +55,5 @@ async def test_subdireccion_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

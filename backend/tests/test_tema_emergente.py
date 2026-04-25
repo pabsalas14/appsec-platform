@@ -23,18 +23,14 @@ async def test_create_tema_emergente(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_temas_emergentes_export_forbidden_user(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_temas_emergentes_export_forbidden_user(client: AsyncClient, auth_headers: dict):
     resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert resp.status_code == 403
     assert "emerging_themes.export" in resp.text
 
 
 @pytest.mark.asyncio
-async def test_temas_emergentes_export_csv_admin(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_temas_emergentes_export_csv_admin(client: AsyncClient, admin_auth_headers: dict):
     await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE)
     r = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
     assert r.status_code == 200, r.text

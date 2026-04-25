@@ -51,9 +51,7 @@ async def update_repositorio(
     entity: Repositorio = Depends(require_ownership(repositorio_svc)),
 ):
     """Partially update an owned repositorio (404 if not owned)."""
-    updated = await repositorio_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await repositorio_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(RepositorioRead.model_validate(updated).model_dump(mode="json"))
 
 

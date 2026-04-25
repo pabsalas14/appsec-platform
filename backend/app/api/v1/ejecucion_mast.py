@@ -57,9 +57,7 @@ async def update_ejecucion_mast(
     entity: EjecucionMAST = Depends(require_ownership(ejecucion_mast_svc)),
 ):
     """Partially update an owned ejecucion_mast (404 if not owned)."""
-    updated = await ejecucion_mast_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await ejecucion_mast_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EjecucionMASTRead.model_validate(updated).model_dump(mode="json"))
 
 

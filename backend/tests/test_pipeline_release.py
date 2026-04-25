@@ -12,6 +12,7 @@ BASE_URL = "/api/v1/pipeline_releases"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_repositorio(client: AsyncClient, headers: dict) -> str:
     return await create_repositorio_id(client, headers)
 
@@ -28,6 +29,7 @@ def _payload(repositorio_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_pipeline_release(client: AsyncClient, auth_headers: dict):
@@ -79,9 +81,7 @@ async def test_pipeline_release_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_pipeline_release_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_pipeline_release_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     repo_id = await _create_repositorio(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(repo_id))
     assert resp.status_code == 201, resp.text

@@ -51,9 +51,7 @@ async def update_programa_source_code(
     entity: ProgramaSourceCode = Depends(require_ownership(programa_source_code_svc)),
 ):
     """Partially update an owned programa_source_code (404 if not owned)."""
-    updated = await programa_source_code_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await programa_source_code_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ProgramaSourceCodeRead.model_validate(updated).model_dump(mode="json"))
 
 

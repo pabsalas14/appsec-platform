@@ -51,9 +51,7 @@ async def update_regulacion_control(
     entity: RegulacionControl = Depends(require_ownership(regulacion_control_svc)),
 ):
     """Partially update an owned regulacion_control (404 if not owned)."""
-    updated = await regulacion_control_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await regulacion_control_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(RegulacionControlRead.model_validate(updated).model_dump(mode="json"))
 
 

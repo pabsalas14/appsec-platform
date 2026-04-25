@@ -51,9 +51,7 @@ async def update_control_source_code(
     entity: ControlSourceCode = Depends(require_ownership(control_source_code_svc)),
 ):
     """Partially update an owned control_source_code (404 if not owned)."""
-    updated = await control_source_code_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await control_source_code_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ControlSourceCodeRead.model_validate(updated).model_dump(mode="json"))
 
 

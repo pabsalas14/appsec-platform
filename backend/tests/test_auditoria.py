@@ -27,18 +27,14 @@ async def test_create_and_list_auditoria(client: AsyncClient, auth_headers: dict
 
 
 @pytest.mark.asyncio
-async def test_auditoria_export_forbidden_user(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_auditoria_export_forbidden_user(client: AsyncClient, auth_headers: dict):
     r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert r.status_code == 403
     assert "audits.export" in r.text
 
 
 @pytest.mark.asyncio
-async def test_auditoria_export_csv_admin(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_auditoria_export_csv_admin(client: AsyncClient, admin_auth_headers: dict):
     await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE)
     r = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
     assert r.status_code == 200, r.text

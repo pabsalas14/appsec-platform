@@ -30,6 +30,7 @@ configure_logging(settings)
 
 # ─── Lifespan ──────────────────────────────────────────────────────────────────
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(
@@ -80,9 +81,7 @@ async def _http_exception_handler(request: Request, exc: HTTPException):
 
 
 @app.exception_handler(RequestValidationError)
-async def _validation_exception_handler(
-    request: Request, exc: RequestValidationError
-):
+async def _validation_exception_handler(request: Request, exc: RequestValidationError):
     """Render Pydantic/FastAPI request validation errors as 422 envelope."""
     return JSONResponse(
         status_code=422,
@@ -147,8 +146,7 @@ async def log_requests(request: Request, call_next):
     )
 
     skip_log = (
-        request.url.path in _HEALTH_PATHS
-        and random.random() >= settings.LOG_SAMPLE_HEALTH  # noqa: S311
+        request.url.path in _HEALTH_PATHS and random.random() >= settings.LOG_SAMPLE_HEALTH  # noqa: S311
     )
 
     if not skip_log:
@@ -217,9 +215,7 @@ async def security_headers(request: Request, call_next):
     # Clickjacking + MIME sniffing
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault(
-        "Referrer-Policy", "strict-origin-when-cross-origin"
-    )
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
 
     # CSP: keep config-driven; can be tightened later per frontend needs.
     if settings.SECURITY_CSP:
@@ -236,6 +232,7 @@ async def security_headers(request: Request, call_next):
 
 
 # ─── Health check ──────────────────────────────────────────────────────────────
+
 
 @app.get("/api/health")
 async def health():

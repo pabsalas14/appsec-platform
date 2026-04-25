@@ -90,9 +90,7 @@ async def list_etapa_releases(
     if service_release_id:
         filters["service_release_id"] = service_release_id
     items = await etapa_release_svc.list(db, filters=filters)
-    return success(
-        [EtapaReleaseRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([EtapaReleaseRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -110,9 +108,7 @@ async def create_etapa_release(
     current_user: User = Depends(get_current_user),
 ):
     """Crea una nueva etapa para el usuario autenticado."""
-    entity = await etapa_release_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await etapa_release_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(EtapaReleaseRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -124,9 +120,7 @@ async def update_etapa_release(
     entity: EtapaRelease = Depends(require_ownership(etapa_release_svc)),
 ):
     """Actualiza parcialmente una etapa (404 si no es del usuario)."""
-    updated = await etapa_release_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await etapa_release_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EtapaReleaseRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -137,13 +131,12 @@ async def delete_etapa_release(
     entity: EtapaRelease = Depends(require_ownership(etapa_release_svc)),
 ):
     """Elimina (soft-delete) una etapa (404 si no es del usuario)."""
-    await etapa_release_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await etapa_release_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "EtapaRelease eliminada"})
 
 
 # ─── Aprobación con SoD (A6) ────────────────────────────────────────────────
+
 
 @router.post("/{id}/aprobar")
 async def aprobar_etapa(

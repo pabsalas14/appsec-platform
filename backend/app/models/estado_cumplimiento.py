@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class EstadoCumplimiento(SoftDeleteMixin, Base):
     __tablename__ = "estado_cumplimientos"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -46,15 +44,11 @@ class EstadoCumplimiento(SoftDeleteMixin, Base):
     porcentaje: Mapped[float | None] = mapped_column(Float(), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text(), nullable=True)
     fecha_evaluacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    registro: Mapped[ServicioReguladoRegistro] = relationship(
-        back_populates="estados_cumplimiento"
-    )
+    registro: Mapped[ServicioReguladoRegistro] = relationship(back_populates="estados_cumplimiento")

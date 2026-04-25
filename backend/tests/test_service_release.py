@@ -12,6 +12,7 @@ BASE_URL = "/api/v1/service_releases"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_servicio(client: AsyncClient, headers: dict) -> str:
     return await create_servicio_id(client, headers)
 
@@ -28,6 +29,7 @@ def _payload(servicio_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_service_release(client: AsyncClient, auth_headers: dict):
@@ -64,7 +66,8 @@ async def test_update_service_release(client: AsyncClient, auth_headers: dict):
     rid = resp.json()["data"]["id"]
 
     patch = await client.patch(
-        f"{BASE_URL}/{rid}", headers=auth_headers,
+        f"{BASE_URL}/{rid}",
+        headers=auth_headers,
         json={"estado_actual": "En Revision de Diseno"},
     )
     assert patch.status_code == 200
@@ -99,9 +102,7 @@ async def test_service_release_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_service_release_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_service_release_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     svc_id = await _create_servicio(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
     assert resp.status_code == 201, resp.text
@@ -113,9 +114,7 @@ async def test_service_release_idor_protected(
 
 
 @pytest.mark.asyncio
-async def test_service_release_export_requires_permission(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_service_release_export_requires_permission(client: AsyncClient, auth_headers: dict):
     """El rol user no puede exportar sin releases.export."""
     resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert resp.status_code == 403
@@ -123,13 +122,9 @@ async def test_service_release_export_requires_permission(
 
 
 @pytest.mark.asyncio
-async def test_service_release_export_csv_success(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_service_release_export_csv_success(client: AsyncClient, admin_auth_headers: dict):
     svc_id = await _create_servicio(client, admin_auth_headers)
-    created = await client.post(
-        BASE_URL, headers=admin_auth_headers, json=_payload(svc_id)
-    )
+    created = await client.post(BASE_URL, headers=admin_auth_headers, json=_payload(svc_id))
     assert created.status_code == 201, created.text
     resp = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)
     assert resp.status_code == 200

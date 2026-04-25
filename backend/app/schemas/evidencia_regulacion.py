@@ -27,11 +27,13 @@ class EvidenciaRegulacionBase(BaseModel):
 
 class EvidenciaRegulacionCreate(EvidenciaRegulacionBase):
     """Fields required to create a evidencia_regulacion. user_id is set from auth context."""
+
     pass
 
 
 class EvidenciaRegulacionUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     control_id: UUID | None = None
     descripcion: str | None = Field(None, min_length=1)
     filename: str | None = Field(None, max_length=500)
@@ -48,6 +50,7 @@ class EvidenciaRegulacionUpdate(BaseModel):
 
 class EvidenciaRegulacionRead(EvidenciaRegulacionBase):
     """Full evidencia_regulacion representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

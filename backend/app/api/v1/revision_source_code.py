@@ -64,9 +64,7 @@ async def update_revision_source_code(
     entity: RevisionSourceCode = Depends(require_ownership(revision_source_code_svc)),
 ):
     """Partially update an owned revision source code."""
-    updated = await revision_source_code_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await revision_source_code_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(RevisionSourceCodeRead.model_validate(updated).model_dump(mode="json"))
 
 

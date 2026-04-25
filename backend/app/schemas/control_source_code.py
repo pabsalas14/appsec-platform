@@ -33,11 +33,13 @@ class ControlSourceCodeBase(BaseModel):
 
 class ControlSourceCodeCreate(ControlSourceCodeBase):
     """Fields required to create a control_source_code. user_id is set from auth context."""
+
     pass
 
 
 class ControlSourceCodeUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = Field(None, min_length=1, max_length=255)
     tipo: str | None = Field(None, max_length=100)
     descripcion: str | None = None
@@ -50,6 +52,7 @@ class ControlSourceCodeUpdate(BaseModel):
 
 class ControlSourceCodeRead(ControlSourceCodeBase):
     """Full control_source_code representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

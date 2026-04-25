@@ -42,9 +42,7 @@ async def test_changelog_entrada_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_non_admin_cannot_create_changelog_entrada(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_non_admin_cannot_create_changelog_entrada(client: AsyncClient, auth_headers: dict):
     csrf = {"X-CSRF-Token": client.cookies.get("csrf_token", "")}
     resp = await client.post(
         BASE_URL,

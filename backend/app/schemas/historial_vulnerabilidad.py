@@ -24,16 +24,19 @@ class HistorialVulnerabilidadBase(BaseModel):
 
 class HistorialVulnerabilidadCreate(HistorialVulnerabilidadBase):
     """Campos para registrar un evento de historial. user_id se toma del contexto de auth."""
+
     pass
 
 
 class HistorialVulnerabilidadUpdate(BaseModel):
     """Update no se expone en la API — el historial es inmutable."""
+
     pass
 
 
 class HistorialVulnerabilidadRead(HistorialVulnerabilidadBase):
     """Representación completa del historial retornada por la API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

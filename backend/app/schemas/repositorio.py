@@ -19,6 +19,7 @@ class RepositorioBase(BaseModel):
 
 class RepositorioCreate(RepositorioBase):
     """Fields required to create a repositorio. user_id is set from auth context."""
+
     pass
 
 
@@ -35,6 +36,7 @@ class RepositorioUpdate(BaseModel):
 
 class RepositorioRead(RepositorioBase):
     """Full repositorio representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

@@ -31,10 +31,14 @@ async def list_filtros_guardados(
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
     # Get paginated items
-    stmt = select(FiltroGuardado).where(
-        FiltroGuardado.usuario_id == current_user.id,
-        FiltroGuardado.deleted_at.is_(None),
-    ).order_by(FiltroGuardado.created_at.desc())
+    stmt = (
+        select(FiltroGuardado)
+        .where(
+            FiltroGuardado.usuario_id == current_user.id,
+            FiltroGuardado.deleted_at.is_(None),
+        )
+        .order_by(FiltroGuardado.created_at.desc())
+    )
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -84,9 +88,7 @@ async def update_filtro_guardado(
     entity: FiltroGuardado = Depends(require_ownership(filtro_guardado_svc, owner_field="usuario_id")),
 ):
     """Partially update an owned filtro guardado (404 if not owned)."""
-    updated = await filtro_guardado_svc.update(
-        db, entity.id, entity_in, scope={"usuario_id": current_user.id}
-    )
+    updated = await filtro_guardado_svc.update(db, entity.id, entity_in, scope={"usuario_id": current_user.id})
     return success(FiltroGuardadoRead.model_validate(updated).model_dump(mode="json"))
 
 

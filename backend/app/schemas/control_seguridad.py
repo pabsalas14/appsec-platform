@@ -15,6 +15,7 @@ class ControlSeguridadBase(BaseModel):
 
 class ControlSeguridadCreate(ControlSeguridadBase):
     """Fields required to create a control_seguridad. user_id is set from auth context."""
+
     pass
 
 
@@ -29,6 +30,7 @@ class ControlSeguridadUpdate(BaseModel):
 
 class ControlSeguridadRead(ControlSeguridadBase):
     """Full control_seguridad representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

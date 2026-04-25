@@ -113,7 +113,5 @@ async def test_evidencia_idor_protected(
         ("PATCH", {"json": {"descripcion": "descripcion editada por otro"}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

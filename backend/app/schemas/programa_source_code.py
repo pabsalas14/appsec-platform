@@ -22,11 +22,13 @@ class ProgramaSourceCodeBase(BaseModel):
 
 class ProgramaSourceCodeCreate(ProgramaSourceCodeBase):
     """Fields required to create a programa_source_code. user_id is set from auth context."""
+
     pass
 
 
 class ProgramaSourceCodeUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = Field(None, min_length=1, max_length=255)
     ano: int | None = Field(None, ge=2000, le=2100)
     descripcion: str | None = None
@@ -40,6 +42,7 @@ class ProgramaSourceCodeUpdate(BaseModel):
 
 class ProgramaSourceCodeRead(ProgramaSourceCodeBase):
     """Full programa_source_code representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

@@ -43,9 +43,7 @@ def request_needs_csrf(request: Request) -> bool:
     if authorization.startswith("Bearer "):
         return False
 
-    return bool(
-        request.cookies.get("access_token") or request.cookies.get("refresh_token")
-    )
+    return bool(request.cookies.get("access_token") or request.cookies.get("refresh_token"))
 
 
 def csrf_is_valid(request: Request) -> bool:

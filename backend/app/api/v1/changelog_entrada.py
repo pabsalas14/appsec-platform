@@ -27,10 +27,7 @@ async def list_changelog_entradas(
 ):
     """List published changelog entries (visible to all authenticated users)."""
     items = await changelog_entrada_svc.list(db, filters={"publicado": True})
-    return success([
-        ChangelogEntradaRead.model_validate(x).model_dump(mode="json")
-        for x in items
-    ])
+    return success([ChangelogEntradaRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/all")
@@ -40,10 +37,7 @@ async def list_all_changelog_entradas(
 ):
     """List ALL changelog entries (drafts + published) — super_admin only."""
     items = await changelog_entrada_svc.list(db, filters={})
-    return success([
-        ChangelogEntradaRead.model_validate(x).model_dump(mode="json")
-        for x in items
-    ])
+    return success([ChangelogEntradaRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -64,9 +58,7 @@ async def create_changelog_entrada(
     current_user: User = Depends(require_role("super_admin", "admin")),
 ):
     """Create a new changelog entry — super_admin only."""
-    entity = await changelog_entrada_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await changelog_entrada_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(ChangelogEntradaRead.model_validate(entity).model_dump(mode="json"))
 
 

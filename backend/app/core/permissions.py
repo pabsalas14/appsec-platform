@@ -12,8 +12,10 @@ from enum import StrEnum
 
 # ─── Roles ───────────────────────────────────────────────────────────────────
 
+
 class RolEnum(StrEnum):
     """Valid user roles — 6 platform roles + 2 framework base roles."""
+
     SUPER_ADMIN = "super_admin"
     CHIEF_APPSEC = "chief_appsec"
     LIDER_PROGRAMA = "lider_programa"
@@ -29,6 +31,7 @@ VALID_ROLES: list[str] = [r.value for r in RolEnum]
 
 
 # ─── Permission code constants ───────────────────────────────────────────────
+
 
 class _Users:
     VIEW = "users.view"
@@ -128,6 +131,7 @@ class _IA:
 
 class P:
     """Permission code namespace.  Use ``P.USERS.VIEW`` etc."""
+
     USERS = _Users
     TASKS = _Tasks
     VULNERABILITIES = _Vulnerabilities
@@ -146,9 +150,11 @@ class P:
 # ─── Default permission matrix per role ──────────────────────────────────────
 # Maps role name → list of permission codes assigned by default at seed time.
 
+
 def _all_codes() -> list[str]:
     """Collect every permission code from P."""
     import inspect
+
     codes: list[str] = []
     for _, cls in inspect.getmembers(P, inspect.isclass):
         for name, value in inspect.getmembers(cls):
@@ -245,9 +251,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
             "ia.execute",
         ]
     ),
-    "auditor": (
-        [*_VIEW_CODES, "audit_logs.export", "audit_logs.verify", "dashboards.export"]
-    ),
+    "auditor": ([*_VIEW_CODES, "audit_logs.export", "audit_logs.verify", "dashboards.export"]),
     "readonly": [
         "dashboards.view",
         "vulnerabilities.view",

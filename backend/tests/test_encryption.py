@@ -8,6 +8,7 @@ from app.core.encryption import EncryptedString, decrypt_string, encrypt_string
 
 DummyBase = declarative_base()
 
+
 # Create a temporary model to run integration tests against the database types.
 class DummySecret(DummyBase):
     __tablename__ = "dummy_secrets"
@@ -57,6 +58,7 @@ async def test_sqlalchemy_encrypted_string_type_transparent_io(_session_factory)
 
         # Let's read from DB bypassing the TypeDecorator to see what's actually on disk
         from sqlalchemy import text
+
         stmt = text("SELECT secret_value FROM dummy_secrets WHERE id = :id")
         result = await db.execute(stmt, {"id": dummy.id})
         raw_db_value = result.scalar_one()

@@ -26,9 +26,7 @@ if TYPE_CHECKING:
 class PipelineRelease(SoftDeleteMixin, Base):
     __tablename__ = "pipeline_releases"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -53,13 +51,9 @@ class PipelineRelease(SoftDeleteMixin, Base):
     # tipo: SAST | DAST | SCA
     tipo: Mapped[str] = mapped_column(String(50), nullable=False)
     # resultado: Pendiente | En Progreso | Exitoso | Fallido | Cancelado
-    resultado: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="Pendiente"
-    )
+    resultado: Mapped[str] = mapped_column(String(50), nullable=False, default="Pendiente")
     herramienta: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -67,9 +61,7 @@ class PipelineRelease(SoftDeleteMixin, Base):
     )
 
     # ─── Relationships ─────────────────────────────────────────────────────────
-    service_release: Mapped[ServiceRelease | None] = relationship(
-        back_populates="pipelines"
-    )
+    service_release: Mapped[ServiceRelease | None] = relationship(back_populates="pipelines")
     repositorio: Mapped[Repositorio] = relationship(back_populates="pipeline_releases")
     hallazgos: Mapped[list[HallazgoPipeline]] = relationship(
         "HallazgoPipeline", back_populates="pipeline_release", lazy="noload"

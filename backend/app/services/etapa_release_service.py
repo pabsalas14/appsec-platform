@@ -23,9 +23,7 @@ from app.schemas.etapa_release import EtapaReleaseCreate, EtapaReleaseUpdate
 from app.services.base import BaseService
 
 
-class EtapaReleaseService(
-    BaseService[EtapaRelease, EtapaReleaseCreate, EtapaReleaseUpdate]
-):
+class EtapaReleaseService(BaseService[EtapaRelease, EtapaReleaseCreate, EtapaReleaseUpdate]):
     """Extends BaseService with SoD validation on etapa approval (A6)."""
 
     async def _sod_activa(self, db: AsyncSession) -> bool:
@@ -39,9 +37,7 @@ class EtapaReleaseService(
         )
         return result.scalar_one_or_none() is not None
 
-    async def _get_service_release_owner(
-        self, db: AsyncSession, service_release_id: uuid.UUID
-    ) -> uuid.UUID | None:
+    async def _get_service_release_owner(self, db: AsyncSession, service_release_id: uuid.UUID) -> uuid.UUID | None:
         """Obtiene el user_id del ServiceRelease padre."""
         result = await db.execute(
             select(ServiceRelease.user_id).where(
@@ -51,9 +47,7 @@ class EtapaReleaseService(
         )
         return result.scalar_one_or_none()
 
-    async def _get_for_decision(
-        self, db: AsyncSession, etapa_id: uuid.UUID
-    ) -> EtapaRelease | None:
+    async def _get_for_decision(self, db: AsyncSession, etapa_id: uuid.UUID) -> EtapaRelease | None:
         """Lee la etapa a aprobar/rechazar sin scope de owner.
 
         La autorización se valida con permiso granular (`releases.approve`)
@@ -88,13 +82,10 @@ class EtapaReleaseService(
             return None
 
         if await self._sod_activa(db):
-            release_owner = await self._get_service_release_owner(
-                db, record.service_release_id
-            )
+            release_owner = await self._get_service_release_owner(db, record.service_release_id)
             if release_owner is not None and release_owner == aprobador_id:
                 raise ConflictException(
-                    "SoD: el aprobador no puede ser el creador del ServiceRelease "
-                    "(ReglaSoD: release.aprobar)"
+                    "SoD: el aprobador no puede ser el creador del ServiceRelease (ReglaSoD: release.aprobar)"
                 )
 
         record.estado = "Aprobada"
@@ -134,13 +125,10 @@ class EtapaReleaseService(
             return None
 
         if await self._sod_activa(db):
-            release_owner = await self._get_service_release_owner(
-                db, record.service_release_id
-            )
+            release_owner = await self._get_service_release_owner(db, record.service_release_id)
             if release_owner is not None and release_owner == aprobador_id:
                 raise ConflictException(
-                    "SoD: el aprobador no puede ser el creador del ServiceRelease "
-                    "(ReglaSoD: release.aprobar)"
+                    "SoD: el aprobador no puede ser el creador del ServiceRelease (ReglaSoD: release.aprobar)"
                 )
 
         record.estado = "Rechazada"

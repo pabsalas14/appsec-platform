@@ -74,9 +74,7 @@ async def put_ia_config(
 
     for field, value in updates.items():
         key = key_map[field]
-        row = (
-            await db.execute(select(SystemSetting).where(SystemSetting.key == key))
-        ).scalar_one_or_none()
+        row = (await db.execute(select(SystemSetting).where(SystemSetting.key == key))).scalar_one_or_none()
         if row is None:
             row = SystemSetting(
                 key=key,

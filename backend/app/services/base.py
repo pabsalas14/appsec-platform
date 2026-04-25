@@ -204,9 +204,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         await db.flush()
         await db.refresh(record)
 
-        await self._audit(
-            db, "update", record, metadata={"changes": _safe_dump(changes)}
-        )
+        await self._audit(db, "update", record, metadata={"changes": _safe_dump(changes)})
         return record
 
     # ─── Delete ──────────────────────────────────────────────────────────────

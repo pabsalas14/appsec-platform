@@ -34,11 +34,13 @@ class RevisionSourceCodeBase(BaseModel):
 
 class RevisionSourceCodeCreate(RevisionSourceCodeBase):
     """Fields required to create a revision_source_code. user_id is set from auth context."""
+
     pass
 
 
 class RevisionSourceCodeUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     fecha_revision: datetime | None = None
     resultado: str | None = None
     evidencia_filename: str | None = Field(None, max_length=500)
@@ -59,6 +61,7 @@ class RevisionSourceCodeUpdate(BaseModel):
 
 class RevisionSourceCodeRead(RevisionSourceCodeBase):
     """Full revision_source_code representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

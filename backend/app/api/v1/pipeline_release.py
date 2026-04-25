@@ -34,9 +34,7 @@ async def list_pipeline_releases(
     if service_release_id:
         filters["service_release_id"] = service_release_id
     items = await pipeline_release_svc.list(db, filters=filters)
-    return success(
-        [PipelineReleaseRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([PipelineReleaseRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -52,9 +50,7 @@ async def create_pipeline_release(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    entity = await pipeline_release_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await pipeline_release_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(PipelineReleaseRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -65,9 +61,7 @@ async def update_pipeline_release(
     current_user: User = Depends(get_current_user),
     entity: PipelineRelease = Depends(require_ownership(pipeline_release_svc)),
 ):
-    updated = await pipeline_release_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await pipeline_release_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(PipelineReleaseRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -77,7 +71,5 @@ async def delete_pipeline_release(
     current_user: User = Depends(get_current_user),
     entity: PipelineRelease = Depends(require_ownership(pipeline_release_svc)),
 ):
-    await pipeline_release_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await pipeline_release_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "PipelineRelease eliminado"})

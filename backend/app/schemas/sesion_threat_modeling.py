@@ -23,11 +23,13 @@ class SesionThreatModelingBase(BaseModel):
 
 class SesionThreatModelingCreate(SesionThreatModelingBase):
     """Fields required to create a sesion_threat_modeling. user_id is set from auth context."""
+
     pass
 
 
 class SesionThreatModelingUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     fecha: datetime | None = None
     participantes: str | None = None
     contexto: str | None = None
@@ -41,6 +43,7 @@ class SesionThreatModelingUpdate(BaseModel):
 
 class SesionThreatModelingRead(SesionThreatModelingBase):
     """Full sesion_threat_modeling representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

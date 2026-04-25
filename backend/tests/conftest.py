@@ -46,6 +46,7 @@ from app.main import app
 
 # ─── Engine & session factory (session-scoped, loop-safe) ────────────────────
 
+
 def _assert_test_database() -> None:
     """Refuse to run if DATABASE_URL looks like a shared dev/prod DB.
 
@@ -131,12 +132,11 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
 async def _session_factory(
     _engine: AsyncEngine,
 ) -> async_sessionmaker[AsyncSession]:
-    return async_sessionmaker(
-        _engine, class_=AsyncSession, expire_on_commit=False
-    )
+    return async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 # ─── DB dependency override + per-test data cleanup ──────────────────────────
+
 
 @pytest_asyncio.fixture(autouse=True)
 async def _apply_db_override(
@@ -166,6 +166,7 @@ async def _apply_db_override(
 
 # ─── HTTP client & auth helpers ──────────────────────────────────────────────
 
+
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Async httpx client wired to the FastAPI app via ASGI transport."""
@@ -180,9 +181,7 @@ def _csrf_headers(client: AsyncClient) -> dict[str, str]:
     return {"X-CSRF-Token": token}
 
 
-async def _register_and_login(
-    client: AsyncClient, username: str | None = None
-) -> None:
+async def _register_and_login(client: AsyncClient, username: str | None = None) -> None:
     """Helper: register + login a disposable user into the client cookie jar."""
     unique = uuid.uuid4().hex[:8]
     username = username or f"testuser_{unique}"

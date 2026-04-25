@@ -27,9 +27,7 @@ router = APIRouter()
 async def list_audit_logs(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_backoffice),
-    actor_user_id: uuid.UUID | None = Query(
-        default=None, description="Filter by actor"
-    ),
+    actor_user_id: uuid.UUID | None = Query(default=None, description="Filter by actor"),
     action: str | None = Query(default=None, description="Exact action match"),
     entity_type: str | None = Query(default=None),
     since: datetime | None = Query(default=None),
@@ -58,11 +56,7 @@ async def list_audit_logs(
     stmt = select(AuditLog)
     for f in filters:
         stmt = stmt.where(f)
-    stmt = (
-        stmt.order_by(AuditLog.ts.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
+    stmt = stmt.order_by(AuditLog.ts.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     rows = result.scalars().all()
 

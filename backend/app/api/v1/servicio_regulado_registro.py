@@ -55,9 +55,7 @@ async def update_servicio_regulado_registro(
     entity: ServicioReguladoRegistro = Depends(require_ownership(servicio_regulado_registro_svc)),
 ):
     """Partially update an owned servicio_regulado_registro (404 if not owned)."""
-    updated = await servicio_regulado_registro_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await servicio_regulado_registro_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ServicioReguladoRegistroRead.model_validate(updated).model_dump(mode="json"))
 
 

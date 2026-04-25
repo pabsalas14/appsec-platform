@@ -22,11 +22,13 @@ class ProgramaSastBase(BaseModel):
 
 class ProgramaSastCreate(ProgramaSastBase):
     """Fields required to create a programa_sast. user_id is set from auth context."""
+
     pass
 
 
 class ProgramaSastUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = Field(None, min_length=1, max_length=255)
     ano: int | None = Field(None, ge=2000, le=2100)
     descripcion: str | None = None
@@ -40,6 +42,7 @@ class ProgramaSastUpdate(BaseModel):
 
 class ProgramaSastRead(ProgramaSastBase):
     """Full programa_sast representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

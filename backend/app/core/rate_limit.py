@@ -42,9 +42,7 @@ def enforce_login_cooldown(key: str) -> None:
     remaining = locked_until - time.monotonic()
     if remaining > 0:
         minutes = settings.AUTH_LOCKOUT_MINUTES
-        raise TooManyRequestsException(
-            f"Too many failed login attempts. Try again in {minutes} minutes."
-        )
+        raise TooManyRequestsException(f"Too many failed login attempts. Try again in {minutes} minutes.")
     if locked_until:
         _login_failures.pop(key, None)
 

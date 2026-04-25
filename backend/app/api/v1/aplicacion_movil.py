@@ -51,9 +51,7 @@ async def update_aplicacion_movil(
     entity: AplicacionMovil = Depends(require_ownership(aplicacion_movil_svc)),
 ):
     """Partially update an owned aplicacion_movil (404 if not owned)."""
-    updated = await aplicacion_movil_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await aplicacion_movil_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(AplicacionMovilRead.model_validate(updated).model_dump(mode="json"))
 
 

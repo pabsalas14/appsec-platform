@@ -24,9 +24,7 @@ from app.schemas.aceptacion_riesgo import (
 from app.services.base import BaseService
 
 
-class AceptacionRiesgoService(
-    BaseService[AceptacionRiesgo, AceptacionRiesgoCreate, AceptacionRiesgoUpdate]
-):
+class AceptacionRiesgoService(BaseService[AceptacionRiesgo, AceptacionRiesgoCreate, AceptacionRiesgoUpdate]):
     """Extends BaseService with SoD validation on approval (A6)."""
 
     async def _sod_activa(self, db: AsyncSession) -> bool:
@@ -40,9 +38,7 @@ class AceptacionRiesgoService(
         )
         return result.scalar_one_or_none() is not None
 
-    async def _get_for_decision(
-        self, db: AsyncSession, aceptacion_id: uuid.UUID
-    ) -> AceptacionRiesgo | None:
+    async def _get_for_decision(self, db: AsyncSession, aceptacion_id: uuid.UUID) -> AceptacionRiesgo | None:
         """Lee una aceptación para aprobar/rechazar sin scope de owner.
 
         Estas acciones se autorizan por permiso granular (`vulnerabilities.approve`)
@@ -76,8 +72,7 @@ class AceptacionRiesgoService(
 
         if await self._sod_activa(db) and record.user_id == aprobador_id:
             raise ConflictException(
-                "SoD: quien registra el riesgo no puede ser quien lo aprueba "
-                "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
+                "SoD: quien registra el riesgo no puede ser quien lo aprueba (ReglaSoD: vulnerabilidad.aceptar_riesgo)"
             )
 
         record.estado = "Aprobada"
@@ -87,10 +82,7 @@ class AceptacionRiesgoService(
 
         await db.flush()
         await db.refresh(record)
-        await self._audit(
-            db, "aprobar", record,
-            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
-        )
+        await self._audit(db, "aprobar", record, metadata={"aprobador_id": str(aprobador_id), "notas": notas})
         return record
 
     async def rechazar(
@@ -113,8 +105,7 @@ class AceptacionRiesgoService(
 
         if await self._sod_activa(db) and record.user_id == aprobador_id:
             raise ConflictException(
-                "SoD: quien registra el riesgo no puede ser quien lo aprueba "
-                "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
+                "SoD: quien registra el riesgo no puede ser quien lo aprueba (ReglaSoD: vulnerabilidad.aceptar_riesgo)"
             )
 
         record.estado = "Rechazada"
@@ -124,10 +115,7 @@ class AceptacionRiesgoService(
 
         await db.flush()
         await db.refresh(record)
-        await self._audit(
-            db, "rechazar", record,
-            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
-        )
+        await self._audit(db, "rechazar", record, metadata={"aprobador_id": str(aprobador_id), "notas": notas})
         return record
 
 

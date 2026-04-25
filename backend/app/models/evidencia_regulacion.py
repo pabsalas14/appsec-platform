@@ -23,9 +23,7 @@ if TYPE_CHECKING:
 class EvidenciaRegulacion(SoftDeleteMixin, Base):
     __tablename__ = "evidencia_regulacions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -49,9 +47,7 @@ class EvidenciaRegulacion(SoftDeleteMixin, Base):
     # SHA-256 para integridad del archivo (A3)
     sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     fecha: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

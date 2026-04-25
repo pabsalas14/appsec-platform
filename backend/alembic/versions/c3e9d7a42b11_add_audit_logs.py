@@ -5,6 +5,7 @@ Revises: a2f7c4d81b30
 Create Date: 2026-04-21 14:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -47,9 +48,7 @@ def upgrade() -> None:
             server_default=sa.text("'{}'::jsonb"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["actor_user_id"], ["users.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["actor_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -58,9 +57,7 @@ def upgrade() -> None:
         ["actor_user_id"],
         unique=False,
     )
-    op.create_index(
-        op.f("ix_audit_logs_action"), "audit_logs", ["action"], unique=False
-    )
+    op.create_index(op.f("ix_audit_logs_action"), "audit_logs", ["action"], unique=False)
     op.create_index(
         "ix_audit_logs_actor_ts",
         "audit_logs",

@@ -53,9 +53,7 @@ async def update_subdireccion(
     entity: Subdireccion = Depends(require_ownership(subdireccion_svc)),
 ):
     """Partially update an owned subdireccion (404 if not owned)."""
-    updated = await subdireccion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await subdireccion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(SubdireccionRead.model_validate(updated).model_dump(mode="json"))
 
 

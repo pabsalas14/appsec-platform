@@ -71,11 +71,7 @@ def _redact(value: Any, _depth: int = 0) -> Any:
         return value
     if isinstance(value, dict):
         return {
-            k: (
-                _REDACTED_PLACEHOLDER
-                if isinstance(k, str) and k.lower() in REDACTED_KEYS
-                else _redact(v, _depth + 1)
-            )
+            k: (_REDACTED_PLACEHOLDER if isinstance(k, str) and k.lower() in REDACTED_KEYS else _redact(v, _depth + 1))
             for k, v in value.items()
         }
     if isinstance(value, (list, tuple)):
@@ -105,6 +101,7 @@ class RedactFilter(logging.Filter):
 
 
 # ─── Context enrichment ────────────────────────────────────────────────────
+
 
 class ContextFilter(logging.Filter):
     """Copy request-scoped contextvars onto every record."""
@@ -137,9 +134,9 @@ class _JsonFormatter(jsonlogger.JsonFormatter):
         message_dict: dict[str, Any],
     ) -> None:
         super().add_fields(log_record, record, message_dict)
-        log_record["ts"] = datetime.fromtimestamp(
-            record.created, tz=UTC
-        ).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        log_record["ts"] = (
+            datetime.fromtimestamp(record.created, tz=UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        )
         log_record["level"] = record.levelname
         log_record["logger"] = record.name
         if "msg" not in log_record:
@@ -171,10 +168,7 @@ def configure_logging(settings) -> None:
         "%(ts)s %(level)s %(logger)s %(msg)s %(request_id)s %(user_id)s "
         "%(ip)s %(method)s %(path)s %(status)s %(duration_ms)s %(event)s"
     )
-    text_format = (
-        "%(asctime)s | %(levelname)-8s | %(name)s | "
-        "rid=%(request_id)s uid=%(user_id)s | %(message)s"
-    )
+    text_format = "%(asctime)s | %(levelname)-8s | %(name)s | rid=%(request_id)s uid=%(user_id)s | %(message)s"
 
     config: dict[str, Any] = {
         "version": 1,
@@ -254,16 +248,12 @@ def configure_logging(settings) -> None:
                 release=settings.LOG_VERSION,
                 integrations=[
                     FastApiIntegration(),
-                    LoggingIntegration(
-                        level=logging.INFO, event_level=logging.ERROR
-                    ),
+                    LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
                 ],
                 before_send=_sentry_before_send,
                 send_default_pii=False,
             )
-            logger.info(
-                "sentry.initialised", extra={"event": "sentry.initialised"}
-            )
+            logger.info("sentry.initialised", extra={"event": "sentry.initialised"})
         except ImportError:  # pragma: no cover - optional dep
             logger.warning(
                 "sentry.sdk_missing",

@@ -51,9 +51,7 @@ async def update_activo_web(
     entity: ActivoWeb = Depends(require_ownership(activo_web_svc)),
 ):
     """Partially update an owned activo_web (404 if not owned)."""
-    updated = await activo_web_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await activo_web_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ActivoWebRead.model_validate(updated).model_dump(mode="json"))
 
 

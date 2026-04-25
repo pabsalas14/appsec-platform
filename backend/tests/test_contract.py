@@ -80,9 +80,7 @@ def test_every_api_v1_route_requires_auth_unless_whitelisted():
 
 
 @pytest.mark.asyncio
-async def test_success_envelope_shape(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_success_envelope_shape(client: AsyncClient, auth_headers: dict[str, str]):
     """A canonical success response must be ``{status: 'success', data: ...}``."""
     resp = await client.get("/api/v1/auth/me", headers=auth_headers)
     assert resp.status_code == 200
@@ -152,9 +150,7 @@ def test_password_policy_rejects_weak_defaults():
 
 
 @pytest.mark.asyncio
-async def test_auth_cookie_samesite_is_configurable(
-    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
-):
+async def test_auth_cookie_samesite_is_configurable(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
     """Guardrail (ADR-0015): Set-Cookie must honor AUTH_COOKIE_SAMESITE."""
     import uuid
 
@@ -176,9 +172,7 @@ async def test_auth_cookie_samesite_is_configurable(
     assert resp.status_code == 200
 
     raws = resp.headers.get_list("set-cookie")
-    access_cookies = [
-        raw for raw in raws if raw.split(";", 1)[0].split("=", 1)[0].strip() == "access_token"
-    ]
+    access_cookies = [raw for raw in raws if raw.split(";", 1)[0].split("=", 1)[0].strip() == "access_token"]
     assert access_cookies, "missing access_token Set-Cookie"
     assert any("samesite=strict" in raw.lower() for raw in access_cookies), (
         f"expected SameSite=Strict on access_token, got {access_cookies}"
@@ -274,10 +268,7 @@ def test_owned_services_declare_audit_action_prefix():
             if attr.owner_field and not attr.audit_action_prefix:
                 offenders.append(f"app.services.{name}.{attr_name}")
 
-    assert not offenders, (
-        "Owned BaseService instances missing audit_action_prefix (ADR-0007): "
-        f"{offenders}"
-    )
+    assert not offenders, f"Owned BaseService instances missing audit_action_prefix (ADR-0007): {offenders}"
 
 
 @pytest.mark.asyncio
@@ -300,11 +291,7 @@ async def test_mutation_writes_audit_log(
     task_id = resp.json()["data"]["id"]
 
     async with _session_factory() as session:
-        rows = (
-            await session.execute(
-                select(AuditLog).where(AuditLog.entity_id == task_id)
-            )
-        ).scalars().all()
+        rows = (await session.execute(select(AuditLog).where(AuditLog.entity_id == task_id))).scalars().all()
 
     assert any(r.action == "task.create" for r in rows), (
         "No task.create audit row — BaseService did not record the mutation."

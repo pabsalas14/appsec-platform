@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-ValidTipos = Literal['SAST', 'DAST', 'SCA', 'TM', 'MAST', 'Terceros', 'CI/CD', 'BugBounty', 'VulnerabilityManager']
+ValidTipos = Literal["SAST", "DAST", "SCA", "TM", "MAST", "Terceros", "CI/CD", "BugBounty", "VulnerabilityManager"]
 
 
 class HerramientaExternaBase(BaseModel):
@@ -17,11 +17,13 @@ class HerramientaExternaBase(BaseModel):
 
 class HerramientaExternaCreate(HerramientaExternaBase):
     """Fields required to create a herramienta_externa. user_id is set from auth context."""
+
     api_token: str | None = Field(None, max_length=255)
 
 
 class HerramientaExternaUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = Field(None, max_length=255)
     tipo: ValidTipos | None = None
     url_base: str | None = Field(None, max_length=255)
@@ -30,6 +32,7 @@ class HerramientaExternaUpdate(BaseModel):
 
 class HerramientaExternaRead(HerramientaExternaBase):
     """Full herramienta_externa representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -38,8 +41,8 @@ class HerramientaExternaRead(HerramientaExternaBase):
     created_at: datetime
     updated_at: datetime
 
-    @model_validator(mode='after')
-    def mask_api_token(self) -> 'HerramientaExternaRead':
+    @model_validator(mode="after")
+    def mask_api_token(self) -> "HerramientaExternaRead":
         """[A7] Data Masking Frontend — Nunca exponer credenciales en crudo.
 
         Siempre se entrega enmascarado hacia el front-end a menos que esté None.

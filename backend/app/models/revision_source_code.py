@@ -24,9 +24,7 @@ if TYPE_CHECKING:
 class RevisionSourceCode(SoftDeleteMixin, Base):
     __tablename__ = "revision_source_codes"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -50,13 +48,9 @@ class RevisionSourceCode(SoftDeleteMixin, Base):
     resultado: Mapped[str] = mapped_column(String(50), nullable=False)
     # Evidencia con integridad SHA-256 (A3)
     evidencia_filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    evidencia_sha256: Mapped[str | None] = mapped_column(
-        String(64), nullable=True, index=True
-    )
+    evidencia_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     notas: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

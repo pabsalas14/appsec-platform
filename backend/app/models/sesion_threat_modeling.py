@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class SesionThreatModeling(SoftDeleteMixin, Base):
     __tablename__ = "sesion_threat_modelings"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -47,9 +45,7 @@ class SesionThreatModeling(SoftDeleteMixin, Base):
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Planificada")
     # True si fue asistida por IA (entrada al Módulo 13.1)
     ia_utilizada: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -57,6 +53,4 @@ class SesionThreatModeling(SoftDeleteMixin, Base):
     )
 
     programa_tm: Mapped[ProgramaThreatModeling] = relationship(back_populates="sesiones")
-    amenazas: Mapped[list[Amenaza]] = relationship(
-        "Amenaza", back_populates="sesion", lazy="noload"
-    )
+    amenazas: Mapped[list[Amenaza]] = relationship("Amenaza", back_populates="sesion", lazy="noload")

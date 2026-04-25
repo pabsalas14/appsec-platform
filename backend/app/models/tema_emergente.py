@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 class TemaEmergente(SoftDeleteMixin, Base):
     __tablename__ = "temas_emergentes"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -42,9 +40,7 @@ class TemaEmergente(SoftDeleteMixin, Base):
     impacto: Mapped[str] = mapped_column(String(50), nullable=False)
     estado: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     fuente: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -54,6 +50,4 @@ class TemaEmergente(SoftDeleteMixin, Base):
     actualizaciones: Mapped[list[ActualizacionTema]] = relationship(
         "ActualizacionTema", back_populates="tema", lazy="noload"
     )
-    cierres: Mapped[list[CierreConclusion]] = relationship(
-        "CierreConclusion", back_populates="tema", lazy="noload"
-    )
+    cierres: Mapped[list[CierreConclusion]] = relationship("CierreConclusion", back_populates="tema", lazy="noload")

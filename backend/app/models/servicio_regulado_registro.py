@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class ServicioReguladoRegistro(SoftDeleteMixin, Base):
     __tablename__ = "servicio_regulado_registros"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -46,9 +44,7 @@ class ServicioReguladoRegistro(SoftDeleteMixin, Base):
     ano: Mapped[int] = mapped_column(Integer(), nullable=False, index=True)
     # estado: Pendiente | En Revision | Cumplido | No Cumplido | Parcial
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Pendiente")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

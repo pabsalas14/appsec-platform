@@ -98,9 +98,7 @@ async def create_upload(
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     contents = await file.read()
     if len(contents) > max_bytes:
-        raise ValidationException(
-            f"File exceeds max upload size of {settings.MAX_UPLOAD_SIZE_MB} MB"
-        )
+        raise ValidationException(f"File exceeds max upload size of {settings.MAX_UPLOAD_SIZE_MB} MB")
 
     sha256 = hashlib.sha256(contents).hexdigest()
 

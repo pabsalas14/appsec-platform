@@ -12,6 +12,7 @@ BASE_URL = "/api/v1/revision_terceros"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_servicio(client: AsyncClient, headers: dict) -> str:
     return await create_servicio_id(client, headers)
 
@@ -28,6 +29,7 @@ def _payload(servicio_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_revision_tercero(client: AsyncClient, auth_headers: dict):
@@ -60,7 +62,8 @@ async def test_filter_by_servicio_id(client: AsyncClient, auth_headers: dict):
 async def test_revision_tercero_requires_activo(client: AsyncClient, auth_headers: dict):
     """Sin servicio_id ni activo_web_id → 422 (model_validator)."""
     resp = await client.post(
-        BASE_URL, headers=auth_headers,
+        BASE_URL,
+        headers=auth_headers,
         json={
             "nombre_empresa": "SecureTeam",
             "tipo": "Pentest",
@@ -94,9 +97,7 @@ async def test_revision_tercero_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_revision_tercero_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_revision_tercero_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     svc_id = await _create_servicio(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
     assert resp.status_code == 201, resp.text

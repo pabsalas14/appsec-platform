@@ -26,6 +26,7 @@ class EvidenciaRemediacionCreate(BaseModel):
     """Campos para registrar evidencia. user_id se toma del contexto de auth.
     sha256 y file_size se calculan en el service al procesar el archivo.
     """
+
     vulnerabilidad_id: UUID
     descripcion: str = Field(..., min_length=3)
     filename: str | None = Field(None, max_length=255)
@@ -37,11 +38,13 @@ class EvidenciaRemediacionCreate(BaseModel):
 
 class EvidenciaRemediacionUpdate(BaseModel):
     """Solo descripción es actualizable — el archivo y hash son inmutables."""
+
     descripcion: str | None = Field(None, min_length=3)
 
 
 class EvidenciaRemediacionRead(EvidenciaRemediacionBase):
     """Representación completa retornada por la API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

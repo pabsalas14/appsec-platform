@@ -51,9 +51,7 @@ async def update_tipo_prueba(
     entity: TipoPrueba = Depends(require_ownership(tipo_prueba_svc)),
 ):
     """Partially update an owned tipo_prueba (404 if not owned)."""
-    updated = await tipo_prueba_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await tipo_prueba_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(TipoPruebaRead.model_validate(updated).model_dump(mode="json"))
 
 

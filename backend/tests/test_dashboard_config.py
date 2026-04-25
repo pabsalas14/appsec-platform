@@ -61,9 +61,7 @@ async def test_dashboard_config_my_visibility_requires_auth(client: AsyncClient)
 
 
 @pytest.mark.asyncio
-async def test_dashboard_config_my_visibility_default(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_dashboard_config_my_visibility_default(client: AsyncClient, auth_headers: dict):
     resp = await client.get(f"{BASE_URL}/my-visibility?dashboard_id=home", headers=auth_headers)
     assert resp.status_code == 200, resp.text
     data = resp.json()["data"]

@@ -29,11 +29,13 @@ class ProgramaThreatModelingBase(BaseModel):
 
 class ProgramaThreatModelingCreate(ProgramaThreatModelingBase):
     """Fields required to create a programa_threat_modeling. user_id is set from auth context."""
+
     pass
 
 
 class ProgramaThreatModelingUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = Field(None, min_length=1, max_length=255)
     ano: int | None = Field(None, ge=2000, le=2100)
     descripcion: str | None = None
@@ -48,6 +50,7 @@ class ProgramaThreatModelingUpdate(BaseModel):
 
 class ProgramaThreatModelingRead(ProgramaThreatModelingBase):
     """Full programa_threat_modeling representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

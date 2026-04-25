@@ -61,9 +61,7 @@ async def update_control_mitigacion(
     entity: ControlMitigacion = Depends(require_ownership(control_mitigacion_svc)),
 ):
     """Partially update an owned control de mitigación."""
-    updated = await control_mitigacion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await control_mitigacion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ControlMitigacionRead.model_validate(updated).model_dump(mode="json"))
 
 

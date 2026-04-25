@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class DashboardConfig(SoftDeleteMixin, Base):
     __tablename__ = "dashboard_configs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     dashboard_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     widget_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     role_id: Mapped[uuid.UUID] = mapped_column(
@@ -33,9 +31,7 @@ class DashboardConfig(SoftDeleteMixin, Base):
     )
     visible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     editable_by_role: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

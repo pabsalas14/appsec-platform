@@ -35,14 +35,10 @@ async def export_excepciones_csv(
     current_user: User = Depends(get_current_user),
 ):
     """Exporta excepciones del usuario a CSV y registra auditoría A7."""
-    items = await excepcion_vulnerabilidad_svc.list(
-        db, filters={"user_id": current_user.id}
-    )
+    items = await excepcion_vulnerabilidad_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "vulnerabilidad_id", "estado", "justificacion", "fecha_limite", "created_at"]
-    )
+    writer.writerow(["id", "vulnerabilidad_id", "estado", "justificacion", "fecha_limite", "created_at"])
     for item in items:
         writer.writerow(
             [
@@ -112,9 +108,7 @@ async def update_excepcion(
     entity: ExcepcionVulnerabilidad = Depends(require_ownership(excepcion_vulnerabilidad_svc)),
 ):
     """Actualiza parcialmente una excepción (solo mientras está Pendiente)."""
-    updated = await excepcion_vulnerabilidad_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await excepcion_vulnerabilidad_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ExcepcionVulnerabilidadRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -133,6 +127,7 @@ async def delete_excepcion(
 
 # ── Flujo de aprobación SoD (A6) ──────────────────────────────────────────────
 
+
 @router.post("/{id}/aprobar")
 async def aprobar_excepcion(
     id: UUID,
@@ -145,9 +140,7 @@ async def aprobar_excepcion(
     SoD (A6): si la regla 'vulnerabilidad.aprobar_excepcion' está activa,
     el aprobador no puede ser el mismo que solicitó la excepción.
     """
-    result = await excepcion_vulnerabilidad_svc.aprobar(
-        db, id, aprobador_id=current_user.id, notas=notas
-    )
+    result = await excepcion_vulnerabilidad_svc.aprobar(db, id, aprobador_id=current_user.id, notas=notas)
     if not result:
         raise NotFoundException("ExcepcionVulnerabilidad")
     return success(ExcepcionVulnerabilidadRead.model_validate(result).model_dump(mode="json"))
@@ -165,9 +158,7 @@ async def rechazar_excepcion(
     SoD (A6): si la regla 'vulnerabilidad.aprobar_excepcion' está activa,
     el rechazador no puede ser el mismo que solicitó la excepción.
     """
-    result = await excepcion_vulnerabilidad_svc.rechazar(
-        db, id, aprobador_id=current_user.id, notas=notas
-    )
+    result = await excepcion_vulnerabilidad_svc.rechazar(db, id, aprobador_id=current_user.id, notas=notas)
     if not result:
         raise NotFoundException("ExcepcionVulnerabilidad")
     return success(ExcepcionVulnerabilidadRead.model_validate(result).model_dump(mode="json"))

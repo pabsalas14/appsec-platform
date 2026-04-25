@@ -49,9 +49,7 @@ async def create_regla_sod(
     current_user: User = Depends(require_backoffice),
 ):
     """Create a new SoD rule. Admin only. Audit logged."""
-    entity = await regla_so_d_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await regla_so_d_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(ReglaSoDRead.model_validate(entity).model_dump(mode="json"))
 
 

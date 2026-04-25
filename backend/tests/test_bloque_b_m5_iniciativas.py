@@ -1,6 +1,5 @@
 """Tests for M5 (Iniciativas) — Bloque B, Fase 13."""
 
-
 import pytest
 from httpx import AsyncClient
 
@@ -68,11 +67,7 @@ async def test_update_iniciativa(client: AsyncClient, auth_headers: dict):
 
     # Update
     update_payload = {"estado": "Completada"}
-    response = await client.patch(
-        f"/api/v1/iniciativas/{iniciativa_id}",
-        json=update_payload,
-        headers=auth_headers
-    )
+    response = await client.patch(f"/api/v1/iniciativas/{iniciativa_id}", json=update_payload, headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["data"]["estado"] == "Completada"
 

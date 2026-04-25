@@ -13,9 +13,7 @@ class Settings(BaseSettings):
 
     # ─── Required secrets (no defaults — must be set via env / .env) ───
     DATABASE_URL: str = Field(..., description="Async DB URL, e.g. postgresql+asyncpg://user:pass@host/db")
-    SECRET_KEY: str = Field(
-        ..., min_length=32, description="JWT signing key (min 32 chars)"
-    )
+    SECRET_KEY: str = Field(..., min_length=32, description="JWT signing key (min 32 chars)")
     APPSEC_MASTER_KEY: str = Field(..., description="Encryption key for storing credentials at-rest (A5)")
     ADMIN_EMAIL: str = Field(..., description="Initial admin email")
     ADMIN_PASSWORD: str = Field(..., min_length=10, description="Initial admin password")
@@ -38,11 +36,11 @@ class Settings(BaseSettings):
     # ─── Webhook SLA ───
     WEBHOOK_URL: str = ""
     WEBHOOK_TYPE: str = "slack"  # slack | gchat | generic
-    SLA_ALERT_DAYS: int = 5     # alert N days before expiry
+    SLA_ALERT_DAYS: int = 5  # alert N days before expiry
     SCHEDULER_SLA_INTERVAL_HOURS: int = 1  # SLA cron job frequency
 
     # ─── SSE (Server-Sent Events) ───
-    SSE_ENABLED: bool = True              # Set to False to disable real-time event streaming
+    SSE_ENABLED: bool = True  # Set to False to disable real-time event streaming
     SSE_KEEPALIVE_INTERVAL: float = 30.0  # Seconds between keepalive pings
 
     # ─── OpenAPI docs ───
@@ -88,7 +86,7 @@ class Settings(BaseSettings):
     ARGUS_TIMEOUT_DEFAULT: int = 300  # seconds per tool
 
     # ─── AI Provider ───
-    AI_DEFAULT_PROVIDER: str = "openai"       # openai | anthropic | openrouter | ollama
+    AI_DEFAULT_PROVIDER: str = "openai"  # openai | anthropic | openrouter | ollama
     AI_DEFAULT_MODEL: str = "gpt-4o"
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
@@ -101,8 +99,7 @@ class Settings(BaseSettings):
         env = info.data.get("ENV", "dev")
         if v == "text" and env != "dev":
             raise ValueError(
-                "LOG_FORMAT='text' is only allowed when ENV='dev'. "
-                "Use LOG_FORMAT='json' for staging/prod."
+                "LOG_FORMAT='text' is only allowed when ENV='dev'. Use LOG_FORMAT='json' for staging/prod."
             )
         return v
 

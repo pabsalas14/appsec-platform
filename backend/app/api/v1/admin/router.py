@@ -17,18 +17,10 @@ from app.api.v1.admin import users as admin_users
 
 admin_router = APIRouter()
 
-admin_router.include_router(
-    admin_users.router, prefix="/users", tags=["Admin · Users"]
-)
-admin_router.include_router(
-    admin_roles.router, prefix="/roles", tags=["Admin · Roles"]
-)
-admin_router.include_router(
-    admin_settings.router, prefix="/settings", tags=["Admin · Settings"]
-)
-admin_router.include_router(
-    admin_regla_sods.router, prefix="/regla-sods", tags=["Admin · ReglaSoD"]
-)
+admin_router.include_router(admin_users.router, prefix="/users", tags=["Admin · Users"])
+admin_router.include_router(admin_roles.router, prefix="/roles", tags=["Admin · Roles"])
+admin_router.include_router(admin_settings.router, prefix="/settings", tags=["Admin · Settings"])
+admin_router.include_router(admin_regla_sods.router, prefix="/regla-sods", tags=["Admin · ReglaSoD"])
 admin_router.include_router(
     admin_herramienta_externas.router,
     prefix="/herramientas-externas",

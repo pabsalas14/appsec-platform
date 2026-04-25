@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class PlanRemediacion(SoftDeleteMixin, Base):
     __tablename__ = "planes_remediacion"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -40,9 +38,7 @@ class PlanRemediacion(SoftDeleteMixin, Base):
     responsable: Mapped[str] = mapped_column(String(255), nullable=False)
     fecha_limite: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     estado: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

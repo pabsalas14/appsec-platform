@@ -155,11 +155,14 @@ OWNED_ENTITIES = [
     pytest.param("repositorios", _create_repositorio, "/api/v1/repositorios/{id}", id="repositorios"),
     pytest.param("activo_webs", _create_activo_web, "/api/v1/activo_webs/{id}", id="activo_webs"),
     pytest.param("servicios", _create_servicio, "/api/v1/servicios/{id}", id="servicios"),
-    pytest.param("aplicacion_movils", _create_aplicacion_movil, "/api/v1/aplicacion_movils/{id}", id="aplicacion_movils"),
+    pytest.param(
+        "aplicacion_movils", _create_aplicacion_movil, "/api/v1/aplicacion_movils/{id}", id="aplicacion_movils"
+    ),
     pytest.param("tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", id="tipo_pruebas"),
-    pytest.param("control_seguridads", _create_control_seguridad, "/api/v1/control_seguridads/{id}", id="control_seguridads"),
+    pytest.param(
+        "control_seguridads", _create_control_seguridad, "/api/v1/control_seguridads/{id}", id="control_seguridads"
+    ),
 ]
-
 
 
 @pytest.mark.asyncio
@@ -185,10 +188,7 @@ async def test_idor_returns_404_for_other_user(
     else:
         resp = await client.delete(url, headers=other_auth_headers)
 
-    assert resp.status_code == 404, (
-        f"IDOR leak on {method} {url}: expected 404, got {resp.status_code} "
-        f"({resp.text})"
-    )
+    assert resp.status_code == 404, f"IDOR leak on {method} {url}: expected 404, got {resp.status_code} ({resp.text})"
 
 
 @pytest.mark.asyncio
@@ -211,9 +211,7 @@ async def test_list_is_scoped_to_user(
 
 
 @pytest.mark.asyncio
-async def test_get_nonexistent_task_returns_404(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_get_nonexistent_task_returns_404(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.get(f"/api/v1/tasks/{uuid4()}", headers=auth_headers)
     assert resp.status_code == 404
 
@@ -230,7 +228,4 @@ def test_base_service_never_commits():
 
     for name in ("create", "update", "delete"):
         src = inspect.getsource(getattr(BaseService, name))
-        assert "commit(" not in src, (
-            f"BaseService.{name} must not call db.commit(); "
-            f"get_db() owns the transaction."
-        )
+        assert "commit(" not in src, f"BaseService.{name} must not call db.commit(); get_db() owns the transaction."

@@ -4,13 +4,13 @@ Revision ID: 45e9065c32d2
 Revises: d1dc9d87bb8d
 Create Date: 2026-04-24 12:48:18.417837
 """
+
 from typing import Sequence, Union
 
 
-
 # revision identifiers, used by Alembic.
-revision: str = '45e9065c32d2'
-down_revision: Union[str, None] = 'd1dc9d87bb8d'
+revision: str = "45e9065c32d2"
+down_revision: Union[str, None] = "d1dc9d87bb8d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

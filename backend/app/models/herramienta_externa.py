@@ -15,9 +15,7 @@ from app.models.mixins import SoftDeleteMixin
 class HerramientaExterna(Base, SoftDeleteMixin):
     __tablename__ = "herramienta_externas"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -31,9 +29,7 @@ class HerramientaExterna(Base, SoftDeleteMixin):
     # [A5] Mandatory At-Rest Encryption — Stored ciphertext, Loaded as plaintext
     api_token: Mapped[str | None] = mapped_column(EncryptedString, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -42,7 +38,7 @@ class HerramientaExterna(Base, SoftDeleteMixin):
 
     __table_args__ = (
         CheckConstraint(
-            tipo.in_(['SAST', 'DAST', 'SCA', 'TM', 'MAST', 'Terceros', 'CI/CD', 'BugBounty', 'VulnerabilityManager']),
+            tipo.in_(["SAST", "DAST", "SCA", "TM", "MAST", "Terceros", "CI/CD", "BugBounty", "VulnerabilityManager"]),
             name="chk_herramienta_externa_tipo_valido",
         ),
     )

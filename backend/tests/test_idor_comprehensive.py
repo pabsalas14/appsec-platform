@@ -17,43 +17,60 @@ from httpx import AsyncClient
 
 IDOR_TEST_ENTITIES = [
     # (entity_name, endpoint_prefix, create_payload, update_payload)
-    ("vulnerabilidad", "vulnerabilidads", {
-        "titulo": "Test IDOR Vuln",
-        "descripcion": "Test",
-        "fuente": "SAST",
-        "severidad": "Alta",
-        "estado": "Abierta",
-        # activo_web_id will be added in the test
-    }, {
-        "estado": "En Progreso",
-    }),
-
-    ("iniciativa", "iniciativas", {
-        "titulo": "Test IDOR Init",
-        "tipo": "Proceso",
-        "estado": "Abierta",
-    }, {
-        "estado": "En Progreso",
-    }),
-
-    ("tema_emergente", "temas_emergentes", {
-        "titulo": "Test IDOR Theme",
-        "descripcion": "Test description",
-        "tipo": "Tendencia",
-        "impacto": "Alto",
-        "estado": "Abierto",
-        "fuente": "Investigacion Interna",
-    }, {
-        "estado": "Activo",
-    }),
-
-    ("filtro_guardado", "filtros_guardados", {
-        "nombre": "Test IDOR Filter",
-        "modulo": "vulnerabilities",
-        "parametros": {"estado": "Abierta"},
-    }, {
-        "nombre": "Updated Filter",
-    }),
+    (
+        "vulnerabilidad",
+        "vulnerabilidads",
+        {
+            "titulo": "Test IDOR Vuln",
+            "descripcion": "Test",
+            "fuente": "SAST",
+            "severidad": "Alta",
+            "estado": "Abierta",
+            # activo_web_id will be added in the test
+        },
+        {
+            "estado": "En Progreso",
+        },
+    ),
+    (
+        "iniciativa",
+        "iniciativas",
+        {
+            "titulo": "Test IDOR Init",
+            "tipo": "Proceso",
+            "estado": "Abierta",
+        },
+        {
+            "estado": "En Progreso",
+        },
+    ),
+    (
+        "tema_emergente",
+        "temas_emergentes",
+        {
+            "titulo": "Test IDOR Theme",
+            "descripcion": "Test description",
+            "tipo": "Tendencia",
+            "impacto": "Alto",
+            "estado": "Abierto",
+            "fuente": "Investigacion Interna",
+        },
+        {
+            "estado": "Activo",
+        },
+    ),
+    (
+        "filtro_guardado",
+        "filtros_guardados",
+        {
+            "nombre": "Test IDOR Filter",
+            "modulo": "vulnerabilities",
+            "parametros": {"estado": "Abierta"},
+        },
+        {
+            "nombre": "Updated Filter",
+        },
+    ),
 ]
 
 
@@ -75,8 +92,7 @@ async def _create_activo_web_for_test(client: AsyncClient, auth_headers: dict) -
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES,
-                          ids=[e[0] for e in IDOR_TEST_ENTITIES])
+@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES, ids=[e[0] for e in IDOR_TEST_ENTITIES])
 async def test_idor_get_other_user_resource(
     client: AsyncClient,
     auth_headers: dict,
@@ -118,8 +134,7 @@ async def test_idor_get_other_user_resource(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES,
-                          ids=[e[0] for e in IDOR_TEST_ENTITIES])
+@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES, ids=[e[0] for e in IDOR_TEST_ENTITIES])
 async def test_idor_patch_other_user_resource(
     client: AsyncClient,
     auth_headers: dict,
@@ -162,8 +177,7 @@ async def test_idor_patch_other_user_resource(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES,
-                          ids=[e[0] for e in IDOR_TEST_ENTITIES])
+@pytest.mark.parametrize("entity_info", IDOR_TEST_ENTITIES, ids=[e[0] for e in IDOR_TEST_ENTITIES])
 async def test_idor_delete_other_user_resource(
     client: AsyncClient,
     auth_headers: dict,
@@ -241,9 +255,7 @@ async def test_idor_list_only_own_resources(
     user_b_ids = [v["id"] for v in user_b_vulns]
 
     # User A's vulnerability should NOT be in User B's list
-    assert user_a_vuln_id not in user_b_ids, (
-        "IDOR FAILED: User B can see User A's vulnerability in list"
-    )
+    assert user_a_vuln_id not in user_b_ids, "IDOR FAILED: User B can see User A's vulnerability in list"
 
 
 @pytest.mark.asyncio

@@ -5,6 +5,7 @@ Revises: e7b2a09f46df
 Create Date: 2026-04-22 12:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -39,14 +40,10 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_attachments_user_id"), "attachments", ["user_id"], unique=False
-    )
+    op.create_index(op.f("ix_attachments_user_id"), "attachments", ["user_id"], unique=False)
 
 
 def downgrade() -> None:

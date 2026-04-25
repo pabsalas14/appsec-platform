@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 class ControlMitigacion(SoftDeleteMixin, Base):
     __tablename__ = "control_mitigacions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -48,9 +46,7 @@ class ControlMitigacion(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -58,6 +54,4 @@ class ControlMitigacion(SoftDeleteMixin, Base):
     )
 
     amenaza: Mapped[Amenaza] = relationship(back_populates="controles")
-    responsable: Mapped[User | None] = relationship(
-        "User", foreign_keys=[responsable_id], lazy="noload"
-    )
+    responsable: Mapped[User | None] = relationship("User", foreign_keys=[responsable_id], lazy="noload")

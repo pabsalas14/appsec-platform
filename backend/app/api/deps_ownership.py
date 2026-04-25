@@ -54,9 +54,7 @@ def require_ownership(
         db: AsyncSession = Depends(get_db),
     ):
         raw_id = request.path_params[id_param]
-        entity = await service.get(
-            db, raw_id, scope={owner_field: current_user.id}
-        )
+        entity = await service.get(db, raw_id, scope={owner_field: current_user.id})
         if entity is None:
             raise NotFoundException(f"{service.model.__name__} not found")
         return entity

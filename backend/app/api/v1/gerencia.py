@@ -53,9 +53,7 @@ async def update_gerencia(
     entity: Gerencia = Depends(require_ownership(gerencia_svc)),
 ):
     """Partially update an owned gerencia (404 if not owned)."""
-    updated = await gerencia_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await gerencia_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(GerenciaRead.model_validate(updated).model_dump(mode="json"))
 
 

@@ -30,9 +30,7 @@ if TYPE_CHECKING:
 class EvidenciaRemediacion(SoftDeleteMixin, Base):
     __tablename__ = "evidencia_remediacions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Analista que sube la evidencia
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -62,9 +60,7 @@ class EvidenciaRemediacion(SoftDeleteMixin, Base):
     file_size: Mapped[int | None] = mapped_column(nullable=True)
 
     # ── Timestamps ──────────────────────────────────────────────────────────
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -75,6 +71,4 @@ class EvidenciaRemediacion(SoftDeleteMixin, Base):
     vulnerabilidad: Mapped[Vulnerabilidad] = relationship(
         "Vulnerabilidad", back_populates="evidencias_remediacion", lazy="noload"
     )
-    uploader: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], lazy="noload"
-    )
+    uploader: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")

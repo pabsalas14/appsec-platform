@@ -2,9 +2,7 @@
 
 from app.schemas.vulnerabilidad import FUENTES_VALIDAS
 
-_DEFAULT = (
-    "Evalúa coherencia del hallazgo con el contexto del activo, la evidencia y el flujo de negocio."
-)
+_DEFAULT = "Evalúa coherencia del hallazgo con el contexto del activo, la evidencia y el flujo de negocio."
 
 # Textos breves: patrones típicos de FP por orígen (SAST | DAST | SCA | TM | MAST | Auditoria | Tercero)
 _MOTOR_HINTS: dict[str, str] = {

@@ -51,9 +51,7 @@ async def update_control_seguridad(
     entity: ControlSeguridad = Depends(require_ownership(control_seguridad_svc)),
 ):
     """Partially update an owned control_seguridad (404 if not owned)."""
-    updated = await control_seguridad_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await control_seguridad_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ControlSeguridadRead.model_validate(updated).model_dump(mode="json"))
 
 

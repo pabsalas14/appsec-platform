@@ -100,9 +100,7 @@ async def test_aceptacion_riesgo_idor_protected(
         ("PATCH", {"json": {"notas_aprobador": "intento externo"}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
 
 
@@ -140,9 +138,7 @@ async def test_aprobar_aceptacion_requires_permission(
         )
         await session.commit()
 
-    denied = await client.post(
-        f"{BASE_URL}/{rid}/aprobar", headers=auth_headers, json={"notas": "ok"}
-    )
+    denied = await client.post(f"{BASE_URL}/{rid}/aprobar", headers=auth_headers, json={"notas": "ok"})
     assert denied.status_code == 403
     assert "vulnerabilities.approve" in denied.text
 
@@ -180,18 +176,14 @@ async def test_aprobar_aceptacion_success_with_admin(
 
 
 @pytest.mark.asyncio
-async def test_aceptacion_export_requires_permission(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_aceptacion_export_requires_permission(client: AsyncClient, auth_headers: dict):
     resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert resp.status_code == 403
     assert "vulnerabilities.export" in resp.text
 
 
 @pytest.mark.asyncio
-async def test_aceptacion_export_csv_success(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_aceptacion_export_csv_success(client: AsyncClient, admin_auth_headers: dict):
     vuln_id = await _create_vuln(client, admin_auth_headers)
     user_info = await client.get("/api/v1/auth/me", headers=admin_auth_headers)
     assert user_info.status_code == 200, user_info.text

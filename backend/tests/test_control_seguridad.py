@@ -24,9 +24,7 @@ async def test_create_control_seguridad(client: AsyncClient, auth_headers: dict)
 
 
 @pytest.mark.asyncio
-async def test_create_control_seguridad_default_obligatorio(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_create_control_seguridad_default_obligatorio(client: AsyncClient, auth_headers: dict):
     """obligatorio defaults to False when not provided."""
     payload = {
         "nombre": "Secret Scanning",
@@ -66,25 +64,19 @@ async def test_control_seguridad_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
 
 
 @pytest.mark.asyncio
-async def test_control_seguridad_update_and_soft_delete(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_control_seguridad_update_and_soft_delete(client: AsyncClient, auth_headers: dict):
     payload = {"nombre": "Dependency Review", "tipo": "sca", "obligatorio": False}
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=payload)
     assert create_resp.status_code == 201
     rid = create_resp.json()["data"]["id"]
 
     # Update
-    patch_resp = await client.patch(
-        f"{BASE_URL}/{rid}", headers=auth_headers, json={"obligatorio": True}
-    )
+    patch_resp = await client.patch(f"{BASE_URL}/{rid}", headers=auth_headers, json={"obligatorio": True})
     assert patch_resp.status_code == 200
     assert patch_resp.json()["data"]["obligatorio"] is True
 

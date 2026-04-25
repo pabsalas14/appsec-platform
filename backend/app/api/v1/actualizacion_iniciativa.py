@@ -55,9 +55,7 @@ async def update_actualizacion_iniciativa(
     entity: ActualizacionIniciativa = Depends(require_ownership(actualizacion_iniciativa_svc)),
 ):
     """Partially update an owned actualizacion iniciativa (404 if not owned)."""
-    updated = await actualizacion_iniciativa_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await actualizacion_iniciativa_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ActualizacionIniciativaRead.model_validate(updated).model_dump(mode="json"))
 
 

@@ -15,6 +15,7 @@ class ReglaSoDBase(BaseModel):
 
 class ReglaSoDCreate(ReglaSoDBase):
     """Fields required to create a ReglaSoD. user_id is set from auth context."""
+
     pass
 
 
@@ -29,6 +30,7 @@ class ReglaSoDUpdate(BaseModel):
 
 class ReglaSoDRead(ReglaSoDBase):
     """Full ReglaSoD representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

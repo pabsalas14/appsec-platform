@@ -9,4 +9,3 @@ changelog_entrada_svc = BaseService[ChangelogEntrada, ChangelogEntradaCreate, Ch
     owner_field=None,
     audit_action_prefix="changelog_entrada",
 )
-

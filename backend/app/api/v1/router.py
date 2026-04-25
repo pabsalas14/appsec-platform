@@ -84,15 +84,9 @@ api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
-api_router.include_router(
-    dashboard.router, prefix="/dashboard", tags=["Dashboard"]
-)
-api_router.include_router(
-    audit_logs.router, prefix="/audit-logs", tags=["Audit logs"]
-)
-api_router.include_router(
-    client_logs.router, prefix="/client-logs", tags=["Client logs"]
-)
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
+api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(admin_router, prefix="/admin")
 

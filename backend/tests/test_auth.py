@@ -15,11 +15,14 @@ from app.models.user import User
 async def test_register(client: AsyncClient):
     """POST /api/v1/auth/register should create a new user."""
     unique = uuid.uuid4().hex[:8]
-    resp = await client.post("/api/v1/auth/register", json={
-        "username": f"newuser_{unique}",
-        "email": f"new_{unique}@example.com",
-        "password": "Securepass123",
-    })
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": f"newuser_{unique}",
+            "email": f"new_{unique}@example.com",
+            "password": "Securepass123",
+        },
+    )
     assert resp.status_code == 201
 
     body = resp.json()
@@ -49,11 +52,7 @@ async def test_register_ignores_privileged_role(
     assert resp.json()["data"]["role"] == "user"
 
     async with _session_factory() as session:
-        user = (
-            await session.execute(
-                select(User).where(User.username == f"role_{unique}")
-            )
-        ).scalar_one()
+        user = (await session.execute(select(User).where(User.username == f"role_{unique}"))).scalar_one()
     assert user.role == "user"
 
 
@@ -80,17 +79,23 @@ async def test_login_success(client: AsyncClient):
     unique = uuid.uuid4().hex[:8]
 
     # Register first
-    await client.post("/api/v1/auth/register", json={
-        "username": f"loginuser_{unique}",
-        "email": f"login_{unique}@example.com",
-        "password": "Mypassword1",
-    })
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": f"loginuser_{unique}",
+            "email": f"login_{unique}@example.com",
+            "password": "Mypassword1",
+        },
+    )
 
     # Login
-    resp = await client.post("/api/v1/auth/login", json={
-        "username": f"loginuser_{unique}",
-        "password": "Mypassword1",
-    })
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": f"loginuser_{unique}",
+            "password": "Mypassword1",
+        },
+    )
     assert resp.status_code == 200
 
     body = resp.json()
@@ -107,16 +112,22 @@ async def test_login_wrong_password(client: AsyncClient):
     """Login with wrong password should return 401."""
     unique = uuid.uuid4().hex[:8]
 
-    await client.post("/api/v1/auth/register", json={
-        "username": f"wrongpw_{unique}",
-        "email": f"wrongpw_{unique}@example.com",
-        "password": "Correctpassword1",
-    })
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": f"wrongpw_{unique}",
+            "email": f"wrongpw_{unique}@example.com",
+            "password": "Correctpassword1",
+        },
+    )
 
-    resp = await client.post("/api/v1/auth/login", json={
-        "username": f"wrongpw_{unique}",
-        "password": "wrongpassword",
-    })
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": f"wrongpw_{unique}",
+            "password": "wrongpassword",
+        },
+    )
     assert resp.status_code == 401
 
 
@@ -173,10 +184,8 @@ async def test_refresh_rotates_without_exposing_token(
 
     async with _session_factory() as session:
         stored = (
-            await session.execute(
-                select(RefreshToken).where(RefreshToken.token_hash.is_not(None))
-            )
-        ).scalars().all()
+            (await session.execute(select(RefreshToken).where(RefreshToken.token_hash.is_not(None)))).scalars().all()
+        )
     assert len(stored) == 2
     assert any(token.revoked_at is not None for token in stored)
 
@@ -261,9 +270,7 @@ async def test_logout(auth_client: AsyncClient, auth_csrf_headers: dict[str, str
 
 
 @pytest.mark.asyncio
-async def test_login_cooldown_after_threshold(
-    client: AsyncClient, monkeypatch
-):
+async def test_login_cooldown_after_threshold(client: AsyncClient, monkeypatch):
     """After AUTH_LOCKOUT_THRESHOLD failures the same key is blocked with 429.
 
     The cooldown must trip even when the next attempt uses a *valid* password,
@@ -317,9 +324,7 @@ def _set_cookie_headers_for(headers, name: str) -> list[str]:
 
 
 @pytest.mark.asyncio
-async def test_auth_cookies_dev_are_not_secure(
-    client: AsyncClient, monkeypatch
-):
+async def test_auth_cookies_dev_are_not_secure(client: AsyncClient, monkeypatch):
     """Dev environments must not emit ``Secure`` cookies (HTTP is allowed)."""
     monkeypatch.setattr("app.config.settings.ENV", "dev")
     monkeypatch.setattr("app.config.settings.AUTH_COOKIE_SAMESITE", "lax")
@@ -344,18 +349,12 @@ async def test_auth_cookies_dev_are_not_secure(
         assert raws, f"missing Set-Cookie for {name}"
         for raw in raws:
             lowered = raw.lower()
-            assert "secure" not in lowered, (
-                f"dev cookie {name!r} must not be Secure: {raw}"
-            )
-            assert "samesite=lax" in lowered, (
-                f"expected SameSite=Lax on {name!r}, got {raw}"
-            )
+            assert "secure" not in lowered, f"dev cookie {name!r} must not be Secure: {raw}"
+            assert "samesite=lax" in lowered, f"expected SameSite=Lax on {name!r}, got {raw}"
 
 
 @pytest.mark.asyncio
-async def test_auth_cookies_in_prod_are_secure_and_samesite_strict(
-    client: AsyncClient, monkeypatch
-):
+async def test_auth_cookies_in_prod_are_secure_and_samesite_strict(client: AsyncClient, monkeypatch):
     """Prod must emit Secure + HttpOnly and honor AUTH_COOKIE_SAMESITE."""
     monkeypatch.setattr("app.config.settings.ENV", "prod")
     monkeypatch.setattr("app.config.settings.AUTH_COOKIE_SAMESITE", "strict")
@@ -382,15 +381,11 @@ async def test_auth_cookies_in_prod_are_secure_and_samesite_strict(
             lowered = raw.lower()
             assert "secure" in lowered, f"{name!r} must be Secure in prod: {raw}"
             assert "httponly" in lowered, f"{name!r} must be HttpOnly: {raw}"
-            assert "samesite=strict" in lowered, (
-                f"{name!r} must honor AUTH_COOKIE_SAMESITE: {raw}"
-            )
+            assert "samesite=strict" in lowered, f"{name!r} must honor AUTH_COOKIE_SAMESITE: {raw}"
 
     csrf_raws = _set_cookie_headers_for(resp.headers, "csrf_token")
     assert csrf_raws, "missing csrf_token cookie"
     csrf_lowered = csrf_raws[0].lower()
-    assert "httponly" not in csrf_lowered, (
-        "csrf_token MUST remain readable by JS for the double-submit pattern"
-    )
+    assert "httponly" not in csrf_lowered, "csrf_token MUST remain readable by JS for the double-submit pattern"
     assert "secure" in csrf_lowered
     assert "samesite=strict" in csrf_lowered

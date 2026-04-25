@@ -20,6 +20,7 @@ class IniciativaBase(BaseModel):
 
 class IniciativaCreate(IniciativaBase):
     """Fields required to create a iniciativa. user_id is set from auth context."""
+
     pass
 
 
@@ -37,6 +38,7 @@ class IniciativaUpdate(BaseModel):
 
 class IniciativaRead(IniciativaBase):
     """Full iniciativa representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

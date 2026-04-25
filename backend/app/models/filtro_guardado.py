@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class FiltroGuardado(SoftDeleteMixin, Base):
     __tablename__ = "filtros_guardados"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     usuario_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -33,15 +31,11 @@ class FiltroGuardado(SoftDeleteMixin, Base):
     modulo: Mapped[str] = mapped_column(String(100), nullable=False)
     parametros: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     compartido: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    usuario: Mapped[User] = relationship(
-        foreign_keys=[usuario_id]
-    )
+    usuario: Mapped[User] = relationship(foreign_keys=[usuario_id])

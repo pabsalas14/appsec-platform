@@ -53,9 +53,7 @@ async def create_evidencia(
     El sha256 debe ser calculado por el cliente o pre-calculado al subir el archivo.
     Se almacena para verificación de integridad (A3).
     """
-    entity = await evidencia_remediacion_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await evidencia_remediacion_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(EvidenciaRemediacionRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -67,9 +65,7 @@ async def update_evidencia(
     entity: EvidenciaRemediacion = Depends(require_ownership(evidencia_remediacion_svc)),
 ):
     """Actualiza la descripción de una evidencia (el archivo y hash son inmutables)."""
-    updated = await evidencia_remediacion_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await evidencia_remediacion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EvidenciaRemediacionRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -80,7 +76,5 @@ async def delete_evidencia(
     entity: EvidenciaRemediacion = Depends(require_ownership(evidencia_remediacion_svc)),
 ):
     """Soft-delete de una evidencia de remediación (A2)."""
-    await evidencia_remediacion_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await evidencia_remediacion_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "EvidenciaRemediacion eliminada"})

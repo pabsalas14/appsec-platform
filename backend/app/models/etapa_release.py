@@ -26,9 +26,7 @@ if TYPE_CHECKING:
 class EtapaRelease(SoftDeleteMixin, Base):
     __tablename__ = "etapa_releases"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -43,9 +41,7 @@ class EtapaRelease(SoftDeleteMixin, Base):
     )
     # Nombre de la etapa (ej. "Design Review", "Security Validation", ...)
     etapa: Mapped[str] = mapped_column(String(100), nullable=False)
-    estado: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="Pendiente"
-    )
+    estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Pendiente")
     # Quien aprobó / rechazó esta etapa (SoD: aprobador_id != user_id del release)
     aprobador_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
@@ -56,12 +52,8 @@ class EtapaRelease(SoftDeleteMixin, Base):
     # Justificación obligatoria al rechazar (A1)
     justificacion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    fecha_completada: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    fecha_completada: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -70,6 +62,4 @@ class EtapaRelease(SoftDeleteMixin, Base):
 
     # ─── Relationships ─────────────────────────────────────────────────────────
     service_release: Mapped[ServiceRelease] = relationship(back_populates="etapas")
-    aprobador: Mapped[User | None] = relationship(
-        "User", foreign_keys=[aprobador_id], lazy="noload"
-    )
+    aprobador: Mapped[User | None] = relationship("User", foreign_keys=[aprobador_id], lazy="noload")

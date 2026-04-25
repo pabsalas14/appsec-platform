@@ -12,11 +12,13 @@ BASE_URL = "/api/v1/hallazgo_terceros"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_revision_tercero(client: AsyncClient, headers: dict) -> str:
     """Crea servicio → revision_tercero. Retorna revision_id."""
     svc_id = await create_servicio_id(client, headers)
     rev = await client.post(
-        "/api/v1/revision_terceros", headers=headers,
+        "/api/v1/revision_terceros",
+        headers=headers,
         json={
             "nombre_empresa": "SecureTeam S.A.",
             "tipo": "Pentest",
@@ -42,6 +44,7 @@ def _payload(revision_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_hallazgo_tercero(client: AsyncClient, auth_headers: dict):
@@ -94,9 +97,7 @@ async def test_hallazgo_tercero_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_hallazgo_tercero_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_hallazgo_tercero_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     rev_id = await _create_revision_tercero(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(rev_id))
     assert resp.status_code == 201, resp.text

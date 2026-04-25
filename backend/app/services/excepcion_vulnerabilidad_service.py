@@ -44,9 +44,7 @@ class ExcepcionVulnerabilidadService(
         )
         return result.scalar_one_or_none() is not None
 
-    async def _get_for_decision(
-        self, db: AsyncSession, excepcion_id: uuid.UUID
-    ) -> ExcepcionVulnerabilidad | None:
+    async def _get_for_decision(self, db: AsyncSession, excepcion_id: uuid.UUID) -> ExcepcionVulnerabilidad | None:
         """Lee una excepción para aprobar/rechazar sin scope de owner.
 
         Estas acciones se autorizan por permiso granular (`vulnerabilities.approve`)
@@ -91,10 +89,7 @@ class ExcepcionVulnerabilidadService(
 
         await db.flush()
         await db.refresh(record)
-        await self._audit(
-            db, "aprobar", record,
-            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
-        )
+        await self._audit(db, "aprobar", record, metadata={"aprobador_id": str(aprobador_id), "notas": notas})
         return record
 
     async def rechazar(
@@ -128,10 +123,7 @@ class ExcepcionVulnerabilidadService(
 
         await db.flush()
         await db.refresh(record)
-        await self._audit(
-            db, "rechazar", record,
-            metadata={"aprobador_id": str(aprobador_id), "notas": notas}
-        )
+        await self._audit(db, "rechazar", record, metadata={"aprobador_id": str(aprobador_id), "notas": notas})
         return record
 
 

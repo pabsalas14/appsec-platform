@@ -42,11 +42,13 @@ class AmenazaBase(BaseModel):
 
 class AmenazaCreate(AmenazaBase):
     """Fields required to create an amenaza. score_total is calculated automatically."""
+
     pass
 
 
 class AmenazaUpdate(BaseModel):
     """All fields optional for partial updates. score_total is recalculated automatically."""
+
     titulo: str | None = Field(None, min_length=1, max_length=255)
     descripcion: str | None = None
     categoria_stride: str | None = None
@@ -66,6 +68,7 @@ class AmenazaUpdate(BaseModel):
 
 class AmenazaRead(AmenazaBase):
     """Full amenaza representation returned from the API. Includes calculated score_total."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

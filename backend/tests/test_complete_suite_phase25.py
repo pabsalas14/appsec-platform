@@ -23,6 +23,7 @@ from httpx import AsyncClient
 # FIXTURES: Common test data and helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 async def activo_web_for_tests(client: AsyncClient, auth_headers: dict) -> str:
     """Helper: Create an ActivoWeb and return its ID."""
@@ -63,45 +64,58 @@ async def celula_for_tests(client: AsyncClient, auth_headers: dict) -> str:
 # OWASP S1: IDOR TESTS — All entities with user_id
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestOWASPS1IDOR:
     """S1: IDOR — every entity with user_id must enforce ownership."""
 
     IDOR_ENTITIES: ClassVar = [
         # (endpoint, create_payload_template, update_payload)
-        ("vulnerabilidads", {
-            "titulo": "Test IDOR Vuln",
-            "descripcion": "Test",
-            "fuente": "SAST",
-            "severidad": "Alta",
-            "estado": "Abierta",
-            # activo_web_id added dynamically
-        }, {"estado": "En Progreso"}),
-
-        ("iniciativas", {
-            "titulo": "Test IDOR Init",
-            "tipo": "Proceso",
-            "estado": "Abierta",
-        }, {"estado": "En Progreso"}),
-
-        ("temas_emergentes", {
-            "titulo": "Test IDOR Theme",
-            "descripcion": "Test description",
-            "tipo": "Tendencia",
-            "impacto": "Alto",
-            "estado": "Abierto",
-            "fuente": "Investigacion Interna",
-        }, {"estado": "Activo"}),
-
-        ("filtros_guardados", {
-            "nombre": "Test IDOR Filter",
-            "modulo": "vulnerabilities",
-            "parametros": {"estado": "Abierta"},
-        }, {"nombre": "Updated Filter"}),
+        (
+            "vulnerabilidads",
+            {
+                "titulo": "Test IDOR Vuln",
+                "descripcion": "Test",
+                "fuente": "SAST",
+                "severidad": "Alta",
+                "estado": "Abierta",
+                # activo_web_id added dynamically
+            },
+            {"estado": "En Progreso"},
+        ),
+        (
+            "iniciativas",
+            {
+                "titulo": "Test IDOR Init",
+                "tipo": "Proceso",
+                "estado": "Abierta",
+            },
+            {"estado": "En Progreso"},
+        ),
+        (
+            "temas_emergentes",
+            {
+                "titulo": "Test IDOR Theme",
+                "descripcion": "Test description",
+                "tipo": "Tendencia",
+                "impacto": "Alto",
+                "estado": "Abierto",
+                "fuente": "Investigacion Interna",
+            },
+            {"estado": "Activo"},
+        ),
+        (
+            "filtros_guardados",
+            {
+                "nombre": "Test IDOR Filter",
+                "modulo": "vulnerabilities",
+                "parametros": {"estado": "Abierta"},
+            },
+            {"nombre": "Updated Filter"},
+        ),
     ]
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES,
-                             ids=[e[0] for e in IDOR_ENTITIES])
+    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES, ids=[e[0] for e in IDOR_ENTITIES])
     async def test_s1_idor_get_other_user_resource_returns_404(
         self,
         client: AsyncClient,
@@ -129,8 +143,7 @@ class TestOWASPS1IDOR:
         assert resp_b.status_code in (404, 403), "IDOR FAILED: User B accessed User A's resource"
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES,
-                             ids=[e[0] for e in IDOR_ENTITIES])
+    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES, ids=[e[0] for e in IDOR_ENTITIES])
     async def test_s1_idor_patch_other_user_resource_returns_403(
         self,
         client: AsyncClient,
@@ -152,12 +165,13 @@ class TestOWASPS1IDOR:
 
         resource_id = resp_a.json()["data"]["id"]
 
-        resp_b = await client.patch(f"/api/v1/{endpoint}/{resource_id}", json=update_payload, headers=other_auth_headers)
+        resp_b = await client.patch(
+            f"/api/v1/{endpoint}/{resource_id}", json=update_payload, headers=other_auth_headers
+        )
         assert resp_b.status_code in (403, 404), "IDOR FAILED: User B modified User A's resource"
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES,
-                             ids=[e[0] for e in IDOR_ENTITIES])
+    @pytest.mark.parametrize("endpoint,create_payload,update_payload", IDOR_ENTITIES, ids=[e[0] for e in IDOR_ENTITIES])
     async def test_s1_idor_delete_other_user_resource_returns_403(
         self,
         client: AsyncClient,
@@ -248,6 +262,7 @@ class TestOWASPS1IDOR:
 # OWASP S3: PROPERTY-LEVEL AUTHORIZATION
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestOWASPS3PropertyAuthz:
     """S3: Sensitive fields should NOT be exposed in responses."""
 
@@ -277,6 +292,7 @@ class TestOWASPS3PropertyAuthz:
 # OWASP S4: RATE LIMITING
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestOWASPS4RateLimiting:
     """S4: Rate limiting and pagination enforcement."""
 
@@ -299,6 +315,7 @@ class TestOWASPS4RateLimiting:
 # ─────────────────────────────────────────────────────────────────────────────
 # OWASP S7: SSRF PREVENTION
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestOWASPS7SSRF:
     """S7: SSRF Prevention — private IP blocking."""
@@ -359,6 +376,7 @@ class TestOWASPS7SSRF:
 # AUDITABILITY: A1 - JUSTIFICACION OBLIGATORIA
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestAuditabilityA1Justificacion:
     """A1: Justificación obligatoria en acciones críticas."""
 
@@ -403,6 +421,7 @@ class TestAuditabilityA1Justificacion:
 # AUDITABILITY: A2 - SOFT DELETE
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestAuditabilityA2SoftDelete:
     """A2: Soft delete — entities are marked deleted, not physically removed."""
 
@@ -444,6 +463,7 @@ class TestAuditabilityA2SoftDelete:
 # AUDITABILITY: A4 - HASH CHAIN
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestAuditabilityA4HashChain:
     """A4: Hash chain in audit log — tamper-evident trail."""
 
@@ -456,14 +476,13 @@ class TestAuditabilityA4HashChain:
             logs = resp.json().get("data", [])
             if len(logs) > 0:
                 log = logs[0]
-                assert "prev_hash" in log or "row_hash" in log, (
-                    "A4 FAILED: Hash fields not present in audit log"
-                )
+                assert "prev_hash" in log or "row_hash" in log, "A4 FAILED: Hash fields not present in audit log"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # AUDITABILITY: A7 - EXPORT LOGGING
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestAuditabilityA7Export:
     """A7: Exports are logged with hash."""
@@ -480,6 +499,7 @@ class TestAuditabilityA7Export:
 # ─────────────────────────────────────────────────────────────────────────────
 # ENVELOPE VALIDATION — All endpoints return proper envelope
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestEnvelopeValidation:
     """All endpoints must return success/paginated/error envelope."""
@@ -524,6 +544,7 @@ class TestEnvelopeValidation:
 # ─────────────────────────────────────────────────────────────────────────────
 # E2E WORKFLOWS — Complete business processes
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestE2EWorkflows:
     """Complete end-to-end workflows."""
@@ -596,6 +617,7 @@ class TestE2EWorkflows:
 # ─────────────────────────────────────────────────────────────────────────────
 # COVERAGE VERIFICATION — Check that critical paths are tested
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestCoverageRequirements:
     """Verify minimum coverage requirements."""

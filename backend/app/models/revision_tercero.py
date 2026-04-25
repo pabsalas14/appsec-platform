@@ -26,9 +26,7 @@ if TYPE_CHECKING:
 class RevisionTercero(SoftDeleteMixin, Base):
     __tablename__ = "revision_terceros"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -51,24 +49,14 @@ class RevisionTercero(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
-    fecha_inicio: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    fecha_fin: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    fecha_inicio: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fecha_fin: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # estado: Planificada | En Curso | Completada | Cancelada
-    estado: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="Planificada"
-    )
+    estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Planificada")
     # Informe con integridad SHA-256 (A3)
     informe_filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    informe_sha256: Mapped[str | None] = mapped_column(
-        String(64), nullable=True, index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    informe_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -77,9 +65,7 @@ class RevisionTercero(SoftDeleteMixin, Base):
 
     # ─── Relationships ─────────────────────────────────────────────────────────
     servicio: Mapped[Servicio | None] = relationship(back_populates="revision_terceros")
-    activo_web: Mapped[ActivoWeb | None] = relationship(
-        back_populates="revision_terceros"
-    )
+    activo_web: Mapped[ActivoWeb | None] = relationship(back_populates="revision_terceros")
     hallazgos: Mapped[list[HallazgoTercero]] = relationship(
         "HallazgoTercero", back_populates="revision_tercero", lazy="noload"
     )

@@ -57,11 +57,7 @@ async def export_aceptaciones_csv(
                 str(item.propietario_riesgo_id),
                 item.estado,
                 item.justificacion_negocio,
-                (
-                    item.fecha_revision_obligatoria.isoformat()
-                    if item.fecha_revision_obligatoria
-                    else ""
-                ),
+                (item.fecha_revision_obligatoria.isoformat() if item.fecha_revision_obligatoria else ""),
                 item.created_at.isoformat() if item.created_at else "",
             ]
         )
@@ -123,9 +119,7 @@ async def update_aceptacion(
     entity: AceptacionRiesgo = Depends(require_ownership(aceptacion_riesgo_svc)),
 ):
     """Actualiza parcialmente una aceptación de riesgo."""
-    updated = await aceptacion_riesgo_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await aceptacion_riesgo_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(AceptacionRiesgoRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -136,13 +130,12 @@ async def delete_aceptacion(
     entity: AceptacionRiesgo = Depends(require_ownership(aceptacion_riesgo_svc)),
 ):
     """Soft-delete de una aceptación de riesgo (A2)."""
-    await aceptacion_riesgo_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await aceptacion_riesgo_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "AceptacionRiesgo eliminada"})
 
 
 # ── Flujo de aprobación SoD (A6) ──────────────────────────────────────────────
+
 
 @router.post("/{id}/aprobar")
 async def aprobar_aceptacion(
@@ -156,9 +149,7 @@ async def aprobar_aceptacion(
     SoD (A6): si la regla 'vulnerabilidad.aceptar_riesgo' está activa,
     quien registra el riesgo no puede ser quien lo aprueba.
     """
-    result = await aceptacion_riesgo_svc.aprobar(
-        db, id, aprobador_id=current_user.id, notas=notas
-    )
+    result = await aceptacion_riesgo_svc.aprobar(db, id, aprobador_id=current_user.id, notas=notas)
     if not result:
         raise NotFoundException("AceptacionRiesgo")
     return success(AceptacionRiesgoRead.model_validate(result).model_dump(mode="json"))
@@ -176,9 +167,7 @@ async def rechazar_aceptacion(
     SoD (A6): si la regla 'vulnerabilidad.aceptar_riesgo' está activa,
     quien registra el riesgo no puede ser quien lo rechaza.
     """
-    result = await aceptacion_riesgo_svc.rechazar(
-        db, id, aprobador_id=current_user.id, notas=notas
-    )
+    result = await aceptacion_riesgo_svc.rechazar(db, id, aprobador_id=current_user.id, notas=notas)
     if not result:
         raise NotFoundException("AceptacionRiesgo")
     return success(AceptacionRiesgoRead.model_validate(result).model_dump(mode="json"))

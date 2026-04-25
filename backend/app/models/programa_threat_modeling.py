@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class ProgramaThreatModeling(SoftDeleteMixin, Base):
     __tablename__ = "programa_threat_modelings"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -52,21 +50,15 @@ class ProgramaThreatModeling(SoftDeleteMixin, Base):
     )
     # estado: Activo | Completado | Cancelado
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Activo")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    activo_web: Mapped[ActivoWeb | None] = relationship(
-        back_populates="programas_threat_modeling"
-    )
-    servicio: Mapped[Servicio | None] = relationship(
-        back_populates="programas_threat_modeling"
-    )
+    activo_web: Mapped[ActivoWeb | None] = relationship(back_populates="programas_threat_modeling")
+    servicio: Mapped[Servicio | None] = relationship(back_populates="programas_threat_modeling")
     sesiones: Mapped[list[SesionThreatModeling]] = relationship(
         "SesionThreatModeling", back_populates="programa_tm", lazy="noload"
     )

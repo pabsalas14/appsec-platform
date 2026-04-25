@@ -22,9 +22,7 @@ if TYPE_CHECKING:
 class Auditoria(SoftDeleteMixin, Base):
     __tablename__ = "auditorias"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -37,9 +35,7 @@ class Auditoria(SoftDeleteMixin, Base):
     fecha_inicio: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     fecha_fin: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     estado: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

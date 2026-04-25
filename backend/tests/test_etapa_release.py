@@ -12,19 +12,24 @@ BASE_URL = "/api/v1/etapa_releases"
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+
 async def _create_service_release(client: AsyncClient, headers: dict) -> str:
     """Crea celula → servicio → service_release. Retorna release_id."""
     cel_id = await create_celula_id(client, headers)
     svc = await client.post(
-        "/api/v1/servicios", headers=headers,
+        "/api/v1/servicios",
+        headers=headers,
         json={"nombre": f"Srv {uuid4().hex[:6]}", "criticidad": "Alta", "celula_id": cel_id},
     )
     svc_id = svc.json()["data"]["id"]
     rel = await client.post(
-        "/api/v1/service_releases", headers=headers,
+        "/api/v1/service_releases",
+        headers=headers,
         json={
-            "nombre": "Release X", "version": "1.0.0",
-            "servicio_id": svc_id, "estado_actual": "Borrador",
+            "nombre": "Release X",
+            "version": "1.0.0",
+            "servicio_id": svc_id,
+            "estado_actual": "Borrador",
         },
     )
     assert rel.status_code == 201, rel.text
@@ -40,6 +45,7 @@ def _payload(release_id: str) -> dict:
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_etapa_release(client: AsyncClient, auth_headers: dict):
@@ -73,9 +79,7 @@ async def test_aprobar_etapa(client: AsyncClient, auth_headers: dict):
     etapa = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
     eid = etapa.json()["data"]["id"]
 
-    resp = await client.post(
-        f"{BASE_URL}/{eid}/aprobar", headers=auth_headers, json={}
-    )
+    resp = await client.post(f"{BASE_URL}/{eid}/aprobar", headers=auth_headers, json={})
     assert resp.status_code == 403
     assert "releases.approve" in resp.text
 
@@ -100,9 +104,7 @@ async def test_rechazar_etapa_justificacion_obligatoria(
     eid = etapa.json()["data"]["id"]
 
     # Sin justificacion → 422
-    resp = await client.post(
-        f"{BASE_URL}/{eid}/rechazar", headers=admin_auth_headers, json={}
-    )
+    resp = await client.post(f"{BASE_URL}/{eid}/rechazar", headers=admin_auth_headers, json={})
     assert resp.status_code == 422
 
     # Con justificacion corta → 422
@@ -121,7 +123,8 @@ async def test_rechazar_etapa(client: AsyncClient, auth_headers: dict):
     eid = etapa.json()["data"]["id"]
 
     resp = await client.post(
-        f"{BASE_URL}/{eid}/rechazar", headers=auth_headers,
+        f"{BASE_URL}/{eid}/rechazar",
+        headers=auth_headers,
         json={"justificacion": "La etapa no cumple los criterios de seguridad establecidos"},
     )
     assert resp.status_code == 403
@@ -135,7 +138,8 @@ async def test_rechazar_etapa_with_admin(client: AsyncClient, auth_headers: dict
     eid = etapa.json()["data"]["id"]
 
     resp = await client.post(
-        f"{BASE_URL}/{eid}/rechazar", headers=admin_auth_headers,
+        f"{BASE_URL}/{eid}/rechazar",
+        headers=admin_auth_headers,
         json={"justificacion": "La etapa no cumple los criterios de seguridad establecidos"},
     )
     assert resp.status_code == 200, resp.text
@@ -157,9 +161,7 @@ async def test_etapa_release_requires_auth(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_etapa_release_idor_protected(
-    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
-):
+async def test_etapa_release_idor_protected(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
     rid = await _create_service_release(client, auth_headers)
     resp = await client.post(BASE_URL, headers=auth_headers, json=_payload(rid))
     assert resp.status_code == 201, resp.text
@@ -171,22 +173,16 @@ async def test_etapa_release_idor_protected(
 
 
 @pytest.mark.asyncio
-async def test_etapa_release_export_requires_permission(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_etapa_release_export_requires_permission(client: AsyncClient, auth_headers: dict):
     resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert resp.status_code == 403
     assert "releases.export" in resp.text
 
 
 @pytest.mark.asyncio
-async def test_etapa_release_export_csv_success(
-    client: AsyncClient, auth_headers: dict, admin_auth_headers: dict
-):
+async def test_etapa_release_export_csv_success(client: AsyncClient, auth_headers: dict, admin_auth_headers: dict):
     rid = await _create_service_release(client, admin_auth_headers)
-    created = await client.post(
-        BASE_URL, headers=admin_auth_headers, json=_payload(rid)
-    )
+    created = await client.post(BASE_URL, headers=admin_auth_headers, json=_payload(rid))
     assert created.status_code == 201, created.text
 
     resp = await client.get(f"{BASE_URL}/export.csv", headers=admin_auth_headers)

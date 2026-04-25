@@ -54,9 +54,7 @@ async def create_herramienta(
     current_user: User = Depends(require_backoffice),
 ):
     """Create a new integration/tool. Admin only. Audit logged."""
-    entity = await herramienta_externa_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await herramienta_externa_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(HerramientaExternaRead.model_validate(entity).model_dump(mode="json"))
 
 

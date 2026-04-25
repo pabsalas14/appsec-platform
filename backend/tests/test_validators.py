@@ -31,4 +31,3 @@ def test_ssrf_validator_accepts_public_http_urls(url: str):
 def test_ssrf_validator_rejects_private_or_unsafe_urls(url: str):
     with pytest.raises(ValueError):
         validate_ssrf_safe_http_url(url)
-

@@ -62,16 +62,12 @@ async def test_aplicacion_movil_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
 
 
 @pytest.mark.asyncio
-async def test_aplicacion_movil_update_and_soft_delete(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_aplicacion_movil_update_and_soft_delete(client: AsyncClient, auth_headers: dict):
     celula_id = await create_celula_id(client, auth_headers)
     payload = {
         "nombre": "Delete Me",
@@ -84,9 +80,7 @@ async def test_aplicacion_movil_update_and_soft_delete(
     rid = create_resp.json()["data"]["id"]
 
     # Update
-    patch_resp = await client.patch(
-        f"{BASE_URL}/{rid}", headers=auth_headers, json={"nombre": "Renamed App"}
-    )
+    patch_resp = await client.patch(f"{BASE_URL}/{rid}", headers=auth_headers, json={"nombre": "Renamed App"})
     assert patch_resp.status_code == 200
     assert patch_resp.json()["data"]["nombre"] == "Renamed App"
 

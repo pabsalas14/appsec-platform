@@ -39,11 +39,13 @@ class ExcepcionVulnerabilidadCreate(ExcepcionVulnerabilidadBase):
 
     El servicio valida SoD: aprobador_id != user_id cuando la regla está activa.
     """
+
     pass
 
 
 class ExcepcionVulnerabilidadUpdate(BaseModel):
     """Todos los campos opcionales para actualizaciones parciales."""
+
     justificacion: str | None = Field(None, min_length=10)
     fecha_limite: datetime | None = None
     estado: str | None = None
@@ -61,6 +63,7 @@ class ExcepcionVulnerabilidadUpdate(BaseModel):
 
 class ExcepcionVulnerabilidadRead(ExcepcionVulnerabilidadBase):
     """Representación completa retornada por la API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

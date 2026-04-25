@@ -20,9 +20,7 @@ class ChangelogEntrada(SoftDeleteMixin, Base):
         ),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -33,16 +31,11 @@ class ChangelogEntrada(SoftDeleteMixin, Base):
     titulo: Mapped[str] = mapped_column(String(255), nullable=False)
     descripcion: Mapped[str] = mapped_column(Text(), nullable=False)
     tipo: Mapped[str] = mapped_column(String(50), nullable=False)
-    fecha_publicacion: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    fecha_publicacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     publicado: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
-

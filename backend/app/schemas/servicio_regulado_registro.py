@@ -25,11 +25,13 @@ class ServicioReguladoRegistroBase(BaseModel):
 
 class ServicioReguladoRegistroCreate(ServicioReguladoRegistroBase):
     """Fields required to create a servicio_regulado_registro. user_id is set from auth context."""
+
     pass
 
 
 class ServicioReguladoRegistroUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre_regulacion: str | None = Field(None, min_length=1, max_length=255)
     ciclo: str | None = None
     ano: int | None = Field(None, ge=2000, le=2100)
@@ -44,6 +46,7 @@ class ServicioReguladoRegistroUpdate(BaseModel):
 
 class ServicioReguladoRegistroRead(ServicioReguladoRegistroBase):
     """Full servicio_regulado_registro representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

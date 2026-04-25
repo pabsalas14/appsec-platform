@@ -56,9 +56,7 @@ async def test_update_vulnerabilidad(client: AsyncClient, auth_headers: dict):
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     vid = resp.json()["data"]["id"]
 
-    patch = await client.patch(
-        f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "En Remediacion"}
-    )
+    patch = await client.patch(f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "En Remediacion"})
     assert patch.status_code == 200
     assert patch.json()["data"]["estado"] == "En Remediacion"
 
@@ -111,16 +109,12 @@ async def test_vulnerabilidad_idor_protected(
         ("PATCH", {"json": {"estado": "Cerrada"}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
 
 
 @pytest.mark.asyncio
-async def test_export_csv_requires_export_permission(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_export_csv_requires_export_permission(client: AsyncClient, auth_headers: dict):
     """Rol user (solo .view) no puede exportar sin vulnerabilities.export."""
     r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
     assert r.status_code == 403
@@ -128,9 +122,7 @@ async def test_export_csv_requires_export_permission(
 
 
 @pytest.mark.asyncio
-async def test_export_csv_success_records_audit(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_export_csv_success_records_audit(client: AsyncClient, admin_auth_headers: dict):
     """Admin exporta CSV y el cuerpo incluye cabecera + fila."""
     create = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
     assert create.status_code == 201, create.text
@@ -143,9 +135,7 @@ async def test_export_csv_success_records_audit(
 
 
 @pytest.mark.asyncio
-async def test_triage_fp_requires_ia_execute_permission(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_triage_fp_requires_ia_execute_permission(client: AsyncClient, auth_headers: dict):
     create = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert create.status_code == 201, create.text
     vid = create.json()["data"]["id"]
@@ -160,9 +150,7 @@ async def test_triage_fp_requires_ia_execute_permission(
 
 
 @pytest.mark.asyncio
-async def test_triage_fp_dry_run_success(
-    client: AsyncClient, admin_auth_headers: dict
-):
+async def test_triage_fp_dry_run_success(client: AsyncClient, admin_auth_headers: dict):
     create = await client.post(BASE_URL, headers=admin_auth_headers, json=SAMPLE_PAYLOAD)
     assert create.status_code == 201, create.text
     vid = create.json()["data"]["id"]
@@ -180,13 +168,9 @@ async def test_triage_fp_dry_run_success(
 
 
 @pytest.mark.asyncio
-async def test_triage_fp_dry_run_success_super_admin(
-    client: AsyncClient, super_admin_auth_headers: dict
-):
+async def test_triage_fp_dry_run_success_super_admin(client: AsyncClient, super_admin_auth_headers: dict):
     """Bloque D: triaje FP con permiso `ia.execute` (rol super_admin)."""
-    create = await client.post(
-        BASE_URL, headers=super_admin_auth_headers, json=SAMPLE_PAYLOAD
-    )
+    create = await client.post(BASE_URL, headers=super_admin_auth_headers, json=SAMPLE_PAYLOAD)
     assert create.status_code == 201, create.text
     vid = create.json()["data"]["id"]
     r = await client.post(

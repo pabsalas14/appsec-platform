@@ -57,9 +57,7 @@ async def update_ejecucion_dast(
     entity: EjecucionDast = Depends(require_ownership(ejecucion_dast_svc)),
 ):
     """Partially update an owned ejecucion DAST."""
-    updated = await ejecucion_dast_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await ejecucion_dast_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(EjecucionDastRead.model_validate(updated).model_dump(mode="json"))
 
 

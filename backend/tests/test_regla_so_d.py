@@ -1,6 +1,5 @@
 """Tests for ReglaSoD — SoD rules are admin-only config."""
 
-
 import pytest
 from httpx import AsyncClient
 
@@ -55,9 +54,7 @@ async def test_admin_can_update_regla_sod(client: AsyncClient, admin_auth_header
     rid = create_resp.json()["data"]["id"]
 
     # Disable
-    patch_resp = await client.patch(
-        f"{BASE_URL}/{rid}", headers=admin_auth_headers, json={"enabled": False}
-    )
+    patch_resp = await client.patch(f"{BASE_URL}/{rid}", headers=admin_auth_headers, json={"enabled": False})
     assert patch_resp.status_code == 200
     assert patch_resp.json()["data"]["enabled"] is False
 

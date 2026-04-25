@@ -25,9 +25,7 @@ if TYPE_CHECKING:
 class ActividadMensualSast(SoftDeleteMixin, Base):
     __tablename__ = "actividad_mensual_sasts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -40,7 +38,7 @@ class ActividadMensualSast(SoftDeleteMixin, Base):
         nullable=False,
         index=True,
     )
-    mes: Mapped[int] = mapped_column(Integer(), nullable=False)   # 1-12
+    mes: Mapped[int] = mapped_column(Integer(), nullable=False)  # 1-12
     ano: Mapped[int] = mapped_column(Integer(), nullable=False, index=True)
     # Conteos por severidad
     total_hallazgos: Mapped[int | None] = mapped_column(Integer(), nullable=True)
@@ -51,9 +49,7 @@ class ActividadMensualSast(SoftDeleteMixin, Base):
     # Score calculado desde pesos de configuración
     score: Mapped[float | None] = mapped_column(Float(), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -62,6 +58,4 @@ class ActividadMensualSast(SoftDeleteMixin, Base):
 
     # ─── Relationships ─────────────────────────────────────────────────────────
     programa_sast: Mapped[ProgramaSast] = relationship(back_populates="actividades")
-    hallazgos: Mapped[list[HallazgoSast]] = relationship(
-        "HallazgoSast", back_populates="actividad_sast", lazy="noload"
-    )
+    hallazgos: Mapped[list[HallazgoSast]] = relationship("HallazgoSast", back_populates="actividad_sast", lazy="noload")

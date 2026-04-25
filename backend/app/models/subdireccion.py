@@ -18,9 +18,7 @@ if TYPE_CHECKING:
 class Subdireccion(SoftDeleteMixin, Base):
     __tablename__ = "subdireccions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -32,9 +30,7 @@ class Subdireccion(SoftDeleteMixin, Base):
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     director_nombre: Mapped[str | None] = mapped_column(String(255), nullable=True)
     director_contacto: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

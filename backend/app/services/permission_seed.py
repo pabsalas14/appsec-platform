@@ -35,13 +35,8 @@ async def ensure_roles_permissions_seeded(db: AsyncSession) -> None:
             db.add(Permission(code=code, description=desc))
         await db.flush()
 
-    existing_roles = {
-        r.name for r in (await db.execute(select(Role))).scalars().all()
-    }
-    perms = {
-        p.code: p
-        for p in (await db.execute(select(Permission))).scalars().all()
-    }
+    existing_roles = {r.name for r in (await db.execute(select(Role))).scalars().all()}
+    perms = {p.code: p for p in (await db.execute(select(Permission))).scalars().all()}
 
     for role_name in VALID_ROLES:
         if role_name in existing_roles:

@@ -30,9 +30,7 @@ if TYPE_CHECKING:
 class ExcepcionVulnerabilidad(SoftDeleteMixin, Base):
     __tablename__ = "excepcion_vulnerabilidads"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Analista que solicita la excepción
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -53,14 +51,10 @@ class ExcepcionVulnerabilidad(SoftDeleteMixin, Base):
     # ── Datos de la excepción ───────────────────────────────────────────────
     # A1: justificacion obligatoria (validado en schema/service)
     justificacion: Mapped[str] = mapped_column(Text, nullable=False)
-    fecha_limite: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
+    fecha_limite: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
     # estados: Pendiente | Aprobada | Rechazada | Vencida | Revocada
-    estado: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="Pendiente", index=True
-    )
+    estado: Mapped[str] = mapped_column(String(32), nullable=False, default="Pendiente", index=True)
 
     # ── Aprobación (SoD — A6) ───────────────────────────────────────────────
     # aprobador_id != user_id cuando regla activa
@@ -70,15 +64,11 @@ class ExcepcionVulnerabilidad(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
-    fecha_aprobacion: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    fecha_aprobacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     notas_aprobador: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # ── Timestamps ──────────────────────────────────────────────────────────
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -86,12 +76,6 @@ class ExcepcionVulnerabilidad(SoftDeleteMixin, Base):
     )
 
     # ── Relationships ────────────────────────────────────────────────────────
-    vulnerabilidad: Mapped[Vulnerabilidad] = relationship(
-        "Vulnerabilidad", back_populates="excepciones", lazy="noload"
-    )
-    solicitante: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], lazy="noload"
-    )
-    aprobador: Mapped[User | None] = relationship(
-        "User", foreign_keys=[aprobador_id], lazy="noload"
-    )
+    vulnerabilidad: Mapped[Vulnerabilidad] = relationship("Vulnerabilidad", back_populates="excepciones", lazy="noload")
+    solicitante: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")
+    aprobador: Mapped[User | None] = relationship("User", foreign_keys=[aprobador_id], lazy="noload")

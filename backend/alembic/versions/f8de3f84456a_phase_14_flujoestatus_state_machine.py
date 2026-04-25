@@ -4,13 +4,13 @@ Revision ID: f8de3f84456a
 Revises: 269422a07547
 Create Date: 2026-04-24 12:45:46.360604
 """
+
 from typing import Sequence, Union
 
 
-
 # revision identifiers, used by Alembic.
-revision: str = 'f8de3f84456a'
-down_revision: Union[str, None] = '269422a07547'
+revision: str = "f8de3f84456a"
+down_revision: Union[str, None] = "269422a07547"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

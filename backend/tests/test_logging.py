@@ -124,9 +124,7 @@ def test_json_formatter_has_stable_fields():
 async def test_request_id_is_echoed_when_provided(client: AsyncClient):
     handler, _buf = _install_capture_handler()
     try:
-        resp = await client.get(
-            "/api/health", headers={"X-Request-ID": "rid-echo-123"}
-        )
+        resp = await client.get("/api/health", headers={"X-Request-ID": "rid-echo-123"})
     finally:
         _uninstall(handler)
 
@@ -147,9 +145,7 @@ async def test_http_request_and_response_share_request_id(client: AsyncClient):
     # Force sampling of /api/health for this test by hitting a non-health path.
     handler, buf = _install_capture_handler()
     try:
-        resp = await client.get(
-            "/api/v1/", headers={"X-Request-ID": "rid-abc-999"}
-        )
+        resp = await client.get("/api/v1/", headers={"X-Request-ID": "rid-abc-999"})
     finally:
         _uninstall(handler)
 

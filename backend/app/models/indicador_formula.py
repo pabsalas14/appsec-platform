@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class IndicadorFormula(SoftDeleteMixin, Base):
     __tablename__ = "indicadores_formulas"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -38,15 +36,11 @@ class IndicadorFormula(SoftDeleteMixin, Base):
     threshold_yellow: Mapped[float] = mapped_column(Float, nullable=True)
     threshold_red: Mapped[float] = mapped_column(Float, nullable=True)
     periodicidad: Mapped[str] = mapped_column(String(50), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    user: Mapped[User] = relationship(
-        foreign_keys=[user_id]
-    )
+    user: Mapped[User] = relationship(foreign_keys=[user_id])

@@ -31,9 +31,7 @@ async def list_hallazgo_pipelines(
     if pipeline_release_id:
         filters["pipeline_release_id"] = pipeline_release_id
     items = await hallazgo_pipeline_svc.list(db, filters=filters)
-    return success(
-        [HallazgoPipelineRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([HallazgoPipelineRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -49,9 +47,7 @@ async def create_hallazgo_pipeline(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    entity = await hallazgo_pipeline_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await hallazgo_pipeline_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(HallazgoPipelineRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -62,9 +58,7 @@ async def update_hallazgo_pipeline(
     current_user: User = Depends(get_current_user),
     entity: HallazgoPipeline = Depends(require_ownership(hallazgo_pipeline_svc)),
 ):
-    updated = await hallazgo_pipeline_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await hallazgo_pipeline_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(HallazgoPipelineRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -74,7 +68,5 @@ async def delete_hallazgo_pipeline(
     current_user: User = Depends(get_current_user),
     entity: HallazgoPipeline = Depends(require_ownership(hallazgo_pipeline_svc)),
 ):
-    await hallazgo_pipeline_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await hallazgo_pipeline_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "HallazgoPipeline eliminado"})

@@ -114,9 +114,7 @@ class TestOWASPS7SSRF:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422), (
-            f"S7 FAILED: localhost not blocked (got {resp.status_code})"
-        )
+        assert resp.status_code in (400, 422), f"S7 FAILED: localhost not blocked (got {resp.status_code})"
 
     @pytest.mark.asyncio
     async def test_s7_private_ip_127_blocked(self, client: AsyncClient, auth_headers: dict):
@@ -133,9 +131,7 @@ class TestOWASPS7SSRF:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422), (
-            f"S7 FAILED: 127.0.0.1 not blocked (got {resp.status_code})"
-        )
+        assert resp.status_code in (400, 422), f"S7 FAILED: 127.0.0.1 not blocked (got {resp.status_code})"
 
     @pytest.mark.asyncio
     async def test_s7_private_ip_10_blocked(self, client: AsyncClient, auth_headers: dict):
@@ -152,9 +148,7 @@ class TestOWASPS7SSRF:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (400, 422), (
-            f"S7 FAILED: 10.0.0.1 not blocked (got {resp.status_code})"
-        )
+        assert resp.status_code in (400, 422), f"S7 FAILED: 10.0.0.1 not blocked (got {resp.status_code})"
 
     @pytest.mark.asyncio
     async def test_s7_aws_metadata_blocked(self, client: AsyncClient, auth_headers: dict):
@@ -201,9 +195,7 @@ class TestAuditabilityA1:
     """A1: Justificacion obligatoria en acciones críticas."""
 
     @pytest.mark.asyncio
-    async def test_a1_close_without_justificacion_rejected(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_a1_close_without_justificacion_rejected(self, client: AsyncClient, auth_headers: dict):
         """Closing critical vulnerability without justificacion should be rejected."""
         # Create ActivoWeb first
         aw_id = await _create_activo_web_for_test(client, auth_headers)
@@ -235,9 +227,9 @@ class TestAuditabilityA1:
         assert resp_close.status_code == 400, (
             f"A1 FAILED: Closed critical vuln without justificacion (status={resp_close.status_code})"
         )
-        assert "justificacion" in resp_close.json()["detail"].lower() or \
-               "required" in resp_close.json()["detail"].lower(), \
-            "A1 FAILED: Error message doesn't mention justificacion"
+        assert (
+            "justificacion" in resp_close.json()["detail"].lower() or "required" in resp_close.json()["detail"].lower()
+        ), "A1 FAILED: Error message doesn't mention justificacion"
 
 
 class TestAuditabilityA2SoftDelete:
@@ -330,9 +322,7 @@ class TestAuditabilityA4HashChain:
             if len(logs) > 0:
                 # Check first log has hash fields
                 log = logs[0]
-                assert "current_hash" in log or "hash" in log, (
-                    "A4 FAILED: Hash field not present in audit log"
-                )
+                assert "current_hash" in log or "hash" in log, "A4 FAILED: Hash field not present in audit log"
 
 
 class TestAuditabilityA7Export:
@@ -349,6 +339,4 @@ class TestAuditabilityA7Export:
 
         # If endpoint exists (200), great - it's auditable
         # If endpoint doesn't exist (404), that's OK for now - deferred
-        assert resp.status_code in (200, 404), (
-            f"A7: Unexpected status for export (got {resp.status_code})"
-        )
+        assert resp.status_code in (200, 404), f"A7: Unexpected status for export (got {resp.status_code})"

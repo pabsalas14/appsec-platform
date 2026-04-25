@@ -28,9 +28,7 @@ if TYPE_CHECKING:
 class ServiceRelease(SoftDeleteMixin, Base):
     __tablename__ = "service_releases"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -47,13 +45,9 @@ class ServiceRelease(SoftDeleteMixin, Base):
     version: Mapped[str] = mapped_column(String(100), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     # Estado derivado del flujo de etapas; se actualiza al avanzar etapas
-    estado_actual: Mapped[str] = mapped_column(
-        String(100), nullable=False, default="Borrador"
-    )
+    estado_actual: Mapped[str] = mapped_column(String(100), nullable=False, default="Borrador")
     jira_referencia: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -62,9 +56,7 @@ class ServiceRelease(SoftDeleteMixin, Base):
 
     # ─── Relationships ─────────────────────────────────────────────────────────
     servicio: Mapped[Servicio] = relationship(back_populates="service_releases")
-    etapas: Mapped[list[EtapaRelease]] = relationship(
-        "EtapaRelease", back_populates="service_release", lazy="noload"
-    )
+    etapas: Mapped[list[EtapaRelease]] = relationship("EtapaRelease", back_populates="service_release", lazy="noload")
     pipelines: Mapped[list[PipelineRelease]] = relationship(
         "PipelineRelease", back_populates="service_release", lazy="noload"
     )

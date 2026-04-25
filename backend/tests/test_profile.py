@@ -7,9 +7,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_patch_me_updates_profile(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_patch_me_updates_profile(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.patch(
         "/api/v1/auth/me",
         headers=auth_headers,
@@ -22,9 +20,7 @@ async def test_patch_me_updates_profile(
 
 
 @pytest.mark.asyncio
-async def test_change_password_requires_current(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_change_password_requires_current(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.post(
         "/api/v1/auth/me/password",
         headers=auth_headers,

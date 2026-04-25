@@ -36,9 +36,7 @@ async def export_service_releases_csv(
     items = await service_release_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "nombre", "version", "estado_actual", "jira_referencia", "servicio_id"]
-    )
+    writer.writerow(["id", "nombre", "version", "estado_actual", "jira_referencia", "servicio_id"])
     for rel in items:
         writer.writerow(
             [
@@ -77,9 +75,7 @@ async def list_service_releases(
     if servicio_id:
         filters["servicio_id"] = servicio_id
     items = await service_release_svc.list(db, filters=filters)
-    return success(
-        [ServiceReleaseRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([ServiceReleaseRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -97,9 +93,7 @@ async def create_service_release(
     current_user: User = Depends(get_current_user),
 ):
     """Crea un nuevo ServiceRelease para el usuario autenticado."""
-    entity = await service_release_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await service_release_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(ServiceReleaseRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -111,9 +105,7 @@ async def update_service_release(
     entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
 ):
     """Actualiza parcialmente un release (404 si no es del usuario)."""
-    updated = await service_release_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await service_release_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ServiceReleaseRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -124,7 +116,5 @@ async def delete_service_release(
     entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
 ):
     """Elimina (soft-delete) un release (404 si no es del usuario)."""
-    await service_release_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await service_release_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "ServiceRelease eliminado"})

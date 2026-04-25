@@ -61,9 +61,7 @@ async def update_actividad_mensual_sast(
     entity: ActividadMensualSast = Depends(require_ownership(actividad_mensual_sast_svc)),
 ):
     """Partially update an owned actividad mensual SAST."""
-    updated = await actividad_mensual_sast_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await actividad_mensual_sast_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(ActividadMensualSastRead.model_validate(updated).model_dump(mode="json"))
 
 

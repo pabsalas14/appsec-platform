@@ -34,9 +34,7 @@ async def list_revision_terceros(
     if activo_web_id:
         filters["activo_web_id"] = activo_web_id
     items = await revision_tercero_svc.list(db, filters=filters)
-    return success(
-        [RevisionTerceroRead.model_validate(x).model_dump(mode="json") for x in items]
-    )
+    return success([RevisionTerceroRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
 @router.get("/{id}")
@@ -52,9 +50,7 @@ async def create_revision_tercero(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    entity = await revision_tercero_svc.create(
-        db, entity_in, extra={"user_id": current_user.id}
-    )
+    entity = await revision_tercero_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(RevisionTerceroRead.model_validate(entity).model_dump(mode="json"))
 
 
@@ -65,9 +61,7 @@ async def update_revision_tercero(
     current_user: User = Depends(get_current_user),
     entity: RevisionTercero = Depends(require_ownership(revision_tercero_svc)),
 ):
-    updated = await revision_tercero_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await revision_tercero_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(RevisionTerceroRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -77,7 +71,5 @@ async def delete_revision_tercero(
     current_user: User = Depends(get_current_user),
     entity: RevisionTercero = Depends(require_ownership(revision_tercero_svc)),
 ):
-    await revision_tercero_svc.delete(
-        db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    await revision_tercero_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "RevisionTercero eliminada"})

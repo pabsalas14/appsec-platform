@@ -29,6 +29,7 @@ from app.models.user import User
 
 # ─── Admin user ───────────────────────────────────────────────────────────────
 
+
 async def _seed_admin(db) -> User:
     """Create the initial admin user if it doesn't exist. Returns the user."""
     result = await db.execute(select(User).where(User.username == "admin"))
@@ -66,15 +67,12 @@ async def _seed_admin(db) -> User:
 
 # ─── System settings ─────────────────────────────────────────────────────────
 
+
 async def _seed_settings(db) -> None:
     """Insert all DEFAULT_SETTINGS using on_conflict_do_nothing."""
     count = 0
     for row in DEFAULT_SETTINGS:
-        stmt = (
-            pg_insert(SystemSetting)
-            .values(**row)
-            .on_conflict_do_nothing(index_elements=[SystemSetting.key])
-        )
+        stmt = pg_insert(SystemSetting).values(**row).on_conflict_do_nothing(index_elements=[SystemSetting.key])
         result = await db.execute(stmt)
         if result.rowcount:
             count += 1
@@ -150,11 +148,23 @@ async def _seed_regla_sods(db, admin_id: uuid.UUID) -> None:
 # ─── Tipos de prueba base ─────────────────────────────────────────────────────
 
 TIPO_PRUEBA_SEEDS = [
-    {"nombre": "SAST — Análisis Estático",     "categoria": "SAST", "descripcion": "Análisis de código fuente sin ejecución"},
-    {"nombre": "DAST — Análisis Dinámico",      "categoria": "DAST", "descripcion": "Análisis de la aplicación en ejecución"},
-    {"nombre": "SCA — Composición de Software", "categoria": "SCA",  "descripcion": "Análisis de dependencias y OSS"},
-    {"nombre": "Threat Modeling",               "categoria": "TM",   "descripcion": "Modelado de amenazas y arquitectura"},
-    {"nombre": "MAST — Análisis Móvil",         "categoria": "MAST", "descripcion": "Análisis estático y dinámico de apps móviles"},
+    {
+        "nombre": "SAST — Análisis Estático",
+        "categoria": "SAST",
+        "descripcion": "Análisis de código fuente sin ejecución",
+    },
+    {
+        "nombre": "DAST — Análisis Dinámico",
+        "categoria": "DAST",
+        "descripcion": "Análisis de la aplicación en ejecución",
+    },
+    {"nombre": "SCA — Composición de Software", "categoria": "SCA", "descripcion": "Análisis de dependencias y OSS"},
+    {"nombre": "Threat Modeling", "categoria": "TM", "descripcion": "Modelado de amenazas y arquitectura"},
+    {
+        "nombre": "MAST — Análisis Móvil",
+        "categoria": "MAST",
+        "descripcion": "Análisis estático y dinámico de apps móviles",
+    },
 ]
 
 
@@ -182,18 +192,78 @@ async def _seed_tipos_prueba(db, admin_id: uuid.UUID) -> None:
 # ─── Controles de seguridad base ──────────────────────────────────────────────
 
 CONTROL_SEEDS = [
-    {"nombre": "Branch Protection (PRs requeridos)",          "tipo": "fuente",          "descripcion": "Requiere PRs con revisores para fusionar a rama principal", "obligatorio": True},
-    {"nombre": "Secret Scanning habilitado",                  "tipo": "fuente",          "descripcion": "Escaneo automático de secretos en todos los commits",       "obligatorio": True},
-    {"nombre": "Dependency Alerts habilitado",                "tipo": "sca",             "descripcion": "Alertas automáticas de dependencias vulnerables",           "obligatorio": True},
-    {"nombre": "SAST en CI/CD",                               "tipo": "pipeline",        "descripcion": "Análisis estático en cada Pull Request",                   "obligatorio": True},
-    {"nombre": "DAST en ambiente de staging",                 "tipo": "pipeline",        "descripcion": "Análisis dinámico antes de promover a producción",         "obligatorio": False},
-    {"nombre": "Image Scanning (contenedores)",               "tipo": "infraestructura", "descripcion": "Escaneo de vulnerabilidades en imágenes Docker",           "obligatorio": True},
-    {"nombre": "IaC Scanning (Terraform/Helm)",               "tipo": "infraestructura", "descripcion": "Análisis estático de infraestructura como código",        "obligatorio": False},
-    {"nombre": "Pentest anual externo",                       "tipo": "auditoria",       "descripcion": "Prueba de penetración por tercero independiente",          "obligatorio": True},
-    {"nombre": "Threat Modeling por servicio crítico",        "tipo": "arquitectura",    "descripcion": "TM obligatorio para servicios de criticidad alta o crítica","obligatorio": True},
-    {"nombre": "MFA en accesos privilegiados",                "tipo": "acceso",          "descripcion": "Multi-factor en todos los accesos con privilegios elevados","obligatorio": True},
-    {"nombre": "SBOM generado en cada release",               "tipo": "sca",             "descripcion": "Software Bill of Materials automático por release",        "obligatorio": False},
-    {"nombre": "Revisión de código de seguridad (SAST manual)","tipo": "fuente",         "descripcion": "Revisión manual por equipo AppSec en cambios críticos",   "obligatorio": False},
+    {
+        "nombre": "Branch Protection (PRs requeridos)",
+        "tipo": "fuente",
+        "descripcion": "Requiere PRs con revisores para fusionar a rama principal",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "Secret Scanning habilitado",
+        "tipo": "fuente",
+        "descripcion": "Escaneo automático de secretos en todos los commits",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "Dependency Alerts habilitado",
+        "tipo": "sca",
+        "descripcion": "Alertas automáticas de dependencias vulnerables",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "SAST en CI/CD",
+        "tipo": "pipeline",
+        "descripcion": "Análisis estático en cada Pull Request",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "DAST en ambiente de staging",
+        "tipo": "pipeline",
+        "descripcion": "Análisis dinámico antes de promover a producción",
+        "obligatorio": False,
+    },
+    {
+        "nombre": "Image Scanning (contenedores)",
+        "tipo": "infraestructura",
+        "descripcion": "Escaneo de vulnerabilidades en imágenes Docker",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "IaC Scanning (Terraform/Helm)",
+        "tipo": "infraestructura",
+        "descripcion": "Análisis estático de infraestructura como código",
+        "obligatorio": False,
+    },
+    {
+        "nombre": "Pentest anual externo",
+        "tipo": "auditoria",
+        "descripcion": "Prueba de penetración por tercero independiente",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "Threat Modeling por servicio crítico",
+        "tipo": "arquitectura",
+        "descripcion": "TM obligatorio para servicios de criticidad alta o crítica",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "MFA en accesos privilegiados",
+        "tipo": "acceso",
+        "descripcion": "Multi-factor en todos los accesos con privilegios elevados",
+        "obligatorio": True,
+    },
+    {
+        "nombre": "SBOM generado en cada release",
+        "tipo": "sca",
+        "descripcion": "Software Bill of Materials automático por release",
+        "obligatorio": False,
+    },
+    {
+        "nombre": "Revisión de código de seguridad (SAST manual)",
+        "tipo": "fuente",
+        "descripcion": "Revisión manual por equipo AppSec en cambios críticos",
+        "obligatorio": False,
+    },
 ]
 
 
@@ -220,11 +290,31 @@ async def _seed_controles(db, admin_id: uuid.UUID) -> None:
 # ─── Herramientas Externas Base ──────────────────────────────────────────────
 
 HERRAMIENTAS_SEEDS = [
-    {"nombre": "SonarQube",            "tipo": "SAST",                  "url_base": "https://sonarqube.internal.example.com", "api_token": "sq_token_placeholder"},
-    {"nombre": "GitHub Advanced Sec.", "tipo": "SCA",                   "url_base": "https://api.github.com",                 "api_token": "ghp_placeholder_token"},
-    {"nombre": "DefectDojo",           "tipo": "VulnerabilityManager",  "url_base": "https://defectdojo.internal.example.com","api_token": "dd_placeholder_token"},
-    {"nombre": "BurpSuite Enterprise", "tipo": "DAST",                  "url_base": "https://burp.internal.example.com",      "api_token": "burp_placeholder_token"},
-    {"nombre": "Trivy",                "tipo": "CI/CD",                 "url_base": "",                                       "api_token": ""},
+    {
+        "nombre": "SonarQube",
+        "tipo": "SAST",
+        "url_base": "https://sonarqube.internal.example.com",
+        "api_token": "sq_token_placeholder",
+    },
+    {
+        "nombre": "GitHub Advanced Sec.",
+        "tipo": "SCA",
+        "url_base": "https://api.github.com",
+        "api_token": "ghp_placeholder_token",
+    },
+    {
+        "nombre": "DefectDojo",
+        "tipo": "VulnerabilityManager",
+        "url_base": "https://defectdojo.internal.example.com",
+        "api_token": "dd_placeholder_token",
+    },
+    {
+        "nombre": "BurpSuite Enterprise",
+        "tipo": "DAST",
+        "url_base": "https://burp.internal.example.com",
+        "api_token": "burp_placeholder_token",
+    },
+    {"nombre": "Trivy", "tipo": "CI/CD", "url_base": "", "api_token": ""},
 ]
 
 
@@ -232,9 +322,7 @@ async def _seed_herramientas(db, admin_id: uuid.UUID) -> None:
     count = 0
     for herr in HERRAMIENTAS_SEEDS:
         # Avoid duplicate tools by name
-        result = await db.execute(
-            select(HerramientaExterna).where(HerramientaExterna.nombre == herr["nombre"])
-        )
+        result = await db.execute(select(HerramientaExterna).where(HerramientaExterna.nombre == herr["nombre"]))
         if result.scalar_one_or_none():
             continue
         db.add(HerramientaExterna(id=uuid.uuid4(), user_id=admin_id, **herr))
@@ -247,6 +335,7 @@ async def _seed_herramientas(db, admin_id: uuid.UUID) -> None:
 
 
 # ─── Entry point ─────────────────────────────────────────────────────────────
+
 
 async def seed() -> None:
     """Run all seed operations. Safe to run multiple times."""

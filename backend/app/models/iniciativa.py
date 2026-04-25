@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 class Iniciativa(SoftDeleteMixin, Base):
     __tablename__ = "iniciativas"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -42,18 +40,14 @@ class Iniciativa(SoftDeleteMixin, Base):
     estado: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     fecha_inicio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     fecha_fin_estimada: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    hitos: Mapped[list[HitoIniciativa]] = relationship(
-        "HitoIniciativa", back_populates="iniciativa", lazy="noload"
-    )
+    hitos: Mapped[list[HitoIniciativa]] = relationship("HitoIniciativa", back_populates="iniciativa", lazy="noload")
     actualizaciones: Mapped[list[ActualizacionIniciativa]] = relationship(
         "ActualizacionIniciativa", back_populates="iniciativa", lazy="noload"
     )

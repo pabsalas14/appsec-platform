@@ -30,9 +30,7 @@ if TYPE_CHECKING:
 class AceptacionRiesgo(SoftDeleteMixin, Base):
     __tablename__ = "aceptacion_riesgos"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # Analista que registra la aceptación de riesgo
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -63,14 +61,10 @@ class AceptacionRiesgo(SoftDeleteMixin, Base):
     )
 
     # Fecha obligatoria de revisión del riesgo aceptado
-    fecha_revision_obligatoria: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
+    fecha_revision_obligatoria: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
     # estados: Pendiente | Aprobada | Rechazada | Vencida | Revocada
-    estado: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="Pendiente", index=True
-    )
+    estado: Mapped[str] = mapped_column(String(32), nullable=False, default="Pendiente", index=True)
 
     # ── Aprobación (SoD — A6) ───────────────────────────────────────────────
     # aprobador_id != user_id cuando regla activa
@@ -80,15 +74,11 @@ class AceptacionRiesgo(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
-    fecha_aprobacion: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    fecha_aprobacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     notas_aprobador: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # ── Timestamps ──────────────────────────────────────────────────────────
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -99,12 +89,6 @@ class AceptacionRiesgo(SoftDeleteMixin, Base):
     vulnerabilidad: Mapped[Vulnerabilidad] = relationship(
         "Vulnerabilidad", back_populates="aceptaciones_riesgo", lazy="noload"
     )
-    solicitante: Mapped[User] = relationship(
-        "User", foreign_keys=[user_id], lazy="noload"
-    )
-    propietario_riesgo: Mapped[User] = relationship(
-        "User", foreign_keys=[propietario_riesgo_id], lazy="noload"
-    )
-    aprobador: Mapped[User | None] = relationship(
-        "User", foreign_keys=[aprobador_id], lazy="noload"
-    )
+    solicitante: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")
+    propietario_riesgo: Mapped[User] = relationship("User", foreign_keys=[propietario_riesgo_id], lazy="noload")
+    aprobador: Mapped[User | None] = relationship("User", foreign_keys=[aprobador_id], lazy="noload")

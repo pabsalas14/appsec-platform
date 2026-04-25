@@ -97,15 +97,7 @@ async def _append_hash_chain(db: AsyncSession, entry: AuditLog) -> None:
 async def validate_chain(db: AsyncSession, *, limit: int = 5000) -> dict[str, Any]:
     """Validate audit log hash-chain (A4). Returns summary + first failure, if any."""
     rows = (
-        (
-            await db.execute(
-                select(AuditLog)
-                .order_by(AuditLog.ts.asc(), AuditLog.id.asc())
-                .limit(limit)
-            )
-        )
-        .scalars()
-        .all()
+        (await db.execute(select(AuditLog).order_by(AuditLog.ts.asc(), AuditLog.id.asc()).limit(limit))).scalars().all()
     )
     prev: str | None = None
     for r in rows:

@@ -53,12 +53,10 @@ async def test_task_crud_creates_three_audit_entries(
 
     async with _session_factory() as session:
         rows = (
-            await session.execute(
-                select(AuditLog)
-                .where(AuditLog.entity_id == task_id)
-                .order_by(AuditLog.ts.asc())
-            )
-        ).scalars().all()
+            (await session.execute(select(AuditLog).where(AuditLog.entity_id == task_id).order_by(AuditLog.ts.asc())))
+            .scalars()
+            .all()
+        )
 
     actions = [r.action for r in rows]
     assert actions == ["task.create", "task.update", "task.delete"], actions
@@ -70,9 +68,7 @@ async def test_task_crud_creates_three_audit_entries(
 
 
 @pytest.mark.asyncio
-async def test_audit_log_list_requires_admin(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_audit_log_list_requires_admin(client: AsyncClient, auth_headers: dict[str, str]):
     resp = await client.get("/api/v1/audit-logs", headers=auth_headers)
     assert resp.status_code == 403
     body = resp.json()
@@ -169,9 +165,7 @@ async def test_task_delete_uses_soft_delete(
     assert deleted.status_code == 200
 
     async with _session_factory() as session:
-        task_row = (
-            await session.execute(select(Task).where(Task.id == task_id))
-        ).scalar_one_or_none()
+        task_row = (await session.execute(select(Task).where(Task.id == task_id))).scalar_one_or_none()
 
     assert task_row is not None
     assert task_row.deleted_at is not None

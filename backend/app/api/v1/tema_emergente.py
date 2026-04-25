@@ -31,9 +31,7 @@ async def export_temas_emergentes_csv(
     items = await tema_emergente_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "titulo", "tipo", "estado", "impacto", "fuente", "celula_id"]
-    )
+    writer.writerow(["id", "titulo", "tipo", "estado", "impacto", "fuente", "celula_id"])
     for t in items:
         writer.writerow(
             [
@@ -79,10 +77,14 @@ async def list_temas_emergentes(
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
     # Get paginated items
-    stmt = select(TemaEmergente).where(
-        TemaEmergente.user_id == current_user.id,
-        TemaEmergente.deleted_at.is_(None),
-    ).order_by(TemaEmergente.created_at.desc())
+    stmt = (
+        select(TemaEmergente)
+        .where(
+            TemaEmergente.user_id == current_user.id,
+            TemaEmergente.deleted_at.is_(None),
+        )
+        .order_by(TemaEmergente.created_at.desc())
+    )
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -132,9 +134,7 @@ async def update_tema_emergente(
     entity: TemaEmergente = Depends(require_ownership(tema_emergente_svc)),
 ):
     """Partially update an owned tema emergente (404 if not owned)."""
-    updated = await tema_emergente_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await tema_emergente_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(TemaEmergenteRead.model_validate(updated).model_dump(mode="json"))
 
 

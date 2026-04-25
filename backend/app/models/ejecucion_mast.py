@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 class EjecucionMAST(SoftDeleteMixin, Base):
     __tablename__ = "ejecucion_masts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -41,9 +39,7 @@ class EjecucionMAST(SoftDeleteMixin, Base):
     fecha_fin: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     resultado: Mapped[str] = mapped_column(String(50), nullable=False)
     url_reporte: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),
@@ -51,6 +47,4 @@ class EjecucionMAST(SoftDeleteMixin, Base):
     )
 
     aplicacion_movil: Mapped[AplicacionMovil] = relationship(back_populates="ejecuciones_mast")
-    hallazgos: Mapped[list[HallazgoMAST]] = relationship(
-        "HallazgoMAST", back_populates="ejecucion", lazy="noload"
-    )
+    hallazgos: Mapped[list[HallazgoMAST]] = relationship("HallazgoMAST", back_populates="ejecucion", lazy="noload")

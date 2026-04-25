@@ -23,11 +23,13 @@ class EstadoCumplimientoBase(BaseModel):
 
 class EstadoCumplimientoCreate(EstadoCumplimientoBase):
     """Fields required to create a estado_cumplimiento. user_id is set from auth context."""
+
     pass
 
 
 class EstadoCumplimientoUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     control_id: UUID | None = None
     estado: str | None = None
     porcentaje: float | None = Field(None, ge=0.0, le=100.0)
@@ -41,6 +43,7 @@ class EstadoCumplimientoUpdate(BaseModel):
 
 class EstadoCumplimientoRead(EstadoCumplimientoBase):
     """Full estado_cumplimiento representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

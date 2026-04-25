@@ -22,9 +22,7 @@ async def my_dashboard_visibility(
     current_user: User = Depends(get_current_user),
 ):
     """Return widget visibility map for current user's role and dashboard."""
-    role = (
-        await db.execute(select(Role).where(Role.name == current_user.role))
-    ).scalar_one_or_none()
+    role = (await db.execute(select(Role).where(Role.name == current_user.role))).scalar_one_or_none()
     if role is None:
         return success(
             {
@@ -36,14 +34,18 @@ async def my_dashboard_visibility(
         )
 
     rows = (
-        await db.execute(
-            select(DashboardConfig).where(
-                DashboardConfig.dashboard_id == dashboard_id,
-                DashboardConfig.role_id == role.id,
-                DashboardConfig.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(DashboardConfig).where(
+                    DashboardConfig.dashboard_id == dashboard_id,
+                    DashboardConfig.role_id == role.id,
+                    DashboardConfig.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     widgets = {
         row.widget_id: {
             "visible": row.visible,
