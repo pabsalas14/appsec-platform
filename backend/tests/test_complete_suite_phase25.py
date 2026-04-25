@@ -14,6 +14,7 @@ NO TESTS RUN UNTIL ALL PHASES 10-27 CODE IS COMPLETE.
 """
 
 import uuid
+from typing import ClassVar
 
 import pytest
 from httpx import AsyncClient
@@ -65,7 +66,7 @@ async def celula_for_tests(client: AsyncClient, auth_headers: dict) -> str:
 class TestOWASPS1IDOR:
     """S1: IDOR — every entity with user_id must enforce ownership."""
 
-    IDOR_ENTITIES = [
+    IDOR_ENTITIES: ClassVar = [
         # (endpoint, create_payload_template, update_payload)
         ("vulnerabilidads", {
             "titulo": "Test IDOR Vuln",

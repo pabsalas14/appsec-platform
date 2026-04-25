@@ -74,12 +74,11 @@ class AceptacionRiesgoService(
         if not record:
             return None
 
-        if await self._sod_activa(db):
-            if record.user_id == aprobador_id:
-                raise ConflictException(
-                    "SoD: quien registra el riesgo no puede ser quien lo aprueba "
-                    "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
-                )
+        if await self._sod_activa(db) and record.user_id == aprobador_id:
+            raise ConflictException(
+                "SoD: quien registra el riesgo no puede ser quien lo aprueba "
+                "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
+            )
 
         record.estado = "Aprobada"
         record.aprobador_id = aprobador_id
@@ -112,12 +111,11 @@ class AceptacionRiesgoService(
         if not record:
             return None
 
-        if await self._sod_activa(db):
-            if record.user_id == aprobador_id:
-                raise ConflictException(
-                    "SoD: quien registra el riesgo no puede ser quien lo aprueba "
-                    "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
-                )
+        if await self._sod_activa(db) and record.user_id == aprobador_id:
+            raise ConflictException(
+                "SoD: quien registra el riesgo no puede ser quien lo aprueba "
+                "(ReglaSoD: vulnerabilidad.aceptar_riesgo)"
+            )
 
         record.estado = "Rechazada"
         record.aprobador_id = aprobador_id

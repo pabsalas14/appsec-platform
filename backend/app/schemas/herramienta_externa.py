@@ -41,9 +41,9 @@ class HerramientaExternaRead(HerramientaExternaBase):
     @model_validator(mode='after')
     def mask_api_token(self) -> 'HerramientaExternaRead':
         """[A7] Data Masking Frontend — Nunca exponer credenciales en crudo.
-        
+
         Siempre se entrega enmascarado hacia el front-end a menos que esté None.
-        En DB se guarda cifrado (A5), al cargar a RAM es texto plano, 
+        En DB se guarda cifrado (A5), al cargar a RAM es texto plano,
         y al serializar a JSON se vuelve ***** para la UI.
         """
         if self.api_token:

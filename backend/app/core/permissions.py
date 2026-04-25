@@ -8,11 +8,11 @@ Centralised permission codes and role definitions.
 Add new permission modules here as you build on the framework.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 # ─── Roles ───────────────────────────────────────────────────────────────────
 
-class RolEnum(str, Enum):
+class RolEnum(StrEnum):
     """Valid user roles — 6 platform roles + 2 framework base roles."""
     SUPER_ADMIN = "super_admin"
     CHIEF_APPSEC = "chief_appsec"
@@ -183,44 +183,70 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
     ),
     "lider_programa": (
         [
-            "programs.view", "programs.create", "programs.edit", "programs.delete", "programs.export",
-            "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit", "vulnerabilities.export",
-            "releases.view", "releases.create", "releases.edit", "releases.export",
-            "initiatives.view", "initiatives.create", "initiatives.edit", "initiatives.export",
-            "audits.view", "audits.create", "audits.edit", "audits.export",
-            "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit", "emerging_themes.export",
-            "dashboards.view", "dashboards.export",
+            "programs.view",
+            "programs.create",
+            "programs.edit",
+            "programs.delete",
+            "programs.export",
+            "vulnerabilities.view",
+            "vulnerabilities.create",
+            "vulnerabilities.edit",
+            "vulnerabilities.export",
+            "releases.view",
+            "releases.create",
+            "releases.edit",
+            "releases.export",
+            "initiatives.view",
+            "initiatives.create",
+            "initiatives.edit",
+            "initiatives.export",
+            "audits.view",
+            "audits.create",
+            "audits.edit",
+            "audits.export",
+            "emerging_themes.view",
+            "emerging_themes.create",
+            "emerging_themes.edit",
+            "emerging_themes.export",
+            "dashboards.view",
+            "dashboards.export",
             "catalogs.view",
-        ]
-        + _CATALOG_MUTATION
-        + [
-            "tasks.view", "tasks.create", "tasks.edit",
-            "ia.view", "ia.execute",
+            *_CATALOG_MUTATION,
+            "tasks.view",
+            "tasks.create",
+            "tasks.edit",
+            "ia.view",
+            "ia.execute",
         ]
     ),
     "analista": (
         [
-            "programs.view", "programs.create", "programs.edit",
-            "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit",
-            "releases.view", "releases.create", "releases.edit",
+            "programs.view",
+            "programs.create",
+            "programs.edit",
+            "vulnerabilities.view",
+            "vulnerabilities.create",
+            "vulnerabilities.edit",
+            "releases.view",
+            "releases.create",
+            "releases.edit",
             "initiatives.view",
             "audits.view",
-            "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit",
+            "emerging_themes.view",
+            "emerging_themes.create",
+            "emerging_themes.edit",
             "dashboards.view",
             "catalogs.view",
-        ]
-        + _CATALOG_MUTATION
-        + [
-            "tasks.view", "tasks.create", "tasks.edit",
-            "ia.view", "ia.execute",
+            *_CATALOG_MUTATION,
+            "tasks.view",
+            "tasks.create",
+            "tasks.edit",
+            "ia.view",
+            "ia.execute",
         ]
     ),
     "auditor": (
-        _VIEW_CODES + [
-            "audit_logs.export",
-            "audit_logs.verify",
-            "dashboards.export",
-        ]
+        [*_VIEW_CODES, "audit_logs.export", "audit_logs.verify", "dashboards.export"]
     ),
     "readonly": [
         "dashboards.view",

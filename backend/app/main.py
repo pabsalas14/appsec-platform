@@ -148,7 +148,7 @@ async def log_requests(request: Request, call_next):
 
     skip_log = (
         request.url.path in _HEALTH_PATHS
-        and random.random() >= settings.LOG_SAMPLE_HEALTH
+        and random.random() >= settings.LOG_SAMPLE_HEALTH  # noqa: S311
     )
 
     if not skip_log:

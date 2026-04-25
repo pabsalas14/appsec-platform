@@ -80,7 +80,7 @@ class TestE2EVulnerabilityLifecycle:
         assert resp_assign.status_code == 200, f"Assign failed: {resp_assign.json()}"
 
         # 3. Submit remediation evidence
-        resp_evidence = await client.post(
+        await client.post(
             "/api/v1/evidencia_remediacions",
             json={
                 "vulnerabilidad_id": vuln_id,

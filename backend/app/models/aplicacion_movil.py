@@ -14,6 +14,7 @@ from app.models.mixins import SoftDeleteMixin
 if TYPE_CHECKING:
     from app.models.celula import Celula
     from app.models.ejecucion_mast import EjecucionMAST
+    from app.models.vulnerabilidad import Vulnerabilidad
 
 
 class AplicacionMovil(SoftDeleteMixin, Base):

@@ -150,7 +150,13 @@ async def suggest_sesion_threat_modeling(
         f"Estado: {session.estado}\n"
         f"Contexto adicional: {payload.contexto_adicional or 'N/A'}\n\n"
         "Responde SOLO JSON con esta forma:\n"
-        '{"threats":[{"titulo":"...","descripcion":"...","categoria_stride":"Spoofing|Tampering|Repudiation|Information Disclosure|Denial of Service|Elevation of Privilege","dread_damage":1,"dread_reproducibility":1,"dread_exploitability":1,"dread_affected_users":1,"dread_discoverability":1,"estado":"Abierta"}]}'
+        '{"threats":['
+        '{"titulo":"...","descripcion":"...","categoria_stride":'
+        '"Spoofing|Tampering|Repudiation|Information Disclosure|'
+        'Denial of Service|Elevation of Privilege",'
+        '"dread_damage":1,"dread_reproducibility":1,"dread_exploitability":1,'
+        '"dread_affected_users":1,"dread_discoverability":1,"estado":"Abierta"}'
+        "]}"
     )
 
     result = await run_prompt(db, prompt=prompt, dry_run=payload.dry_run)

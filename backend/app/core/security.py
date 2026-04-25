@@ -60,11 +60,13 @@ def validate_password_strength(password: str, *, username: str | None = None) ->
             f"Password must be at least {min_length} characters"
         )
 
-    if settings.AUTH_PASSWORD_REQUIRE_MIXED_CASE:
-        if not (any(c.islower() for c in password) and any(c.isupper() for c in password)):
-            raise ConflictException(
-                "Password must contain both uppercase and lowercase letters"
-            )
+    if (
+        settings.AUTH_PASSWORD_REQUIRE_MIXED_CASE
+        and not (any(c.islower() for c in password) and any(c.isupper() for c in password))
+    ):
+        raise ConflictException(
+            "Password must contain both uppercase and lowercase letters"
+        )
 
     if settings.AUTH_PASSWORD_REQUIRE_DIGIT and not any(c.isdigit() for c in password):
         raise ConflictException("Password must contain at least one digit")

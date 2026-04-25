@@ -256,7 +256,7 @@ async def create_sesion_tm_id(client: AsyncClient, headers: dict[str, str]) -> s
 
 async def create_servicio_regulado_registro_id(client: AsyncClient, headers: dict[str, str]) -> str:
     svc_id = await create_servicio_id(client, headers)
-    x = _u()
+    _u()
     r = await client.post(
         "/api/v1/servicio_regulado_registros",
         headers=headers,

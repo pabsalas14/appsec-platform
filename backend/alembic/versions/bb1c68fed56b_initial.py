@@ -1,7 +1,7 @@
 """initial
 
 Revision ID: bb1c68fed56b
-Revises: 
+Revises:
 Create Date: 2026-04-21 06:15:00.000000
 
 """

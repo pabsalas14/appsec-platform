@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.programa_dast import ProgramaDast
     from app.models.programa_threat_modeling import ProgramaThreatModeling
     from app.models.revision_tercero import RevisionTercero
+    from app.models.vulnerabilidad import Vulnerabilidad
 
 
 class ActivoWeb(SoftDeleteMixin, Base):

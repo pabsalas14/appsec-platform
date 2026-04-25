@@ -13,7 +13,9 @@ class Settings(BaseSettings):
 
     # ─── Required secrets (no defaults — must be set via env / .env) ───
     DATABASE_URL: str = Field(..., description="Async DB URL, e.g. postgresql+asyncpg://user:pass@host/db")
-    SECRET_KEY: str = Field(..., min_length=32, description="JWT signing key — generate with: python -c \"import secrets; print(secrets.token_urlsafe(64))\"")
+    SECRET_KEY: str = Field(
+        ..., min_length=32, description="JWT signing key (min 32 chars)"
+    )
     APPSEC_MASTER_KEY: str = Field(..., description="Encryption key for storing credentials at-rest (A5)")
     ADMIN_EMAIL: str = Field(..., description="Initial admin email")
     ADMIN_PASSWORD: str = Field(..., min_length=10, description="Initial admin password")
@@ -107,9 +109,13 @@ class Settings(BaseSettings):
     @field_validator("SECRET_KEY")
     @classmethod
     def secret_key_not_default(cls, v: str) -> str:
-        insecure = {"dev_secret_key_change_in_production_min32chars!!", "changeme", "secret"}
+        insecure = {
+            "dev_secret_key_change_in_production_min32chars!!",
+            "changeme",
+            "secret",
+        }
         if v.lower() in insecure:
-            raise ValueError("SECRET_KEY must not use a well-known default value. Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(64))\"")
+            raise ValueError("SECRET_KEY must not use a well-known default value")
         return v
 
     @field_validator("AUTH_COOKIE_SAMESITE")

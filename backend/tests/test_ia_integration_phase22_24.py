@@ -76,7 +76,6 @@ class TestPhase22ThreatModeling:
         if resp_threats.status_code == 200:
             threats = resp_threats.json()["data"]
             # Verify STRIDE categories are present
-            stride_categories = {"Spoofing", "Tampering", "Repudiation", "Information Disclosure", "Denial of Service", "Elevation of Privilege"}
             if threats:
                 threat = threats[0]
                 assert "categoria_stride" in threat or "stride" in threat.get("titulo", "").lower(), \
@@ -130,7 +129,7 @@ class TestPhase23FPTriage:
                 "descripcion": "SQL Injection in login",
                 "severidad": "Alta",
                 "tipo_motor": "SAST",
-                "codigo_snippet": "SELECT * FROM users WHERE id = '" + id + "'",
+                "codigo_snippet": "SELECT * FROM users WHERE id = '" + id + "'",  # noqa: S608
             },
             headers=auth_headers,
         )
@@ -280,7 +279,7 @@ class TestPhase24IAProviderSwitching:
         """IA calls should respect timeout setting."""
         # Get current config
         resp_config = await client.get("/api/v1/admin/ia-config", headers=admin_auth_headers)
-        config = resp_config.json()["data"]
+        resp_config.json()["data"]
 
         # Update timeout to short value
         await client.put(

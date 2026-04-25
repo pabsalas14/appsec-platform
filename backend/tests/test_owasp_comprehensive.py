@@ -183,9 +183,6 @@ class TestOWASPS13Injection:
     async def test_s13_csv_sql_injection_blocked(self, client: AsyncClient, auth_headers: dict):
         """CSV import with SQL injection should be rejected or sanitized."""
         # Try to import CSV with SQL injection payload
-        csv_content = """titulo,descripcion,fuente,severidad
-Test'; DROP TABLE vulnerabilidades;--,desc,SAST,ALTA
-"""
         # Note: File upload test - if endpoint exists
         # This is a placeholder; actual endpoint may vary
         # We're validating that input is sanitized before DB insert
@@ -312,7 +309,7 @@ class TestAuditabilityA2SoftDelete:
 
         if resp_audit.status_code == 200:
             logs = resp_audit.json()["data"]
-            delete_logs = [l for l in logs if l.get("action") == "delete"]
+            delete_logs = [log_entry for log_entry in logs if log_entry.get("action") == "delete"]
             assert len(delete_logs) > 0, "A2 FAILED: Deletion not logged"
 
 

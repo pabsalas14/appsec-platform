@@ -151,7 +151,7 @@ async def download_upload(
         raise NotFoundException("Attachment not found")
 
     path = Path(row.storage_path)
-    if not path.exists():
+    if not os.path.exists(row.storage_path):  # noqa: ASYNC240
         raise NotFoundException("Stored file is missing")
     return FileResponse(path, media_type=row.content_type, filename=row.filename)
 

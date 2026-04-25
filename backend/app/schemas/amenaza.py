@@ -9,7 +9,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-CATEGORIAS_STRIDE = {"Spoofing", "Tampering", "Repudiation", "Information Disclosure", "Denial of Service", "Elevation of Privilege"}
+CATEGORIAS_STRIDE = {
+    "Spoofing",
+    "Tampering",
+    "Repudiation",
+    "Information Disclosure",
+    "Denial of Service",
+    "Elevation of Privilege",
+}
 ESTADOS_AMENAZA = {"Abierta", "Mitigada", "Aceptada", "Transferida", "En Revision"}
 
 

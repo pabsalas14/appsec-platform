@@ -143,19 +143,27 @@ api_router.include_router(hallazgo_pipeline.router, prefix="/hallazgo_pipelines"
 api_router.include_router(revision_tercero.router, prefix="/revision_terceros", tags=["Revision_tercero"])
 api_router.include_router(hallazgo_tercero.router, prefix="/hallazgo_terceros", tags=["Hallazgo_tercero"])
 api_router.include_router(programa_sast.router, prefix="/programa_sasts", tags=["Programa_sast"])
-api_router.include_router(actividad_mensual_sast.router, prefix="/actividad_mensual_sasts", tags=["Actividad_mensual_sast"])
+api_router.include_router(
+    actividad_mensual_sast.router, prefix="/actividad_mensual_sasts", tags=["ActividadMensualSast"]
+)
 api_router.include_router(hallazgo_sast.router, prefix="/hallazgo_sasts", tags=["Hallazgo_sast"])
 api_router.include_router(programa_dast.router, prefix="/programa_dasts", tags=["Programa_dast"])
 api_router.include_router(ejecucion_dast.router, prefix="/ejecucion_dasts", tags=["Ejecucion_dast"])
 api_router.include_router(hallazgo_dast.router, prefix="/hallazgo_dasts", tags=["Hallazgo_dast"])
-api_router.include_router(programa_threat_modeling.router, prefix="/programa_threat_modelings", tags=["Programa_threat_modeling"])
-api_router.include_router(sesion_threat_modeling.router, prefix="/sesion_threat_modelings", tags=["Sesion_threat_modeling"])
+api_router.include_router(
+    programa_threat_modeling.router, prefix="/programa_threat_modelings", tags=["ProgThreatModeling"]
+)
+api_router.include_router(
+    sesion_threat_modeling.router, prefix="/sesion_threat_modelings", tags=["SesionThreatModeling"]
+)
 api_router.include_router(amenaza.router, prefix="/amenazas", tags=["Amenaza"])
 api_router.include_router(control_mitigacion.router, prefix="/control_mitigacions", tags=["Control_mitigacion"])
 api_router.include_router(programa_source_code.router, prefix="/programa_source_codes", tags=["Programa_source_code"])
 api_router.include_router(control_source_code.router, prefix="/control_source_codes", tags=["Control_source_code"])
 api_router.include_router(revision_source_code.router, prefix="/revision_source_codes", tags=["Revision_source_code"])
-api_router.include_router(servicio_regulado_registro.router, prefix="/servicio_regulado_registros", tags=["Servicio_regulado_registro"])
+api_router.include_router(
+    servicio_regulado_registro.router, prefix="/servicio_regulado_registros", tags=["ServRegulado"]
+)
 api_router.include_router(regulacion_control.router, prefix="/regulacion_controls", tags=["Regulacion_control"])
 api_router.include_router(evidencia_regulacion.router, prefix="/evidencia_regulacions", tags=["Evidencia_regulacion"])
 api_router.include_router(estado_cumplimiento.router, prefix="/estado_cumplimientos", tags=["Estado_cumplimiento"])
@@ -169,7 +177,9 @@ api_router.include_router(gerencia.router, prefix="/gerencias", tags=["Gerencia"
 # ─── Módulo 5 — Iniciativas ───────────────────────────────────────────────────
 api_router.include_router(iniciativa.router, prefix="/iniciativas", tags=["Iniciativa"])
 api_router.include_router(hito_iniciativa.router, prefix="/hito_iniciativas", tags=["Hito_iniciativa"])
-api_router.include_router(actualizacion_iniciativa.router, prefix="/actualizacion_iniciativas", tags=["Actualizacion_iniciativa"])
+api_router.include_router(
+    actualizacion_iniciativa.router, prefix="/actualizacion_iniciativas", tags=["ActualizacionIniciativa"]
+)
 
 # ─── Módulo 6 — Auditorías ────────────────────────────────────────────────────
 api_router.include_router(auditoria.router, prefix="/auditorias", tags=["Auditoria"])

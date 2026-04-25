@@ -93,7 +93,7 @@ async def put_ia_config(
         action="ia.config.update",
         entity_type="system_settings",
         entity_id=admin_user.id,
-        metadata={"updated_fields": sorted(list(updates.keys()))},
+        metadata={"updated_fields": sorted(updates.keys())},
     )
 
     current = await read_ia_config(db)

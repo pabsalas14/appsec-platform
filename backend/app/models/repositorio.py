@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.pipeline_release import PipelineRelease
     from app.models.programa_sast import ProgramaSast
     from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.vulnerabilidad import Vulnerabilidad
 
 
 class Repositorio(SoftDeleteMixin, Base):

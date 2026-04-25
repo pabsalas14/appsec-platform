@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.revision_tercero import RevisionTercero
     from app.models.service_release import ServiceRelease
     from app.models.servicio_regulado_registro import ServicioReguladoRegistro
+    from app.models.vulnerabilidad import Vulnerabilidad
 
 
 class Servicio(SoftDeleteMixin, Base):

@@ -122,7 +122,7 @@ def test_json_formatter_has_stable_fields():
 
 @pytest.mark.asyncio
 async def test_request_id_is_echoed_when_provided(client: AsyncClient):
-    handler, buf = _install_capture_handler()
+    handler, _buf = _install_capture_handler()
     try:
         resp = await client.get(
             "/api/health", headers={"X-Request-ID": "rid-echo-123"}

@@ -78,12 +78,11 @@ class ExcepcionVulnerabilidadService(
         if not record:
             return None
 
-        if await self._sod_activa(db):
-            if record.user_id == aprobador_id:
-                raise ConflictException(
-                    "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
-                    "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
-                )
+        if await self._sod_activa(db) and record.user_id == aprobador_id:
+            raise ConflictException(
+                "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
+                "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
+            )
 
         record.estado = "Aprobada"
         record.aprobador_id = aprobador_id
@@ -116,12 +115,11 @@ class ExcepcionVulnerabilidadService(
         if not record:
             return None
 
-        if await self._sod_activa(db):
-            if record.user_id == aprobador_id:
-                raise ConflictException(
-                    "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
-                    "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
-                )
+        if await self._sod_activa(db) and record.user_id == aprobador_id:
+            raise ConflictException(
+                "SoD: el aprobador no puede ser el mismo usuario que solicitó la excepción "
+                "(ReglaSoD: vulnerabilidad.aprobar_excepcion)"
+            )
 
         record.estado = "Rechazada"
         record.aprobador_id = aprobador_id

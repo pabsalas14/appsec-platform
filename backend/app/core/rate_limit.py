@@ -38,7 +38,7 @@ def enforce_rate_limit(*, bucket: str, key: str, limit: int, window_seconds: int
 
 
 def enforce_login_cooldown(key: str) -> None:
-    count, locked_until = _login_failures.get(key, (0, 0.0))
+    _count, locked_until = _login_failures.get(key, (0, 0.0))
     remaining = locked_until - time.monotonic()
     if remaining > 0:
         minutes = settings.AUTH_LOCKOUT_MINUTES
