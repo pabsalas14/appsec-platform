@@ -1,15 +1,14 @@
 """Notificacion schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class NotificacionBase(BaseModel):
     titulo: str
-    cuerpo: Optional[str] = None
+    cuerpo: str | None = None
     leida: bool = False
 
 
@@ -22,9 +21,9 @@ class NotificacionCreate(NotificacionBase):
 class NotificacionUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    titulo: Optional[str] = None
-    cuerpo: Optional[str] = None
-    leida: Optional[bool] = None
+    titulo: str | None = None
+    cuerpo: str | None = None
+    leida: bool | None = None
 
 
 class NotificacionRead(NotificacionBase):

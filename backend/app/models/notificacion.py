@@ -1,7 +1,7 @@
 """Notificacion model — owned per-user entity (G2 in-app)."""
 
 import uuid
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
