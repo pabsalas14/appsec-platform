@@ -1,10 +1,11 @@
 /**
- * useQueryBuilder — state management for Query Builder (Fase 1)
+ * useQueryBuilder — State management for Query Builder (Fase 1)
+ * Handles: config, chart type, preview data, API calls
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@/lib/api";
 
 interface QueryConfig {
   base_table: string;
@@ -15,7 +16,20 @@ interface QueryConfig {
   aggregations?: Array<{ field: string; alias?: string }>;
   order_by?: Array<{ field: string; direction: string }>;
   limit?: number;
-};
+}
+
+interface PreviewData {
+  columns: string[];
+  rows: Array<Record<string, unknown>>;
+  row_count: number;
+}
+
+interface SavedWidget {
+  id: string;
+  nombre: string;
+  query_config: QueryConfig;
+  preview_data: PreviewData | null;
+}
 
 export const useQueryBuilder = () => {
   const [config, setConfig] = useState<QueryConfig>({
@@ -29,73 +43,91 @@ export const useQueryBuilder = () => {
     limit: 1000,
   });
 
-  const [chartType, setChartType] = useState("data_table");
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [chartType, setChartType] = useState<string>("data_table");
+  const [widgetName, setWidgetName] = useState<string>("");
 
-  // Fetch schema info (tables, columns, relationships)
-  const { data: schema } = useQuery({
-    queryKey: ["schema-info"],
-    queryFn: () => apiClient.get("/admin/query-builder/schema-info"),
+  // Fetch schema from backend
+  const { data: schema = {} } = useQuery({
+    queryKey: ["query-builder-schema"],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.post("/api/v1/admin/query-builder/schema-info", {});
+        return response.data;
+      } catch (error) {
+        console.error("Failed to fetch schema:", error);
+        return {};
+      }
+    },
   });
 
   // Validate query
   const validateMutation = useMutation({
-    mutationFn: (queryConfig: QueryConfig) =>
-      apiClient.post("/admin/query-builder/validate", queryConfig),
+    mutationFn: async (queryConfig: QueryConfig) => {
+      const response = await apiClient.post("/api/v1/admin/query-builder/validate", queryConfig);
+      return response.data;
+    },
   });
 
   // Execute query
   const executeMutation = useMutation({
-    mutationFn: (queryConfig: QueryConfig) =>
-      apiClient.post("/admin/query-builder/execute", queryConfig),
-    onSuccess: (data) => {
-      setPreviewData(data);
+    mutationFn: async (queryConfig: QueryConfig) => {
+      const response = await apiClient.post("/api/v1/admin/query-builder/execute", {
+        query_config: queryConfig,
+        timeout_seconds: 30,
+        max_rows: 1000,
+      });
+      return response.data as PreviewData;
     },
   });
 
   // Save widget
   const saveMutation = useMutation({
-    mutationFn: (widgetData: { nombre: string; query_config: QueryConfig; chart_type: string }) =>
-      apiClient.post("/admin/query-builder/save", widgetData),
+    mutationFn: async (name: string) => {
+      const response = await apiClient.post("/api/v1/admin/query-builder/save", {
+        nombre: name,
+        descripcion: `Query Builder widget: ${name}`,
+        query_config: config,
+        chart_type: chartType,
+      });
+      return response.data as SavedWidget;
+    },
   });
 
   const updateConfig = useCallback((updates: Partial<QueryConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  const handleValidate = useCallback(async () => {
-    return validateMutation.mutateAsync(config);
+  const validate = useCallback(async () => {
+    await validateMutation.mutateAsync(config);
   }, [config, validateMutation]);
 
-  const handleExecute = useCallback(async () => {
-    return executeMutation.mutateAsync(config);
+  const execute = useCallback(async () => {
+    await executeMutation.mutateAsync(config);
   }, [config, executeMutation]);
 
-  const handleSave = useCallback(
-    (nombre: string) => {
-      return saveMutation.mutateAsync({
-        nombre,
-        query_config: config,
-        chart_type: chartType,
-      });
+  const save = useCallback(
+    async (name: string) => {
+      const result = await saveMutation.mutateAsync(name);
+      setWidgetName("");
+      return result;
     },
-    [config, chartType, saveMutation]
+    [saveMutation]
   );
 
   return {
     config,
     chartType,
-    previewData,
+    previewData: executeMutation.data,
     schema,
+    isLoading: executeMutation.isPending,
+    error: executeMutation.error?.message,
     updateConfig,
     setChartType,
-    validate: handleValidate,
-    execute: handleExecute,
-    save: handleSave,
-    isValidating: validateMutation.isPending,
-    isExecuting: executeMutation.isPending,
+    validate,
+    execute,
+    save,
     isSaving: saveMutation.isPending,
     validationResult: validateMutation.data,
-    error: executeMutation.error || saveMutation.error,
+    isValidating: validateMutation.isPending,
   };
 };

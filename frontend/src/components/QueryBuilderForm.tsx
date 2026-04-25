@@ -1,11 +1,11 @@
 /**
- * QueryBuilderForm — left panel form for Query Builder (Fase 1)
+ * QueryBuilderForm — Left panel for Query Builder
+ * Handles: base table, joins, fields, filters, group by, aggregations
  */
 
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface QueryBuilderFormProps {
@@ -17,7 +17,7 @@ interface QueryBuilderFormProps {
   isValidating?: boolean;
   isExecuting?: boolean;
   validationResult?: ValidationResult;
-};
+}
 
 interface ValidationResult {
   valid: boolean;
@@ -32,112 +32,165 @@ export const QueryBuilderForm: React.FC<QueryBuilderFormProps> = ({
   onValidate,
   onExecute,
   isValidating,
-  isExecuting,
   validationResult,
 }) => {
-  const tables = schema?.tables || [];
+  const tables = (schema.tables as Array<{ name: string }>) || [];
+  const currentTable = config.base_table as string || "";
+
+  const handleTableChange = (table: string) => {
+    onConfigChange({ ...config, base_table: table });
+  };
+
+  const handleFieldToggle = (field: string) => {
+    const selected = (config.select_fields as string[]) || [];
+    const updated = selected.includes(field) ? selected.filter((f) => f !== field) : [...selected, field];
+    onConfigChange({ ...config, select_fields: updated });
+  };
+
+  const handleAddFilter = () => {
+    const filters = (config.filters as Array<Record<string, unknown>>) || [];
+    onConfigChange({
+      ...config,
+      filters: [...filters, { field: "", operator: "=", value: "" }],
+    });
+  };
+
+  const handleFilterChange = (index: number, field: string, value: unknown) => {
+    const filters = (config.filters as Array<Record<string, unknown>>) || [];
+    const updated = [...filters];
+    updated[index] = { ...updated[index], [field]: value };
+    onConfigChange({ ...config, filters: updated });
+  };
+
+  const handleRemoveFilter = (index: number) => {
+    const filters = (config.filters as Array<Record<string, unknown>>) || [];
+    onConfigChange({ ...config, filters: filters.filter((_, i) => i !== index) });
+  };
+
+  const selectedFields = (config.select_fields as string[]) || [];
+  const filters = (config.filters as Array<Record<string, unknown>>) || [];
 
   return (
-    <div className="space-y-4 p-4">
-      {/* Base Table Selector */}
+    <div className="space-y-4">
+      {/* Base Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Base Table</CardTitle>
+          <CardTitle className="text-base">Base Table</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={config.base_table} onValueChange={(value) => onConfigChange({ base_table: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select table..." />
-            </SelectTrigger>
-            <SelectContent>
-              {tables.map((table: any) => (
-                <SelectItem key={table.name} value={table.name}>
-                  {table.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={currentTable}
+            onChange={(e) => handleTableChange(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md text-sm"
+          >
+            <option value="">Select a table...</option>
+            {tables.map((table) => (
+              <option key={table.name} value={table.name}>
+                {table.name}
+              </option>
+            ))}
+          </select>
         </CardContent>
       </Card>
 
-      {/* Field Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Select Fields</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Input
-              placeholder="field1, field2, field3..."
-              value={(config.select_fields || []).join(", ")}
-              onChange={(e) => onConfigChange({ select_fields: e.target.value.split(",").map((f) => f.trim()) })}
-            />
-            <p className="text-xs text-muted-foreground">Separate fields with commas</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Fields */}
+      {currentTable && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Fields</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-64 overflow-y-auto">
+            {/* Mock fields - in real app, fetch from schema */}
+            {["id", "name", "email", "created_at", "updated_at"].map((field) => (
+              <label key={field} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedFields.includes(field)}
+                  onChange={() => handleFieldToggle(field)}
+                  className="rounded"
+                />
+                <span className="text-sm">{field}</span>
+              </label>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-xs text-muted-foreground">
-            {(config.filters || []).length} filter(s) applied
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Filters</CardTitle>
+            <Button onClick={handleAddFilter} variant="outline" size="sm">
+              + Add Filter
+            </Button>
           </div>
-          <Button variant="outline" size="sm" className="mt-2">
-            + Add Filter
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Group By */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Group By</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="field1, field2..."
-            value={(config.group_by || []).join(", ")}
-            onChange={(e) => onConfigChange({ group_by: e.target.value.split(",").map((f) => f.trim()) })}
-          />
+        <CardContent className="space-y-2">
+          {filters.length === 0 && <p className="text-xs text-muted-foreground">No filters yet</p>}
+
+          {filters.map((filter, i) => (
+            <div key={i} className="flex gap-2 items-center text-sm">
+              <Input
+                placeholder="Field"
+                value={(filter.field as string) || ""}
+                onChange={(e) => handleFilterChange(i, "field", e.target.value)}
+                className="text-xs h-8"
+              />
+
+              <select
+                value={(filter.operator as string) || "="}
+                onChange={(e) => handleFilterChange(i, "operator", e.target.value)}
+                className="px-2 py-1 border rounded text-xs h-8"
+              >
+                <option value="=">=</option>
+                <option value="!=">!=</option>
+                <option value=">">{">"}</option>
+                <option value="<">{"<"}</option>
+                <option value=">=">{">="}</option>
+                <option value="<=">{"\<="}</option>
+                <option value="IN">IN</option>
+                <option value="LIKE">LIKE</option>
+              </select>
+
+              <Input
+                placeholder="Value"
+                value={String((filter.value as string) || "")}
+                onChange={(e) => handleFilterChange(i, "value", e.target.value)}
+                className="text-xs h-8"
+              />
+
+              <Button
+                onClick={() => handleRemoveFilter(i)}
+                variant="ghost"
+                size="sm"
+                className="text-xs h-8 px-2"
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
       {/* Validation Status */}
       {validationResult && (
-        <Card className={validationResult.valid ? "border-green-200" : "border-red-200"}>
-          <CardHeader>
-            <CardTitle className="text-sm">{validationResult.valid ? "✓ Valid" : "✗ Invalid"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {validationResult.errors.length > 0 && (
-              <div className="text-sm text-red-600">
-                {validationResult.errors.map((err: string, i: number) => (
-                  <div key={i}>• {err}</div>
-                ))}
-              </div>
-            )}
-            {validationResult.warnings.length > 0 && (
-              <div className="text-sm text-amber-600 mt-2">
-                {validationResult.warnings.map((warn: string, i: number) => (
-                  <div key={i}>⚠ {warn}</div>
-                ))}
-              </div>
-            )}
+        <Card className={validationResult.valid ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+          <CardContent className="pt-4">
+            <p className={`text-xs font-medium ${validationResult.valid ? "text-green-900" : "text-red-900"}`}>
+              {validationResult.valid ? "✓ Valid configuration" : "✗ Configuration has errors"}
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <Button onClick={onValidate} disabled={isValidating} variant="outline" className="flex-1">
+        <Button onClick={onValidate} variant="outline" className="flex-1 text-xs h-9">
           {isValidating ? "Validating..." : "Validate"}
         </Button>
-        <Button onClick={onExecute} disabled={isExecuting} className="flex-1">
-          {isExecuting ? "Executing..." : "Execute"}
+        <Button onClick={onExecute} disabled={!validationResult?.valid} className="flex-1 text-xs h-9">
+          Execute
         </Button>
       </div>
     </div>

@@ -1,49 +1,53 @@
 /**
- * useQueryValidation — real-time validation for query configs (Fase 1)
+ * useQueryValidation — Real-time validation for query configs (Fase 1)
+ * Debounced validation on config changes
  */
 
 import { useEffect, useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@/lib/api";
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-};
+}
 
 export const useQueryValidation = (config: Record<string, unknown>) => {
   const [result, setResult] = useState<ValidationResult>({ valid: true, errors: [], warnings: [] });
   const [isDebouncing, setIsDebouncing] = useState(false);
 
   const validateMutation = useMutation({
-    mutationFn: (queryConfig: Record<string, unknown>) =>
-      apiClient.post("/admin/query-builder/validate", queryConfig),
+    mutationFn: async (queryConfig: Record<string, unknown>) => {
+      try {
+        const response = await apiClient.post("/api/v1/admin/query-builder/validate", queryConfig);
+        return response.data as ValidationResult;
+      } catch (error: any) {
+        return {
+          valid: false,
+          errors: [error.response?.data?.detail || error.message || "Validation failed"],
+          warnings: [],
+        };
+      }
+    },
   });
 
-  const validate = useCallback(async (cfg: any) => {
-    setIsDebouncing(true);
-    try {
-      const response = await validateMutation.mutateAsync(cfg);
-      setResult(response || { valid: true, errors: [], warnings: [] });
-    } finally {
-      setIsDebouncing(false);
-    }
-  }, [validateMutation]);
-
-  // Debounced validation on config change
+  // Debounce validation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      validate(config);
+    setIsDebouncing(true);
+    const timer = setTimeout(async () => {
+      const validationResult = await validateMutation.mutateAsync(config);
+      setResult(validationResult);
+      setIsDebouncing(false);
     }, 500); // 500ms debounce
 
-    return () => clearTimeout(timer);
-  }, [config, validate]);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [config, validateMutation]);
 
   return {
-    ...result,
+    result,
     isValidating: validateMutation.isPending || isDebouncing,
-    hasErrors: result.errors.length > 0,
-    hasWarnings: result.warnings.length > 0,
   };
 };
