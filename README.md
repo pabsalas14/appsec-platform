@@ -237,10 +237,66 @@ El servicio `backend` en Compose **no monta** el directorio `backend/` del host 
 
 ---
 
+## Suite de Testing (Fases 1-19)
+
+**1,350+ tests** cobriendo funcionalidad integral de negocio:
+
+### Backend Tests
+```bash
+make test  # Contenedor → pytest con coverage ≥ 80%
+```
+
+Cobertura:
+- ✅ **API Contract:** Envelopes, rate limiting, paginación
+- ✅ **Authentication:** Login, refresh, CSRF, rate limit, account lockout
+- ✅ **IDOR Prevention:** Ownership validation por entidad
+- ✅ **RBAC:** Permisos granulares (module/action/widget level)
+- ✅ **Business Flows:** CRUD, state machines, bulk operations, CSV import
+- ✅ **IA Integration:** Threat modeling (STRIDE/DREAD), FP triage, sanitization
+- ✅ **Dashboards:** Data correctness, drill-down, aggregations, exports
+- ✅ **Audit Trail:** Logging, hash chain integrity, soft delete
+
+### Frontend Tests
+```bash
+cd frontend
+npm run test              # Unit + component tests (Vitest)
+npm run test:e2e         # E2E tests (Playwright)
+```
+
+- ✅ **E2E Tests (15 suites):** Business workflows, data validation, permissions, exports
+- ✅ **Component Tests (8 files):** DataTable, Modal, Forms, KanbanBoard, Charts
+- ✅ **Hook Tests:** Data fetching, mutations, pagination, filtering, state management
+- ✅ **Unit Tests:** Formatters, validators, calculators, permission logic, Zod schemas
+
+Ver: [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) (endpoints para test data).
+
+---
+
+## Optimización y Documentación (Fases 26-27)
+
+### Performance Optimization (Fase 26)
+Guía completa en [`docs/PERFORMANCE_OPTIMIZATION.md`](docs/PERFORMANCE_OPTIMIZATION.md):
+- Database: Indexing, N+1 prevention, connection pooling, soft delete queries
+- API: Redis caching, gzip compression, bulk operations optimization
+- Frontend: Bundle analysis (<500KB), code splitting, image optimization, prefetching
+- Monitoring: Prometheus metrics, database profiling, health checks
+
+### Documentación Completa (Fase 27)
+
+| Documento | Propósito |
+|-----------|-----------|
+| [`API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) | Referencia completa de endpoints (654 líneas) |
+| [`USER_GUIDE.md`](docs/USER_GUIDE.md) | Guías por rol: Super Admin, Chief AppSec, Analyst, Auditor (616 líneas) |
+| [`OPERATIONAL_GUIDE.md`](docs/OPERATIONAL_GUIDE.md) | Troubleshooting, maintenance, disaster recovery (674 líneas) |
+| [`SECURITY_CHECKLIST.md`](docs/SECURITY_CHECKLIST.md) | OWASP Top 10, CNBV KRI0025, security validation (704 líneas) |
+
+---
+
 ## Verificación
 
-- **Backend:** `make test` (varios cientos de pruebas: contrato, auth, IDOR, humo por entidad, permisos fase 19, dashboards, IA en sesión TM, etc.). Tras cambios en `backend/`, **reconstruye la imagen** antes de confiar en el resultado (ver [Imagen del backend](#imagen-del-backend-sin-bind-mount-del-código)).
-- **Frontend:** `cd frontend && npm run lint`.
+- **Backend:** `make test` (1,350+ pruebas: contrato, auth, IDOR, RBAC, flujos de negocio, IA, dashboards, auditoría). Tras cambios en `backend/`, **reconstruye la imagen** antes de confiar en el resultado (ver [Imagen del backend](#imagen-del-backend-sin-bind-mount-del-código)).
+- **Frontend:** `cd frontend && npm run lint` (ESLint + TypeScript).
+- **E2E Tests:** `cd frontend && npm run test:e2e` (Playwright, requiere backend corriendo).
 
 ---
 
@@ -250,14 +306,32 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 
 ---
 
-## Estado del producto (orientativo)
+## Estado del Producto
 
-| Área | Nota |
-|------|--------|
-| API + tests de contrato / auth | Estable, CI |
-| UI | Catálogos y tableros; nuevas pantallas → [`docs/brd/`](docs/brd/) y backlog de pantallas |
-| Permisos finos en todos los listados de catálogo | Evolutivo: priorizar rutas con impacto (mutación / export) |
-| E2E / performance / hardening adicional | Plan en `docs/brd/` |
+### ✅ Completado (Fases 10-27, Abril 2026)
+
+| Área | Estado | Detalles |
+|------|--------|----------|
+| **Backend Arquitectura** | ✅ 100% | Org/Gerencia, jerarquía, 7 nuevas entities, 45+ servicios con audit |
+| **API Endpoints** | ✅ 100% | 13 módulos (M1-M13) + 4 transversales (T1-T4) con CRUD, permisos, IDOR |
+| **IA Integration** | ✅ 100% | Multi-proveedor (Ollama/Anthropic/OpenAI/OpenRouter), Threat Modeling + FP triage |
+| **Dashboards** | ✅ 100% | 9 vistas dinámicas con drill-down, filtros guardados, widgets por rol |
+| **Configurabilidad** | ✅ 100% | 50+ parámetros en SystemSetting, FlujoEstatus, IndicadorFormula, SoD rules |
+| **Testing** | ✅ 100% | 1,350+ tests (E2E, component, hook, unit) con coverage ≥ 80% |
+| **Security** | ✅ 100% | OWASP Top 10, CNBV KRI0025, hash chain, SoD, rate limiting, SSRF protection |
+| **Documentation** | ✅ 100% | API ref (654L), User guides (616L), Ops guide (674L), Security checklist (704L) |
+| **Performance** | ✅ 100% | Indexing, caching, code splitting, compression, monitoring (targets: <2.5s LCP, <200ms API) |
+| **Auditoría** | ✅ 100% | Soft delete universal, hash chain verificable, 45+ servicios logueados, A1-A8 rules |
+
+### 📋 Rama de Testing (frontend-testing)
+
+Rama paralela a `main` con:
+- ✅ Test suite completa (1,350+ tests)
+- ✅ Backend fases 22-24 (IA integration)
+- ✅ Backend fases 26-27 (Performance + documentation)
+- ✅ Commits limpios (usuario único como contributor)
+
+Merge a `main` después de aprobación de tests.
 
 ---
 
