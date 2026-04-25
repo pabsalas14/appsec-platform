@@ -188,5 +188,5 @@ async def rechazar_etapa(
         notas=body.notas,
     )
     if not updated:
-        return error("Etapa no encontrada", status_code=404)
+        raise NotFoundException("Etapa no encontrada")
     return success(EtapaReleaseRead.model_validate(updated).model_dump(mode="json"))
