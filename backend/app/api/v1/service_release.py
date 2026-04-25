@@ -33,7 +33,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_service_releases_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.RELEASES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta releases del usuario a CSV y registra auditoría A7."""
     items = await service_release_svc.list(db, filters={"user_id": current_user.id})

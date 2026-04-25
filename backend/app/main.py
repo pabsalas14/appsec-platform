@@ -85,11 +85,10 @@ async def _validation_exception_handler(
     """Render Pydantic/FastAPI request validation errors as 422 envelope."""
     return JSONResponse(
         status_code=422,
-        content={
-            "status": "error",
-            "detail": jsonable_encoder(exc.errors()),
-            "code": "RequestValidationError",
-        },
+        content=error_response(
+            jsonable_encoder(exc.errors()),
+            code="RequestValidationError",
+        ),
     )
 
 

@@ -18,10 +18,38 @@ router = APIRouter()
 async def list_filtros_guardados(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    page: int = 1,
+    page_size: int = 50,
 ):
-    """List filtros guardados owned by the current user."""
-    items = await filtro_guardado_svc.list(db, filters={"usuario_id": current_user.id})
-    return success([FiltroGuardadoRead.model_validate(x).model_dump(mode="json") for x in items])
+    """List filtros guardados owned by the current user (paginated)."""
+    from sqlalchemy import select, func
+    from app.core.response import paginated
+
+    # Get paginated items
+    stmt = select(FiltroGuardado).where(
+        FiltroGuardado.usuario_id == current_user.id,
+        FiltroGuardado.deleted_at.is_(None),
+    ).order_by(FiltroGuardado.created_at.desc())
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+
+    # Get total count
+    count_stmt = select(func.count(FiltroGuardado.id)).where(
+        FiltroGuardado.usuario_id == current_user.id,
+        FiltroGuardado.deleted_at.is_(None),
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one_or_none() or 0
+
+    return paginated(
+        [FiltroGuardadoRead.model_validate(x).model_dump(mode="json") for x in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
 
 @router.get("/{id}")

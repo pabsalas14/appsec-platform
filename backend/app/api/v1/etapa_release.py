@@ -14,8 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.exceptions import NotFoundException
 from app.core.permissions import P
-from app.core.response import error, success
+from app.core.response import success
 from app.models.etapa_release import EtapaRelease
 from app.models.user import User
 from app.schemas.etapa_release import (
@@ -34,7 +35,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_etapa_releases_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.RELEASES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta etapas de releases del usuario a CSV y registra auditoría A7."""
     items = await etapa_release_svc.list(db, filters={"user_id": current_user.id})
@@ -164,7 +165,7 @@ async def aprobar_etapa(
         notas=body.notas,
     )
     if not updated:
-        return error("Etapa no encontrada", status_code=404)
+        raise NotFoundException("Etapa no encontrada")
     return success(EtapaReleaseRead.model_validate(updated).model_dump(mode="json"))
 
 

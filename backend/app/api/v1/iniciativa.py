@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_iniciativas_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.INITIATIVES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta iniciativas del usuario a CSV y registra auditoría A7."""
     items = await iniciativa_svc.list(db, filters={"user_id": current_user.id})
@@ -73,10 +73,38 @@ async def export_iniciativas_csv(
 async def list_iniciativas(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    page: int = 1,
+    page_size: int = 50,
 ):
-    """List iniciativas owned by the current user."""
-    items = await iniciativa_svc.list(db, filters={"user_id": current_user.id})
-    return success([IniciativaRead.model_validate(x).model_dump(mode="json") for x in items])
+    """List iniciativas owned by the current user (paginated)."""
+    from sqlalchemy import select, func
+    from app.core.response import paginated
+
+    # Get paginated items
+    stmt = select(Iniciativa).where(
+        Iniciativa.user_id == current_user.id,
+        Iniciativa.deleted_at.is_(None),
+    ).order_by(Iniciativa.created_at.desc())
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+
+    # Get total count
+    count_stmt = select(func.count(Iniciativa.id)).where(
+        Iniciativa.user_id == current_user.id,
+        Iniciativa.deleted_at.is_(None),
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one_or_none() or 0
+
+    return paginated(
+        [IniciativaRead.model_validate(x).model_dump(mode="json") for x in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
 
 @router.get("/{id}")

@@ -55,8 +55,7 @@ const SECRET_KEYS = new Set([
 function redact<T>(value: T, depth = 0): T {
   if (depth > 6 || value === null || value === undefined) return value;
   if (Array.isArray(value)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (value as any[]).map((v) => redact(v, depth + 1)) as unknown as T;
+    return (value as unknown[]).map((v) => redact(v, depth + 1)) as T;
   }
   if (typeof value === 'object') {
     const out: Record<string, unknown> = {};

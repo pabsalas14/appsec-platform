@@ -74,7 +74,7 @@ def _parse_triage_output(
 @router.get("/export.csv")
 async def export_vulnerabilidades_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.VULNERABILITIES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta hallazgos del usuario a CSV; deja huella en auditoría (A7)."""
     items = await vulnerabilidad_svc.list(db, filters={"user_id": current_user.id})
@@ -131,17 +131,58 @@ async def export_vulnerabilidades_csv(
 async def list_vulnerabilidads(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    page: int = 1,
+    page_size: int = 50,
 ):
-    """List vulnerabilidads owned by the current user."""
-    items = await vulnerabilidad_svc.list(db, filters={"user_id": current_user.id})
-    return success([VulnerabilidadRead.model_validate(x).model_dump(mode="json") for x in items])
+    """List vulnerabilidads owned by the current user (paginated)."""
+    from sqlalchemy import select, func
+    from app.core.response import paginated
+
+    # Get paginated items
+    stmt = select(Vulnerabilidad).where(
+        Vulnerabilidad.user_id == current_user.id,
+        Vulnerabilidad.deleted_at.is_(None),
+    ).order_by(Vulnerabilidad.created_at.desc())
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+
+    # Get total count
+    count_stmt = select(func.count(Vulnerabilidad.id)).where(
+        Vulnerabilidad.user_id == current_user.id,
+        Vulnerabilidad.deleted_at.is_(None),
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one_or_none() or 0
+
+    return paginated(
+        [VulnerabilidadRead.model_validate(x).model_dump(mode="json") for x in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
 
 @router.get("/{id}")
 async def get_vulnerabilidad(
-    entity: Vulnerabilidad = Depends(require_ownership(vulnerabilidad_svc)),
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Get a single owned vulnerabilidad by ID (404 if not owned)."""
+    # Validate UUID format
+    try:
+        entity_id = UUID(id)
+    except (ValueError, TypeError):
+        raise NotFoundException(f"Invalid ID format: {id}")
+
+    # Fetch entity
+    entity = await vulnerabilidad_svc.get(db, entity_id, scope={"user_id": current_user.id})
+    if not entity or entity.user_id != current_user.id:
+        raise NotFoundException(f"Vulnerabilidad {id} not found")
+
     return success(VulnerabilidadRead.model_validate(entity).model_dump(mode="json"))
 
 

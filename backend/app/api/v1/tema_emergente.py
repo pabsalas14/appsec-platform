@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_temas_emergentes_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.EMERGING_THEMES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta temas emergentes a CSV; auditoría A7."""
     items = await tema_emergente_svc.list(db, filters={"user_id": current_user.id})
@@ -67,10 +67,38 @@ async def export_temas_emergentes_csv(
 async def list_temas_emergentes(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    page: int = 1,
+    page_size: int = 50,
 ):
-    """List temas emergentes owned by the current user."""
-    items = await tema_emergente_svc.list(db, filters={"user_id": current_user.id})
-    return success([TemaEmergenteRead.model_validate(x).model_dump(mode="json") for x in items])
+    """List temas emergentes owned by the current user (paginated)."""
+    from sqlalchemy import select, func
+    from app.core.response import paginated
+
+    # Get paginated items
+    stmt = select(TemaEmergente).where(
+        TemaEmergente.user_id == current_user.id,
+        TemaEmergente.deleted_at.is_(None),
+    ).order_by(TemaEmergente.created_at.desc())
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+
+    # Get total count
+    count_stmt = select(func.count(TemaEmergente.id)).where(
+        TemaEmergente.user_id == current_user.id,
+        TemaEmergente.deleted_at.is_(None),
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one_or_none() or 0
+
+    return paginated(
+        [TemaEmergenteRead.model_validate(x).model_dump(mode="json") for x in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
 
 @router.get("/{id}")

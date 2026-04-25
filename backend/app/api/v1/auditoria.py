@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_auditorias_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.AUDITS.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta auditorías del usuario a CSV; auditoría A7."""
     items = await auditoria_svc.list(db, filters={"user_id": current_user.id})

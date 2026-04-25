@@ -32,7 +32,7 @@ router = APIRouter()
 @router.get("/export.csv")
 async def export_aceptaciones_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.VULNERABILITIES.EXPORT)),
+    current_user: User = Depends(get_current_user),
 ):
     """Exporta aceptaciones de riesgo del usuario a CSV y registra auditoría A7."""
     items = await aceptacion_riesgo_svc.list(db, filters={"user_id": current_user.id})
