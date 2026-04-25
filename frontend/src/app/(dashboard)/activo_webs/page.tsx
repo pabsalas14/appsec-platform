@@ -1,9 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Download, ExternalLink, FileSpreadsheet, Link2, Loader2, Pencil, Plus, Trash2, Upload } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { ArrowDownAZ, ArrowUpAZ, ExternalLink, Link2, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -38,6 +37,8 @@ import {
   PageWrapper,
   Select,
 } from '@/components/ui';
+import { CatalogCsvToolbar } from '@/components/catalog/CatalogCsvToolbar';
+import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import { useCelulas } from '@/hooks/useCelulas';
 import {
   useActivoWebs,
@@ -48,7 +49,7 @@ import {
 import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
-import { downloadCsvFromApi, importCsvToApi } from '@/lib/csvDownload';
+import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { logger } from '@/lib/logger';
 import {
   ActivoWebCreateSchema,
@@ -254,15 +255,13 @@ function ActivoWebForm({
 }
 
 export default function ActivoWebsPage() {
-  const qc = useQueryClient();
-  const importInputRef = useRef<HTMLInputElement>(null);
-  const [csvBusy, setCsvBusy] = useState(false);
   const { data: rows, isLoading, isError } = useActivoWebs();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: orgs } = useOrganizacions();
   const { data: celulas } = useCelulas();
   const [q, setQ] = useState('');
+  const [nombreOrderDesc, setNombreOrderDesc] = useState(false);
   const [gerenciaF, setGerenciaF] = useState<string>(ALL);
   const [orgF, setOrgF] = useState<string>(ALL);
   const [celulaF, setCelulaF] = useState<string>(ALL);
@@ -333,45 +332,6 @@ export default function ActivoWebsPage() {
     return fromFilter;
   }, [filteredCelulas, orgName, edit, celulas]);
 
-  const onExportCsv = async () => {
-    try {
-      await downloadCsvFromApi('/activo_webs/export.csv', 'activo_webs.csv');
-      toast.success('CSV exportado');
-    } catch (e) {
-      logger.error('activo_web.csv_export.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'No se pudo exportar'));
-    }
-  };
-
-  const onTemplateCsv = async () => {
-    try {
-      await downloadCsvFromApi('/activo_webs/import-template.csv', 'activo_webs_import_template.csv');
-      toast.success('Plantilla descargada');
-    } catch (e) {
-      logger.error('activo_web.csv_template.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'No se pudo descargar la plantilla'));
-    }
-  };
-
-  const onPickImport = () => importInputRef.current?.click();
-
-  const onImportFile = async (fileList: FileList | null) => {
-    const file = fileList?.[0];
-    if (!file) return;
-    setCsvBusy(true);
-    try {
-      await importCsvToApi('/activo_webs/import', file);
-      toast.success('Importación aplicada');
-      await qc.invalidateQueries({ queryKey: ['activo_webs'] });
-    } catch (e) {
-      logger.error('activo_web.csv_import.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'Error al importar'));
-    } finally {
-      setCsvBusy(false);
-      if (importInputRef.current) importInputRef.current.value = '';
-    }
-  };
-
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows || [])
@@ -389,6 +349,17 @@ export default function ActivoWebsPage() {
       });
   }, [rows, q, celulaF, celulaShort]);
 
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      const cmp = a.nombre.localeCompare(b.nombre, 'es');
+      return nombreOrderDesc ? -cmp : cmp;
+    });
+    return list;
+  }, [filtered, nombreOrderDesc]);
+
+  const list = useClientPagedList(sorted, [q, nombreOrderDesc, celulaF, gerenciaF, orgF]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
@@ -396,31 +367,12 @@ export default function ActivoWebsPage() {
         description="Expuestos vía URL, asignados a célula; base para riesgo y pruebas de seguridad."
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={(e) => void onImportFile(e.target.files)}
+          <CatalogCsvToolbar
+            basePath="/activo_webs"
+            exportFileName="activo_webs.csv"
+            templateFileName="activo_webs_import_template.csv"
+            invalidateQueries={[['activo_webs']]}
           />
-          <Button type="button" variant="outline" size="sm" onClick={() => void onExportCsv()}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => void onTemplateCsv()}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Plantilla
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={csvBusy}
-            onClick={onPickImport}
-          >
-            {csvBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Importar
-          </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -498,14 +450,20 @@ export default function ActivoWebsPage() {
               />
             </div>
           </div>
-          <div className="max-w-md">
-            <label className="text-sm font-medium">Buscar</label>
-            <Input
-              className="mt-1"
-              placeholder="Nombre, URL, ambiente, tipo…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
+          <div className="mb-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="max-w-md flex-1">
+              <label className="text-sm font-medium">Buscar</label>
+              <Input
+                className="mt-1"
+                placeholder="Nombre, URL, ambiente, tipo…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setNombreOrderDesc((v) => !v)}>
+              {nombreOrderDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
+              Orden: {nombreOrderDesc ? 'Z-A' : 'A-Z'}
+            </Button>
           </div>
 
           {isLoading && (
@@ -517,7 +475,7 @@ export default function ActivoWebsPage() {
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay activos web. Crea uno o defina células primero.</p>
           )}
-          {filtered && filtered.length > 0 && (
+          {list.total > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
@@ -531,7 +489,7 @@ export default function ActivoWebsPage() {
                 </tr>
               </DataTableHead>
               <DataTableBody>
-                {filtered.map((a) => {
+                {list.paged.map((a) => {
                   const c = celulas?.find((x) => x.id === a.celula_id);
                   const o = c ? orgName.get(c.organizacion_id) : undefined;
                   const g = o ? gerName.get(o.gerencia_id) : undefined;
@@ -612,6 +570,19 @@ export default function ActivoWebsPage() {
               </DataTableBody>
             </DataTable>
           )}
+          <CatalogPaginationBar
+            page={list.page}
+            pageCount={list.pageCount}
+            total={list.total}
+            from={list.from}
+            to={list.to}
+            pageSize={list.pageSize}
+            onPageChange={list.setPage}
+            onPageSizeChange={(n) => {
+              list.setPageSize(n);
+              list.setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 

@@ -45,6 +45,8 @@ export default function SesionThreatModelingDetailPage() {
   const [backlog, setBacklog] = useState('');
   const [planTrabajo, setPlanTrabajo] = useState('');
   const [activoSecId, setActivoSecId] = useState('');
+  const [activosRelacionadosIds, setActivosRelacionadosIds] = useState<string[]>([]);
+  const [adjuntosJson, setAdjuntosJson] = useState('[]');
 
   const [contextoAdicional, setContextoAdicional] = useState('');
   const [dryRun, setDryRun] = useState(true);
@@ -58,6 +60,8 @@ export default function SesionThreatModelingDetailPage() {
     setBacklog(sesion.backlog_tareas ?? '');
     setPlanTrabajo(sesion.plan_trabajo ?? '');
     setActivoSecId(sesion.activo_web_secundario_id ?? '');
+    setActivosRelacionadosIds(sesion.activos_web_relacionados_ids ?? []);
+    setAdjuntosJson(JSON.stringify(sesion.adjuntos_referencias ?? [], null, 2));
   }, [sesion]);
 
   const activoOptions = useMemo(
@@ -224,17 +228,72 @@ export default function SesionThreatModelingDetailPage() {
                 options={activoOptions}
               />
             </div>
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Activos web relacionados (multiples)</span>
+              <div className="max-h-36 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                {(activoWebs ?? []).map((a) => {
+                  const checked = activosRelacionadosIds.includes(a.id);
+                  return (
+                    <label key={a.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setActivosRelacionadosIds((prev) =>
+                            e.target.checked ? [...prev, a.id] : prev.filter((x) => x !== a.id),
+                          );
+                        }}
+                      />
+                      <span>{a.nombre}</span>
+                    </label>
+                  );
+                })}
+                {(activoWebs ?? []).length === 0 && (
+                  <p className="text-xs text-muted-foreground">No hay activos web disponibles.</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adjuntos_referencias">Adjuntos (JSON)</Label>
+              <Textarea
+                id="adjuntos_referencias"
+                rows={4}
+                className="font-mono text-xs"
+                value={adjuntosJson}
+                onChange={(e) => setAdjuntosJson(e.target.value)}
+                spellCheck={false}
+                placeholder='[{"tipo":"evidencia","url":"https://...","nombre":"captura.png"}]'
+              />
+              <p className="text-xs text-muted-foreground">Lista JSON de adjuntos/referencias de la sesion.</p>
+            </div>
             <Button
               type="button"
               className="gap-2"
               disabled={updateSesion.isPending}
               onClick={() => {
+                let adjuntosPayload: Array<Record<string, unknown>> | null = null;
+                const raw = adjuntosJson.trim();
+                if (raw && raw !== '[]') {
+                  try {
+                    const parsed = JSON.parse(raw) as unknown;
+                    if (!Array.isArray(parsed)) {
+                      toast.error('Adjuntos: debe ser un arreglo JSON.');
+                      return;
+                    }
+                    adjuntosPayload = parsed as Array<Record<string, unknown>>;
+                  } catch {
+                    toast.error('Adjuntos: JSON no valido.');
+                    return;
+                  }
+                }
                 updateSesion.mutate(
                   {
                     id: sesion.id,
                     backlog_tareas: backlog.trim() || null,
                     plan_trabajo: planTrabajo.trim() || null,
                     activo_web_secundario_id: activoSecId || null,
+                    activos_web_relacionados_ids: activosRelacionadosIds.length ? activosRelacionadosIds : null,
+                    adjuntos_referencias: adjuntosPayload,
                   },
                   {
                     onSuccess: () => toast.success('Sesión actualizada'),

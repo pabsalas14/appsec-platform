@@ -2615,6 +2615,26 @@ export interface paths {
         patch: operations["update_programa_sast_api_v1_programa_sasts__id__patch"];
         trace?: never;
     };
+    "/api/v1/actividad_mensual_sasts/config/scoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Actividad Mensual Sast Scoring Config
+         * @description Expose B1 config: sub-estados sugeridos y pesos de severidad.
+         */
+        get: operations["get_actividad_mensual_sast_scoring_config_api_v1_actividad_mensual_sasts_config_scoring_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/actividad_mensual_sasts/{id}/sincronizar-hallazgos": {
         parameters: {
             query?: never;
@@ -6760,6 +6780,8 @@ export interface components {
              * @description Activo | Inactivo | Completado | Cancelado
              */
             estado: string;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaSourceCodeUpdate
@@ -6776,6 +6798,8 @@ export interface components {
             repositorio_id?: string | null;
             /** Estado */
             estado?: string | null;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaThreatModelingCreate
@@ -7222,6 +7246,10 @@ export interface components {
             plan_trabajo?: string | null;
             /** Activo Web Secundario Id */
             activo_web_secundario_id?: string | null;
+            /** Activos Web Relacionados Ids */
+            activos_web_relacionados_ids?: string[] | null;
+            /** Adjuntos Referencias */
+            adjuntos_referencias?: Record<string, never>[] | null;
         };
         /**
          * SesionThreatModelingIASuggestRequest
@@ -7262,6 +7290,10 @@ export interface components {
             plan_trabajo?: string | null;
             /** Activo Web Secundario Id */
             activo_web_secundario_id?: string | null;
+            /** Activos Web Relacionados Ids */
+            activos_web_relacionados_ids?: string[] | null;
+            /** Adjuntos Referencias */
+            adjuntos_referencias?: Record<string, never>[] | null;
         };
         /**
          * SubdireccionCreate
@@ -14707,6 +14739,40 @@ export interface operations {
                 "application/json": components["schemas"]["ProgramaSastUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_actividad_mensual_sast_scoring_config_api_v1_actividad_mensual_sasts_config_scoring_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

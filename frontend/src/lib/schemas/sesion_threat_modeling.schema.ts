@@ -14,6 +14,8 @@ export const SesionThreatModelingSchema = z.object({
   backlog_tareas: z.string().nullable().optional(),
   plan_trabajo: z.string().nullable().optional(),
   activo_web_secundario_id: z.string().uuid().nullable().optional(),
+  activos_web_relacionados_ids: z.array(z.string().uuid()).nullable().optional(),
+  adjuntos_referencias: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -28,6 +30,8 @@ export const SesionThreatModelingCreateSchema = z.object({
   backlog_tareas: z.string().nullable().optional(),
   plan_trabajo: z.string().nullable().optional(),
   activo_web_secundario_id: z.string().uuid().nullable().optional(),
+  activos_web_relacionados_ids: z.array(z.string().uuid()).nullable().optional(),
+  adjuntos_referencias: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 export const SesionThreatModelingUpdateSchema = SesionThreatModelingCreateSchema.partial();

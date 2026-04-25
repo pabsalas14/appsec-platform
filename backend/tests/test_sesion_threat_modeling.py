@@ -6,7 +6,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.services.ia_provider import IAResult
-from tests.graph_helpers import create_programa_tm_id, create_sesion_tm_id
+from tests.graph_helpers import create_activo_web_id, create_programa_tm_id, create_sesion_tm_id
 
 BASE_URL = "/api/v1/sesion_threat_modelings"
 
@@ -14,6 +14,7 @@ BASE_URL = "/api/v1/sesion_threat_modelings"
 @pytest.mark.asyncio
 async def test_create_sesion_threat_modeling(client: AsyncClient, auth_headers: dict):
     pt = await create_programa_tm_id(client, auth_headers)
+    aw = await create_activo_web_id(client, auth_headers)
     SAMPLE_PAYLOAD = {
         "programa_tm_id": pt,
         "fecha": "2024-03-01T10:00:00+00:00",
@@ -21,10 +22,15 @@ async def test_create_sesion_threat_modeling(client: AsyncClient, auth_headers: 
         "contexto": "API review",
         "estado": "Completada",
         "ia_utilizada": False,
+        "activo_web_secundario_id": aw,
+        "activos_web_relacionados_ids": [aw],
+        "adjuntos_referencias": [{"tipo": "evidencia", "url": "https://example.org/evidencia-1"}],
     }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
+    assert resp.json()["data"]["activo_web_secundario_id"] == aw
+    assert resp.json()["data"]["activos_web_relacionados_ids"] == [aw]
 
 
 @pytest.mark.asyncio

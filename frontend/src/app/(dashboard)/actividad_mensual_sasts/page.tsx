@@ -41,6 +41,7 @@ import {
 import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import {
   useActividadMensualSasts,
+  useActividadMensualSastScoringConfig,
   useCreateActividadMensualSast,
   useDeleteActividadMensualSast,
   useSincronizarHallazgosActividadMensualSast,
@@ -63,10 +64,12 @@ function FormFields({
   initial,
   onSuccess,
   progOptions,
+  subEstadoOptions,
 }: {
   initial?: ActividadMensualSast | null;
   onSuccess: () => void;
   progOptions: { value: string; label: string }[];
+  subEstadoOptions: string[];
 }) {
   const createMut = useCreateActividadMensualSast();
   const updateMut = useUpdateActividadMensualSast();
@@ -180,7 +183,19 @@ function FormFields({
       ))}
       <div>
         <label className="text-sm font-medium">Sub-estado</label>
-        <Input className="mt-1" placeholder="P. ej. Pendiente, En análisis…" {...form.register('sub_estado')} />
+        {subEstadoOptions.length > 0 ? (
+          <Select
+            className="mt-1"
+            value={form.watch('sub_estado') ?? ''}
+            onChange={(e) => form.setValue('sub_estado', e.target.value || null)}
+            options={[
+              { value: '', label: '— Sin sub-estado' },
+              ...subEstadoOptions.map((s) => ({ value: s, label: s })),
+            ]}
+          />
+        ) : (
+          <Input className="mt-1" placeholder="P. ej. Pendiente, En análisis…" {...form.register('sub_estado')} />
+        )}
       </div>
       {isEdit && initial && (
         <p className="text-xs text-muted-foreground">
@@ -209,6 +224,7 @@ function FormFields({
 export default function ActividadMensualSastsPage() {
   const { data: rows, isLoading, isError } = useActividadMensualSasts();
   const { data: progs } = useProgramaSasts();
+  const { data: scoringCfg } = useActividadMensualSastScoringConfig();
   const [q, setQ] = useState('');
   const [sortDesc, setSortDesc] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -266,7 +282,11 @@ export default function ActividadMensualSastsPage() {
             <DialogHeader>
               <DialogTitle>Nueva actividad</DialogTitle>
             </DialogHeader>
-            <FormFields onSuccess={() => setCreateOpen(false)} progOptions={progOptions} />
+            <FormFields
+              onSuccess={() => setCreateOpen(false)}
+              progOptions={progOptions}
+              subEstadoOptions={scoringCfg?.sub_estados_mes ?? []}
+            />
           </DialogContent>
         </Dialog>
       </PageHeader>
@@ -408,7 +428,13 @@ export default function ActividadMensualSastsPage() {
             <DialogTitle>Editar actividad</DialogTitle>
           </DialogHeader>
           {edit && (
-            <FormFields key={edit.id} initial={edit} onSuccess={() => setEdit(null)} progOptions={progOptions} />
+            <FormFields
+              key={edit.id}
+              initial={edit}
+              onSuccess={() => setEdit(null)}
+              progOptions={progOptions}
+              subEstadoOptions={scoringCfg?.sub_estados_mes ?? []}
+            />
           )}
         </DialogContent>
       </Dialog>

@@ -8,10 +8,10 @@ Leyenda: **Hecho** = cumple el espíritu del requisito con evidencia. **Parcial*
 |----|------------------------|--------|----------------------------|
 | P1 | §1 Objetivo — plataforma unificada | Parcial | Hay consolidación; falta cierre de todos los módulos operativos con la misma calidad. |
 | P2 | §2 Principios (config-driven, schema dinámico, inventario, drill-down, filtros) | Parcial | Catálogos y permisos avanzan; **Schema Builder** dinámico de campos por entidad no está a nivel BRD. |
-| P3 | §3.1–3.4 Jerarquía + inventarios (CRUD, import+template+export) | Parcial | **Hecho:** API + UI de export/plantilla/import en **repositorios** y **activos web** (permisos `inventory.*`). Otros catálogos masivos según prioridad BRD. |
-| P4 | §4 Motor de scoring mensual | Parcial | Entidades/ servicios; **actividades/pesos **configurables en UI y reporte 100% mes** según BRD: revisar. |
-| P5 | §5.1–5.2 Programas SAST/SCA/CDS, DAST | Parcial | **+** export CSV programas SAST y **DAST** bajo `programs.export` + PBAC + A7. **Pend.:** campos por motor al BRD, SCA/CDS según narrativa. |
-| P6 | §5.3 MDA (amenazas, activos, plan, IA) | Parcial | Sesiones TM + IA + amenazas; **activos múltiples, plan de trabajo, artefactos** al alcance BRD. |
+| P3 | §3.1–3.4 Jerarquía + inventarios (CRUD, import+template+export) | Hecho | CRUD UI homogéneo (tabla, búsqueda, orden, paginación) + import/template/export CSV en catálogos/inventario §3 (incluye jerarquía org, servicios, repositorios, activos web, tipos/controles) con pruebas A4 de cadena y ownership. |
+| P4 | §4 Motor de scoring mensual | Hecho | Score mensual SAST recalculado con `scoring.pesos_severidad`, sub-estados configurables (`scoring.sast_mensual`), endpoint de configuración y sincronización automática/manual de hallazgos. |
+| P5 | §5.1–5.2 Programas SAST/SCA/CDS, DAST | Hecho | Programas SAST, DAST y Source Code con `metadatos_motor` JSON (API + UI), import/export y tipos OpenAPI regenerados; campos de motor administrables sin cambios de código. |
+| P6 | §5.3 MDA (amenazas, activos, plan, IA) | Hecho | Sesión TM con IA + amenazas, backlog, plan, activo secundario, activos múltiples relacionados y adjuntos/referencias JSON; cobertura de pruebas de sesión/IA mantenida. |
 | P7 | §5.4 Código fuente (GitHub/Atlassian) | Parcial | Controles/ inventarios en modelo; **checklists y cierre operativo** según frentes. |
 | P8 | §5.5 Servicios regulados | Parcial | Registros; **cierre multi-jefatura** según narrativa. |
 | P9 | §6 MAST | Parcial | Entidad/ rutas; **UI y schema dinámico** al nivel BRD. |

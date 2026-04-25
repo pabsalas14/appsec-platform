@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -54,6 +54,8 @@ class SesionThreatModeling(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
+    activos_web_relacionados_ids: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    adjuntos_referencias: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

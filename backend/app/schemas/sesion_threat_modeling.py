@@ -1,6 +1,7 @@
 """SesionThreatModeling schemas — Pydantic v2."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,6 +19,8 @@ class SesionThreatModelingBase(BaseModel):
     backlog_tareas: str | None = None
     plan_trabajo: str | None = None
     activo_web_secundario_id: UUID | None = None
+    activos_web_relacionados_ids: list[str] | None = None
+    adjuntos_referencias: list[dict[str, Any]] | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_SESION:
@@ -41,6 +44,8 @@ class SesionThreatModelingUpdate(BaseModel):
     backlog_tareas: str | None = None
     plan_trabajo: str | None = None
     activo_web_secundario_id: UUID | None = None
+    activos_web_relacionados_ids: list[str] | None = None
+    adjuntos_referencias: list[dict[str, Any]] | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_SESION:

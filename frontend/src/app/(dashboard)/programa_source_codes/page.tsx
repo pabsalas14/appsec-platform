@@ -69,6 +69,7 @@ function FormFields({
   const createMut = useCreateProgramaSourceCode();
   const updateMut = useUpdateProgramaSourceCode();
   const isEdit = Boolean(initial);
+  const [motorJson, setMotorJson] = useState('{}');
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: initial
@@ -78,6 +79,7 @@ function FormFields({
           descripcion: initial.descripcion ?? null,
           repositorio_id: initial.repositorio_id,
           estado: initial.estado,
+          metadatos_motor: initial.metadatos_motor ?? null,
         }
       : {
           nombre: '',
@@ -85,6 +87,7 @@ function FormFields({
           descripcion: null,
           repositorio_id: repoOptions[0]?.value ?? '',
           estado: 'Activo',
+          metadatos_motor: null,
         },
   });
   const pending = createMut.isPending || updateMut.isPending;
@@ -95,13 +98,37 @@ function FormFields({
     }
   }, [initial, repoOptions, form]);
 
+  useEffect(() => {
+    if (initial?.metadatos_motor && typeof initial.metadatos_motor === 'object') {
+      setMotorJson(JSON.stringify(initial.metadatos_motor, null, 2));
+    } else {
+      setMotorJson('{}');
+    }
+  }, [initial]);
+
   const onSubmit = form.handleSubmit((data) => {
+    const t = motorJson.trim();
+    let metadatos_motor: Record<string, unknown> | null = null;
+    if (t && t !== '{}') {
+      try {
+        const p = JSON.parse(t) as unknown;
+        if (p !== null && (typeof p !== 'object' || Array.isArray(p))) {
+          toast.error('Metadatos del motor: debe ser un objeto JSON.');
+          return;
+        }
+        metadatos_motor = p as Record<string, unknown> | null;
+      } catch {
+        toast.error('Metadatos del motor: JSON no válido.');
+        return;
+      }
+    }
     const payload: ProgramaSourceCodeCreate = {
       nombre: data.nombre.trim(),
       ano: data.ano,
       descripcion: data.descripcion?.trim() || null,
       repositorio_id: data.repositorio_id,
       estado: data.estado,
+      metadatos_motor,
     };
     if (isEdit && initial) {
       updateMut.mutate(
@@ -162,6 +189,18 @@ function FormFields({
       <div>
         <label className="text-sm font-medium">Descripción</label>
         <Textarea className="mt-1" rows={2} {...form.register('descripcion')} />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Metadatos del motor (JSON)</label>
+        <Textarea
+          className="mt-1 font-mono text-xs"
+          rows={4}
+          spellCheck={false}
+          value={motorJson}
+          onChange={(e) => setMotorJson(e.target.value)}
+          placeholder='{"herramientas":["SAST","SCA","CDS"],"version":"2026.04"}'
+        />
+        <p className="mt-1 text-xs text-muted-foreground">Objeto JSON; vacio o {} se guarda como null.</p>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>

@@ -102,7 +102,7 @@ async def test_hallazgo_sast_syncs_actividad_mensual_automatically(client: Async
     patched = await client.patch(
         f"{BASE_URL}/{hid}",
         headers=auth_headers,
-        json={"severidad": "Crítica"},
+        json={"severidad": "Critica"},
     )
     assert patched.status_code == 200, patched.text
     act2 = await client.get(f"/api/v1/actividad_mensual_sasts/{aid}", headers=auth_headers)

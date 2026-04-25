@@ -120,3 +120,12 @@ async def test_sincronizar_hallazgos_recalcula_conteo(
     assert d["altos"] == 1
     assert d["total_hallazgos"] == 1
     assert d["score"] is not None and d["score"] < 100.0
+
+
+@pytest.mark.asyncio
+async def test_get_scoring_config_for_actividad_mensual_sast(client: AsyncClient, auth_headers: dict):
+    resp = await client.get(f"{BASE_URL}/config/scoring", headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert isinstance(data["sub_estados_mes"], list)
+    assert isinstance(data["pesos_severidad"], dict)

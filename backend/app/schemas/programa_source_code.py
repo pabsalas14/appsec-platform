@@ -1,6 +1,7 @@
 """ProgramaSourceCode schemas — Pydantic v2."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -14,6 +15,7 @@ class ProgramaSourceCodeBase(BaseModel):
     descripcion: str | None = None
     repositorio_id: UUID
     estado: str = Field(..., description="Activo | Inactivo | Completado | Cancelado")
+    metadatos_motor: dict[str, Any] | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_PROGRAMA:
@@ -34,6 +36,7 @@ class ProgramaSourceCodeUpdate(BaseModel):
     descripcion: str | None = None
     repositorio_id: UUID | None = None
     estado: str | None = None
+    metadatos_motor: dict[str, Any] | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_PROGRAMA:
