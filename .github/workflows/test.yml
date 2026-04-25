@@ -1,9 +1,10 @@
-name: CI
+name: CI/Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, frontend-testing]
   pull_request:
+    branches: [main, frontend-testing]
   workflow_dispatch:
 
 concurrency:
@@ -13,29 +14,75 @@ concurrency:
 env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
-  # Settings + Alembic; Fernet 32-byte key (A5). Public CI-only; do not use in production.
   APPSEC_MASTER_KEY: "bOEizITi-HIjCc8gIlF3FMfwidr6I0z7RFGXJdfizwU="
 
 jobs:
-  # ─── Backend ─────────────────────────────────────────────────────────────
-  lint-backend:
-    name: Lint backend (ruff)
+  # ─── LINT ────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ruff + eslint + tsc)
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: backend } }
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - run: pip install -r requirements.txt
-      - run: ruff check .
-      - run: ruff format --check .
 
-  test-backend:
-    name: Test backend (pytest + coverage 70%)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Lint backend (ruff)
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          ruff check .
+          ruff format --check .
+
+      - name: Lint frontend (eslint + tsc)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Check dead code frontend (knip)
+        working-directory: frontend
+        run: npx knip --strict
+
+  # ─── SECURITY ────────────────────────────────────────────────────────────
+  security:
+    name: Security (pip-audit + vulture)
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Security audit (pip-audit)
+        working-directory: backend
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Dead code backend (vulture)
+        working-directory: backend
+        run: |
+          pip install vulture
+          vulture app --min-confidence 80
+
+  # ─── BACKEND TESTS ───────────────────────────────────────────────────────
+  test-backend:
+    name: Backend Tests (pytest + coverage)
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16-alpine
@@ -57,114 +104,100 @@ jobs:
       ENV: dev
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - run: pip install -r requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
       - name: Apply migrations
+        working-directory: backend
         run: alembic upgrade head
-      - name: Run tests with coverage gate
+
+      - name: Run tests with coverage (70% gate)
+        working-directory: backend
         env:
-          # Ephemeral Postgres service — safe to TRUNCATE between tests.
           PYTEST_ALLOW_ANY_DB: "1"
         run: pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=70 tests/
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload coverage
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage.xml
 
-  security-backend:
-    name: Security audit (pip-audit)
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: backend } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - run: pip install pip-audit
-      - run: pip-audit -r requirements.txt
-
-  dead-code-backend:
-    name: Dead code backend (vulture)
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: backend } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - run: pip install vulture
-      - run: vulture app --min-confidence 80
-
-  # ─── Frontend ────────────────────────────────────────────────────────────
-  lint-frontend:
-    name: Lint frontend (eslint + tsc)
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: frontend } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-
-  build-frontend:
-    name: Build frontend
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: frontend } }
-    env:
-      NEXT_PUBLIC_API_URL: ""
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run build
-
+  # ─── FRONTEND TESTS ──────────────────────────────────────────────────────
   test-frontend:
-    name: Test frontend (vitest)
+    name: Frontend Tests (vitest)
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: frontend } }
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run test:run
 
-  dead-code-frontend:
-    name: Dead code frontend (knip)
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run unit/component tests
+        working-directory: frontend
+        run: npm run test:run -- --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+
+  # ─── BUILD ───────────────────────────────────────────────────────────────
+  build:
+    name: Build (Frontend Next.js)
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: frontend } }
+    needs: [lint]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npx knip --strict
 
-  # ─── Type drift (backend vs frontend) ────────────────────────────────────
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: ""
+        run: npm run build
+
+  # ─── TYPE DRIFT ──────────────────────────────────────────────────────────
   drift-types:
-    name: Type drift (openapi-typescript)
+    name: Type Drift Check (backend vs frontend)
     runs-on: ubuntu-latest
-    needs: [test-backend]
+    needs: [test-backend, build]
     services:
       postgres:
         image: postgres:16-alpine
@@ -186,21 +219,28 @@ jobs:
       ENV: dev
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+
       - name: Install backend deps
         working-directory: backend
         run: pip install -r requirements.txt
+
       - name: Apply migrations
         working-directory: backend
         run: alembic upgrade head
+
       - name: Start backend
         working-directory: backend
         run: |
@@ -212,12 +252,15 @@ jobs:
             sleep 1
           done
           echo "backend failed to start"; tail -n 100 uvicorn.log; exit 1
+
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
+
       - name: Regenerate types
         working-directory: frontend
         run: npx openapi-typescript http://127.0.0.1:8000/openapi.json -o /tmp/api.ts
+
       - name: Compare with committed types
         run: |
           if ! diff -u frontend/src/types/api.ts /tmp/api.ts; then
@@ -225,11 +268,11 @@ jobs:
             exit 1
           fi
 
-  # ─── End-to-end (Playwright) ─────────────────────────────────────────────
-  e2e:
-    name: E2E (Playwright Login → CRUD)
+  # ─── E2E TESTS ───────────────────────────────────────────────────────────
+  test-e2e:
+    name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
-    needs: [test-backend, build-frontend]
+    needs: [test-backend, build]
     services:
       postgres:
         image: postgres:16-alpine
@@ -255,11 +298,15 @@ jobs:
       E2E_PASSWORD: Changeme123!
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -268,11 +315,13 @@ jobs:
       - name: Install backend deps
         working-directory: backend
         run: pip install -r requirements.txt
+
       - name: Apply migrations + seed
         working-directory: backend
         run: |
           alembic upgrade head
           python -m app.seed
+
       - name: Start backend
         working-directory: backend
         run: |
@@ -288,9 +337,11 @@ jobs:
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
       - name: Start frontend
         working-directory: frontend
         run: |
@@ -306,11 +357,14 @@ jobs:
       - name: Install Playwright browsers
         working-directory: frontend
         run: npx playwright install --with-deps chromium firefox
+
       - name: Run Playwright tests
         working-directory: frontend
         run: npx playwright test
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload playwright report
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report
