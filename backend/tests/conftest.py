@@ -22,12 +22,15 @@ Tables are created by Alembic on container start; we never re-create schema
 here.
 """
 
+import asyncio
 import uuid
 from typing import AsyncGenerator
 
+import asyncpg.exceptions
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -67,6 +70,48 @@ def _assert_test_database() -> None:
 
 
 _assert_test_database()
+
+
+def _is_pg_deadlock(exc: BaseException) -> bool:
+    cur: BaseException | None = exc
+    for _ in range(8):
+        if cur is None:
+            return False
+        if isinstance(cur, asyncpg.exceptions.DeadlockDetectedError):
+            return True
+        cur = getattr(cur, "__cause__", None) or getattr(cur, "orig", None)  # type: ignore[assignment]
+    return False
+
+
+async def _truncate_test_data_after_test(engine: AsyncEngine) -> None:
+    """Clear rows after each test; retry on PostgreSQL deadlocks (TRUNCATE vs app TX)."""
+    truncate_sql = (
+        "TRUNCATE TABLE audit_logs, refresh_tokens, attachments, "
+        "role_permissions, roles, permissions, system_settings, "
+        "tasks, projects, "
+        "changelog_entradas, "
+        "regla_sods, "
+        "control_seguridads, tipo_pruebas, "
+        "aplicacion_movils, servicios, "
+        "hallazgo_sasts, actividad_mensual_sasts, programa_sasts, "
+        "hallazgo_pipelines, pipeline_releases, "
+        "revision_source_codes, programa_source_codes, "
+        "repositorios, activo_webs, "
+        "celulas, gerencias, subdireccions, organizacions, "
+        "users CASCADE"
+    )
+    truncate_stmt = text(truncate_sql)
+
+    for attempt in range(12):
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(truncate_stmt)
+            return
+        except DBAPIError as exc:
+            if _is_pg_deadlock(exc):
+                await asyncio.sleep(0.08 * (attempt + 1))
+                continue
+            raise
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -117,21 +162,7 @@ async def _apply_db_override(
     finally:
         app.dependency_overrides.pop(get_db, None)
         reset_rate_limit_state()
-        async with _engine.begin() as conn:
-            await conn.execute(
-                text(
-                    "TRUNCATE TABLE audit_logs, refresh_tokens, attachments, "
-                    "role_permissions, roles, permissions, system_settings, "
-                    "tasks, projects, "
-                    "changelog_entradas, "
-                    "regla_sods, "
-                    "control_seguridads, tipo_pruebas, "
-                    "aplicacion_movils, servicios, "
-                    "repositorios, activo_webs, "
-                    "celulas, gerencias, subdireccions, organizacions, "
-                    "users CASCADE"
-                )
-            )
+        await _truncate_test_data_after_test(_engine)
 
 
 # ─── HTTP client & auth helpers ──────────────────────────────────────────────
@@ -268,4 +299,38 @@ async def super_admin_auth_headers(
     assert resp.status_code == 200, resp.text
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after super_admin login"
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def readonly_auth_headers(
+    client: AsyncClient,
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> dict[str, str]:
+    """Register a user, promote to ``readonly`` (sin permisos de mutación de catálogo)."""
+    unique = uuid.uuid4().hex[:8]
+    username = f"readonly_{unique}"
+    payload = {
+        "username": username,
+        "email": f"{username}@example.com",
+        "password": "Testpass123",
+    }
+
+    resp = await client.post("/api/v1/auth/register", json=payload)
+    assert resp.status_code == 201, resp.text
+
+    async with _session_factory() as session:
+        await session.execute(
+            text("UPDATE users SET role = 'readonly' WHERE username = :u"),
+            {"u": username},
+        )
+        await session.commit()
+
+    resp = await client.post(
+        "/api/v1/auth/login",
+        json={"username": username, "password": payload["password"]},
+    )
+    assert resp.status_code == 200, resp.text
+    token = client.cookies.get("access_token")
+    assert token, "Missing access_token cookie after readonly login"
     return {"Authorization": f"Bearer {token}"}

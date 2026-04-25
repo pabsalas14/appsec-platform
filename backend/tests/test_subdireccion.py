@@ -23,6 +23,15 @@ async def test_create_subdireccion(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
+async def test_readonly_cannot_create_subdireccion(
+    client: AsyncClient, readonly_auth_headers: dict
+):
+    resp = await client.post(BASE_URL, headers=readonly_auth_headers, json=SAMPLE_PAYLOAD)
+    assert resp.status_code == 403
+    assert "catalogs.create" in resp.text
+
+
+@pytest.mark.asyncio
 async def test_list_subdireccions_empty(client: AsyncClient, auth_headers: dict):
     resp = await client.get(BASE_URL, headers=auth_headers)
     assert resp.status_code == 200

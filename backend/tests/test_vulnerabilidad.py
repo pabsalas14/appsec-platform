@@ -181,6 +181,25 @@ async def test_triage_fp_dry_run_success(
 
 
 @pytest.mark.asyncio
+async def test_triage_fp_dry_run_success_super_admin(
+    client: AsyncClient, super_admin_auth_headers: dict
+):
+    """Bloque D: triaje FP con permiso `ia.execute` (rol super_admin)."""
+    create = await client.post(
+        BASE_URL, headers=super_admin_auth_headers, json=SAMPLE_PAYLOAD
+    )
+    assert create.status_code == 201, create.text
+    vid = create.json()["data"]["id"]
+    r = await client.post(
+        f"{BASE_URL}/{vid}/ia/triage-fp",
+        headers=super_admin_auth_headers,
+        json={"dry_run": True, "contexto_adicional": "Mismo flujo que admin"},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["dry_run"] is True
+
+
+@pytest.mark.asyncio
 async def test_triage_fp_parses_json_output(
     client: AsyncClient,
     admin_auth_headers: dict,

@@ -15,6 +15,7 @@ class AuditoriaBase(BaseModel):
     titulo: str = Field(..., min_length=1, max_length=255)
     tipo: str = Field(..., min_length=1, max_length=100)
     alcance: str = Field(..., min_length=1)
+    estado: str = Field(..., min_length=1, max_length=100)
     fecha_inicio: datetime = Field(...)
     fecha_fin: Optional[datetime] = None
 
@@ -31,6 +32,7 @@ class AuditoriaUpdate(BaseModel):
     titulo: Optional[str] = Field(None, min_length=1, max_length=255)
     tipo: Optional[str] = Field(None, min_length=1, max_length=100)
     alcance: Optional[str] = Field(None, min_length=1)
+    estado: Optional[str] = Field(None, min_length=1, max_length=100)
     fecha_inicio: Optional[datetime] = None
     fecha_fin: Optional[datetime] = None
 

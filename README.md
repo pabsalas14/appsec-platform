@@ -153,8 +153,12 @@ Los endpoints `GET .../export.csv` exigen el permiso de export del dominio (p. e
 | Iniciativas | `GET /api/v1/iniciativas/export.csv` |
 | Aceptación de riesgo | `GET /api/v1/aceptacion_riesgos/export.csv` |
 | Excepciones (vulns) | `GET /api/v1/excepcion_vulnerabilidads/export.csv` |
+| Temas emergentes (M7) | `GET /api/v1/temas_emergentes/export.csv` — `emerging_themes.export` |
+| Auditorías (M6) | `GET /api/v1/auditorias/export.csv` — `audits.export` |
 
-Ampliar a más catálogos implica añadir la ruta, el permiso en `P` y la entrada de auditoría — seguir el patrón de `vulnerabilidad.py` y la matriz de permisos en [`tests/test_fase19_permissions.py`](backend/tests/test_fase19_permissions.py).
+Ampliar a más recursos: misma ruta, permiso en `P`, `audit_record` y test — ver `tema_emergente.py` / `iniciativa.py` y la matriz en [`tests/test_fase19_permissions.py`](backend/tests/test_fase19_permissions.py).
+
+**Catálogo organizacional (Subdirección → Célula):** el CRUD de `subdireccions`, `gerencias`, `organizacions` y `celulas` requiere `catalogs.view` / `catalogs.create` / `catalogs.edit` / `catalogs.delete` (rol `user` del framework las incluye además de todas las `.view` generadas).
 
 ---
 
@@ -205,6 +209,16 @@ make seed
 
 > Tras `make test` (trunca `users` / `tasks` / `refresh_tokens` en la base de pruebas), **`make seed`** restablece el usuario admin.
 
+### Imagen del backend (sin bind-mount del código)
+
+El servicio `backend` en Compose **no monta** el directorio `backend/` del host en `/app`: solo se monta el volumen de **uploads**. El código que ejecuta el contenedor es el **de la última imagen construida**.
+
+| Situación | Qué hacer |
+|-----------|-----------|
+| Cambiaste `backend/` (rutas, modelos, `tests/`, Alembic, etc.) y quieres verlo **en el contenedor** | `docker compose build backend` y luego `docker compose up -d backend` (o `make up` si ya reconstruiste). |
+| Ejecutas `make test` o `docker compose exec backend pytest` | Corren el código **dentro de la imagen**; si no has reconstruido, las pruebas siguen la build anterior. |
+| Desarrollo rápido sin rebuild continuo | Opcional: ejecutar API o `pytest` **en el host** con el mismo `DATABASE_URL` que apunte al Postgres del stack (flujo avanzado; el repo asume Docker para `make test`). |
+
 ---
 
 ## Comandos de desarrollo (Makefile = fuente de verdad)
@@ -221,7 +235,7 @@ make seed
 
 ## Verificación
 
-- **Backend:** `make test` (varios cientos de pruebas: contrato, auth, IDOR, humo por entidad, permisos fase 19, dashboards, IA en sesión TM, etc.).
+- **Backend:** `make test` (varios cientos de pruebas: contrato, auth, IDOR, humo por entidad, permisos fase 19, dashboards, IA en sesión TM, etc.). Tras cambios en `backend/`, **reconstruye la imagen** antes de confiar en el resultado (ver [Imagen del backend](#imagen-del-backend-sin-bind-mount-del-código)).
 - **Frontend:** `cd frontend && npm run lint`.
 
 ---

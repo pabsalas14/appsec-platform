@@ -259,6 +259,10 @@ New backend endpoints powering this surface:
 
 ## ⚠️ Operational gotchas
 
+- **Docker backend image**: the Compose `backend` service does **not** bind-mount
+  `./backend` into `/app` (only `uploads` is mounted). Rebuild the image
+  (`docker compose build backend`) after changing `backend/` code or tests, or
+  `make test` will run a stale copy. See [`README.md`](README.md#imagen-del-backend-sin-bind-mount-del-código).
 - **Async DB tests**: `tests/conftest.py` uses `NullPool` + session-scoped
   engine because `asyncpg` connections are bound to their creating event
   loop. Don't switch to a pooled engine without understanding ADR-0006.

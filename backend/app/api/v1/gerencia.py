@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.gerencia import Gerencia
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("")
 async def list_gerencias(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.VIEW)),
 ):
     """List gerencias owned by the current user."""
     items = await gerencia_svc.list(db, filters={"user_id": current_user.id})
@@ -26,6 +27,7 @@ async def list_gerencias(
 
 @router.get("/{id}")
 async def get_gerencia(
+    _: User = Depends(require_permission(P.CATALOGS.VIEW)),
     entity: Gerencia = Depends(require_ownership(gerencia_svc)),
 ):
     """Get a single owned gerencia by ID (404 if not owned)."""
@@ -36,7 +38,7 @@ async def get_gerencia(
 async def create_gerencia(
     entity_in: GerenciaCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.CREATE)),
 ):
     """Create a new gerencia for the current user."""
     entity = await gerencia_svc.create(db, entity_in, extra={"user_id": current_user.id})
@@ -47,7 +49,7 @@ async def create_gerencia(
 async def update_gerencia(
     entity_in: GerenciaUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.EDIT)),
     entity: Gerencia = Depends(require_ownership(gerencia_svc)),
 ):
     """Partially update an owned gerencia (404 if not owned)."""
@@ -60,7 +62,7 @@ async def update_gerencia(
 @router.delete("/{id}")
 async def delete_gerencia(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.DELETE)),
     entity: Gerencia = Depends(require_ownership(gerencia_svc)),
 ):
     """Delete an owned gerencia (404 if not owned)."""

@@ -1,17 +1,66 @@
 """Auditoria CRUD endpoints."""
 
+from __future__ import annotations
+
+import csv
+import hashlib
+from io import StringIO
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.auditoria import Auditoria
 from app.schemas.auditoria import AuditoriaCreate, AuditoriaRead, AuditoriaUpdate
+from app.services.audit_service import record as audit_record
 from app.services.auditoria_service import auditoria_svc
 
 router = APIRouter()
+
+
+@router.get("/export.csv")
+async def export_auditorias_csv(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.AUDITS.EXPORT)),
+):
+    """Exporta auditorías del usuario a CSV; auditoría A7."""
+    items = await auditoria_svc.list(db, filters={"user_id": current_user.id})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        ["id", "titulo", "tipo", "estado", "fecha_inicio", "fecha_fin", "alcance"]
+    )
+    for a in items:
+        writer.writerow(
+            [
+                str(a.id),
+                a.titulo,
+                a.tipo,
+                a.estado,
+                a.fecha_inicio.isoformat() if a.fecha_inicio else "",
+                a.fecha_fin.isoformat() if a.fecha_fin else "",
+                (a.alcance or "")[:2000],
+            ]
+        )
+    body = buf.getvalue()
+    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    await audit_record(
+        db,
+        action="auditoria.export_csv",
+        entity_type="auditoria",
+        entity_id=current_user.id,
+        metadata={"rows": len(items), "sha256": digest, "format": "csv"},
+    )
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="auditorias.csv"'},
+    )
 
 
 @router.get("")

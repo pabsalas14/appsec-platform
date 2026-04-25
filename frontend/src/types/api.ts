@@ -3447,6 +3447,26 @@ export interface paths {
         patch: operations["update_actualizacion_iniciativa_api_v1_actualizacion_iniciativas__id__patch"];
         trace?: never;
     };
+    "/api/v1/auditorias/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Auditorias Csv
+         * @description Exporta auditorías del usuario a CSV; auditoría A7.
+         */
+        get: operations["export_auditorias_csv_api_v1_auditorias_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auditorias": {
         parameters: {
             query?: never;
@@ -3653,6 +3673,26 @@ export interface paths {
          * @description Partially update an owned plan remediacion (404 if not owned).
          */
         patch: operations["update_plan_remediacion_api_v1_plan_remediacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/temas_emergentes/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Temas Emergentes Csv
+         * @description Exporta temas emergentes a CSV; auditoría A7.
+         */
+        get: operations["export_temas_emergentes_csv_api_v1_temas_emergentes_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/temas_emergentes": {
@@ -4446,6 +4486,8 @@ export interface components {
             tipo: string;
             /** Alcance */
             alcance: string;
+            /** Estado */
+            estado: string;
             /**
              * Fecha Inicio
              * Format: date-time
@@ -4465,6 +4507,8 @@ export interface components {
             tipo?: string | null;
             /** Alcance */
             alcance?: string | null;
+            /** Estado */
+            estado?: string | null;
             /** Fecha Inicio */
             fecha_inicio?: string | null;
             /** Fecha Fin */
@@ -5250,6 +5294,16 @@ export interface components {
              * Format: uuid
              */
             auditoria_id: string;
+            /**
+             * Categoria
+             * @default General
+             */
+            categoria: string;
+            /**
+             * Estado
+             * @default Abierto
+             */
+            estado: string;
         };
         /**
          * HallazgoAuditoriaUpdate
@@ -5262,6 +5316,10 @@ export interface components {
             descripcion?: string | null;
             /** Severidad */
             severidad?: string | null;
+            /** Categoria */
+            categoria?: string | null;
+            /** Estado */
+            estado?: string | null;
         };
         /**
          * HallazgoDastCreate
@@ -17333,6 +17391,40 @@ export interface operations {
             };
         };
     };
+    export_auditorias_csv_api_v1_auditorias_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_auditorias_api_v1_auditorias_get: {
         parameters: {
             query?: never;
@@ -18024,6 +18116,40 @@ export interface operations {
                 "application/json": components["schemas"]["PlanRemediacionUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_temas_emergentes_csv_api_v1_temas_emergentes_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

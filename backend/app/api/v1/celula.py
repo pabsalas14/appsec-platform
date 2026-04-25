@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.celula import Celula
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("")
 async def list_celulas(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.VIEW)),
 ):
     """List celulas owned by the current user."""
     items = await celula_svc.list(db, filters={"user_id": current_user.id})
@@ -26,6 +27,7 @@ async def list_celulas(
 
 @router.get("/{id}")
 async def get_celula(
+    _: User = Depends(require_permission(P.CATALOGS.VIEW)),
     entity: Celula = Depends(require_ownership(celula_svc)),
 ):
     """Get a single owned celula by ID (404 if not owned)."""
@@ -36,7 +38,7 @@ async def get_celula(
 async def create_celula(
     entity_in: CelulaCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.CREATE)),
 ):
     """Create a new celula for the current user."""
     entity = await celula_svc.create(db, entity_in, extra={"user_id": current_user.id})
@@ -47,7 +49,7 @@ async def create_celula(
 async def update_celula(
     entity_in: CelulaUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.EDIT)),
     entity: Celula = Depends(require_ownership(celula_svc)),
 ):
     """Partially update an owned celula (404 if not owned)."""
@@ -60,7 +62,7 @@ async def update_celula(
 @router.delete("/{id}")
 async def delete_celula(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.DELETE)),
     entity: Celula = Depends(require_ownership(celula_svc)),
 ):
     """Delete an owned celula (404 if not owned)."""

@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.subdireccion import Subdireccion
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("")
 async def list_subdireccions(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.VIEW)),
 ):
     """List subdireccions owned by the current user."""
     items = await subdireccion_svc.list(db, filters={"user_id": current_user.id})
@@ -26,6 +27,7 @@ async def list_subdireccions(
 
 @router.get("/{id}")
 async def get_subdireccion(
+    _: User = Depends(require_permission(P.CATALOGS.VIEW)),
     entity: Subdireccion = Depends(require_ownership(subdireccion_svc)),
 ):
     """Get a single owned subdireccion by ID (404 if not owned)."""
@@ -36,7 +38,7 @@ async def get_subdireccion(
 async def create_subdireccion(
     entity_in: SubdireccionCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.CREATE)),
 ):
     """Create a new subdireccion for the current user."""
     entity = await subdireccion_svc.create(db, entity_in, extra={"user_id": current_user.id})
@@ -47,7 +49,7 @@ async def create_subdireccion(
 async def update_subdireccion(
     entity_in: SubdireccionUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.EDIT)),
     entity: Subdireccion = Depends(require_ownership(subdireccion_svc)),
 ):
     """Partially update an owned subdireccion (404 if not owned)."""
@@ -60,7 +62,7 @@ async def update_subdireccion(
 @router.delete("/{id}")
 async def delete_subdireccion(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.DELETE)),
     entity: Subdireccion = Depends(require_ownership(subdireccion_svc)),
 ):
     """Delete an owned subdireccion (404 if not owned)."""

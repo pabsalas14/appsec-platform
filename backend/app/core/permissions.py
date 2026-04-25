@@ -162,40 +162,60 @@ def _all_codes() -> list[str]:
 _VIEW_CODES = [c for c in _all_codes() if c.endswith(".view")]
 _EXPORT_CODES = [c for c in _all_codes() if c.endswith(".export")]
 
+# Jerarquía org. (subdirección → célula): mutación bajo códigos dedicados
+_CATALOG_MUTATION = [
+    "catalogs.create",
+    "catalogs.edit",
+    "catalogs.delete",
+]
+
 DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
     "super_admin": _all_codes(),
     "admin": _all_codes(),
     "chief_appsec": (
-        _VIEW_CODES + _EXPORT_CODES + [
+        _VIEW_CODES
+        + _EXPORT_CODES
+        + _CATALOG_MUTATION
+        + [
             "vulnerabilities.approve",
             "releases.approve",
             "audit_logs.verify",
         ]
     ),
-    "lider_programa": [
-        "programs.view", "programs.create", "programs.edit", "programs.delete", "programs.export",
-        "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit", "vulnerabilities.export",
-        "releases.view", "releases.create", "releases.edit", "releases.export",
-        "initiatives.view", "initiatives.create", "initiatives.edit", "initiatives.export",
-        "audits.view", "audits.create", "audits.edit", "audits.export",
-        "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit", "emerging_themes.export",
-        "dashboards.view", "dashboards.export",
-        "catalogs.view",
-        "tasks.view", "tasks.create", "tasks.edit",
-        "ia.view", "ia.execute",
-    ],
-    "analista": [
-        "programs.view", "programs.create", "programs.edit",
-        "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit",
-        "releases.view", "releases.create", "releases.edit",
-        "initiatives.view",
-        "audits.view",
-        "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit",
-        "dashboards.view",
-        "catalogs.view",
-        "tasks.view", "tasks.create", "tasks.edit",
-        "ia.view", "ia.execute",
-    ],
+    "lider_programa": (
+        [
+            "programs.view", "programs.create", "programs.edit", "programs.delete", "programs.export",
+            "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit", "vulnerabilities.export",
+            "releases.view", "releases.create", "releases.edit", "releases.export",
+            "initiatives.view", "initiatives.create", "initiatives.edit", "initiatives.export",
+            "audits.view", "audits.create", "audits.edit", "audits.export",
+            "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit", "emerging_themes.export",
+            "dashboards.view", "dashboards.export",
+            "catalogs.view",
+        ]
+        + _CATALOG_MUTATION
+        + [
+            "tasks.view", "tasks.create", "tasks.edit",
+            "ia.view", "ia.execute",
+        ]
+    ),
+    "analista": (
+        [
+            "programs.view", "programs.create", "programs.edit",
+            "vulnerabilities.view", "vulnerabilities.create", "vulnerabilities.edit",
+            "releases.view", "releases.create", "releases.edit",
+            "initiatives.view",
+            "audits.view",
+            "emerging_themes.view", "emerging_themes.create", "emerging_themes.edit",
+            "dashboards.view",
+            "catalogs.view",
+        ]
+        + _CATALOG_MUTATION
+        + [
+            "tasks.view", "tasks.create", "tasks.edit",
+            "ia.view", "ia.execute",
+        ]
+    ),
     "auditor": (
         _VIEW_CODES + [
             "audit_logs.export",
@@ -211,5 +231,5 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "programs.view",
         "catalogs.view",
     ],
-    "user": _VIEW_CODES,
+    "user": _VIEW_CODES + _CATALOG_MUTATION,
 }

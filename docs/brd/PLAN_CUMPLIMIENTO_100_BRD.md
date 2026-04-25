@@ -84,9 +84,14 @@
 
 ## 3. Ejecución inmediata (en curso en repo)
 
-- Documentación: este plan + matriz.  
-- **Breadcrumbs** con etiquetas para rutas de negocio (§13, navegación).  
-- Siguiente iteración de código: priorizar **Fase A1/A2** en catálogos que aún tengan UI mínima, luego **F2/F3** en dashboards, según prioridad de negocio.
+- Documentación: este plan + matriz (actualizar filas al cerrar entregas).  
+- **Cerrado reciente (API):** permisos `catalogs.*` en §3.1; exports CSV con `audit_record` (auditorías, temas emergentes; **export** dedicado de programa SAST aún no — prioridad tras estabilidad del teardown de tests con FKs a `repositorios`); tests de regresión (readonly, exports, triaje IA `super_admin`). `tests/conftest.py`: `TRUNCATE` abarca cadenas SAST/pipeline/revisión de código; reintentos ante **deadlock** en PostgreSQL. *Desarrollo con Docker (sin bind-mount del backend):* tras tocar `backend/tests/`, `docker compose build backend` (o `make test` con imagen al día) para que el contenedor use el código.  
+- **Siguiente prioridad (huecos mayores):**  
+  1. **A2** — import + plantilla descargable en catálogos BRD que lo exijan (un flujo piloto reutilizable).  
+  2. **A3** — extender exports a inventario (`repositorios`, `activo_webs`) definiendo permiso (p. ej. ampliar `catalogs` o `programs` según decisión en ADR breve).  
+  3. **F2/F3** — drill-down y filtros §13.2 en dashboards existentes; breadcrumbs §13 ya parcialmente en UI.  
+  4. **G2** — notificaciones §14.3 (modelo mínimo + bell).  
+- Ejecutar `make types` tras cambios de OpenAPI y commitear `frontend/src/types/api.ts`.
 
 ---
 

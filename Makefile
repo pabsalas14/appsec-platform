@@ -92,9 +92,10 @@ shell-db: ## Open psql in the postgres container
 
 # ──────────────────── Testing ────────────────────
 
-test: ## Run backend tests (⚠ truncates tasks/users/refresh_tokens — use a disposable DB)
-	@printf "$(RED)⚠  Tests TRUNCATE users/tasks/refresh_tokens in the target DB.$(NC)\n"
+test: ## Run backend tests (⚠ truncates users/tasks/… — use disposable DB; backend image has no source bind-mount)
+	@printf "$(RED)⚠  Tests TRUNCATE users/tasks/… in the target DB.$(NC)\n"
 	@printf "$(YELLOW)   Set PYTEST_ALLOW_ANY_DB=1 only if the DB is disposable.$(NC)\n"
+	@printf "$(YELLOW)   Backend container uses built image: run $(CYAN)docker compose build backend$(YELLOW) after code changes.$(NC)\n"
 	docker compose exec -e PYTEST_ALLOW_ANY_DB=1 backend python -m pytest tests/ -v
 
 # ──────────────────── Scaffolding ────────────────────

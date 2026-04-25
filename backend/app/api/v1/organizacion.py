@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.permissions import P
 from app.core.response import success
 from app.models.user import User
 from app.models.organizacion import Organizacion
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("")
 async def list_organizacions(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.VIEW)),
 ):
     """List organizacions owned by the current user."""
     items = await organizacion_svc.list(db, filters={"user_id": current_user.id})
@@ -26,6 +27,7 @@ async def list_organizacions(
 
 @router.get("/{id}")
 async def get_organizacion(
+    _: User = Depends(require_permission(P.CATALOGS.VIEW)),
     entity: Organizacion = Depends(require_ownership(organizacion_svc)),
 ):
     """Get a single owned organizacion by ID (404 if not owned)."""
@@ -36,7 +38,7 @@ async def get_organizacion(
 async def create_organizacion(
     entity_in: OrganizacionCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.CREATE)),
 ):
     """Create a new organizacion for the current user."""
     entity = await organizacion_svc.create(db, entity_in, extra={"user_id": current_user.id})
@@ -47,7 +49,7 @@ async def create_organizacion(
 async def update_organizacion(
     entity_in: OrganizacionUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.EDIT)),
     entity: Organizacion = Depends(require_ownership(organizacion_svc)),
 ):
     """Partially update an owned organizacion (404 if not owned)."""
@@ -60,7 +62,7 @@ async def update_organizacion(
 @router.delete("/{id}")
 async def delete_organizacion(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.CATALOGS.DELETE)),
     entity: Organizacion = Depends(require_ownership(organizacion_svc)),
 ):
     """Delete an owned organizacion (404 if not owned)."""

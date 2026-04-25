@@ -50,7 +50,7 @@ async def test_sqlalchemy_encrypted_string_type_transparent_io(_session_factory)
     async with _session_factory() as db:
         dummy = DummySecret(secret_value=plain)
         db.add(dummy)
-        await db.commit()
+        await db.flush()
         await db.refresh(dummy)
 
         # In RAM it should appear as plaintext
@@ -68,4 +68,3 @@ async def test_sqlalchemy_encrypted_string_type_transparent_io(_session_factory)
 
         # And decrypting the raw value manually must yield our plaintext
         assert decrypt_string(raw_db_value) == plain
-
