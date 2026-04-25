@@ -7,6 +7,19 @@ type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['revision_terceros'] as const;
 
+export type ChecklistTemplateItem = { id: string; label: string; tipo?: string };
+export type ChecklistTemplate = { items: ChecklistTemplateItem[] };
+
+export function useRevisionTerceroChecklistTemplate() {
+  return useQuery({
+    queryKey: [...KEY, 'config', 'checklist'] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<ChecklistTemplate>>('/revision_terceros/config/checklist');
+      return data.data;
+    },
+  });
+}
+
 export function useRevisionTerceros() {
   return useQuery({
     queryKey: KEY,

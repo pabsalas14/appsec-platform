@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.api.deps_ownership import require_role
 from app.core.response import success, error
-from app.models import ConfiguracionIA, SesionThreatModeling, Vulnerabilidad
+from app.models.sesion_threat_modeling import SesionThreatModeling
+from app.models.system_setting import SystemSetting as ConfiguracionIA
+from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas import (
     ConfiguracionIARead,
     ConfiguracionIAUpdate,

@@ -5,11 +5,12 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+from datetime import UTC, datetime
 from io import StringIO
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +34,19 @@ from app.services.vulnerabilidad_ia_triage_hints import get_motor_triage_hints
 from app.services.vulnerabilidad_service import vulnerabilidad_svc
 
 router = APIRouter()
+
+
+@router.get("/config/flujo")
+async def get_vulnerabilidad_flujo_config(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """BRD D1: catálogo y transiciones (lectura) para alinear UI y validaciones server-side."""
+    from app.services.json_setting import get_json_setting
+    from app.services.vulnerabilidad_flujo import parse_estatus_catalog
+
+    raw = await get_json_setting(db, "catalogo.estatus_vulnerabilidad", [])
+    return success({"estatus": parse_estatus_catalog(raw)})
 
 
 def _parse_triage_output(
@@ -127,44 +141,120 @@ async def export_vulnerabilidades_csv(
     )
 
 
+def _parse_created_after(s: str | None) -> datetime | None:
+    if not s or not str(s).strip():
+        return None
+    t = str(s).strip()
+    try:
+        return datetime.fromisoformat(t.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
 @router.get("")
 async def list_vulnerabilidads(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     page: int = 1,
     page_size: int = 50,
+    sort: Literal["created_at", "titulo", "fuente", "severidad", "sla_dias", "updated_at"] = "created_at",
+    order: Literal["asc", "desc"] = "desc",
+    q: str | None = None,
+    search: str | None = None,
+    severidad: str | None = None,
+    estado: str | None = None,
+    fuente: str | None = None,
+    sla: str | None = None,
+    reincidencia: bool = False,
+    created_after: str | None = Query(default=None, description="ISO-8601: filtra created_at >="),
 ):
-    """List vulnerabilidads owned by the current user (paginated)."""
-    from sqlalchemy import func, select
+    """List vulnerabilidads del usuario: paginación, búsqueda, filtros y orden (BRD §13.2 P20)."""
+    from sqlalchemy import and_, case, func, or_, select
 
     from app.core.response import paginated
 
-    # Enforce pagination limits (S4: Rate limiting)
     page = max(1, page)
-    page_size = min(max(1, page_size), 100)  # Cap at 100
+    page_size = min(max(1, page_size), 100)
 
-    # Get paginated items
-    stmt = (
-        select(Vulnerabilidad)
-        .where(
-            Vulnerabilidad.user_id == current_user.id,
-            Vulnerabilidad.deleted_at.is_(None),
+    base_where = [
+        Vulnerabilidad.user_id == current_user.id,
+        Vulnerabilidad.deleted_at.is_(None),
+    ]
+    term = (q or search or "").strip()
+    if term:
+        like = f"%{term}%"
+        base_where.append(
+            or_(
+                Vulnerabilidad.titulo.ilike(like),
+                Vulnerabilidad.descripcion.ilike(like),
+                Vulnerabilidad.fuente.ilike(like),
+            )
         )
-        .order_by(Vulnerabilidad.created_at.desc())
-    )
+    if severidad:
+        base_where.append(Vulnerabilidad.severidad == severidad)
+    if estado:
+        base_where.append(Vulnerabilidad.estado == estado)
+    if fuente:
+        base_where.append(Vulnerabilidad.fuente == fuente)
+    ca = _parse_created_after(created_after)
+    if ca is not None:
+        base_where.append(Vulnerabilidad.created_at >= ca)
 
-    # Apply pagination
+    if sla == "vencida":
+        now = datetime.now(UTC)
+        base_where.extend(
+            [
+                Vulnerabilidad.fecha_limite_sla.isnot(None),
+                Vulnerabilidad.fecha_limite_sla < now,
+            ]
+        )
+
+    if reincidencia:
+        dup_cwe = (
+            select(Vulnerabilidad.cwe_id)
+            .where(
+                Vulnerabilidad.user_id == current_user.id,
+                Vulnerabilidad.deleted_at.is_(None),
+                Vulnerabilidad.cwe_id.isnot(None),
+            )
+            .group_by(Vulnerabilidad.cwe_id)
+            .having(func.count() > 1)
+        )
+        base_where.append(Vulnerabilidad.cwe_id.in_(dup_cwe))
+
+    where_all = and_(*base_where)
+
+    sev_rank = case(
+        (Vulnerabilidad.severidad == "Critica", 4),
+        (Vulnerabilidad.severidad == "Alta", 3),
+        (Vulnerabilidad.severidad == "Media", 2),
+        (Vulnerabilidad.severidad == "Baja", 1),
+        else_=0,
+    )
+    # severidad: order desc => Crítica > Alta > … (rank 4 → 1)
+    order_cols: list = []
+    if sort == "titulo":
+        order_cols = [Vulnerabilidad.titulo.asc() if order == "asc" else Vulnerabilidad.titulo.desc()]
+    elif sort == "fuente":
+        order_cols = [Vulnerabilidad.fuente.asc() if order == "asc" else Vulnerabilidad.fuente.desc()]
+    elif sort == "severidad":
+        order_cols = [sev_rank.desc() if order == "desc" else sev_rank.asc()]
+    elif sort == "sla_dias":
+        fl = Vulnerabilidad.fecha_limite_sla
+        order_cols = [fl.asc().nulls_last()] if order == "asc" else [fl.desc().nulls_last()]
+    elif sort == "updated_at":
+        order_cols = [Vulnerabilidad.updated_at.asc() if order == "asc" else Vulnerabilidad.updated_at.desc()]
+    else:
+        order_cols = [Vulnerabilidad.created_at.asc() if order == "asc" else Vulnerabilidad.created_at.desc()]
+
+    stmt = select(Vulnerabilidad).where(where_all).order_by(*order_cols)
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     items = result.scalars().all()
 
-    # Get total count
-    count_stmt = select(func.count(Vulnerabilidad.id)).where(
-        Vulnerabilidad.user_id == current_user.id,
-        Vulnerabilidad.deleted_at.is_(None),
-    )
+    count_stmt = select(func.count(Vulnerabilidad.id)).where(where_all)
     total_result = await db.execute(count_stmt)
-    total = total_result.scalar_one_or_none() or 0
+    total = int(total_result.scalar_one_or_none() or 0)
 
     return paginated(
         [VulnerabilidadRead.model_validate(x).model_dump(mode="json") for x in items],

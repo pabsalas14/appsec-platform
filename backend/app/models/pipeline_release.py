@@ -1,6 +1,6 @@
 """PipelineRelease model — ejecución SAST/DAST/SCA en CI/CD (Módulo 8).
 
-Vinculado a un Repositorio y opcionalmente a un ServiceRelease.
+Vinculado a un Repositorio y/o Activo web (DAST) y opcionalmente a un ServiceRelease.
 Los hallazgos que fallen pueden promover una Vulnerabilidad.
 """
 
@@ -10,7 +10,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,6 +18,7 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
+    from app.models.activo_web import ActivoWeb
     from app.models.hallazgo_pipeline import HallazgoPipeline
     from app.models.repositorio import Repositorio
     from app.models.service_release import ServiceRelease
@@ -40,19 +41,28 @@ class PipelineRelease(SoftDeleteMixin, Base):
         nullable=True,
         index=True,
     )
-    repositorio_id: Mapped[uuid.UUID] = mapped_column(
+    repositorio_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("repositorios.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
-    rama: Mapped[str] = mapped_column(String(255), nullable=False)
+    rama: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scan_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mes: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    activo_web_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("activo_webs.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     commit_sha: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # tipo: SAST | DAST | SCA
     tipo: Mapped[str] = mapped_column(String(50), nullable=False)
     # resultado: Pendiente | En Progreso | Exitoso | Fallido | Cancelado
     resultado: Mapped[str] = mapped_column(String(50), nullable=False, default="Pendiente")
     herramienta: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    liberado_con_vulns_criticas_o_altas: Mapped[bool | None] = mapped_column(Boolean(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -62,7 +72,10 @@ class PipelineRelease(SoftDeleteMixin, Base):
 
     # ─── Relationships ─────────────────────────────────────────────────────────
     service_release: Mapped[ServiceRelease | None] = relationship(back_populates="pipelines")
-    repositorio: Mapped[Repositorio] = relationship(back_populates="pipeline_releases")
+    repositorio: Mapped[Repositorio | None] = relationship(
+        back_populates="pipeline_releases", foreign_keys=[repositorio_id]
+    )
+    activo_web: Mapped[ActivoWeb | None] = relationship(foreign_keys=[activo_web_id], lazy="noload")
     hallazgos: Mapped[list[HallazgoPipeline]] = relationship(
         "HallazgoPipeline", back_populates="pipeline_release", lazy="noload"
     )

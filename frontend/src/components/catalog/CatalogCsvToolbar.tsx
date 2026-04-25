@@ -84,7 +84,7 @@ export function CatalogCsvToolbar({ basePath, exportFileName, templateFileName, 
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={() => void onTemplate()}>
         <FileSpreadsheet className="mr-2 h-4 w-4" />
-        Plantilla
+        Descargar template
       </Button>
       <Button type="button" variant="outline" size="sm" disabled={csvBusy} onClick={() => importInputRef.current?.click()}>
         {csvBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}

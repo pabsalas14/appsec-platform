@@ -33,6 +33,7 @@ from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -198,13 +199,48 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             return None
 
         changes = schema.model_dump(exclude_unset=True)
+        previous: dict[str, Any] = {}
+        for key in list(changes.keys()):
+            if not hasattr(record, key):
+                continue
+            if key == "custom_fields":
+                cur = getattr(record, "custom_fields", None)
+                previous[key] = dict(cur) if isinstance(cur, dict) else cur
+            else:
+                previous[key] = getattr(record, key)
+
+        if "custom_fields" in changes and hasattr(record, "custom_fields"):
+            patch = changes.pop("custom_fields")
+            if patch is not None:
+                if isinstance(patch, dict):
+                    base_cf = record.custom_fields if isinstance(getattr(record, "custom_fields", None), dict) else {}
+                    record.custom_fields = {**base_cf, **patch}
+                else:
+                    record.custom_fields = patch  # type: ignore[assignment]
+
         for key, value in changes.items():
             setattr(record, key, value)
 
         await db.flush()
         await db.refresh(record)
 
-        await self._audit(db, "update", record, metadata={"changes": _safe_dump(changes)})
+        new_vals: dict[str, Any] = {}
+        for key in list(previous.keys()):
+            if key == "custom_fields" and hasattr(record, "custom_fields"):
+                cfv = record.custom_fields
+                new_vals[key] = dict(cfv) if isinstance(cfv, dict) else cfv
+            elif hasattr(record, key):
+                new_vals[key] = getattr(record, key)
+
+        await self._audit(
+            db,
+            "update",
+            record,
+            metadata={
+                "previous": _safe_dump(previous) if previous else None,
+                "new": _safe_dump(new_vals) if new_vals else None,
+            },
+        )
         return record
 
     # ─── Delete ──────────────────────────────────────────────────────────────
@@ -230,12 +266,14 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             # Soft-delete (A2): keep row, mark as deleted.
             import datetime as _dt
 
+            del_payload = _row_snapshot_for_audit(record)
             record.deleted_at = _dt.datetime.now(_dt.UTC)
             if hasattr(record, "deleted_by"):
                 record.deleted_by = _coerce_uuid(actor_id)
             await db.flush()
             await db.refresh(record)
         else:
+            del_payload = _row_snapshot_for_audit(record)
             await db.delete(record)
             await db.flush()
 
@@ -244,6 +282,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             "delete",
             None,
             override_entity_id=entity_id,
+            metadata={"previous": _safe_dump(del_payload) if del_payload else None},
         )
         return True
 
@@ -274,6 +313,18 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             entity_id=entity_id,
             metadata=metadata,
         )
+
+
+def _row_snapshot_for_audit(record: Base) -> dict[str, Any]:
+    """Columnas persistidas (sin relaciones) para G3 — valor «anterior» en delete."""
+    insp = sa_inspect(record)
+    out: dict[str, Any] = {}
+    for attr in insp.mapper.column_attrs:
+        key = attr.key
+        if key in ("deleted_at", "deleted_by"):
+            continue
+        out[key] = getattr(record, key, None)
+    return out
 
 
 def _safe_dump(data: dict[str, Any]) -> dict[str, Any]:

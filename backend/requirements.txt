@@ -10,6 +10,7 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.26
 httpx==0.27.0
+aiohttp>=3.9.0
 email-validator==2.1.0
 
 # Phase 3 — Evidencias, Reportes, Webhooks
@@ -26,6 +27,9 @@ Pillow==12.2.0
 # Phase 5 — AI Provider integration (scan workflow intelligence)
 openai>=1.30.0
 anthropic>=0.25.0
+
+# G2: ejecución programada (cron) en el proceso API
+apscheduler==3.10.4
 
 # Observability
 python-json-logger>=2.0.7,<3.0.0

@@ -24,16 +24,30 @@ router = APIRouter()
 async def list_revision_source_codes(
     programa_sc_id: UUID | None = Query(None, description="Filter by programa_sc_id"),
     control_sc_id: UUID | None = Query(None, description="Filter by control_sc_id"),
+    resultado: str | None = Query(None, max_length=50, description="Cumple | No Cumple | Parcial | No Aplica"),
+    q: str | None = Query(None, max_length=200, description="Búsqueda en notas"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List revisiones source code, optionally filtered by programa or control."""
-    filters: dict = {"user_id": current_user.id}
+    """List revisiones source code, optionally filtered. BRD §5.4 / F3."""
+    from sqlalchemy import select
+
+    conds = [
+        RevisionSourceCode.user_id == current_user.id,
+        RevisionSourceCode.deleted_at.is_(None),
+    ]
     if programa_sc_id is not None:
-        filters["programa_sc_id"] = programa_sc_id
+        conds.append(RevisionSourceCode.programa_sc_id == programa_sc_id)
     if control_sc_id is not None:
-        filters["control_sc_id"] = control_sc_id
-    items = await revision_source_code_svc.list(db, filters=filters)
+        conds.append(RevisionSourceCode.control_sc_id == control_sc_id)
+    if resultado and resultado.strip():
+        conds.append(RevisionSourceCode.resultado == resultado.strip())
+    if q and q.strip():
+        conds.append(RevisionSourceCode.notas.ilike(f"%{q.strip()}%"))
+    res = await db.execute(
+        select(RevisionSourceCode).where(*conds).order_by(RevisionSourceCode.fecha_revision.desc())
+    )
+    items = res.scalars().all()
     return success([RevisionSourceCodeRead.model_validate(x).model_dump(mode="json") for x in items])
 
 

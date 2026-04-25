@@ -10,6 +10,7 @@ from app.models.indicador_formula import IndicadorFormula
 from app.models.user import User
 from app.schemas.indicador_formula import IndicadorFormulaCreate, IndicadorFormulaRead, IndicadorFormulaUpdate
 from app.services.indicador_formula_service import indicador_formula_svc
+from app.services.indicator_evaluator import IndicatorEvaluationError, evaluate_formula, status_for_value
 
 router = APIRouter()
 
@@ -22,6 +23,36 @@ async def list_indicador_formulas(
     """List indicador formulas owned by the current user."""
     items = await indicador_formula_svc.list(db, filters={"user_id": current_user.id})
     return success([IndicadorFormulaRead.model_validate(x).model_dump(mode="json") for x in items])
+
+
+@router.get("/{id}/evaluate")
+async def evaluate_indicador_formula(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: IndicadorFormula = Depends(require_ownership(indicador_formula_svc)),
+):
+    """Evalúa la fórmula (motor E1) y devuelve valor + semáforo."""
+    try:
+        value = await evaluate_formula(db, entity.formula, user_id=current_user.id)
+    except IndicatorEvaluationError as e:
+        from app.core.exceptions import ValidationException
+
+        raise ValidationException(str(e)) from e
+    st = status_for_value(
+        value,
+        threshold_green=entity.threshold_green,
+        threshold_yellow=entity.threshold_yellow,
+        threshold_red=entity.threshold_red,
+        lower_is_better=True,
+    )
+    return success(
+        {
+            "id": str(entity.id),
+            "code": entity.code,
+            "value": value,
+            "status": st,
+        }
+    )
 
 
 @router.get("/{id}")

@@ -169,6 +169,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/dashboards'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboards
             </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/dashboards/hub'))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Hub operativo
+            </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/executive'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Ejecutivo
             </CommandItem>

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,6 +19,7 @@ class TemaEmergenteBase(BaseModel):
     estado: str = Field(..., min_length=1, max_length=100)
     fuente: str = Field(..., min_length=1, max_length=255)
     celula_id: UUID | None = None
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class TemaEmergenteCreate(TemaEmergenteBase):
@@ -36,6 +38,7 @@ class TemaEmergenteUpdate(BaseModel):
     estado: str | None = Field(None, min_length=1, max_length=100)
     fuente: str | None = Field(None, min_length=1, max_length=255)
     celula_id: UUID | None = None
+    custom_fields: dict[str, Any] | None = None
 
 
 class TemaEmergenteRead(TemaEmergenteBase):

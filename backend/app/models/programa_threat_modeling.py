@@ -57,8 +57,12 @@ class ProgramaThreatModeling(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    activo_web: Mapped[ActivoWeb | None] = relationship(back_populates="programas_threat_modeling")
-    servicio: Mapped[Servicio | None] = relationship(back_populates="programas_threat_modeling")
+    activo_web: Mapped[ActivoWeb | None] = relationship(
+        "ActivoWeb", back_populates="programas_threat_modeling", lazy="noload"
+    )
+    servicio: Mapped[Servicio | None] = relationship(
+        "Servicio", back_populates="programas_threat_modeling", lazy="noload"
+    )
     sesiones: Mapped[list[SesionThreatModeling]] = relationship(
         "SesionThreatModeling", back_populates="programa_tm", lazy="noload"
     )

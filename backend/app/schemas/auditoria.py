@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,6 +18,7 @@ class AuditoriaBase(BaseModel):
     estado: str = Field(..., min_length=1, max_length=100)
     fecha_inicio: datetime = Field(...)
     fecha_fin: datetime | None = None
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class AuditoriaCreate(AuditoriaBase):
@@ -34,6 +36,7 @@ class AuditoriaUpdate(BaseModel):
     estado: str | None = Field(None, min_length=1, max_length=100)
     fecha_inicio: datetime | None = None
     fecha_fin: datetime | None = None
+    custom_fields: dict[str, Any] | None = None
 
 
 class AuditoriaRead(AuditoriaBase):

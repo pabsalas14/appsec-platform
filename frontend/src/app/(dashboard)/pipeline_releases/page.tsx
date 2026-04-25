@@ -38,6 +38,7 @@ import {
   PageWrapper,
   Select,
 } from '@/components/ui';
+import { useActivoWebs } from '@/hooks/useActivoWebs';
 import {
   useCreatePipelineRelease,
   useDeletePipelineRelease,
@@ -48,6 +49,7 @@ import { useRepositorios } from '@/hooks/useRepositorios';
 import { useServiceReleases } from '@/hooks/useServiceReleases';
 import { logger } from '@/lib/logger';
 import {
+  PipelineMesOptions,
   PipelineReleaseFormCreateSchema,
   RESULTADOS_PIPELINE,
   TIPOS_PIPELINE,
@@ -60,38 +62,58 @@ import { extractErrorMessage, formatDate } from '@/lib/utils';
 const ALL = '' as const;
 
 const pipelineEditSchema = z.object({
+  repositorio_id: z.union([z.string().uuid(), z.literal('')]).optional(),
+  activo_web_id: z.union([z.string().uuid(), z.literal('')]).optional(),
   rama: z.string().min(1).max(255),
   commit_sha: z.string().max(64).nullable().optional(),
+  scan_id: z.string().max(255).nullable().optional(),
+  mes: z
+    .string()
+    .optional()
+    .refine((s) => s === undefined || s === '' || /^([1-9]|1[0-2])$/.test(s), { message: 'Mes entre 1 y 12' }),
   resultado: z.enum(RESULTADOS_PIPELINE),
   herramienta: z.string().max(200).nullable().optional(),
+  liberado_con_vulns_criticas_o_altas: z.boolean().nullable().optional(),
 });
 type PipelineEditForm = z.infer<typeof pipelineEditSchema>;
+type FormCreate = z.infer<typeof PipelineReleaseFormCreateSchema>;
 
-function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSuccess: () => void; repoOptions: { value: string; label: string }[]; releaseOptions: { value: string; label: string }[] }) {
+function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions, activoOptions }: { onSuccess: () => void; repoOptions: { value: string; label: string }[]; releaseOptions: { value: string; label: string }[]; activoOptions: { value: string; label: string }[] }) {
   const createMut = useCreatePipelineRelease();
-  const form = useForm<z.infer<typeof PipelineReleaseFormCreateSchema>>({
+  const form = useForm<FormCreate>({
     resolver: zodResolver(PipelineReleaseFormCreateSchema),
     defaultValues: {
       service_release_id: '',
       repositorio_id: repoOptions[0]?.value ?? '',
       rama: 'main',
       commit_sha: null,
+      scan_id: null,
+      mes: '',
+      activo_web_id: '',
       tipo: 'SAST',
       resultado: 'Pendiente',
       herramienta: null,
+      liberado_con_vulns_criticas_o_altas: null,
     },
   });
+  const tipo = form.watch('tipo');
   const pending = createMut.isPending;
 
   const onSubmit = form.handleSubmit((data) => {
+    const mesStr = data.mes?.trim() ?? '';
+    const mes = mesStr ? parseInt(mesStr, 10) : null;
     const payload: PipelineReleaseCreate = {
       service_release_id: data.service_release_id && data.service_release_id.length > 0 ? data.service_release_id : null,
-      repositorio_id: data.repositorio_id,
+      repositorio_id: data.repositorio_id && data.repositorio_id.length > 0 ? data.repositorio_id : null,
       rama: data.rama.trim(),
       commit_sha: data.commit_sha?.trim() || null,
+      scan_id: data.scan_id?.trim() || null,
+      mes,
+      activo_web_id: data.activo_web_id && data.activo_web_id.length > 0 ? data.activo_web_id : null,
       tipo: data.tipo,
       resultado: data.resultado,
       herramienta: data.herramienta?.trim() || null,
+      liberado_con_vulns_criticas_o_altas: data.liberado_con_vulns_criticas_o_altas ?? null,
     };
     createMut.mutate(payload, {
       onSuccess: () => {
@@ -104,6 +126,8 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSucc
       },
     });
   });
+
+  const canCreate = repoOptions.length > 0 || activoOptions.length > 0;
 
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
@@ -120,17 +144,69 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSucc
         />
       </div>
       <div>
-        <label className="text-sm font-medium">Repositorio *</label>
+        <label className="text-sm font-medium">Tipo *</label>
         <Select
           className="mt-1"
-          value={form.watch('repositorio_id')}
+          value={form.watch('tipo')}
+          onChange={(e) => {
+            const t = e.target.value as (typeof TIPOS_PIPELINE)[number];
+            form.setValue('tipo', t, { shouldValidate: true });
+            if (t === 'DAST' && !form.getValues('repositorio_id')) {
+              /* permitir DAST sin repo hasta que elijan activo */
+            }
+          }}
+          options={TIPOS_PIPELINE.map((t) => ({ value: t, label: t }))}
+        />
+        <p className="text-xs text-muted-foreground mt-1">DAST: repositorio y/o activo web (al menos uno). SAST/SCA: repositorio obligatorio.</p>
+      </div>
+      <div>
+        <label className="text-sm font-medium">Repositorio{tipo === 'DAST' ? ' (opcional si hay activo)' : ' *'}</label>
+        <Select
+          className="mt-1"
+          value={form.watch('repositorio_id') || ''}
           onChange={(e) => form.setValue('repositorio_id', e.target.value, { shouldValidate: true })}
-          options={repoOptions}
-          placeholder="Repositorio"
+          options={[
+            { value: '', label: '—' },
+            ...repoOptions,
+          ]}
         />
         {form.formState.errors.repositorio_id && (
           <p className="mt-1 text-xs text-destructive">{form.formState.errors.repositorio_id.message}</p>
         )}
+      </div>
+      {tipo === 'DAST' && (
+        <div>
+          <label className="text-sm font-medium">Activo web (DAST)</label>
+          <Select
+            className="mt-1"
+            value={form.watch('activo_web_id') || ''}
+            onChange={(e) => form.setValue('activo_web_id', e.target.value, { shouldValidate: true })}
+            options={[
+              { value: '', label: '—' },
+              ...activoOptions,
+            ]}
+          />
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-sm font-medium">Scan ID (DAST/CI)</label>
+          <Input
+            className="mt-1 font-mono text-xs"
+            value={form.watch('scan_id') ?? ''}
+            onChange={(e) => form.setValue('scan_id', e.target.value || null, { shouldValidate: true })}
+            placeholder="id del job o escaneo"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Mes (1–12, cohorte DAST)</label>
+          <Select
+            className="mt-1"
+            value={form.watch('mes') ?? ''}
+            onChange={(e) => form.setValue('mes', e.target.value, { shouldValidate: true })}
+            options={PipelineMesOptions}
+          />
+        </div>
       </div>
       <div>
         <label className="text-sm font-medium">Rama *</label>
@@ -147,15 +223,6 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSucc
           value={form.watch('commit_sha') ?? ''}
           onChange={(e) => form.setValue('commit_sha', e.target.value || null, { shouldValidate: true })}
           placeholder="abc123…"
-        />
-      </div>
-      <div>
-        <label className="text-sm font-medium">Tipo *</label>
-        <Select
-          className="mt-1"
-          value={form.watch('tipo')}
-          onChange={(e) => form.setValue('tipo', e.target.value as (typeof TIPOS_PIPELINE)[number], { shouldValidate: true })}
-          options={TIPOS_PIPELINE.map((t) => ({ value: t, label: t }))}
         />
       </div>
       <div>
@@ -176,13 +243,27 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSucc
           onChange={(e) => form.setValue('herramienta', e.target.value || null, { shouldValidate: true })}
         />
       </div>
+      {tipo === 'DAST' && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="libCrit"
+            checked={Boolean(form.watch('liberado_con_vulns_criticas_o_altas'))}
+            onChange={(e) => form.setValue('liberado_con_vulns_criticas_o_altas', e.target.checked, { shouldValidate: true })}
+            className="h-4 w-4"
+          />
+          <label htmlFor="libCrit" className="text-sm">
+            Marcado: liberado con vulnerabilidades críticas/altas (BRD)
+          </label>
+        </div>
+      )}
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="outline">
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !form.watch('repositorio_id')}>
+        <Button type="submit" disabled={pending || !canCreate}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Crear
         </Button>
@@ -191,18 +272,38 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions }: { onSucc
   );
 }
 
-function PipelineEditForm({ initial, onSuccess, repoName }: { initial: PipelineRelease; onSuccess: () => void; repoName: string }) {
+function PipelineEditForm({
+  initial,
+  onSuccess,
+  repoName,
+  activoName,
+  repoOptions,
+  activoOptions,
+}: {
+  initial: PipelineRelease;
+  onSuccess: () => void;
+  repoName: string;
+  activoName: string;
+  repoOptions: { value: string; label: string }[];
+  activoOptions: { value: string; label: string }[];
+}) {
   const updateMut = useUpdatePipelineRelease();
   const form = useForm<PipelineEditForm>({
     resolver: zodResolver(pipelineEditSchema),
     defaultValues: {
+      repositorio_id: initial.repositorio_id ?? '',
+      activo_web_id: initial.activo_web_id ?? '',
       rama: initial.rama,
       commit_sha: initial.commit_sha ?? null,
+      scan_id: initial.scan_id ?? null,
+      mes: initial.mes != null ? String(initial.mes) : '',
       resultado: initial.resultado as (typeof RESULTADOS_PIPELINE)[number],
       herramienta: initial.herramienta ?? null,
+      liberado_con_vulns_criticas_o_altas: initial.liberado_con_vulns_criticas_o_altas ?? null,
     },
   });
   const pending = updateMut.isPending;
+  const tipo = initial.tipo;
 
   const onSubmit = form.handleSubmit((data) => {
     const patch: PipelineReleaseUpdate = {};
@@ -210,6 +311,18 @@ function PipelineEditForm({ initial, onSuccess, repoName }: { initial: PipelineR
     if ((data.commit_sha ?? null) !== (initial.commit_sha ?? null)) patch.commit_sha = data.commit_sha?.trim() || null;
     if (data.resultado !== initial.resultado) patch.resultado = data.resultado;
     if ((data.herramienta ?? null) !== (initial.herramienta ?? null)) patch.herramienta = data.herramienta?.trim() || null;
+    const scan = data.scan_id?.trim() || null;
+    if (scan !== (initial.scan_id ?? null)) patch.scan_id = scan;
+    const mesStr = data.mes?.trim() ?? '';
+    const mes = mesStr ? parseInt(mesStr, 10) : null;
+    if (mes !== (initial.mes ?? null)) patch.mes = mes;
+    const newRepo = data.repositorio_id && data.repositorio_id.length > 0 ? data.repositorio_id : null;
+    const newAct = data.activo_web_id && data.activo_web_id.length > 0 ? data.activo_web_id : null;
+    if (newRepo !== (initial.repositorio_id ?? null)) patch.repositorio_id = newRepo;
+    if (newAct !== (initial.activo_web_id ?? null)) patch.activo_web_id = newAct;
+    if ((data.liberado_con_vulns_criticas_o_altas ?? null) !== (initial.liberado_con_vulns_criticas_o_altas ?? null)) {
+      patch.liberado_con_vulns_criticas_o_altas = data.liberado_con_vulns_criticas_o_altas ?? null;
+    }
     if (Object.keys(patch).length === 0) {
       onSuccess();
       return;
@@ -233,14 +346,59 @@ function PipelineEditForm({ initial, onSuccess, repoName }: { initial: PipelineR
     <form className="space-y-4" onSubmit={onSubmit}>
       <div className="rounded-md border border-white/10 p-3 text-sm space-y-1">
         <p>
-          <span className="text-muted-foreground">Repositorio: </span>
-          {repoName}
+          <span className="text-muted-foreground">Tipo: </span>
+          {tipo}
         </p>
         <p>
-          <span className="text-muted-foreground">Tipo: </span>
-          {initial.tipo}
+          <span className="text-muted-foreground">Repositorio: </span>
+          {initial.repositorio_id ? repoName : '—'}
         </p>
-        <p className="text-xs text-muted-foreground">No se puede cambiar repositorio, tipo ni liberación; solo rama, commit, resultado y herramienta.</p>
+        {tipo === 'DAST' && (
+          <p>
+            <span className="text-muted-foreground">Activo web: </span>
+            {initial.activo_web_id ? activoName : '—'}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">Ajusta rama, scan, activo u resultado según la política DAST/CI.</p>
+      </div>
+      {tipo === 'DAST' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-sm font-medium">Repositorio (opcional)</label>
+            <Select
+              className="mt-1"
+              value={form.watch('repositorio_id') || ''}
+              onChange={(e) => form.setValue('repositorio_id', e.target.value, { shouldValidate: true })}
+              options={[{ value: '', label: '—' }, ...repoOptions]}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Activo web (opcional)</label>
+            <Select
+              className="mt-1"
+              value={form.watch('activo_web_id') || ''}
+              onChange={(e) => form.setValue('activo_web_id', e.target.value, { shouldValidate: true })}
+              options={[{ value: '', label: '—' }, ...activoOptions]}
+            />
+          </div>
+        </div>
+      )}
+      <div>
+        <label className="text-sm font-medium">Scan ID (CI / correlación)</label>
+        <Input
+          className="mt-1 font-mono text-xs"
+          value={form.watch('scan_id') ?? ''}
+          onChange={(e) => form.setValue('scan_id', e.target.value || null, { shouldValidate: true })}
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Mes (1–12, series)</label>
+        <Select
+          className="mt-1"
+          value={form.watch('mes') ?? ''}
+          onChange={(e) => form.setValue('mes', e.target.value, { shouldValidate: true })}
+          options={PipelineMesOptions}
+        />
       </div>
       <div>
         <label className="text-sm font-medium">Rama *</label>
@@ -279,6 +437,20 @@ function PipelineEditForm({ initial, onSuccess, repoName }: { initial: PipelineR
           onChange={(e) => form.setValue('herramienta', e.target.value || null, { shouldValidate: true })}
         />
       </div>
+      {tipo === 'DAST' && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="libCritE"
+            checked={Boolean(form.watch('liberado_con_vulns_criticas_o_altas'))}
+            onChange={(e) => form.setValue('liberado_con_vulns_criticas_o_altas', e.target.checked, { shouldValidate: true })}
+            className="h-4 w-4"
+          />
+          <label htmlFor="libCritE" className="text-sm">
+            Liberado con vulns críticas/altas
+          </label>
+        </div>
+      )}
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="outline">
@@ -295,40 +467,63 @@ function PipelineEditForm({ initial, onSuccess, repoName }: { initial: PipelineR
 }
 
 export default function PipelineReleasesPage() {
-  const { data: rows, isLoading, isError } = usePipelineReleases();
-  const { data: repos } = useRepositorios();
-  const { data: releases } = useServiceReleases();
   const [q, setQ] = useState('');
   const [repoF, setRepoF] = useState<string>(ALL);
+  const [releaseF, setReleaseF] = useState<string>(ALL);
   const [tipoF, setTipoF] = useState<string>(ALL);
   const [resF, setResF] = useState<string>(ALL);
+  const [mesF, setMesF] = useState<string>(ALL);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<PipelineRelease | null>(null);
   const deleteMut = useDeletePipelineRelease();
+
+  const { data: repos } = useRepositorios();
+  const { data: releases } = useServiceReleases();
+  const { data: activos } = useActivoWebs();
+
+  const listParams = useMemo(() => {
+    const p: { repositorio_id?: string; service_release_id?: string; tipo?: string; mes?: number } = {};
+    if (repoF !== ALL) p.repositorio_id = repoF;
+    if (releaseF !== ALL) p.service_release_id = releaseF;
+    if (tipoF !== ALL) p.tipo = tipoF;
+    if (mesF !== ALL) p.mes = parseInt(mesF, 10);
+    return Object.keys(p).length ? p : undefined;
+  }, [repoF, releaseF, tipoF, mesF]);
+
+  const { data: rows, isLoading, isError } = usePipelineReleases(listParams);
 
   const repoOptions = useMemo(
     () => (repos ?? []).map((r) => ({ value: r.id, label: r.nombre })),
     [repos],
   );
+  const activoOptions = useMemo(
+    () => (activos ?? []).map((a) => ({ value: a.id, label: a.nombre })),
+    [activos],
+  );
   const releaseOptions = useMemo(
     () => (releases ?? []).map((r) => ({ value: r.id, label: `${r.nombre} ${r.version}`.trim() })),
     [releases],
   );
+  const activoById = useCallback(
+    (id: string | null | undefined) => (id ? (activos ?? []).find((x) => x.id === id)?.nombre : undefined) ?? '—',
+    [activos],
+  );
   const repoName = useCallback(
-    (id: string) => (repos ?? []).find((x) => x.id === id)?.nombre ?? id.slice(0, 8),
+    (id: string | null | undefined) => (id ? (repos ?? []).find((x) => x.id === id)?.nombre : undefined) ?? '—',
     [repos],
   );
-  const releaseLabel = useCallback((id: string | null | undefined) => {
+  const releaseLabel = useCallback(
+    (id: string | null | undefined) => {
     if (!id) return '—';
     const r = (releases ?? []).find((x) => x.id === id);
     return r ? `${r.nombre} ${r.version}` : id.slice(0, 8);
-  }, [releases]);
+  },
+    [releases],
+  );
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows || [])
-      .filter((r) => (repoF === ALL ? true : r.repositorio_id === repoF))
-      .filter((r) => (tipoF === ALL ? true : r.tipo === tipoF))
       .filter((r) => (resF === ALL ? true : r.resultado === resF))
       .filter((r) => {
         if (!s) return true;
@@ -336,20 +531,22 @@ export default function PipelineReleasesPage() {
           r.rama.toLowerCase().includes(s) ||
           (r.commit_sha && r.commit_sha.toLowerCase().includes(s)) ||
           (r.herramienta && r.herramienta.toLowerCase().includes(s)) ||
-          repoName(r.repositorio_id).toLowerCase().includes(s)
+          (r.scan_id && r.scan_id.toLowerCase().includes(s)) ||
+          repoName(r.repositorio_id).toLowerCase().includes(s) ||
+          activoById(r.activo_web_id).toLowerCase().includes(s)
         );
       });
-  }, [rows, q, repoF, tipoF, resF, repoName]);
+  }, [rows, q, resF, repoName, activoById]);
 
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Pipelines (SAST / DAST / SCA)"
-        description="Ejecuciones de análisis vinculadas a un repositorio (y opcionalmente a una liberación de servicio)."
+        description="Ejecuciones vinculadas a repositorio (SAST/SCA) o a repositorio y/o activo web (DAST). Filtros de lista en servidor: repo, liberación, tipo, mes (BRD §10.2)."
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!repoOptions.length}>
+            <Button disabled={!repoOptions.length && !activoOptions.length}>
               <Plus className="mr-2 h-4 w-4" />
               Nueva
             </Button>
@@ -362,6 +559,7 @@ export default function PipelineReleasesPage() {
               onSuccess={() => setCreateOpen(false)}
               repoOptions={repoOptions}
               releaseOptions={releaseOptions}
+              activoOptions={activoOptions}
             />
           </DialogContent>
         </Dialog>
@@ -372,8 +570,9 @@ export default function PipelineReleasesPage() {
           <p className="text-sm text-muted-foreground">
             <GitBranch className="inline h-4 w-4 mr-1 align-text-bottom" />
             {rows?.length ?? 0} registro(s)
+            {listParams && ' (filtrados en servidor)'}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 max-w-6xl">
             <div>
               <label className="text-sm font-medium">Repositorio</label>
               <Select
@@ -387,6 +586,18 @@ export default function PipelineReleasesPage() {
               />
             </div>
             <div>
+              <label className="text-sm font-medium">Liberación</label>
+              <Select
+                className="mt-1"
+                value={releaseF}
+                onChange={(e) => setReleaseF(e.target.value)}
+                options={[
+                  { value: ALL, label: 'Todas' },
+                  ...releaseOptions,
+                ]}
+              />
+            </div>
+            <div>
               <label className="text-sm font-medium">Tipo</label>
               <Select
                 className="mt-1"
@@ -395,6 +606,18 @@ export default function PipelineReleasesPage() {
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...TIPOS_PIPELINE.map((t) => ({ value: t, label: t })),
+                ]}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Mes</label>
+              <Select
+                className="mt-1"
+                value={mesF}
+                onChange={(e) => setMesF(e.target.value)}
+                options={[
+                  { value: ALL, label: 'Todos' },
+                  ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
                 ]}
               />
             </div>
@@ -412,7 +635,7 @@ export default function PipelineReleasesPage() {
             </div>
             <div className="max-w-md">
               <label className="text-sm font-medium">Buscar</label>
-              <Input className="mt-1" placeholder="Rama, commit, repo…" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input className="mt-1" placeholder="Rama, commit, scan, repo, activo…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
           </div>
 
@@ -423,14 +646,15 @@ export default function PipelineReleasesPage() {
           )}
           {isError && <p className="text-destructive">No se pudo cargar el listado.</p>}
           {rows && rows.length === 0 && !isLoading && (
-            <p className="text-muted-foreground">No hay pipelines. Defina repositorios primero.</p>
+            <p className="text-muted-foreground">No hay pipelines. Defina repositorios o activos web.</p>
           )}
           {filtered && filtered.length > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
-                  <DataTableTh>Repo / tipo</DataTableTh>
+                  <DataTableTh>Origen / tipo</DataTableTh>
                   <DataTableTh>Rama</DataTableTh>
+                  <DataTableTh>Scan / mes</DataTableTh>
                   <DataTableTh>Resultado</DataTableTh>
                   <DataTableTh>Liberación</DataTableTh>
                   <DataTableTh>Herramienta</DataTableTh>
@@ -442,12 +666,19 @@ export default function PipelineReleasesPage() {
                 {filtered.map((r) => (
                   <DataTableRow key={r.id}>
                     <DataTableCell>
-                      <div className="font-medium">{repoName(r.repositorio_id)}</div>
+                      <div className="font-medium text-sm">{r.repositorio_id ? repoName(r.repositorio_id) : '—'}</div>
+                      {r.tipo === 'DAST' && r.activo_web_id && (
+                        <div className="text-xs text-muted-foreground">Activo: {activoById(r.activo_web_id)}</div>
+                      )}
                       <Badge variant="primary" className="mt-0.5">
                         {r.tipo}
                       </Badge>
                     </DataTableCell>
                     <DataTableCell className="font-mono text-xs">{r.rama}</DataTableCell>
+                    <DataTableCell className="text-xs text-muted-foreground">
+                      {r.scan_id ?? '—'}
+                      {r.mes != null ? ` · m${r.mes}` : ''}
+                    </DataTableCell>
                     <DataTableCell>
                       <Badge variant="default">{r.resultado}</Badge>
                     </DataTableCell>
@@ -513,6 +744,9 @@ export default function PipelineReleasesPage() {
               initial={edit}
               onSuccess={() => setEdit(null)}
               repoName={repoName(edit.repositorio_id)}
+              activoName={activoById(edit.activo_web_id)}
+              repoOptions={repoOptions}
+              activoOptions={activoOptions}
             />
           )}
         </DialogContent>

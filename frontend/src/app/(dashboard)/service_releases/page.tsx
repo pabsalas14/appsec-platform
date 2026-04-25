@@ -44,27 +44,71 @@ import {
   useServiceReleases,
   useUpdateServiceRelease,
 } from '@/hooks/useServiceReleases';
+import { useServiceReleaseOperacionConfig } from '@/hooks/useOperacionConfig';
 import { useServicios } from '@/hooks/useServicios';
 import { logger } from '@/lib/logger';
 import {
   ESTADOS_SERVICE_RELEASE,
-  ServiceReleaseCreateSchema,
+  ServiceReleaseFormInputSchema,
   type ServiceRelease,
   type ServiceReleaseCreate,
+  type ServiceReleaseFormInput,
   type ServiceReleaseUpdate,
 } from '@/lib/schemas/service_release.schema';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
 
 const ALL = '' as const;
 
-const emptyCreate: ServiceReleaseCreate = {
+const emptyForm: ServiceReleaseFormInput = {
   nombre: '',
   version: '',
   descripcion: null,
   servicio_id: '',
   estado_actual: 'Borrador',
   jira_referencia: null,
+  contexto_liberacion_text: '',
+  fecha_entrada_local: '',
 };
+
+function toDatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function buildServiceReleasePayload(data: ServiceReleaseFormInput): ServiceReleaseCreate {
+  let contexto: Record<string, unknown> | null = null;
+  if (data.contexto_liberacion_text && data.contexto_liberacion_text.trim()) {
+    try {
+      const parsed: unknown = JSON.parse(data.contexto_liberacion_text);
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        contexto = parsed as Record<string, unknown>;
+      } else {
+        throw new Error();
+      }
+    } catch {
+      throw new Error('JSON inválido en contexto de liberación (debe ser un objeto).');
+    }
+  }
+  let fecha: string | null = null;
+  if (data.fecha_entrada_local) {
+    const d = new Date(data.fecha_entrada_local);
+    if (Number.isNaN(d.getTime())) throw new Error('Fecha de entrada inválida');
+    fecha = d.toISOString();
+  }
+  return {
+    nombre: data.nombre.trim(),
+    version: data.version.trim(),
+    descripcion: data.descripcion?.trim() || null,
+    servicio_id: data.servicio_id,
+    estado_actual: data.estado_actual,
+    jira_referencia: data.jira_referencia?.trim() || null,
+    contexto_liberacion: contexto,
+    fecha_entrada: fecha,
+  };
+}
 
 function ServiceReleaseForm({
   initial,
@@ -75,38 +119,55 @@ function ServiceReleaseForm({
   onSuccess: () => void;
   servicioOptions: { value: string; label: string }[];
 }) {
+  const { data: operacion } = useServiceReleaseOperacionConfig();
   const createMut = useCreateServiceRelease();
   const updateMut = useUpdateServiceRelease();
   const isEdit = Boolean(initial);
-  const form = useForm<ServiceReleaseCreate>({
-    resolver: zodResolver(ServiceReleaseCreateSchema),
+  const form = useForm<ServiceReleaseFormInput>({
+    resolver: zodResolver(ServiceReleaseFormInputSchema),
     defaultValues: initial
       ? {
           nombre: initial.nombre,
           version: initial.version,
           descripcion: initial.descripcion ?? null,
           servicio_id: initial.servicio_id,
-          estado_actual: initial.estado_actual as (typeof ESTADOS_SERVICE_RELEASE)[number],
+          estado_actual: initial.estado_actual as ServiceReleaseFormInput['estado_actual'],
           jira_referencia: initial.jira_referencia ?? null,
+          contexto_liberacion_text: initial.contexto_liberacion
+            ? JSON.stringify(initial.contexto_liberacion, null, 2)
+            : '',
+          fecha_entrada_local: toDatetimeLocal(initial.fecha_entrada),
         }
       : {
-          ...emptyCreate,
+          ...emptyForm,
           servicio_id: servicioOptions[0]?.value ?? '',
         },
   });
 
   const pending = createMut.isPending || updateMut.isPending;
-  const estadoOptions = ESTADOS_SERVICE_RELEASE.map((e) => ({ value: e, label: e }));
+  const tr = operacion?.transiciones;
+  const estadoOptions = useMemo(() => {
+    const toOpt = (e: string) => ({ value: e, label: e });
+    if (isEdit && initial) {
+      const cur = initial.estado_actual;
+      if (!tr || Object.keys(tr).length === 0) return ESTADOS_SERVICE_RELEASE.map(toOpt);
+      const next = tr[cur] as string[] | undefined;
+      if (next && next.length) {
+        return Array.from(new Set([cur, ...next])).map(toOpt);
+      }
+      return [toOpt(cur)];
+    }
+    return [{ value: 'Borrador', label: 'Borrador' }];
+  }, [isEdit, initial, tr]);
 
   const onSubmit = form.handleSubmit((data) => {
-    const createPayload: ServiceReleaseCreate = {
-      nombre: data.nombre.trim(),
-      version: data.version.trim(),
-      descripcion: data.descripcion?.trim() || null,
-      servicio_id: data.servicio_id,
-      estado_actual: data.estado_actual,
-      jira_referencia: data.jira_referencia?.trim() || null,
-    };
+    let createPayload: ServiceReleaseCreate;
+    try {
+      createPayload = buildServiceReleasePayload(data);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Datos no válidos');
+      return;
+    }
     if (isEdit && initial) {
       const patch: ServiceReleaseUpdate = {};
       if (createPayload.nombre !== initial.nombre) patch.nombre = createPayload.nombre;
@@ -116,6 +177,12 @@ function ServiceReleaseForm({
       if (createPayload.estado_actual !== initial.estado_actual) patch.estado_actual = createPayload.estado_actual;
       if ((createPayload.jira_referencia ?? null) !== (initial.jira_referencia ?? null))
         patch.jira_referencia = createPayload.jira_referencia;
+      if (JSON.stringify(createPayload.contexto_liberacion ?? null) !== JSON.stringify(initial.contexto_liberacion ?? null)) {
+        patch.contexto_liberacion = createPayload.contexto_liberacion;
+      }
+      if ((createPayload.fecha_entrada ?? null) !== (initial.fecha_entrada ?? null)) {
+        patch.fecha_entrada = createPayload.fecha_entrada;
+      }
       if (Object.keys(patch).length === 0) {
         onSuccess();
         return;
@@ -202,14 +269,42 @@ function ServiceReleaseForm({
           className="mt-1"
           value={form.watch('estado_actual')}
           onChange={(e) =>
-            form.setValue('estado_actual', e.target.value as (typeof ESTADOS_SERVICE_RELEASE)[number], {
+            form.setValue('estado_actual', e.target.value as ServiceReleaseFormInput['estado_actual'], {
               shouldValidate: true,
             })
           }
           options={estadoOptions}
         />
+        {tr && Object.keys(tr).length > 0 && isEdit && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Transiciones mostradas según ajuste de operación (admin o Settings).
+          </p>
+        )}
         {form.formState.errors.estado_actual && (
           <p className="mt-1 text-xs text-destructive">{form.formState.errors.estado_actual.message}</p>
+        )}
+      </div>
+      <div>
+        <label className="text-sm font-medium">Fecha de entrada a la etapa (opcional)</label>
+        <Input
+          className="mt-1"
+          type="datetime-local"
+          value={form.watch('fecha_entrada_local') ?? ''}
+          onChange={(e) => form.setValue('fecha_entrada_local', e.target.value || null, { shouldValidate: true })}
+        />
+        <p className="text-xs text-muted-foreground mt-1">BRD: cuándo ingresó al estado/etapa (auditoría y SLA de paso).</p>
+      </div>
+      <div>
+        <label className="text-sm font-medium">Contexto de liberación (JSON opcional)</label>
+        <Textarea
+          className="mt-1 font-mono text-xs"
+          rows={4}
+          placeholder='{ "riesgo": "alto" }'
+          value={form.watch('contexto_liberacion_text') ?? ''}
+          onChange={(e) => form.setValue('contexto_liberacion_text', e.target.value, { shouldValidate: true })}
+        />
+        {form.formState.errors.contexto_liberacion_text && (
+          <p className="mt-1 text-xs text-destructive">{form.formState.errors.contexto_liberacion_text.message}</p>
         )}
       </div>
       <div>
@@ -237,14 +332,24 @@ function ServiceReleaseForm({
 }
 
 export default function ServiceReleasesPage() {
-  const { data: rows, isLoading, isError } = useServiceReleases();
-  const { data: servicios } = useServicios();
   const [q, setQ] = useState('');
+  const [jiraF, setJiraF] = useState('');
   const [servicioF, setServicioF] = useState<string>(ALL);
   const [estadoF, setEstadoF] = useState<string>(ALL);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<ServiceRelease | null>(null);
   const deleteMut = useDeleteServiceRelease();
+  const { data: servicios } = useServicios();
+
+  const listParams = useMemo(() => {
+    const p: { servicio_id?: string; estado_actual?: string; jira?: string } = {};
+    if (servicioF !== ALL) p.servicio_id = servicioF;
+    if (estadoF !== ALL) p.estado_actual = estadoF;
+    if (jiraF.trim()) p.jira = jiraF.trim();
+    return Object.keys(p).length ? p : undefined;
+  }, [servicioF, estadoF, jiraF]);
+
+  const { data: rows, isLoading, isError } = useServiceReleases(listParams);
 
   const servicioById = useMemo(
     () => new Map((servicios ?? []).map((s) => [s.id, s.nombre])),
@@ -258,26 +363,24 @@ export default function ServiceReleasesPage() {
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return (rows || [])
-      .filter((r) => (servicioF === ALL ? true : r.servicio_id === servicioF))
-      .filter((r) => (estadoF === ALL ? true : r.estado_actual === estadoF))
-      .filter((r) => {
-        if (!s) return true;
-        return (
-          r.nombre.toLowerCase().includes(s) ||
-          r.version.toLowerCase().includes(s) ||
-          (r.jira_referencia && r.jira_referencia.toLowerCase().includes(s)) ||
-          (r.descripcion && r.descripcion.toLowerCase().includes(s)) ||
-          (servicioById.get(r.servicio_id) || '').toLowerCase().includes(s)
-        );
-      });
-  }, [rows, q, servicioF, estadoF, servicioById]);
+    return (rows || []).filter((r) => {
+      if (!s) return true;
+      return (
+        r.nombre.toLowerCase().includes(s) ||
+        r.version.toLowerCase().includes(s) ||
+        (r.jira_referencia && r.jira_referencia.toLowerCase().includes(s)) ||
+        (r.descripcion && r.descripcion.toLowerCase().includes(s)) ||
+        (servicioById.get(r.servicio_id) || '').toLowerCase().includes(s) ||
+        (r.contexto_liberacion && JSON.stringify(r.contexto_liberacion).toLowerCase().includes(s))
+      );
+    });
+  }, [rows, q, servicioById]);
 
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Liberaciones de servicio (BRD)"
-        description="Versiones de despliegue vinculadas a un servicio; estados alineados al flujo de diseño, seguridad y producción."
+        description="Versiones de despliegue vinculadas a un servicio; estados, contexto JSON (BRD) y transiciones alineados a operación (admin / Settings)."
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
@@ -286,7 +389,7 @@ export default function ServiceReleasesPage() {
               Nueva
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nueva liberación</DialogTitle>
             </DialogHeader>
@@ -300,6 +403,7 @@ export default function ServiceReleasesPage() {
           <p className="text-sm text-muted-foreground">
             <Package className="inline h-4 w-4 mr-1 align-text-bottom" />
             {rows?.length ?? 0} liberación(es)
+            {listParams && ' (filtrada en servidor)'}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
             <div>
@@ -326,11 +430,20 @@ export default function ServiceReleasesPage() {
                 ]}
               />
             </div>
-            <div className="max-w-md sm:col-span-2 lg:col-span-1">
-              <label className="text-sm font-medium">Buscar</label>
+            <div>
+              <label className="text-sm font-medium">Referencia Jira (API)</label>
               <Input
                 className="mt-1"
-                placeholder="Nombre, versión, Jira, servicio…"
+                placeholder="PROJ-42 (búsqueda parcial en servidor)"
+                value={jiraF}
+                onChange={(e) => setJiraF(e.target.value)}
+              />
+            </div>
+            <div className="max-w-md sm:col-span-2 lg:col-span-1">
+              <label className="text-sm font-medium">Buscar en vista (cliente)</label>
+              <Input
+                className="mt-1"
+                placeholder="Nombre, versión, servicio, contexto…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -354,6 +467,8 @@ export default function ServiceReleasesPage() {
                   <DataTableTh>Versión</DataTableTh>
                   <DataTableTh>Servicio</DataTableTh>
                   <DataTableTh>Estado</DataTableTh>
+                  <DataTableTh>Ctx.</DataTableTh>
+                  <DataTableTh>Entrada</DataTableTh>
                   <DataTableTh>Jira</DataTableTh>
                   <DataTableTh>Actualizado</DataTableTh>
                   <DataTableTh className="w-[100px]">Acciones</DataTableTh>
@@ -371,6 +486,12 @@ export default function ServiceReleasesPage() {
                       <Badge variant="primary" className="whitespace-normal text-left max-w-[200px]">
                         {r.estado_actual}
                       </Badge>
+                    </DataTableCell>
+                    <DataTableCell className="text-xs text-muted-foreground">
+                      {r.contexto_liberacion && Object.keys(r.contexto_liberacion).length > 0 ? 'Sí' : '—'}
+                    </DataTableCell>
+                    <DataTableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {r.fecha_entrada ? formatDate(r.fecha_entrada) : '—'}
                     </DataTableCell>
                     <DataTableCell className="text-sm text-muted-foreground">
                       {r.jira_referencia ?? '—'}
@@ -423,7 +544,7 @@ export default function ServiceReleasesPage() {
       </Card>
 
       <Dialog open={edit !== null} onOpenChange={(o) => !o && setEdit(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar liberación</DialogTitle>
           </DialogHeader>

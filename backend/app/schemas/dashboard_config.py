@@ -1,21 +1,22 @@
-"""DashboardConfig schemas — Pydantic v2."""
+"""DashboardConfig schemas — Pydantic v2 for widget visibility config (Fase 2)."""
 
-from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DashboardConfigBase(BaseModel):
-    dashboard_id: str
-    widget_id: str
+    """Common fields for DashboardConfig."""
+
+    dashboard_id: UUID
+    widget_id: str = Field(..., min_length=1, max_length=255)
     role_id: UUID
-    visible: bool
-    editable_by_role: bool
+    visible: bool = Field(default=True)
+    editable_by_role: bool = Field(default=False)
 
 
 class DashboardConfigCreate(DashboardConfigBase):
-    """Fields required to create a dashboard config."""
+    """Fields required to create config."""
 
     pass
 
@@ -23,18 +24,13 @@ class DashboardConfigCreate(DashboardConfigBase):
 class DashboardConfigUpdate(BaseModel):
     """All fields optional for partial updates."""
 
-    dashboard_id: str | None = None
-    widget_id: str | None = None
-    role_id: UUID | None = None
     visible: bool | None = None
     editable_by_role: bool | None = None
 
 
 class DashboardConfigRead(DashboardConfigBase):
-    """Full dashboard config representation returned from the API."""
+    """Full representation returned from the API."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    created_at: datetime
-    updated_at: datetime

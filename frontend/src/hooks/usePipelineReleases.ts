@@ -7,11 +7,33 @@ type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['pipeline_releases'] as const;
 
-export function usePipelineReleases() {
+export type PipelineReleasesListParams = {
+  repositorio_id?: string;
+  service_release_id?: string;
+  scan_id?: string;
+  tipo?: string;
+  rama?: string;
+  mes?: string | number;
+};
+
+function listParamsToQuery(p?: PipelineReleasesListParams): Record<string, string> | undefined {
+  if (!p) return undefined;
+  const o: Record<string, string> = {};
+  for (const [k, v] of Object.entries(p) as [keyof PipelineReleasesListParams, string | number | undefined][]) {
+    if (v === undefined || v === '') continue;
+    o[k] = String(v);
+  }
+  return Object.keys(o).length ? o : undefined;
+}
+
+export function usePipelineReleases(params?: PipelineReleasesListParams) {
+  const q = listParamsToQuery(params);
   return useQuery({
-    queryKey: KEY,
+    queryKey: [...KEY, q ?? {}] as const,
     queryFn: async () => {
-      const { data } = await api.get<Envelope<PipelineRelease[]>>('/pipeline_releases/');
+      const { data } = await api.get<Envelope<PipelineRelease[]>>('/pipeline_releases/', {
+        params: q,
+      });
       return data.data;
     },
   });
@@ -24,7 +46,7 @@ export function useCreatePipelineRelease() {
       const { data } = await api.post<Envelope<PipelineRelease>>('/pipeline_releases/', payload);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pipeline_releases'] }),
   });
 }
 
@@ -35,7 +57,7 @@ export function useUpdatePipelineRelease() {
       const { data } = await api.patch<Envelope<PipelineRelease>>(`/pipeline_releases/${id}`, payload);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pipeline_releases'] }),
   });
 }
 
@@ -45,6 +67,6 @@ export function useDeletePipelineRelease() {
     mutationFn: async (id: string) => {
       await api.delete(`/pipeline_releases/${id}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pipeline_releases'] }),
   });
 }

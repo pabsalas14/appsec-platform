@@ -45,6 +45,8 @@ from app.api.v1 import (
     historial_vulnerabilidad,
     hito_iniciativa,
     indicador_formula,
+    indicadores,
+    madurez,
     # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
     iniciativa,
     notificacion,
@@ -190,6 +192,8 @@ api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones
 # ─── Módulo 2 — Panel de Administración (transversal) ─────────────────────────
 api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
 api_router.include_router(indicador_formula.router, prefix="/indicadores_formulas", tags=["Indicador_formula"])
+api_router.include_router(indicadores.router, prefix="/indicadores", tags=["Indicadores"])
+api_router.include_router(madurez.router, prefix="/madurez", tags=["Madurez"])
 api_router.include_router(filtro_guardado.router, prefix="/filtros_guardados", tags=["Filtro_guardado"])
 api_router.include_router(dashboard_config.router, prefix="/dashboard_configs", tags=["Dashboard_config"])
 api_router.include_router(changelog_entrada.router, prefix="/changelog_entradas", tags=["Changelog_entrada"])

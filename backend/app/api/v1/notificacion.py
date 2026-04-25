@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_permission
+from app.api.deps import get_db, require_backoffice, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
 from app.core.response import success
@@ -11,6 +11,7 @@ from app.models.notificacion import Notificacion
 from app.models.user import User
 from app.schemas.notificacion import NotificacionCreate, NotificacionRead, NotificacionUpdate
 from app.services.notificacion_service import marcar_todas_leidas_for_user, notificacion_svc
+from app.services.notification_rules_runner import run_all_notification_rules
 
 router = APIRouter()
 
@@ -23,6 +24,16 @@ async def list_notificacions(
     """List notificacions owned by the current user (más recientes primero)."""
     items = await notificacion_svc.list(db, filters={"user_id": current_user.id})
     return success([NotificacionRead.model_validate(x).model_dump(mode="json") for x in items])
+
+
+@router.post("/procesar-reglas", status_code=200)
+async def procesar_reglas_notificacion(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_backoffice),
+):
+    """G2 — Ejecuta reglas automáticas (§14.3); idempotente. Admin / super_admin."""
+    out = await run_all_notification_rules(db)
+    return success(out)
 
 
 @router.post("/marcar-todas-leidas")

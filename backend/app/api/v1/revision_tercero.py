@@ -15,9 +15,38 @@ from app.schemas.revision_tercero import (
     RevisionTerceroRead,
     RevisionTerceroUpdate,
 )
+from app.services.json_setting import get_json_setting
 from app.services.revision_tercero_service import revision_tercero_svc
 
 router = APIRouter()
+
+# Plantilla por defecto BRD §10.3 (sobrescribible con `catalogo.checklist_revision_tercero`)
+_DEFAULT_CHECKLIST = {
+    "items": [
+        {"id": "alcance", "label": "Alcance y responsables acordados y documentados", "tipo": "boolean"},
+        {"id": "metodologia", "label": "Metodología y herramientas alineadas al estándar interno", "tipo": "boolean"},
+        {"id": "acceso", "label": "Controles de acceso y manejo de datos sensibles (NDA, vault)", "tipo": "boolean"},
+        {"id": "entregables", "label": "Entregables: informe, evidencias, severidad (CVSS/CWE)", "tipo": "boolean"},
+        {"id": "cierre", "label": "Plan de cierre o seguimiento de hallazgos acordado", "tipo": "boolean"},
+    ]
+}
+
+
+@router.get("/config/checklist")
+async def get_revision_tercero_checklist_template(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """BRD §10.3: plantilla de ítems de checklist (admin vía `catalogo.checklist_revision_tercero`)."""
+    raw = await get_json_setting(db, "catalogo.checklist_revision_tercero", None)
+    if raw is None or raw == []:
+        data = dict(_DEFAULT_CHECKLIST)
+    elif isinstance(raw, dict) and "items" in raw:
+        data = raw
+    else:
+        # lista plana o formato legacy → normalizar
+        data = {"items": raw} if isinstance(raw, list) else dict(_DEFAULT_CHECKLIST)
+    return success(data)
 
 
 @router.get("")

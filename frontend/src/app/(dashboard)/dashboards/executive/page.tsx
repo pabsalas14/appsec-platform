@@ -62,6 +62,37 @@ export default function ExecutiveDashboardPage() {
           </CardContent>
         </Card>
       )}
+      {isVisible('dashboard.executive.panel.heatmap') && data?.by_severity && (
+        <Card>
+          <CardContent className="py-4 space-y-2">
+            <p className="text-sm font-medium">Heatmap por severidad (F1 — inventario de exposición)</p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-sm">
+              {['Critica', 'Alta', 'Media', 'Baja', 'Informativa'].map((k) => {
+                const n = data.by_severity?.[k] ?? 0;
+                const max = Math.max(1, ...Object.values(data.by_severity ?? {}));
+                const intensity = max > 0 ? Math.min(1, 0.15 + (n / max) * 0.85) : 0.1;
+                return (
+                  <div
+                    key={k}
+                    className="rounded-md border border-border p-3"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, hsl(var(--primary)) ${Math.round(intensity * 100)}%, transparent)`,
+                    }}
+                  >
+                    <div className="text-xs text-muted-foreground">{k}</div>
+                    <div className="text-lg font-semibold tabular-nums">{isLoading ? '…' : n}</div>
+                  </div>
+                );
+              })}
+            </div>
+            {data?.trend?.new_vulnerabilities_7d != null && (
+              <p className="text-xs text-muted-foreground">
+                Tendencia: {data.trend.new_vulnerabilities_7d} nuevas (últimos 7 días)
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </PageWrapper>
   );
 }

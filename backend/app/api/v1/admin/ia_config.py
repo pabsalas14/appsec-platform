@@ -136,7 +136,7 @@ async def ia_test_call(
         provider=result.provider,  # type: ignore[arg-type]
         model=result.model,
         content=result.content,
-        usage=result.usage,
+        usage=getattr(result, "usage", None),
         dry_run=payload.dry_run,
     )
     return success(body.model_dump(mode="json"))

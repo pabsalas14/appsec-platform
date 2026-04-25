@@ -6,13 +6,19 @@ Multi-provider support: Ollama, Anthropic, OpenAI, OpenRouter
 import asyncio
 import json
 import logging
+import os
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Optional, cast
 
 import aiohttp
 import httpx
 from pydantic import BaseModel, ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.schemas.ia_config import IAConfigRead, IAProvider
+from app.services.json_setting import get_json_setting
 
 logger = logging.getLogger(__name__)
 
@@ -450,3 +456,110 @@ def get_ai_provider(
         raise ValueError(f"Unknown provider: {provider_type}")
 
     return provider_class(**kwargs)
+
+
+# ─── Runtime: administración, triage y pruebas (expuesto vía `app.api.v1`) ───
+
+
+class IAProviderError(RuntimeError):
+    """Fallo al invocar el proveedor IA configurado."""
+
+
+@dataclass(frozen=True, slots=True)
+class RunPromptResult:
+    content: str
+    provider: str
+    model: str
+
+
+def _as_ia_provider_id(raw: str) -> str:
+    s = (raw or "ollama").strip().lower()
+    return s if s in ("ollama", "anthropic", "openai", "openrouter") else "ollama"
+
+
+async def read_ia_config(db: AsyncSession) -> IAConfigRead:
+    """Lectura efectiva de claves `ia.*` (admin / defaults)."""
+    p = _as_ia_provider_id(str(await get_json_setting(db, "ia.proveedor_activo", "ollama")))
+    return IAConfigRead(
+        proveedor_activo=cast(IAProvider, p),
+        modelo=str(await get_json_setting(db, "ia.modelo", "llama3.1:8b")),
+        temperatura=float(await get_json_setting(db, "ia.temperatura", 0.3)),
+        max_tokens=int(await get_json_setting(db, "ia.max_tokens", 4096)),
+        timeout_segundos=int(await get_json_setting(db, "ia.timeout_segundos", 60)),
+        sanitizar_datos_paga=bool(await get_json_setting(db, "ia.sanitizar_datos_paga", True)),
+    )
+
+
+async def run_prompt(
+    db: AsyncSession,
+    *,
+    prompt: str,
+    dry_run: bool = True,
+) -> RunPromptResult:
+    """
+    Envía un prompt al proveedor activo, o responde con JSON fijo en simulación.
+    `dry_run=True` nunca sale de la red (sólo estructura coherente con triage).
+    """
+    cfg = await read_ia_config(db)
+    if dry_run:
+        body = {
+            "verdict": "needs_review",
+            "confidence": 0.5,
+            "rationale": "Simulación (dry run): no se llamó a ningún proveedor externo.",
+            "suggested_state": None,
+        }
+        return RunPromptResult(
+            content=json.dumps(body, ensure_ascii=False),
+            provider=cfg.proveedor_activo.value
+            if isinstance(cfg.proveedor_activo, Enum)
+            else str(cfg.proveedor_activo),
+            model=cfg.modelo,
+        )
+    p = (
+        cfg.proveedor_activo.value
+        if isinstance(cfg.proveedor_activo, Enum)
+        else str(cfg.proveedor_activo)
+    )
+    if p == "ollama":
+        base = os.environ.get("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
+        oll = OllamaProvider(
+            base_url=base,
+            model=cfg.modelo,
+            timeout_seconds=cfg.timeout_segundos,
+        )
+        try:
+            r = await oll.generate(
+                prompt,
+                temperature=cfg.temperatura,
+                max_tokens=cfg.max_tokens,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("ia.run_prompt.ollama_failed", extra={"event": "ia.run_prompt.ollama_failed"})
+            raise IAProviderError(str(exc)) from exc
+        return RunPromptResult(content=r.content, provider=r.provider, model=cfg.modelo)
+    if p in ("openai", "anthropic", "openrouter"):
+        key = os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get(
+            "OPENROUTER_API_KEY", ""
+        )
+        if not key:
+            raise IAProviderError("Falta variable de entorno de API (OPENAI/ANTHROPIC/OPENROUTER).")
+        try:
+            ptype = {
+                "openai": AIProviderType.OPENAI,
+                "anthropic": AIProviderType.ANTHROPIC,
+                "openrouter": AIProviderType.OPENROUTER,
+            }[p]
+        except KeyError as err:
+            raise IAProviderError(f"Proveedor no soportado: {p}") from err
+        prov = get_ai_provider(ptype, api_key=key, model=cfg.modelo, timeout_seconds=cfg.timeout_segundos)
+        try:
+            r = await prov.generate(
+                prompt,
+                temperature=cfg.temperatura,
+                max_tokens=cfg.max_tokens,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("ia.run_prompt.remote_failed", extra={"event": "ia.run_prompt.remote_failed"})
+            raise IAProviderError(str(exc)) from exc
+        return RunPromptResult(content=r.content, provider=r.provider, model=cfg.modelo)
+    raise IAProviderError(f"Proveedor no soportado: {p}")

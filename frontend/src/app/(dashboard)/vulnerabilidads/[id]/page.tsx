@@ -3,7 +3,8 @@
 import { ChevronLeft, Loader2, Scale } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   Badge,
@@ -16,12 +17,15 @@ import {
   Label,
   PageHeader,
   PageWrapper,
+  Select,
   Separator,
   Switch,
   Textarea,
 } from '@/components/ui';
-import { useTriageVulnerabilidadIa, useVulnerabilidad } from '@/hooks/useVulnerabilidads';
+import { useVulnerabilidadFlujoConfig } from '@/hooks/useOperacionConfig';
+import { useTriageVulnerabilidadIa, useUpdateVulnerabilidad, useVulnerabilidad } from '@/hooks/useVulnerabilidads';
 import { logger } from '@/lib/logger';
+import { labelForEstatusId, optionsForEstadoTransiciones, resolveEstatusIdFromRaw } from '@/lib/vulnerabilidadFlujo';
 import type { VulnerabilidadIATriageResponse } from '@/lib/schemas/vulnerabilidad_ia_triage_response.schema';
 import { cn, extractErrorMessage, formatDate } from '@/lib/utils';
 
@@ -43,11 +47,32 @@ export default function VulnerabilidadDetailPage() {
   const params = useParams();
   const id = typeof params.id === 'string' ? params.id : undefined;
   const { data: vuln, isLoading, error } = useVulnerabilidad(id);
+  const { data: flujoCfg } = useVulnerabilidadFlujoConfig();
+  const estatus = flujoCfg?.estatus;
+  const updateVuln = useUpdateVulnerabilidad();
   const triage = useTriageVulnerabilidadIa();
 
   const [contextoAdicional, setContextoAdicional] = useState('');
   const [dryRun, setDryRun] = useState(true);
   const [ultima, setUltima] = useState<VulnerabilidadIATriageResponse | null>(null);
+  const [estadoEdit, setEstadoEdit] = useState('');
+
+  const currentResuelto = useMemo(
+    () => (vuln ? resolveEstatusIdFromRaw(vuln.estado, estatus) : ''),
+    [vuln, estatus],
+  );
+  const estadoOptions = useMemo(
+    () => (vuln ? optionsForEstadoTransiciones(estatus, vuln.estado) : []),
+    [vuln, estatus],
+  );
+  const estadoLabel = useMemo(
+    () => (vuln ? labelForEstatusId(estatus, vuln.estado) : ''),
+    [vuln, estatus],
+  );
+
+  useEffect(() => {
+    if (vuln) setEstadoEdit(resolveEstatusIdFromRaw(vuln.estado, estatus));
+  }, [vuln, estatus]);
 
   if (!id) {
     return (
@@ -83,6 +108,26 @@ export default function VulnerabilidadDetailPage() {
       </PageWrapper>
     );
   }
+
+  const onGuardarEstado = () => {
+    if (!id || !vuln) return;
+    if (!estadoEdit || estadoEdit === currentResuelto) {
+      toast.info('No hay cambio de estado');
+      return;
+    }
+    updateVuln.mutate(
+      { id, estado: estadoEdit },
+      {
+        onSuccess: () => {
+          toast.success('Estado actualizado (validado con catálogo D1 y transiciones).');
+        },
+        onError: (e) => {
+          logger.error('vulnerabilidad.update_estado.failed', { id, error: e });
+          toast.error(extractErrorMessage(e, 'Transición no permitida o estado inválido.'));
+        },
+      },
+    );
+  };
 
   const onTriage = () => {
     triage.mutate(
@@ -125,10 +170,11 @@ export default function VulnerabilidadDetailPage() {
 
       <PageHeader
         title={vuln.titulo}
-        description={`Motor: ${vuln.fuente} · ${vuln.severidad} · ${vuln.estado}`}
+        description={`Motor: ${vuln.fuente} · ${vuln.severidad} · ${estadoLabel} (${vuln.estado})`}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Detalle del hallazgo</CardTitle>
@@ -163,6 +209,55 @@ export default function VulnerabilidadDetailPage() {
             </dl>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Flujo de estatus (D1)</CardTitle>
+            <CardDescription>
+              Valores y transiciones según ajuste admin (`catalogo.estatus_vulnerabilidad`); el backend valida cada
+              cambio.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {!estatus?.length && (
+              <p className="text-muted-foreground">Catálogo no disponible. Mostrando valor almacenado: {vuln.estado}</p>
+            )}
+            {estatus && estatus.length > 0 && (
+              <>
+                <div>
+                  <p className="text-xs text-muted-foreground">Actual (resuelto a id)</p>
+                  <p className="font-medium">
+                    {estadoLabel} <span className="text-muted-foreground font-mono text-xs">· {currentResuelto}</span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium" htmlFor="estado_d1">
+                    Nuevo estatus
+                  </label>
+                  <Select
+                    id="estado_d1"
+                    className="mt-1"
+                    value={estadoEdit}
+                    onChange={(e) => setEstadoEdit(e.target.value)}
+                    options={estadoOptions.length ? estadoOptions : [{ value: currentResuelto, label: estadoLabel }]}
+                    disabled={updateVuln.isPending}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={onGuardarEstado}
+                  disabled={
+                    updateVuln.isPending || !estadoEdit || estadoEdit === currentResuelto
+                  }
+                >
+                  {updateVuln.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Aplicar cambio de estatus
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        </div>
 
         <Card>
           <CardHeader>

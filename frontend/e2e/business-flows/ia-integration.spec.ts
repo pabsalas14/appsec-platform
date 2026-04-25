@@ -79,6 +79,38 @@ test.describe("IA Integration (M13)", () => {
       }
     });
 
+    test("G4: dry_run TM suggest succeeds for each configured provider slot", async ({
+      testData,
+    }) => {
+      const providers = [
+        { ai_provider: "ollama" as const, ai_model: "llama3" },
+        { ai_provider: "anthropic" as const, ai_model: "claude-3-5-sonnet" },
+      ];
+      for (const p of providers) {
+        const put = await testData.api.request.put(
+          `http://localhost:8000/api/v1/admin/ia-config`,
+          { data: p }
+        );
+        if (!put.ok()) {
+          test.skip();
+          return;
+        }
+        const sessions = await testData.api.list("/sesion_threat_modelings");
+        const first = (sessions as { id?: string }[] | null)?.[0];
+        if (!first?.id) {
+          test.skip();
+          return;
+        }
+        const r = await testData.api.request.post(
+          `http://localhost:8000/api/v1/sesion_threat_modelings/${first.id}/ia/suggest`,
+          { data: { contexto: "G4 e2e", dry_run: true } }
+        );
+        expect(r.status(), `provider ${p.ai_provider}`).toBeLessThan(500);
+        const j = await r.json();
+        expect((j as { status?: string }).status).toBe("success");
+      }
+    });
+
     test("should log all IA configuration changes to audit trail", async ({
       testData,
     }) => {

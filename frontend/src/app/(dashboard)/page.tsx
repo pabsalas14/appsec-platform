@@ -34,6 +34,7 @@ import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilte
 import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { appendHierarchyQuery } from '@/lib/dashboardLinks';
 import { isBackofficeUser } from '@/lib/roles';
 
 export default function DashboardHomePage() {
@@ -118,7 +119,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-rose-400"
             iconBg="bg-rose-500/10"
-            href="/vulnerabilidads"
+            href={appendHierarchyQuery('/vulnerabilidads', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.critical_count') && (
@@ -128,7 +129,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-orange-400"
             iconBg="bg-orange-500/10"
-            href="/vulnerabilidads?severidad=Critica"
+            href={appendHierarchyQuery('/vulnerabilidads?severidad=Critica', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.overdue_sla') && (
@@ -138,7 +139,7 @@ export default function DashboardHomePage() {
             icon={Circle}
             iconColor="text-amber-400"
             iconBg="bg-amber-500/10"
-            href="/vulnerabilidads?sla=vencida"
+            href={appendHierarchyQuery('/vulnerabilidads?sla=vencida', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.risk_level') && (
@@ -148,7 +149,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-violet-400"
             iconBg="bg-violet-500/10"
-            href="/dashboards/executive"
+            href={appendHierarchyQuery('/dashboards/executive', filters)}
           />
         )}
       </div>
@@ -160,7 +161,7 @@ export default function DashboardHomePage() {
           icon={Users}
           iconColor="text-cyan-400"
           iconBg="bg-cyan-500/10"
-          href="/dashboards/team"
+          href={appendHierarchyQuery('/dashboards/team', filters)}
         />
         <StatCard
           label="Releases (total)"
@@ -168,7 +169,7 @@ export default function DashboardHomePage() {
           icon={ListTodo}
           iconColor="text-blue-400"
           iconBg="bg-blue-500/10"
-          href="/service_releases"
+          href={appendHierarchyQuery('/service_releases', filters)}
         />
         <StatCard
           label="Releases en progreso"
@@ -176,7 +177,7 @@ export default function DashboardHomePage() {
           icon={Activity}
           iconColor="text-indigo-400"
           iconBg="bg-indigo-500/10"
-          href="/service_releases"
+          href={appendHierarchyQuery('/service_releases', filters)}
         />
         <StatCard
           label="Pendientes aprobación"
@@ -184,7 +185,7 @@ export default function DashboardHomePage() {
           icon={Circle}
           iconColor="text-fuchsia-400"
           iconBg="bg-fuchsia-500/10"
-          href="/service_releases"
+          href={appendHierarchyQuery('/service_releases', filters)}
         />
       </div>
 

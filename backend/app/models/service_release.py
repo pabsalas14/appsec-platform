@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -47,6 +47,8 @@ class ServiceRelease(SoftDeleteMixin, Base):
     # Estado derivado del flujo de etapas; se actualiza al avanzar etapas
     estado_actual: Mapped[str] = mapped_column(String(100), nullable=False, default="Borrador")
     jira_referencia: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contexto_liberacion: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    fecha_entrada: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

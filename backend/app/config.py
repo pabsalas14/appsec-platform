@@ -93,6 +93,11 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
     OLLAMA_URL: str = "http://localhost:11434"
 
+    # ─── G2: evaluación diaria (nocturna) de reglas hacia in-app notifications ───
+    SCHEDULE_NOTIFICATION_RULES: bool = False
+    NOTIFICATION_CRON_HOUR_UTC: int = 2
+    NOTIFICATION_CRON_MINUTE_UTC: int = 0
+
     @field_validator("LOG_FORMAT")
     @classmethod
     def log_format_safe_in_prod(cls, v: str, info) -> str:

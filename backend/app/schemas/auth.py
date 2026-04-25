@@ -1,6 +1,7 @@
 """Authentication schemas — Pydantic v2."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -31,6 +32,7 @@ class UserRead(BaseModel):
     full_name: str | None = None
     role: str
     is_active: bool
+    preferences: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -44,6 +46,7 @@ class ProfileUpdate(BaseModel):
 
     full_name: str | None = None
     email: EmailStr | None = None
+    preferences: dict[str, Any] | None = None
 
 
 class PasswordChange(BaseModel):

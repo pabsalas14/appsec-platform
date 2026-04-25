@@ -3,7 +3,7 @@
  * DataTable, Modal, Form, KanbanBoard, Chart, Semaphore
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -203,7 +203,7 @@ describe('DataTable Component', () => {
         setSelected(newSelected);
       };
 
-      const { rerender } = render(
+      render(
         <table>
           <tbody>
             {mockData.map((row) => (
@@ -506,7 +506,7 @@ describe('Form Component', () => {
         setErrors(newErrors);
       };
 
-      const { rerender } = render(
+      render(
         <form onSubmit={handleSubmit}>
           <input name="titulo" required />
           {errors.titulo && <span>{errors.titulo}</span>}
@@ -555,7 +555,7 @@ describe('Form Component', () => {
         setIsLoading(false);
       };
 
-      const { rerender } = render(
+      render(
         <form onSubmit={handleSubmit}>
           <button type="submit" disabled={isLoading}>
             {isLoading ? 'Submitting...' : 'Submit'}
@@ -578,7 +578,7 @@ describe('Form Component', () => {
         setSuccess(true);
       };
 
-      const { rerender } = render(
+      render(
         <form onSubmit={handleSubmit}>
           <button type="submit">Submit</button>
           {success && <div>Successfully created!</div>}
@@ -603,7 +603,7 @@ describe('Form Component', () => {
         }
       };
 
-      const { rerender } = render(
+      render(
         <form onSubmit={handleSubmit}>
           <button type="submit">Submit</button>
           {error && <div className="error">{error}</div>}
@@ -720,7 +720,7 @@ describe('KanbanBoard Component', () => {
         }));
       };
 
-      const { rerender } = render(
+      render(
         <div>
           <button
             onClick={() =>
@@ -801,7 +801,7 @@ describe('Chart Component', () => {
     it('should update chart when data changes', () => {
       const [data, setData] = React.useState(pieChartData.datasets[0].data);
 
-      const { rerender } = render(
+      render(
         <div>
           <canvas data-testid="pie-chart" />
           <button onClick={() => setData([50, 35, 15])}>Update</button>

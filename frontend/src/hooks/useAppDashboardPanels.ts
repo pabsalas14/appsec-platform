@@ -16,6 +16,8 @@ export type DashboardExecutiveData = {
     critical_count: number;
     sla_compliance: number;
   };
+  by_severity?: Record<string, number>;
+  trend?: { new_vulnerabilities_7d?: number };
   risk_level: string;
   applied_filters?: Record<string, string>;
 };

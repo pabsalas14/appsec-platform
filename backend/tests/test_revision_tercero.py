@@ -93,7 +93,41 @@ async def test_revision_tercero_sha256_max_length(client: AsyncClient, auth_head
 @pytest.mark.asyncio
 async def test_revision_tercero_requires_auth(client: AsyncClient):
     assert (await client.get(BASE_URL)).status_code == 401
+    assert (await client.get(f"{BASE_URL}/config/checklist")).status_code == 401
     assert (await client.get(f"{BASE_URL}/{uuid4()}")).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_checklist_template(client: AsyncClient, auth_headers: dict):
+    r = await client.get(f"{BASE_URL}/config/checklist", headers=auth_headers)
+    assert r.status_code == 200
+    data = r.json()["data"]
+    assert "items" in data
+    assert len(data["items"]) >= 1
+    assert data["items"][0].get("id")
+
+
+@pytest.mark.asyncio
+async def test_patch_checklist_evidencias(client: AsyncClient, auth_headers: dict):
+    svc_id = await _create_servicio(client, auth_headers)
+    r = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
+    assert r.status_code == 201
+    rid = r.json()["data"]["id"]
+    patch = await client.patch(
+        f"{BASE_URL}/{rid}",
+        headers=auth_headers,
+        json={
+            "responsable_revision": "Juan Pérez",
+            "observaciones": "OK entorno staging",
+            "checklist_resultados": {"alcance": {"ok": True}},
+            "evidencias": [{"url": "https://example.com/informe.pdf", "tipo": "informe"}],
+        },
+    )
+    assert patch.status_code == 200
+    d = patch.json()["data"]
+    assert d["responsable_revision"] == "Juan Pérez"
+    assert d["checklist_resultados"]["alcance"]["ok"] is True
+    assert d["evidencias"][0]["url"] == "https://example.com/informe.pdf"
 
 
 @pytest.mark.asyncio

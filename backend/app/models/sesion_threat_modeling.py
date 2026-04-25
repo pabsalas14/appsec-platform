@@ -16,11 +16,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 from app.models.mixins import SoftDeleteMixin
+from app.models.programa_threat_modeling import ProgramaThreatModeling
 
 if TYPE_CHECKING:
     from app.models.activo_web import ActivoWeb
     from app.models.amenaza import Amenaza
-    from app.models.programa_threat_modeling import ProgramaThreatModeling
 
 
 class SesionThreatModeling(SoftDeleteMixin, Base):

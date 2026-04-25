@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
+from typing import TypeVar
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -11,11 +16,33 @@ class Base(DeclarativeBase):
     pass
 
 
+T = TypeVar("T")
+
+
 async def get_db():
     async with async_session() as session:
         try:
             yield session
             await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+async def run_in_transaction(
+    fn: Callable[[AsyncSession], Awaitable[T]],
+) -> T:
+    """
+    Misma política de commit/rollback que `get_db` (único sitio de commit, ADR-0003),
+    para tareas en segundo plano (p. ej. reglas de notificación programadas).
+    """
+    async with async_session() as session:
+        try:
+            out = await fn(session)
+            await session.commit()
+            return out
         except Exception:
             await session.rollback()
             raise

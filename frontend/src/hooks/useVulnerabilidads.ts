@@ -12,12 +12,36 @@ const KEY = ['vulnerabilidads'] as const;
 
 type IATriageRequest = components['schemas']['VulnerabilidadIATriageRequest'];
 
+export type VulnerabilidadListMeta = {
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+
+type ListResponse = { status: 'success'; data: Vulnerabilidad[]; meta: VulnerabilidadListMeta };
+
+/** Primera página (hasta 100) — selects y formularios dependientes. */
 export function useVulnerabilidads() {
   return useQuery({
     queryKey: KEY,
     queryFn: async () => {
-      const { data } = await api.get<Envelope<Vulnerabilidad[]>>('/vulnerabilidads/');
+      const { data } = await api.get<Envelope<Vulnerabilidad[]>>('/vulnerabilidads/?page_size=100&page=1');
       return data.data;
+    },
+  });
+}
+
+/** Listado con filtros/orden/paginación vía querystring (BRD P19–P20). */
+export function useVulnerabilidadsList(sp: string) {
+  return useQuery({
+    queryKey: [...KEY, 'list', sp] as const,
+    queryFn: async () => {
+      const qs = new URLSearchParams(sp);
+      if (!qs.has('page')) qs.set('page', '1');
+      if (!qs.has('page_size')) qs.set('page_size', '20');
+      const { data } = await api.get<ListResponse>(`/vulnerabilidads/?${qs.toString()}`);
+      return { items: data.data, meta: data.meta };
     },
   });
 }
@@ -51,7 +75,10 @@ export function useUpdateVulnerabilidad() {
       const { data } = await api.patch<Envelope<Vulnerabilidad>>(`/vulnerabilidads/${id}`, payload);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: KEY });
+      void qc.invalidateQueries({ queryKey: [...KEY, variables.id] });
+    },
   });
 }
 

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, ForeignKey, String, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -46,6 +46,7 @@ class Iniciativa(SoftDeleteMixin, Base):
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
+    custom_fields: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
 
     hitos: Mapped[list[HitoIniciativa]] = relationship("HitoIniciativa", back_populates="iniciativa", lazy="noload")
     actualizaciones: Mapped[list[ActualizacionIniciativa]] = relationship(

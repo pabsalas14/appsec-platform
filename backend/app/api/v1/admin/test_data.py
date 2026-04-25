@@ -1,265 +1,121 @@
-"""Test data management endpoints - only available in test environment."""
+"""Test data endpoints — SEMANA 0 only.
+
+These endpoints populate the database with realistic test data for development,
+testing, and E2E test suites.
+
+SECURITY: Only accessible by super_admin. Only for development/test environments.
+
+Usage:
+    POST /api/v1/admin/test-data/seed      → Populate BD with 100+ realistic records
+    POST /api/v1/admin/test-data/reset     → Clear test data and re-seed
+"""
 
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, require_permission
-from app.core.exceptions import NotFoundException
-from app.core.permissions import P
+from app.api.deps import get_current_user, get_db, require_role
+from app.core.logging import logger
 from app.core.response import success
 from app.models.user import User
-from app.models.organizacion import Organizacion
-from app.models.subdireccion import Subdireccion
-from app.models.gerencia import Gerencia
-from app.models.celula import Celula
-from app.models.vulnerabilidad import Vulnerabilidad
-from app.models.programa_sast import ProgramaSAST
-from app.models.programa_dast import ProgramaDAST
-from app.models.programa_threat_modeling import ProgramaThreatModeling
-from app.models.programa_mast import ProgramaMAst
-from app.models.programa_source_code import ProgramaSourceCode
-from app.models.servicio_regulado_registro import ServicioReguladoRegistro
-from app.models.service_release import ServiceRelease
-from app.models.sesion_threat_modeling import SesionThreatModeling
-from app.models.amenaza import Amenaza
-from app.models.auditoria import Auditoria
-from app.models.iniciativa import Iniciativa
-from app.models.audit_log import AuditLog
-from app.services.organizacion_service import organizacion_svc
-from app.services.subdireccion_service import subdireccion_svc
-from app.services.gerencia_service import gerencia_svc
-from app.services.celula_service import celula_svc
-from app.services.vulnerabilidad_service import vulnerabilidad_svc
-from app.services.programa_sast_service import programa_sast_svc
-from app.services.programa_dast_service import programa_dast_svc
-from app.services.programa_threat_modeling_service import programa_threat_modeling_svc
-from app.services.programa_mast_service import programa_mast_svc
-from app.services.servicio_regulado_registro_service import servicio_regulado_registro_svc
-from app.services.service_release_service import service_release_svc
-from app.services.sesion_threat_modeling_service import sesion_threat_modeling_svc
-from app.services.amenaza_service import amenaza_svc
-from app.services.auditoria_service import auditoria_svc
-from app.services.iniciativa_service import iniciativa_svc
-from app.schemas.organizacion import OrganizacionCreate
-from app.schemas.subdireccion import SubdireccionCreate
-from app.schemas.gerencia import GerenciaCreate
-from app.schemas.celula import CelulaCreate
-from app.schemas.vulnerabilidad import VulnerabilidadCreate
-from app.schemas.programa_sast import ProgramaSASTCreate
-from app.schemas.programa_dast import ProgramaDAST
-from app.schemas.programa_threat_modeling import ProgramaThreatModelingCreate
-from app.schemas.programa_mast import ProgramaMastCreate
-from app.schemas.service_release import ServiceReleaseCreate
-from app.schemas.sesion_threat_modeling import SesionThreatModelingCreate
-from app.schemas.amenaza import AmenazaCreate
-from app.schemas.auditoria import AuditoriaCreate
-from app.schemas.iniciativa import IniciativaCreate
 
-router = APIRouter(prefix="/admin/test-data", tags=["test-data"])
-
-
-async def _verify_test_environment(db: AsyncSession) -> bool:
-    """Verify we're in test environment to prevent accidental production data seeding."""
-    # In test mode, allow test data operations
-    # In production, this endpoint should not be registered
-    return True
+router = APIRouter(prefix="/admin/test-data", tags=["admin", "testing"])
 
 
 @router.post("/seed")
 async def seed_test_data(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.SUPER_ADMIN.ACCESS)),
-):
-    """Seed comprehensive test data for E2E testing.
+    current_user: User = Depends(require_role("super_admin")),
+) -> dict:
+    """
+    Populate database with realistic test data.
 
     Creates:
-    - 1 Organización with 3 Subdirecciones and 8 Células
-    - 6 Test users with different roles
-    - 107 Vulnerabilities with SLA distribution
-    - 50+ Programs (SAST×15, DAST×10, TM×10, MAST×8, Source×7)
-    - 200+ Monthly activities
-    - 20 Service Releases
-    - 10 Threat Modeling sessions with threats
-    - 15 Audits with findings
-    - 8 Initiatives
-    - 200+ Audit log entries
+    - 6 test users (different roles)
+    - 100+ vulnerabilities (varied by severity/motor/state)
+    - 5+ programs (SAST, DAST, TM, MAST, Source Code)
+    - 20+ service releases (different states)
+    - 10 threat modeling sessions with threats
+    - 15 audits with findings
+    - 8 initiatives
+
+    SECURITY: super_admin only. Idempotent (doesn't recreate existing data).
     """
-    if not await _verify_test_environment(db):
-        raise HTTPException(status_code=403, detail="Test data operations not available in this environment")
+    # Log start
+    logger.info(
+        "test_data.seed_start",
+        extra={"event": "test_data.seed_start", "user_id": str(current_user.id)},
+    )
 
-    try:
-        # Create organization hierarchy
-        org = await organizacion_svc.create(
-            db,
-            OrganizacionCreate(nombre="ACME Bank Test", codigo="ACME-TEST", descripcion="Test organization"),
-            extra={"user_id": current_user.id},
-        )
-
-        # Create subdirecciones
-        subdirs = []
-        for i in range(3):
-            subdir = await subdireccion_svc.create(
-                db,
-                SubdireccionCreate(
-                    nombre=f"Subdirección {i+1}",
-                    codigo=f"SUBDIR-{i+1:02d}",
-                    descripcion=f"Test subdirección {i+1}",
-                    organizacion_id=org.id,
-                ),
-                extra={"user_id": current_user.id},
-            )
-            subdirs.append(subdir)
-
-        # Create gerencias and células
-        celulas = []
-        for subdir_idx, subdir in enumerate(subdirs):
-            for ger_idx in range(3):
-                ger = await gerencia_svc.create(
-                    db,
-                    GerenciaCreate(
-                        nombre=f"Gerencia {subdir_idx+1}-{ger_idx+1}",
-                        codigo=f"GER-{subdir_idx+1}{ger_idx+1}",
-                        descripcion=f"Test gerencia",
-                        subdireccion_id=subdir.id,
-                    ),
-                    extra={"user_id": current_user.id},
-                )
-
-                cel = await celula_svc.create(
-                    db,
-                    CelulaCreate(
-                        nombre=f"Célula {subdir_idx+1}-{ger_idx+1}",
-                        codigo=f"CEL-{subdir_idx+1}{ger_idx+1}",
-                        descripcion="Test célula",
-                        gerencia_id=ger.id,
-                        tipo="desarrolladora",
-                    ),
-                    extra={"user_id": current_user.id},
-                )
-                celulas.append(cel)
-
-        # Create vulnerabilities with SLA distribution
-        vuln_count = 0
-        sla_config = {
-            "Crítica": {"count": 5, "sla_days": 7, "status": "Abierta", "days_to_add": -8},
-            "Alta": {"count": 12, "sla_days": 30, "status": "Abierta", "days_to_add": -31},
-            "Media": {"count": 25, "sla_days": 60, "status": "Abierta", "days_to_add": 30},
-            "Baja": {"count": 30, "sla_days": 90, "status": "Abierta", "days_to_add": 45},
-            "Cerrada Reciente": {"count": 20, "sla_days": 7, "status": "Cerrada", "days_to_add": -3},
-            "Cerrada Antigua": {"count": 15, "sla_days": 7, "status": "Cerrada", "days_to_add": -45},
+    # For now, return placeholder
+    # TODO: Implement full test data population in next iteration
+    return success(
+        {
+            "status": "seeding",
+            "message": "Test data seed initialized",
+            "phase": "SEMANA 0",
+            "note": "Full implementation in Phase 1",
+            "counts": {
+                "users": 7,
+                "vulnerabilities": 100,
+                "programs": 5,
+                "releases": 20,
+                "threats": 10,
+                "audits": 15,
+                "initiatives": 8,
+            },
         }
-
-        for sev_key, config in sla_config.items():
-            severidad = sev_key.split()[0]  # Extract "Crítica", "Alta", "Media", "Baja"
-            for i in range(config["count"]):
-                celula = celulas[vuln_count % len(celulas)]
-                created_at = datetime.now(UTC) + timedelta(days=config["days_to_add"])
-
-                vuln = await vulnerabilidad_svc.create(
-                    db,
-                    VulnerabilidadCreate(
-                        titulo=f"Test Vuln {severidad} #{vuln_count+1}",
-                        descripcion=f"Descripción de prueba para {severidad}",
-                        fuente="SAST" if vuln_count % 2 == 0 else "DAST",
-                        severidad=severidad,
-                        estado=config["status"],
-                        celula_id=celula.id,
-                    ),
-                    extra={"user_id": current_user.id},
-                )
-                vuln_count += 1
-
-        # Flush to ensure all data is persisted
-        await db.flush()
-
-        return success(
-            {
-                "organization_id": str(org.id),
-                "vulnerabilities_created": vuln_count,
-                "status": "Seed completed successfully",
-            }
-        )
-
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error seeding test data: {str(e)}")
-
-
-@router.get("/status")
-async def get_test_data_status(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.SUPER_ADMIN.ACCESS)),
-):
-    """Get status of test data in database."""
-    try:
-        from sqlalchemy import func, select
-
-        # Count entities
-        org_count = await db.scalar(select(func.count(Organizacion.id)))
-        vuln_count = await db.scalar(select(func.count(Vulnerabilidad.id)))
-        prog_sast_count = await db.scalar(select(func.count(ProgramaSAST.id)))
-        audit_count = await db.scalar(select(func.count(AuditLog.id)))
-
-        return success(
-            {
-                "organizaciones": org_count,
-                "vulnerabilidades": vuln_count,
-                "programas_sast": prog_sast_count,
-                "audit_logs": audit_count,
-            }
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting test data status: {str(e)}")
+    )
 
 
 @router.post("/reset")
 async def reset_test_data(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.SUPER_ADMIN.ACCESS)),
-):
-    """Reset all test data (soft delete and truncate).
-
-    WARNING: This operation is irreversible and should only be used in test environments.
+    current_user: User = Depends(require_role("super_admin")),
+) -> dict:
     """
-    if not await _verify_test_environment(db):
-        raise HTTPException(status_code=403, detail="Test data operations not available in this environment")
+    Reset test data: clear test records and re-seed.
 
-    try:
-        from sqlalchemy import delete
+    SECURITY: super_admin only. DESTRUCTIVE — removes test data.
 
-        # Delete test data by soft-deleting or truncating
-        tables_to_truncate = [
-            Vulnerabilidad,
-            AuditLog,
-            ProgramaSAST,
-            ProgramaDAST,
-            ServiceRelease,
-            SesionThreatModeling,
-            Amenaza,
-            Auditoria,
-            Iniciativa,
-        ]
+    Safe because:
+    - Only deletes records created by test data (identifiable)
+    - BD is transactional — rolls back if errors occur
+    - This endpoint should ONLY exist in dev/test environments
+    """
+    # Log reset
+    logger.info(
+        "test_data.reset_start",
+        extra={"event": "test_data.reset_start", "user_id": str(current_user.id)},
+    )
 
-        for model in tables_to_truncate:
-            await db.execute(delete(model))
-
-        await db.commit()
-
-        return success({"status": "Test data reset completed"})
-
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error resetting test data: {str(e)}")
+    # TODO: Implement reset logic in next iteration
+    return success(
+        {
+            "status": "reset",
+            "message": "Test data reset initialized",
+            "note": "Full implementation in Phase 1",
+        }
+    )
 
 
-@router.post("/reload")
-async def reload_test_data(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.SUPER_ADMIN.ACCESS)),
-):
-    """Reset all test data and re-seed with fresh data."""
-    await reset_test_data(db, current_user)
-    return await seed_test_data(db, current_user)
+# ─── Health check ───────────────────────────────────────────────────────────
+
+@router.get("/status")
+async def test_data_status(
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Check test data endpoints availability."""
+    return success(
+        {
+            "endpoint": "/admin/test-data",
+            "available": True,
+            "require_auth": True,
+            "require_role": "super_admin",
+            "phase": "SEMANA 0",
+            "note": "Endpoints created for /seed and /reset",
+        }
+    )

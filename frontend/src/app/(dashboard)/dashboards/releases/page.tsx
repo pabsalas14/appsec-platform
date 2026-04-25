@@ -1,6 +1,7 @@
 "use client";
 
 import { Layers } from 'lucide-react';
+import Link from 'next/link';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
@@ -83,11 +84,11 @@ export default function ReleasesDashboardPage() {
       )}
 
       {isVisible('dashboard.releases.panel.kanban') && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Kanban de releases</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <details open className="rounded-lg border border-border bg-card text-card-foreground">
+          <summary className="cursor-pointer list-inside px-4 py-3 text-sm font-medium">
+            Kanban de releases (clic para colapsar)
+          </summary>
+          <div className="border-t px-4 py-3">
             {kanbanLoading ? (
               <div className="text-sm text-muted-foreground">Cargando...</div>
             ) : (
@@ -99,17 +100,21 @@ export default function ReleasesDashboardPage() {
                     </div>
                     <div className="space-y-1">
                       {items.map((item) => (
-                        <div key={item.id} className="rounded bg-muted/40 px-2 py-1 text-xs">
+                        <Link
+                          key={item.id}
+                          href={`/service_releases?highlight=${item.id}`}
+                          className="block rounded bg-muted/40 px-2 py-1 text-xs transition-colors hover:bg-muted/70 hover:underline"
+                        >
                           {item.nombre} · v{item.version}
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </details>
       )}
     </PageWrapper>
   );

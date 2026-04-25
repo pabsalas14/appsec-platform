@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from app.services.ia_provider import IAResult
+from app.services.ia_provider import RunPromptResult
 from tests.graph_helpers import create_activo_web_id, create_programa_tm_id, create_sesion_tm_id
 
 BASE_URL = "/api/v1/sesion_threat_modelings"
@@ -117,11 +117,10 @@ async def test_sesion_threat_modeling_ia_suggest_marks_session_as_ai_used(
     sid = await create_sesion_tm_id(client, admin_auth_headers)
 
     async def _fake_run_prompt(*args, **kwargs):
-        return IAResult(
+        return RunPromptResult(
             provider="openai",
             model="gpt-4o-mini",
             content="- Spoofing por token expirado\n- Tampering en payload de webhook",
-            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
         )
 
     monkeypatch.setattr("app.api.v1.sesion_threat_modeling.run_prompt", _fake_run_prompt)
@@ -150,7 +149,7 @@ async def test_sesion_threat_modeling_ia_suggest_creates_amenazas_when_requested
     sid = await create_sesion_tm_id(client, admin_auth_headers)
 
     async def _fake_run_prompt(*args, **kwargs):
-        return IAResult(
+        return RunPromptResult(
             provider="openai",
             model="gpt-4o-mini",
             content=(
@@ -159,7 +158,6 @@ async def test_sesion_threat_modeling_ia_suggest_creates_amenazas_when_requested
                 '"dread_exploitability":7,"dread_affected_users":6,"dread_discoverability":6,'
                 '"estado":"Abierta"}]}'
             ),
-            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
         )
 
     monkeypatch.setattr("app.api.v1.sesion_threat_modeling.run_prompt", _fake_run_prompt)

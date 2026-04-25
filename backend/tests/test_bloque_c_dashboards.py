@@ -89,6 +89,10 @@ async def test_dashboard_executive_endpoint(client: AsyncClient, auth_headers: d
     assert "risk_level" in data["data"]
     assert "total_vulnerabilities" in data["data"]["kpis"]
     assert "critical_count" in data["data"]["kpis"]
+    assert "by_severity" in data["data"]
+    assert isinstance(data["data"]["by_severity"], dict)
+    assert "trend" in data["data"]
+    assert "new_vulnerabilities_7d" in data["data"]["trend"]
 
 
 @pytest.mark.asyncio

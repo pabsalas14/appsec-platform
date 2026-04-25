@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import csv
 import hashlib
+from datetime import datetime
 from io import StringIO
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -23,9 +25,26 @@ from app.schemas.service_release import (
     ServiceReleaseUpdate,
 )
 from app.services.audit_service import record as audit_record
+from app.services.json_setting import get_json_setting
 from app.services.service_release_service import service_release_svc
 
 router = APIRouter()
+
+
+@router.get("/config/operacion")
+async def get_service_release_operacion_config(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """C1–C3: transiciones, orden kanban y ajuste de flujo (lectura) desde system_settings."""
+    tr = await get_json_setting(db, "flujo.transiciones_liberacion", None)
+    kn = await get_json_setting(db, "kanban.liberacion", None)
+    return success(
+        {
+            "transiciones": tr if isinstance(tr, dict) else {},
+            "kanban": kn if isinstance(kn, dict) else {},
+        }
+    )
 
 
 @router.get("/export.csv")
@@ -68,14 +87,37 @@ async def export_service_releases_csv(
 @router.get("")
 async def list_service_releases(
     servicio_id: UUID | None = Query(default=None),
+    estado_actual: str | None = Query(default=None, max_length=120),
+    jira: str | None = Query(
+        default=None,
+        max_length=255,
+        description="Búsqueda parcial (referencia Jira).",
+    ),
+    creado_desde: datetime | None = Query(default=None),
+    creado_hasta: datetime | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lista releases del usuario. Filtrar por ?servicio_id=<uuid>."""
-    filters: dict = {"user_id": current_user.id}
+    """Lista releases del usuario. Filtros §13.2 (liberaciones flujo)."""
+    from sqlalchemy import and_
+    from app.models.service_release import ServiceRelease
+
+    cond = [
+        ServiceRelease.user_id == current_user.id,
+        ServiceRelease.deleted_at.is_(None),
+    ]
     if servicio_id:
-        filters["servicio_id"] = servicio_id
-    items = await service_release_svc.list(db, filters=filters)
+        cond.append(ServiceRelease.servicio_id == servicio_id)
+    if estado_actual:
+        cond.append(ServiceRelease.estado_actual == estado_actual)
+    if jira and jira.strip():
+        cond.append(ServiceRelease.jira_referencia.ilike(f"%{jira.strip()}%"))
+    if creado_desde is not None:
+        cond.append(ServiceRelease.created_at >= creado_desde)
+    if creado_hasta is not None:
+        cond.append(ServiceRelease.created_at <= creado_hasta)
+    res = await db.execute(select(ServiceRelease).where(and_(*cond)).order_by(ServiceRelease.created_at.desc()))
+    items = res.scalars().all()
     return success([ServiceReleaseRead.model_validate(x).model_dump(mode="json") for x in items])
 
 

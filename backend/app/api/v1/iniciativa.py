@@ -5,19 +5,22 @@ from __future__ import annotations
 import csv
 import hashlib
 from io import StringIO
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.exceptions import NotFoundException
 from app.core.permissions import P
 from app.core.response import success
 from app.models.iniciativa import Iniciativa
 from app.models.user import User
 from app.schemas.iniciativa import IniciativaCreate, IniciativaRead, IniciativaUpdate
 from app.services.audit_service import record as audit_record
+from app.services.iniciativa_progreso import progreso_iniciativa_mes
 from app.services.iniciativa_service import iniciativa_svc
 
 router = APIRouter()
@@ -75,6 +78,9 @@ async def list_iniciativas(
     current_user: User = Depends(get_current_user),
     page: int = 1,
     page_size: int = 50,
+    estado: str | None = Query(None, description="Filtro por estatus (F3)"),
+    tipo: str | None = Query(None, description="Filtro por tipo (F3)"),
+    q: str | None = Query(None, max_length=200, description="Búsqueda en título"),
 ):
     """List iniciativas owned by the current user (paginated)."""
     from sqlalchemy import func, select
@@ -85,13 +91,21 @@ async def list_iniciativas(
     page = max(1, page)
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
+    base_conds = [
+        Iniciativa.user_id == current_user.id,
+        Iniciativa.deleted_at.is_(None),
+    ]
+    if estado and estado.strip():
+        base_conds.append(Iniciativa.estado == estado.strip())
+    if tipo and tipo.strip():
+        base_conds.append(Iniciativa.tipo == tipo.strip())
+    if q and q.strip():
+        base_conds.append(Iniciativa.titulo.ilike(f"%{q.strip()}%"))
+
     # Get paginated items
     stmt = (
         select(Iniciativa)
-        .where(
-            Iniciativa.user_id == current_user.id,
-            Iniciativa.deleted_at.is_(None),
-        )
+        .where(*base_conds)
         .order_by(Iniciativa.created_at.desc())
     )
 
@@ -101,10 +115,7 @@ async def list_iniciativas(
     items = result.scalars().all()
 
     # Get total count
-    count_stmt = select(func.count(Iniciativa.id)).where(
-        Iniciativa.user_id == current_user.id,
-        Iniciativa.deleted_at.is_(None),
-    )
+    count_stmt = select(func.count(Iniciativa.id)).where(*base_conds)
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one_or_none() or 0
 
@@ -113,6 +124,34 @@ async def list_iniciativas(
         page=page,
         page_size=page_size,
         total=total,
+    )
+
+
+@router.get("/{id}/progreso-mes")
+async def get_iniciativa_progreso_mes(
+    id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    anio: int | None = Query(None, ge=2000, le=2100),
+    mes: int | None = Query(None, ge=1, le=12),
+):
+    """P10: actividades (hitos) del mes con peso y progreso ponderado 0-100 %."""
+    p = await progreso_iniciativa_mes(
+        db,
+        user_id=current_user.id,
+        iniciativa_id=id,
+        anio=anio,
+        mes=mes,
+    )
+    if p is None:
+        raise NotFoundException("Iniciativa not found")
+    return success(
+        {
+            "anio": p.anio,
+            "mes": p.mes,
+            "progreso_total_pct": p.progreso_total_pct,
+            "actividades": p.actividades,
+        }
     )
 
 

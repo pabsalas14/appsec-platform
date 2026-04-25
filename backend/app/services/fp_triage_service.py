@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models import Vulnerabilidad, HistorialVulnerabilidad
-from app.schemas import VulnerabilidadRead
+from app.schemas.vulnerabilidad import VulnerabilidadRead
 from app.services.ia_provider import (
     AIProvider,
     ClassificationResponse,

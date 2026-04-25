@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -114,6 +114,9 @@ class Vulnerabilidad(SoftDeleteMixin, Base):
         server_default=text("now()"),
         onupdate=lambda: datetime.now(UTC),
     )
+
+    # P2 — campos adicionales configurables (no alteran columnas core ni scoring)
+    custom_fields: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
 
     # ── Relationships ────────────────────────────────────────────────────────
     creator: Mapped[User] = relationship("User", foreign_keys=[user_id], lazy="noload")

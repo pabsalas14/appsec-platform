@@ -38,6 +38,7 @@ import {
   Select,
   Textarea,
 } from '@/components/ui';
+import { HallazgoPipelineCsvToolbar } from '@/components/catalog/HallazgoPipelineCsvToolbar';
 import { ESTADOS_HALLAZGO_PIPELINE, SEVERIDADES_HALLAZGO, vulnerabilidadOptions } from '@/lib/hallazgo-constants';
 import {
   useCreateHallazgoPipeline,
@@ -258,6 +259,8 @@ export default function HallazgoPipelinesPage() {
         title="Hallazgos (pipeline SAST / DAST / SCA)"
         description="Vinculados a una ejecución de pipeline. Estado distinto a hallazgos de código/terceros."
       >
+        <div className="flex flex-wrap items-center gap-2">
+          <HallazgoPipelineCsvToolbar />
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button disabled={!pipeOptions.length}>
@@ -366,6 +369,7 @@ export default function HallazgoPipelinesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </PageHeader>
 
       <Card>

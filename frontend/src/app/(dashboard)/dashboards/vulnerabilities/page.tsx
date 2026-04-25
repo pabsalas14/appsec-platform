@@ -1,14 +1,17 @@
 "use client";
 
 import { Circle, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
-import { Card, CardContent, CardHeader, CardTitle, PageHeader, PageWrapper, StatCard } from '@/components/ui';
+import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
-import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useDashboardVulnerabilities } from '@/hooks/useAppDashboardPanels';
+import { appendHierarchyQuery } from '@/lib/dashboardLinks';
+import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
+import { cn } from '@/lib/utils';
 
 export default function VulnerabilitiesDashboardPage() {
   const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
@@ -45,15 +48,18 @@ export default function VulnerabilitiesDashboardPage() {
             icon={ShieldCheck}
             iconColor="text-rose-400"
             iconBg="bg-rose-500/10"
+            href={appendHierarchyQuery('/vulnerabilidads', filters)}
           />
         )}
         {isVisible('dashboard.vulnerabilities.card.overdue') && (
           <StatCard
             label="Vencidas SLA"
+            labelHint="Criterio D2 (BRD): cuenta hallazgos con SLA vencido en estatus activo, excluyendo aceptación de riesgo aprobada y excepción vigente."
             value={data?.overdue_count ?? (isLoading ? '…' : 0)}
             icon={Circle}
             iconColor="text-amber-400"
             iconBg="bg-amber-500/10"
+            href={appendHierarchyQuery('/vulnerabilidads?sla=vencida', filters)}
           />
         )}
         {isVisible('dashboard.vulnerabilities.card.sla_green') && (
@@ -63,23 +69,41 @@ export default function VulnerabilitiesDashboardPage() {
             icon={Circle}
             iconColor="text-emerald-400"
             iconBg="bg-emerald-500/10"
+            href={appendHierarchyQuery('/vulnerabilidads', filters)}
           />
         )}
       </div>
       {isVisible('dashboard.vulnerabilities.panel.by_severity') && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Por severidad</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            {Object.entries(data?.by_severity ?? {}).map(([sev, count]) => (
-              <div key={sev} className="flex justify-between">
-                <span>{sev}</span>
-                <span className="font-medium">{count}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <details open className="rounded-lg border border-border bg-card text-card-foreground">
+          <summary className="cursor-pointer list-inside px-4 py-3 text-sm font-medium">
+            Por severidad (clic para colapsar)
+          </summary>
+          <div className="space-y-1 border-t px-4 py-3 text-sm">
+            {Object.entries(data?.by_severity ?? {}).map(([sev, count]) => {
+              const listParam: Record<string, string> = {
+                CRITICA: 'Critica',
+                ALTA: 'Alta',
+                MEDIA: 'Media',
+                BAJA: 'Baja',
+              };
+              const sevParam = listParam[sev] ?? sev;
+              const target = appendHierarchyQuery(
+                `/vulnerabilidads?severidad=${encodeURIComponent(sevParam)}`,
+                filters,
+              );
+              return (
+                <Link
+                  key={sev}
+                  href={target}
+                  className={cn('flex justify-between rounded-md px-1 py-0.5 -mx-1', 'hover:bg-accent/40 transition-colors')}
+                >
+                  <span>{sev}</span>
+                  <span className="font-medium text-primary underline-offset-2 hover:underline">{count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </details>
       )}
     </PageWrapper>
   );

@@ -1760,6 +1760,26 @@ export interface paths {
         patch: operations["update_control_seguridad_api_v1_control_seguridads__id__patch"];
         trace?: never;
     };
+    "/api/v1/vulnerabilidads/config/flujo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vulnerabilidad Flujo Config
+         * @description BRD D1: catálogo y transiciones (lectura) para alinear UI y validaciones server-side.
+         */
+        get: operations["get_vulnerabilidad_flujo_config_api_v1_vulnerabilidads_config_flujo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/vulnerabilidads/export.csv": {
         parameters: {
             query?: never;
@@ -1789,7 +1809,7 @@ export interface paths {
         };
         /**
          * List Vulnerabilidads
-         * @description List vulnerabilidads owned by the current user (paginated).
+         * @description List vulnerabilidads del usuario: paginación, búsqueda, filtros y orden (BRD §13.2 P20).
          */
         get: operations["list_vulnerabilidads_api_v1_vulnerabilidads_get"];
         put?: never;
@@ -2194,6 +2214,26 @@ export interface paths {
         patch: operations["update_evidencia_api_v1_evidencia_remediacions__id__patch"];
         trace?: never;
     };
+    "/api/v1/service_releases/config/operacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Service Release Operacion Config
+         * @description C1–C3: transiciones, orden kanban y ajuste de flujo (lectura) desde system_settings.
+         */
+        get: operations["get_service_release_operacion_config_api_v1_service_releases_config_operacion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service_releases/export.csv": {
         parameters: {
             query?: never;
@@ -2223,7 +2263,7 @@ export interface paths {
         };
         /**
          * List Service Releases
-         * @description Lista releases del usuario. Filtrar por ?servicio_id=<uuid>.
+         * @description Lista releases del usuario. Filtros §13.2 (liberaciones flujo).
          */
         get: operations["list_service_releases_api_v1_service_releases_get"];
         put?: never;
@@ -2392,7 +2432,7 @@ export interface paths {
         };
         /**
          * List Pipeline Releases
-         * @description Lista pipelines del usuario. Filtrar por ?repositorio_id= o ?service_release_id=.
+         * @description Lista pipelines. Filtros BRD §10.2 / §13.2 (Liberaciones pipeline).
          */
         get: operations["list_pipeline_releases_api_v1_pipeline_releases_get"];
         put?: never;
@@ -2421,6 +2461,46 @@ export interface paths {
         head?: never;
         /** Update Pipeline Release */
         patch: operations["update_pipeline_release_api_v1_pipeline_releases__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/hallazgo_pipelines/plantilla.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Descargar Plantilla Hallazgos Pipeline
+         * @description BRD C2: plantilla obligatoria para import masivo (Regla global §2.7).
+         */
+        get: operations["descargar_plantilla_hallazgos_pipeline_api_v1_hallazgo_pipelines_plantilla_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/hallazgo_pipelines/import-csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Hallazgos Pipeline Csv
+         * @description C2: carga de detalle; hace match ``scan_id`` + ``branch`` con Nivel 1 (pipeline_releases).
+         */
+        post: operations["import_hallazgos_pipeline_csv_api_v1_hallazgo_pipelines_import_csv_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/hallazgo_pipelines": {
@@ -2461,6 +2541,26 @@ export interface paths {
         head?: never;
         /** Update Hallazgo Pipeline */
         patch: operations["update_hallazgo_pipeline_api_v1_hallazgo_pipelines__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/revision_terceros/config/checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Revision Tercero Checklist Template
+         * @description BRD §10.3: plantilla de ítems de checklist (admin vía `catalogo.checklist_revision_tercero`).
+         */
+        get: operations["get_revision_tercero_checklist_template_api_v1_revision_terceros_config_checklist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/revision_terceros": {
@@ -3172,7 +3272,7 @@ export interface paths {
         };
         /**
          * List Programa Source Codes
-         * @description List programa_source_codes owned by the current user.
+         * @description List programa source code con paginación y filtros (P7 / §13.2).
          */
         get: operations["list_programa_source_codes_api_v1_programa_source_codes_get"];
         put?: never;
@@ -3276,7 +3376,7 @@ export interface paths {
         };
         /**
          * List Revision Source Codes
-         * @description List revisiones source code, optionally filtered by programa or control.
+         * @description List revisiones source code, optionally filtered. BRD §5.4 / F3.
          */
         get: operations["list_revision_source_codes_api_v1_revision_source_codes_get"];
         put?: never;
@@ -4042,7 +4142,7 @@ export interface paths {
         };
         /**
          * List Auditorias
-         * @description List auditorias owned by the current user.
+         * @description List auditorias owned by the current user. Filtros §8 / §13.2.
          */
         get: operations["list_auditorias_api_v1_auditorias_get"];
         put?: never;
@@ -4270,7 +4370,7 @@ export interface paths {
         };
         /**
          * List Temas Emergentes
-         * @description List temas emergentes owned by the current user (paginated).
+         * @description List temas emergentes owned by the current user (paginated). Filtros §9 / §13.2.
          */
         get: operations["list_temas_emergentes_api_v1_temas_emergentes_get"];
         put?: never;
@@ -4493,6 +4593,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/indicadores_formulas/{id}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Evaluate Indicador Formula
+         * @description Evalúa la fórmula (motor E1) y devuelve valor + semáforo.
+         */
+        get: operations["evaluate_indicador_formula_api_v1_indicadores_formulas__id__evaluate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/indicadores_formulas/{id}": {
         parameters: {
             query?: never;
@@ -4519,6 +4639,107 @@ export interface paths {
          * @description Partially update an owned indicador formula (404 if not owned).
          */
         patch: operations["update_indicador_formula_api_v1_indicadores_formulas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/indicadores/{code}/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Calculate Indicador By Code
+         * @description Calcula el valor actual de un `IndicadorFormula` por `code` para el usuario actual.
+         */
+        get: operations["calculate_indicador_by_code_api_v1_indicadores__code__calculate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicadores/{code}/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trend Indicador
+         * @description E1.3 / F1: serie de puntos para gráficos. v1: repite el valor actual (sin serie histórica materializada).
+         */
+        get: operations["trend_indicador_api_v1_indicadores__code__trend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicadores/{code}/aggregate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Aggregate Indicador
+         * @description E1.3: valor actual + sección reservada para desglose jerárquico (roll-up = backlog).
+         */
+        get: operations["aggregate_indicador_api_v1_indicadores__code__aggregate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/madurez/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Madurez Summary
+         * @description Score 0-100 de madurez: proporción de vulnerabilidades en estados "cerrada/remediada" vs totales
+         *     bajo el mismo alcance jerárquico que los dashboards, con pesos en `system_settings` `madurez.pesos`.
+         */
+        get: operations["get_madurez_summary_api_v1_madurez_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/madurez/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Madurez Csv
+         * @description E2: exporta una fila con score y conteos bajo el mismo alcance que `/summary`.
+         */
+        get: operations["export_madurez_csv_api_v1_madurez_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/filtros_guardados": {
@@ -4735,6 +4956,26 @@ export interface paths {
          * @description Crea un aviso in-app propio (sistema/background puede usar en fases futuras).
          */
         post: operations["create_notificacion_api_v1_notificacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificacions/procesar-reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Procesar Reglas Notificacion
+         * @description G2 — Ejecuta reglas automáticas (§14.3); idempotente. Admin / super_admin.
+         */
+        post: operations["procesar_reglas_notificacion_api_v1_notificacions_procesar_reglas_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5203,6 +5444,14 @@ export interface components {
              * File
              * Format: binary
              * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_hallazgos_pipeline_csv_api_v1_hallazgo_pipelines_import_csv_post */
+        Body_import_hallazgos_pipeline_csv_api_v1_hallazgo_pipelines_import_csv_post: {
+            /**
+             * File
+             * Format: binary
              */
             file: string;
         };
@@ -6592,13 +6841,16 @@ export interface components {
         PipelineReleaseCreate: {
             /** Service Release Id */
             service_release_id?: string | null;
-            /**
-             * Repositorio Id
-             * Format: uuid
-             */
-            repositorio_id: string;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
             /** Rama */
             rama: string;
+            /** Scan Id */
+            scan_id?: string | null;
+            /** Mes */
+            mes?: number | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
             /** Commit Sha */
             commit_sha?: string | null;
             /** Tipo */
@@ -6610,20 +6862,32 @@ export interface components {
             resultado: string;
             /** Herramienta */
             herramienta?: string | null;
+            /** Liberado Con Vulns Criticas O Altas */
+            liberado_con_vulns_criticas_o_altas?: boolean | null;
         };
         /**
          * PipelineReleaseUpdate
          * @description All fields optional for partial updates.
          */
         PipelineReleaseUpdate: {
+            /** Repositorio Id */
+            repositorio_id?: string | null;
             /** Rama */
             rama?: string | null;
+            /** Scan Id */
+            scan_id?: string | null;
+            /** Mes */
+            mes?: number | null;
+            /** Activo Web Id */
+            activo_web_id?: string | null;
             /** Commit Sha */
             commit_sha?: string | null;
             /** Resultado */
             resultado?: string | null;
             /** Herramienta */
             herramienta?: string | null;
+            /** Liberado Con Vulns Criticas O Altas */
+            liberado_con_vulns_criticas_o_altas?: boolean | null;
         };
         /**
          * PlanRemediacionCreate
@@ -6674,6 +6938,8 @@ export interface components {
             full_name?: string | null;
             /** Email */
             email?: string | null;
+            /** Preferences */
+            preferences?: Record<string, never> | null;
         };
         /**
          * ProgramaDastCreate
@@ -7055,6 +7321,14 @@ export interface components {
             informe_filename?: string | null;
             /** Informe Sha256 */
             informe_sha256?: string | null;
+            /** Checklist Resultados */
+            checklist_resultados?: Record<string, never> | null;
+            /** Evidencias */
+            evidencias?: Record<string, never>[] | null;
+            /** Responsable Revision */
+            responsable_revision?: string | null;
+            /** Observaciones */
+            observaciones?: string | null;
         };
         /**
          * RevisionTerceroUpdate
@@ -7079,6 +7353,14 @@ export interface components {
             informe_filename?: string | null;
             /** Informe Sha256 */
             informe_sha256?: string | null;
+            /** Checklist Resultados */
+            checklist_resultados?: Record<string, never> | null;
+            /** Evidencias */
+            evidencias?: Record<string, never>[] | null;
+            /** Responsable Revision */
+            responsable_revision?: string | null;
+            /** Observaciones */
+            observaciones?: string | null;
         };
         /** RoleCreate */
         RoleCreate: {
@@ -7119,6 +7401,10 @@ export interface components {
             estado_actual: string;
             /** Jira Referencia */
             jira_referencia?: string | null;
+            /** Contexto Liberacion */
+            contexto_liberacion?: Record<string, never> | null;
+            /** Fecha Entrada */
+            fecha_entrada?: string | null;
         };
         /**
          * ServiceReleaseUpdate
@@ -7135,6 +7421,10 @@ export interface components {
             estado_actual?: string | null;
             /** Jira Referencia */
             jira_referencia?: string | null;
+            /** Contexto Liberacion */
+            contexto_liberacion?: Record<string, never> | null;
+            /** Fecha Entrada */
+            fecha_entrada?: string | null;
         };
         /**
          * ServicioCreate
@@ -12185,6 +12475,40 @@ export interface operations {
             };
         };
     };
+    get_vulnerabilidad_flujo_config_api_v1_vulnerabilidads_config_flujo_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_vulnerabilidades_csv_api_v1_vulnerabilidads_export_csv_get: {
         parameters: {
             query?: never;
@@ -12224,6 +12548,17 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
+                sort?: "created_at" | "titulo" | "fuente" | "severidad" | "sla_dias" | "updated_at";
+                order?: "asc" | "desc";
+                q?: string | null;
+                search?: string | null;
+                severidad?: string | null;
+                estado?: string | null;
+                fuente?: string | null;
+                sla?: string | null;
+                reincidencia?: boolean;
+                /** @description ISO-8601: filtra created_at >= */
+                created_after?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -13316,6 +13651,40 @@ export interface operations {
             };
         };
     };
+    get_service_release_operacion_config_api_v1_service_releases_config_operacion_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_service_releases_csv_api_v1_service_releases_export_csv_get: {
         parameters: {
             query?: never;
@@ -13354,6 +13723,11 @@ export interface operations {
         parameters: {
             query?: {
                 servicio_id?: string | null;
+                estado_actual?: string | null;
+                /** @description Búsqueda parcial (referencia Jira). */
+                jira?: string | null;
+                creado_desde?: string | null;
+                creado_hasta?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -13829,6 +14203,10 @@ export interface operations {
             query?: {
                 repositorio_id?: string | null;
                 service_release_id?: string | null;
+                scan_id?: string | null;
+                tipo?: string | null;
+                rama?: string | null;
+                mes?: number | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -13987,6 +14365,78 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    descargar_plantilla_hallazgos_pipeline_api_v1_hallazgo_pipelines_plantilla_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_hallazgos_pipeline_csv_api_v1_hallazgo_pipelines_import_csv_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_hallazgos_pipeline_csv_api_v1_hallazgo_pipelines_import_csv_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14166,6 +14616,40 @@ export interface operations {
                 "application/json": components["schemas"]["HallazgoPipelineUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_revision_tercero_checklist_template_api_v1_revision_terceros_config_checklist_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -16529,7 +17013,14 @@ export interface operations {
     };
     list_programa_source_codes_api_v1_programa_source_codes_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+                /** @description Filtro P7 / F3 */
+                estado?: string | null;
+                /** @description Búsqueda en nombre */
+                q?: string | null;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -16890,6 +17381,10 @@ export interface operations {
                 programa_sc_id?: string | null;
                 /** @description Filter by control_sc_id */
                 control_sc_id?: string | null;
+                /** @description Cumple | No Cumple | Parcial | No Aplica */
+                resultado?: string | null;
+                /** @description Búsqueda en notas */
+                q?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -18747,6 +19242,12 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
+                /** @description Filtro por estatus (F3) */
+                estado?: string | null;
+                /** @description Filtro por tipo (F3) */
+                tipo?: string | null;
+                /** @description Búsqueda en título */
+                q?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -19315,7 +19816,12 @@ export interface operations {
     };
     list_auditorias_api_v1_auditorias_get: {
         parameters: {
-            query?: never;
+            query?: {
+                estado?: string | null;
+                tipo?: string | null;
+                /** @description Búsqueda en título */
+                q?: string | null;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -20064,6 +20570,10 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
+                estado?: string | null;
+                tipo?: string | null;
+                /** @description Búsqueda en título */
+                q?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -20846,6 +21356,40 @@ export interface operations {
             };
         };
     };
+    evaluate_indicador_formula_api_v1_indicadores_formulas__id__evaluate_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_indicador_formula_api_v1_indicadores_formulas__id__get: {
         parameters: {
             query?: never;
@@ -20931,6 +21475,195 @@ export interface operations {
                 "application/json": components["schemas"]["IndicadorFormulaUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calculate_indicador_by_code_api_v1_indicadores__code__calculate_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trend_indicador_api_v1_indicadores__code__trend_get: {
+        parameters: {
+            query?: {
+                /** @description Días hacia atrás; serie v1 = mismo valor (evolución detallada en backlog). */
+                days?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    aggregate_indicador_api_v1_indicadores__code__aggregate_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_madurez_summary_api_v1_madurez_summary_get: {
+        parameters: {
+            query?: {
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_madurez_csv_api_v1_madurez_export_csv_get: {
+        parameters: {
+            query?: {
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -21628,6 +22361,40 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    procesar_reglas_notificacion_api_v1_notificacions_procesar_reglas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

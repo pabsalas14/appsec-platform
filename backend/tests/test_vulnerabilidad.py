@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from app.services.ia_provider import IAResult
+from app.services.ia_provider import RunPromptResult
 
 BASE_URL = "/api/v1/vulnerabilidads"
 
@@ -34,6 +34,14 @@ async def test_create_vulnerabilidad(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
+async def test_config_flujo_disponible(client: AsyncClient, auth_headers: dict):
+    r = await client.get(f"{BASE_URL}/config/flujo", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["status"] == "success"
+    assert "estatus" in r.json()["data"]
+
+
+@pytest.mark.asyncio
 async def test_list_vulnerabilidads_empty(client: AsyncClient, auth_headers: dict):
     resp = await client.get(BASE_URL, headers=auth_headers)
     assert resp.status_code == 200
@@ -56,9 +64,11 @@ async def test_update_vulnerabilidad(client: AsyncClient, auth_headers: dict):
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     vid = resp.json()["data"]["id"]
 
-    patch = await client.patch(f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "En Remediacion"})
+    patch = await client.patch(
+        f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "en_remediacion"}
+    )
     assert patch.status_code == 200
-    assert patch.json()["data"]["estado"] == "En Remediacion"
+    assert patch.json()["data"]["estado"] == "en_remediacion"
 
 
 @pytest.mark.asyncio
@@ -193,7 +203,7 @@ async def test_triage_fp_parses_json_output(
     vid = create.json()["data"]["id"]
 
     async def _fake_run_prompt(*args, **kwargs):
-        return IAResult(
+        return RunPromptResult(
             provider="openai",
             model="gpt-4o-mini",
             content=(
@@ -201,7 +211,6 @@ async def test_triage_fp_parses_json_output(
                 '"rationale":"No hay ruta explotable en runtime.",'
                 '"suggested_state":"En Revision"}'
             ),
-            usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
         )
 
     monkeypatch.setattr("app.api.v1.vulnerabilidad.run_prompt", _fake_run_prompt)
@@ -216,3 +225,29 @@ async def test_triage_fp_parses_json_output(
     assert data["verdict"] == "false_positive"
     assert data["confidence"] == pytest.approx(0.92)
     assert data["suggested_state"] == "En Revision"
+
+
+@pytest.mark.asyncio
+async def test_list_vulnerabilidads_filter_fuente_and_pagination(client: AsyncClient, auth_headers: dict):
+    a = {**SAMPLE_PAYLOAD, "fuente": "DAST", "titulo": "DAST issue"}
+    b = {**SAMPLE_PAYLOAD, "fuente": "SAST", "titulo": "SAST issue"}
+    assert (await client.post(BASE_URL, headers=auth_headers, json=a)).status_code == 201
+    assert (await client.post(BASE_URL, headers=auth_headers, json=b)).status_code == 201
+    r = await client.get(f"{BASE_URL}?fuente=DAST&page=1&page_size=20", headers=auth_headers)
+    assert r.status_code == 200
+    j = r.json()
+    assert all(x["fuente"] == "DAST" for x in j["data"])
+    assert j["meta"]["total"] >= 1
+    assert j["pagination"]["page"] == 1
+
+
+@pytest.mark.asyncio
+async def test_list_vulnerabilidads_reincidencia_por_cwe(client: AsyncClient, auth_headers: dict):
+    p = {**SAMPLE_PAYLOAD, "cwe_id": "CWE-400"}
+    assert (await client.post(BASE_URL, headers=auth_headers, json={**p, "titulo": "dup1"})).status_code == 201
+    assert (await client.post(BASE_URL, headers=auth_headers, json={**p, "titulo": "dup2"})).status_code == 201
+    r = await client.get(f"{BASE_URL}?reincidencia=true&page_size=100", headers=auth_headers)
+    assert r.status_code == 200
+    rows = r.json()["data"]
+    assert len(rows) == 2
+    assert {x["cwe_id"] for x in rows} == {"CWE-400"}

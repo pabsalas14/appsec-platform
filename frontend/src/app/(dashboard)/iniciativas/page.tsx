@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Pencil, Plus, Target, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -35,10 +35,12 @@ import {
   Input,
   PageHeader,
   PageWrapper,
+  Progress,
   Select,
   Textarea,
 } from '@/components/ui';
 import { useCelulas } from '@/hooks/useCelulas';
+import { useIniciativaProgresoMes } from '@/hooks/useIniciativaProgresoMes';
 import {
   useCreateIniciativa,
   useDeleteIniciativa,
@@ -280,7 +282,11 @@ export default function IniciativasPage() {
   const [celulaF, setCelulaF] = useState<string | typeof FILTER_SIN_CELULA>(ALL);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<Iniciativa | null>(null);
+  const [progresoIniciativaId, setProgresoIniciativaId] = useState<string>('');
   const deleteMut = useDeleteIniciativa();
+  const { data: progresoMes, isLoading: progresoLoading } = useIniciativaProgresoMes(
+    progresoIniciativaId || null,
+  );
 
   const orgName = useMemo(() => {
     const m = new Map<string, string>();
@@ -329,6 +335,12 @@ export default function IniciativasPage() {
       });
   }, [rows, q, celulaF, celulas]);
 
+  useEffect(() => {
+    if (rows && rows.length > 0 && !progresoIniciativaId) {
+      setProgresoIniciativaId(rows[0].id);
+    }
+  }, [rows, progresoIniciativaId]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
@@ -350,6 +362,54 @@ export default function IniciativasPage() {
           </DialogContent>
         </Dialog>
       </PageHeader>
+
+      {rows && rows.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 className="text-sm font-medium">P10 · Progreso del mes (actividades / hitos)</h3>
+                <p className="text-xs text-muted-foreground">
+                  Pesos desde cada hito; el total se recalcula al cambiar estatus (TanStack Query).
+                </p>
+              </div>
+              <div className="w-full sm:max-w-sm">
+                <label className="text-xs text-muted-foreground">Iniciativa</label>
+                <Select
+                  className="mt-1"
+                  value={progresoIniciativaId}
+                  onChange={(e) => setProgresoIniciativaId(e.target.value)}
+                  options={rows.map((r) => ({ value: r.id, label: r.titulo }))}
+                />
+              </div>
+            </div>
+            {progresoLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando…
+              </div>
+            )}
+            {progresoMes && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>
+                    {progresoMes.mes}/{progresoMes.anio} — avance
+                  </span>
+                  <span className="font-mono text-primary">{progresoMes.progreso_total_pct.toFixed(1)}%</span>
+                </div>
+                <Progress value={Math.min(100, progresoMes.progreso_total_pct)} className="h-2" />
+                <ul className="text-xs text-muted-foreground space-y-1 max-h-40 overflow-y-auto">
+                  {progresoMes.actividades.map((a) => (
+                    <li key={a.id}>
+                      <span className="text-foreground">{a.titulo}</span> — peso {a.peso_pct}% — {a.estado}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-4 space-y-4">

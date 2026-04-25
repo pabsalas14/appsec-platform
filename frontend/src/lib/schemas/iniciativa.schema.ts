@@ -10,6 +10,7 @@ export const IniciativaSchema = z.object({
   celula_id: z.string().uuid().nullable().optional(),
   fecha_inicio: z.string().nullable().optional(),
   fecha_fin_estimada: z.string().nullable().optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });

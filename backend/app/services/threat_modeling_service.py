@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models import SesionThreatModeling, Amenaza, ControlMitigacion
-from app.schemas import AmenazaCreate, AmenazaRead
+from app.schemas.amenaza import AmenazaCreate, AmenazaRead
 from app.services.ia_provider import (
     AIProvider,
     AmenazaResponse,

@@ -3,10 +3,7 @@
  * useVulnerabilidades, usePrograms, useDashboard, useFiltrosGuardados
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 
 /**
  * ============================================================================
@@ -14,21 +11,6 @@ import React from 'react';
  * ============================================================================
  */
 describe('useVulnerabilidades Hook', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-  });
-
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    React.createElement(QueryClientProvider, { client: queryClient }, children)
-  );
-
   describe('Fetching Data', () => {
     it('should fetch vulnerabilities list', async () => {
       const mockVulns = [
@@ -357,21 +339,6 @@ describe('useVulnerabilidades Hook', () => {
  * ============================================================================
  */
 describe('useProgram* Hooks (SAST, DAST, TM, MAST, SourceCode)', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-  });
-
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    React.createElement(QueryClientProvider, { client: queryClient }, children)
-  );
-
   describe('Program CRUD', () => {
     it('should fetch SAST programs', async () => {
       const mockApi = vi.fn().mockResolvedValue({
@@ -525,17 +492,6 @@ describe('useProgram* Hooks (SAST, DAST, TM, MAST, SourceCode)', () => {
  * ============================================================================
  */
 describe('useFiltrosGuardados Hook', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-  });
-
   describe('Save Filter', () => {
     it('should save new filter', async () => {
       const filterData = {
@@ -624,12 +580,6 @@ describe('useFiltrosGuardados Hook', () => {
  * ============================================================================
  */
 describe('useDashboardStats Hook', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    queryClient = new QueryClient();
-  });
-
   describe('KPI Calculations', () => {
     it('should calculate total vulnerability count', async () => {
       const mockApi = vi.fn().mockResolvedValue({

@@ -6,7 +6,7 @@ import csv
 import hashlib
 from io import StringIO
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -65,9 +65,25 @@ async def export_auditorias_csv(
 async def list_auditorias(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    estado: str | None = Query(None, max_length=120),
+    tipo: str | None = Query(None, max_length=120),
+    q: str | None = Query(None, max_length=200, description="Búsqueda en título"),
 ):
-    """List auditorias owned by the current user."""
-    items = await auditoria_svc.list(db, filters={"user_id": current_user.id})
+    """List auditorias owned by the current user. Filtros §8 / §13.2."""
+    from sqlalchemy import select
+
+    conds = [
+        Auditoria.user_id == current_user.id,
+        Auditoria.deleted_at.is_(None),
+    ]
+    if estado and estado.strip():
+        conds.append(Auditoria.estado == estado.strip())
+    if tipo and tipo.strip():
+        conds.append(Auditoria.tipo == tipo.strip())
+    if q and q.strip():
+        conds.append(Auditoria.titulo.ilike(f"%{q.strip()}%"))
+    res = await db.execute(select(Auditoria).where(*conds).order_by(Auditoria.created_at.desc()))
+    items = res.scalars().all()
     return success([AuditoriaRead.model_validate(x).model_dump(mode="json") for x in items])
 
 

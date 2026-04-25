@@ -10,8 +10,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -56,6 +56,11 @@ class RevisionTercero(SoftDeleteMixin, Base):
     # Informe con integridad SHA-256 (A3)
     informe_filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
     informe_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # BRD §10.3: checklist estructurado, evidencias y metadatos
+    checklist_resultados: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    evidencias: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    responsable_revision: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

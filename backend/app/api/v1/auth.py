@@ -364,6 +364,11 @@ async def update_me(
     if payload.full_name is not None:
         current_user.full_name = payload.full_name
 
+    if payload.preferences is not None:
+        merged = dict(current_user.preferences or {})
+        merged.update(payload.preferences)
+        current_user.preferences = merged
+
     await db.flush()
     await db.refresh(current_user)
 

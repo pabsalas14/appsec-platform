@@ -42,8 +42,42 @@ async def lifespan(app: FastAPI):
             "log_level": settings.LOG_LEVEL,
         },
     )
-    yield
-    logger.info("app.shutdown", extra={"event": "app.shutdown"})
+    scheduler = None
+    if settings.SCHEDULE_NOTIFICATION_RULES:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.cron import CronTrigger
+
+        from app.database import run_in_transaction
+        from app.services.notification_rules_runner import run_all_notification_rules
+
+        async def _notif_job() -> None:
+            await run_in_transaction(run_all_notification_rules)
+
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(
+            _notif_job,
+            CronTrigger(
+                hour=settings.NOTIFICATION_CRON_HOUR_UTC,
+                minute=settings.NOTIFICATION_CRON_MINUTE_UTC,
+            ),
+            id="g2_notificacion_reglas_diarias",
+            replace_existing=True,
+        )
+        scheduler.start()
+        logger.info(
+            "app.scheduler.g2",
+            extra={
+                "event": "app.scheduler.g2",
+                "hour_utc": settings.NOTIFICATION_CRON_HOUR_UTC,
+                "minute_utc": settings.NOTIFICATION_CRON_MINUTE_UTC,
+            },
+        )
+    try:
+        yield
+    finally:
+        if scheduler is not None:
+            scheduler.shutdown(wait=False)
+        logger.info("app.shutdown", extra={"event": "app.shutdown"})
 
 
 # ─── App ───────────────────────────────────────────────────────────────────────

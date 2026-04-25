@@ -43,6 +43,8 @@ interface StatCardProps {
   className?: string;
   /** Enlace opcional (drill-down BRD §13.1) */
   href?: string;
+  /** Tooltip accesible (p. ej. criterio D2 en SLA vencidas) */
+  labelHint?: string;
 }
 
 export function StatCard({
@@ -54,6 +56,7 @@ export function StatCard({
   trend,
   className,
   href,
+  labelHint,
 }: StatCardProps) {
   const inner = (
     <GlassCard
@@ -65,7 +68,9 @@ export function StatCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-muted-foreground truncate">{label}</p>
+          <p className="text-sm text-muted-foreground truncate" title={labelHint}>
+            {label}
+          </p>
           <motion.p
             className="text-2xl font-bold text-foreground mt-1"
             initial={{ opacity: 0, y: 10 }}

@@ -1,6 +1,9 @@
 """ServiceRelease schemas — Pydantic v2."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -9,8 +12,10 @@ ESTADOS_VALIDOS = [
     "Borrador",
     "En Revision de Diseno",
     "En Validacion de Seguridad",
+    "Con Observaciones",
     "En Pruebas de Seguridad",
     "Pendiente de Aprobacion",
+    "Pendiente Aprobación",
     "En QA",
     "En Produccion",
     "Rechazado",
@@ -25,6 +30,8 @@ class ServiceReleaseBase(BaseModel):
     servicio_id: UUID
     estado_actual: str = "Borrador"
     jira_referencia: str | None = None
+    contexto_liberacion: dict[str, Any] | None = None
+    fecha_entrada: datetime | None = None
 
     @field_validator("estado_actual")
     @classmethod
@@ -48,6 +55,8 @@ class ServiceReleaseUpdate(BaseModel):
     descripcion: str | None = None
     estado_actual: str | None = None
     jira_referencia: str | None = None
+    contexto_liberacion: dict[str, Any] | None = None
+    fecha_entrada: datetime | None = None
 
     @field_validator("estado_actual")
     @classmethod

@@ -12,7 +12,7 @@ Validaciones de negocio:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -37,6 +37,7 @@ class VulnerabilidadBase(BaseModel):
     activo_web_id: UUID | None = None
     servicio_id: UUID | None = None
     aplicacion_movil_id: UUID | None = None
+    custom_fields: dict[str, Any] = Field(default_factory=dict, description="P2: campos dinámicos (JSON)")
 
     @field_validator("fuente")
     @classmethod
@@ -80,6 +81,7 @@ class VulnerabilidadUpdate(BaseModel):
     activo_web_id: UUID | None = None
     servicio_id: UUID | None = None
     aplicacion_movil_id: UUID | None = None
+    custom_fields: dict[str, Any] | None = None
 
     @field_validator("fuente")
     @classmethod

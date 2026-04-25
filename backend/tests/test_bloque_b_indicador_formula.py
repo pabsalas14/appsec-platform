@@ -47,7 +47,7 @@ async def test_indicador_formula_json_formula(client: AsyncClient, auth_headers:
         ],
     }
     payload = {
-        "code": "KRI0025",
+        "code": "KRI-TEST-COMPLEX",
         "nombre": "Control Deficiente Score",
         "motor": "multi",
         "formula": complex_formula,

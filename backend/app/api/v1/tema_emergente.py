@@ -6,7 +6,7 @@ import csv
 import hashlib
 from io import StringIO
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -67,8 +67,11 @@ async def list_temas_emergentes(
     current_user: User = Depends(get_current_user),
     page: int = 1,
     page_size: int = 50,
+    estado: str | None = Query(None, max_length=120),
+    tipo: str | None = Query(None, max_length=120),
+    q: str | None = Query(None, max_length=200, description="Búsqueda en título"),
 ):
-    """List temas emergentes owned by the current user (paginated)."""
+    """List temas emergentes owned by the current user (paginated). Filtros §9 / §13.2."""
     from sqlalchemy import func, select
 
     from app.core.response import paginated
@@ -77,13 +80,21 @@ async def list_temas_emergentes(
     page = max(1, page)
     page_size = min(max(1, page_size), 100)  # Cap at 100
 
+    base_conds = [
+        TemaEmergente.user_id == current_user.id,
+        TemaEmergente.deleted_at.is_(None),
+    ]
+    if estado and estado.strip():
+        base_conds.append(TemaEmergente.estado == estado.strip())
+    if tipo and tipo.strip():
+        base_conds.append(TemaEmergente.tipo == tipo.strip())
+    if q and q.strip():
+        base_conds.append(TemaEmergente.titulo.ilike(f"%{q.strip()}%"))
+
     # Get paginated items
     stmt = (
         select(TemaEmergente)
-        .where(
-            TemaEmergente.user_id == current_user.id,
-            TemaEmergente.deleted_at.is_(None),
-        )
+        .where(*base_conds)
         .order_by(TemaEmergente.created_at.desc())
     )
 
@@ -93,10 +104,7 @@ async def list_temas_emergentes(
     items = result.scalars().all()
 
     # Get total count
-    count_stmt = select(func.count(TemaEmergente.id)).where(
-        TemaEmergente.user_id == current_user.id,
-        TemaEmergente.deleted_at.is_(None),
-    )
+    count_stmt = select(func.count(TemaEmergente.id)).where(*base_conds)
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one_or_none() or 0
 

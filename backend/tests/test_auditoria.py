@@ -27,6 +27,15 @@ async def test_create_and_list_auditoria(client: AsyncClient, auth_headers: dict
 
 
 @pytest.mark.asyncio
+async def test_list_auditorias_filtro_estado(client: AsyncClient, auth_headers: dict):
+    await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
+    r = await client.get(f"{BASE_URL}?estado=En%20curso", headers=auth_headers)
+    assert r.status_code == 200
+    for row in r.json()["data"]:
+        assert row["estado"] == "En curso"
+
+
+@pytest.mark.asyncio
 async def test_auditoria_export_forbidden_user(client: AsyncClient, readonly_auth_headers: dict[str, str]):
     r = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert r.status_code == 403

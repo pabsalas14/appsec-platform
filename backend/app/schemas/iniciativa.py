@@ -1,9 +1,10 @@
 """Iniciativa schemas — Pydantic v2."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class IniciativaBase(BaseModel):
@@ -16,6 +17,7 @@ class IniciativaBase(BaseModel):
     celula_id: UUID | None = None
     fecha_inicio: datetime | None = None
     fecha_fin_estimada: datetime | None = None
+    custom_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class IniciativaCreate(IniciativaBase):
@@ -34,6 +36,7 @@ class IniciativaUpdate(BaseModel):
     celula_id: UUID | None = None
     fecha_inicio: datetime | None = None
     fecha_fin_estimada: datetime | None = None
+    custom_fields: dict[str, Any] | None = None
 
 
 class IniciativaRead(IniciativaBase):

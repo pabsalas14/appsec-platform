@@ -112,8 +112,8 @@ new-entity: ## Scaffold a new owned entity. Usage: make new-entity NAME=Project 
 	fi
 	python3 scripts/new_entity.py --name "$(NAME)" --fields "$(FIELDS)"
 
-types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI
-	cd frontend && npx openapi-typescript http://localhost/openapi.json -o src/types/api.ts
+types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI (direct :8000 avoids nginx 504)
+	cd frontend && npx openapi-typescript http://127.0.0.1:8000/openapi.json -o src/types/api.ts
 
 # ──────────────────── Maintenance ────────────────────
 

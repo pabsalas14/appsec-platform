@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import and_, case, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_permission
@@ -25,6 +25,51 @@ from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
 
 router = APIRouter()
+
+
+async def _where_sla_vencido_respet_d2(db: AsyncSession):
+    """BRD D2: SLA vencido excluye aceptación de riesgo y excepción vigente aprobada."""
+    from app.models.aceptacion_riesgo import AceptacionRiesgo
+    from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
+    from app.models.vulnerabilidad import Vulnerabilidad
+    from app.services.json_setting import get_json_setting
+    from app.services.vulnerabilidad_flujo import estados_activa_clasificacion, parse_estatus_catalog
+
+    now = datetime.now(UTC)
+    raw = await get_json_setting(db, "catalogo.estatus_vulnerabilidad", [])
+    activa = estados_activa_clasificacion(parse_estatus_catalog(raw))
+    base_del = [Vulnerabilidad.deleted_at.is_(None)]
+    not_acep = not_(
+        exists(
+            select(AceptacionRiesgo.id).where(
+                AceptacionRiesgo.vulnerabilidad_id == Vulnerabilidad.id,
+                AceptacionRiesgo.estado == "Aprobada",
+                AceptacionRiesgo.deleted_at.is_(None),
+            )
+        )
+    )
+    not_exc = not_(
+        exists(
+            select(ExcepcionVulnerabilidad.id).where(
+                ExcepcionVulnerabilidad.vulnerabilidad_id == Vulnerabilidad.id,
+                ExcepcionVulnerabilidad.estado == "Aprobada",
+                ExcepcionVulnerabilidad.fecha_limite > now,
+                ExcepcionVulnerabilidad.deleted_at.is_(None),
+            )
+        )
+    )
+    base = [
+        *base_del,
+        Vulnerabilidad.fecha_limite_sla.isnot(None),
+        Vulnerabilidad.fecha_limite_sla < now,
+        not_acep,
+        not_exc,
+    ]
+    if activa:
+        base.append(Vulnerabilidad.estado.in_(list(activa)))
+    else:
+        base.append(Vulnerabilidad.estado != "Cerrada")
+    return and_(*base)
 
 
 def _hierarchy_filter_dict(
@@ -253,15 +298,14 @@ async def dashboard_vulnerabilities(
         state_counts[state] = int(count.scalar_one() or 0)
 
     total = sum(severity_counts.values())
+    sla_d2 = await _where_sla_vencido_respet_d2(db)
     overdue = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(Vulnerabilidad)
                 .where(
-                    Vulnerabilidad.fecha_limite_sla < datetime.now(UTC),
-                    Vulnerabilidad.estado != "Cerrada",
-                    Vulnerabilidad.deleted_at.is_(None),
+                    sla_d2,
                     *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
@@ -329,7 +373,10 @@ async def dashboard_releases(
                 select(func.count())
                 .select_from(ServiceRelease)
                 .where(
-                    ServiceRelease.estado_actual == "Pendiente Aprobación",
+                    or_(
+                        ServiceRelease.estado_actual == "Pendiente Aprobación",
+                        ServiceRelease.estado_actual == "Pendiente de Aprobacion",
+                    ),
                     ServiceRelease.deleted_at.is_(None),
                     *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
@@ -533,15 +580,51 @@ async def dashboard_executive(
         or 0
     )
 
+    sev_conds = [
+        Vulnerabilidad.deleted_at.is_(None),
+        *([hierarchy_filter] if hierarchy_filter is not None else []),
+    ]
     vuln_critica = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(Vulnerabilidad)
                 .where(
-                    Vulnerabilidad.severidad == "CRITICA",
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    func.lower(Vulnerabilidad.severidad) == "critica",
+                    *sev_conds,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    by_severity: dict[str, int] = {}
+    for label in ("Critica", "Alta", "Media", "Baja", "Informativa"):
+        n = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        func.lower(Vulnerabilidad.severidad) == label.lower(),
+                        *sev_conds,
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        by_severity[label] = n
+
+    now = datetime.now(UTC)
+    week_ago = now - timedelta(days=7)
+    new_7d = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.created_at >= week_ago,
+                    *sev_conds,
                 )
             )
         ).scalar_one()
@@ -554,6 +637,10 @@ async def dashboard_executive(
                 "total_vulnerabilities": vuln_total,
                 "critical_count": vuln_critica,
                 "sla_compliance": 85,
+            },
+            "by_severity": by_severity,
+            "trend": {
+                "new_vulnerabilities_7d": new_7d,
             },
             "risk_level": "MEDIUM" if vuln_critica > 5 else "LOW",
             "applied_filters": _hierarchy_filter_dict(
@@ -770,6 +857,7 @@ async def dashboard_program_detail(
         or 0
     )
     open_count = max(total - closed, 0)
+    sla_d2 = await _where_sla_vencido_respet_d2(db)
     overdue = int(
         (
             await db.execute(
@@ -777,9 +865,7 @@ async def dashboard_program_detail(
                 .select_from(Vulnerabilidad)
                 .where(
                     Vulnerabilidad.fuente == source,
-                    Vulnerabilidad.fecha_limite_sla < datetime.now(UTC),
-                    Vulnerabilidad.estado != "Cerrada",
-                    Vulnerabilidad.deleted_at.is_(None),
+                    sla_d2,
                     *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )

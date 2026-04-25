@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -24,16 +25,32 @@ router = APIRouter()
 async def list_pipeline_releases(
     repositorio_id: UUID | None = Query(default=None),
     service_release_id: UUID | None = Query(default=None),
+    scan_id: str | None = Query(default=None, max_length=255),
+    tipo: str | None = Query(default=None, max_length=50),
+    rama: str | None = Query(default=None, max_length=255),
+    mes: int | None = Query(default=None, ge=1, le=12),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lista pipelines del usuario. Filtrar por ?repositorio_id= o ?service_release_id=."""
-    filters: dict = {"user_id": current_user.id}
+    """Lista pipelines. Filtros BRD §10.2 / §13.2 (Liberaciones pipeline)."""
+    cond = [
+        PipelineRelease.user_id == current_user.id,
+        PipelineRelease.deleted_at.is_(None),
+    ]
     if repositorio_id:
-        filters["repositorio_id"] = repositorio_id
+        cond.append(PipelineRelease.repositorio_id == repositorio_id)
     if service_release_id:
-        filters["service_release_id"] = service_release_id
-    items = await pipeline_release_svc.list(db, filters=filters)
+        cond.append(PipelineRelease.service_release_id == service_release_id)
+    if scan_id and scan_id.strip():
+        cond.append(PipelineRelease.scan_id == scan_id.strip())
+    if tipo and tipo.strip():
+        cond.append(PipelineRelease.tipo == tipo.strip())
+    if rama and rama.strip():
+        cond.append(PipelineRelease.rama == rama.strip())
+    if mes is not None:
+        cond.append(PipelineRelease.mes == mes)
+    res = await db.execute(select(PipelineRelease).where(and_(*cond)).order_by(PipelineRelease.created_at.desc()))
+    items = res.scalars().all()
     return success([PipelineReleaseRead.model_validate(x).model_dump(mode="json") for x in items])
 
 

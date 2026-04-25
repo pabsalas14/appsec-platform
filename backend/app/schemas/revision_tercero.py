@@ -1,6 +1,7 @@
 """RevisionTercero schemas — Pydantic v2."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -32,6 +33,11 @@ class RevisionTerceroBase(BaseModel):
     informe_filename: str | None = None
     # SHA-256 del informe para integridad (A3)
     informe_sha256: str | None = Field(default=None, max_length=64)
+    # BRD §10.3: ítems de checklist (id → cumple, nota…), evidencias y texto libre
+    checklist_resultados: dict[str, Any] | None = None
+    evidencias: list[dict[str, Any]] | None = None
+    responsable_revision: str | None = Field(default=None, max_length=255)
+    observaciones: str | None = None
 
     @field_validator("tipo")
     @classmethod
@@ -73,6 +79,10 @@ class RevisionTerceroUpdate(BaseModel):
     estado: str | None = None
     informe_filename: str | None = None
     informe_sha256: str | None = Field(default=None, max_length=64)
+    checklist_resultados: dict[str, Any] | None = None
+    evidencias: list[dict[str, Any]] | None = None
+    responsable_revision: str | None = Field(default=None, max_length=255)
+    observaciones: str | None = None
 
     @field_validator("tipo")
     @classmethod

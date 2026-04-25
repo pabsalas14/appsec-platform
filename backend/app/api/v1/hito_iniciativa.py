@@ -1,6 +1,10 @@
 """HitoIniciativa CRUD endpoints."""
 
-from fastapi import APIRouter, Depends
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -18,9 +22,16 @@ router = APIRouter()
 async def list_hito_iniciativas(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    iniciativa_id: uuid.UUID | None = Query(
+        default=None,
+        description="P10: filtrar actividades (hitos) de una iniciativa",
+    ),
 ):
     """List hito iniciativas owned by the current user."""
-    items = await hito_iniciativa_svc.list(db, filters={"user_id": current_user.id})
+    filters: dict = {"user_id": current_user.id}
+    if iniciativa_id is not None:
+        filters["iniciativa_id"] = iniciativa_id
+    items = await hito_iniciativa_svc.list(db, filters=filters)
     return success([HitoIniciativaRead.model_validate(x).model_dump(mode="json") for x in items])
 
 

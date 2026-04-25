@@ -86,14 +86,21 @@
 
 - Documentación: este plan + matriz (actualizar filas al cerrar entregas).  
 - **Avance fases A–B (2026-04-25, cierre):** **A1** — pantallas CRUD de §3 homologadas (tabla, búsqueda, orden y paginación) incluyendo inventario (`repositorios`, `activo_webs`) y catálogos operativos (`subdireccions`, `gerencias`, `organizacions`, `celulas`, `servicios`, `tipo_pruebas`, `control_seguridads`). **A2/A3** — import/template/export CSV en esas entidades con auditoría y permisos. **A4** — prueba de cadena org expandida (`subdireccion -> gerencia -> organizacion -> celula`) validando herencia en `repositorios`, `activo_webs` y `servicios`. **B1** — scoring mensual configurable (pesos + sub-estados administrables; endpoint de configuración para UI). **B2** — sincronización automática de actividad mensual al mutar `hallazgo_sasts` (además del endpoint manual). **B3** — `metadatos_motor` JSON en `programa_sasts`, `programa_dasts` y `programa_source_codes` (API + UI). **B4** — sesión TM con backlog, plan, activo secundario, activos relacionados múltiples y adjuntos/referencias JSON.  
+- **Cierre fases C y D (API, 2026-04-25):** **C1** — `contexto_liberacion` + `fecha_entrada`, `GET /service_releases/config/operacion` (transiciones + kanban), listado con filtros, validación de transición vía `flujo.transiciones_liberacion`. **C2** — `scan_id` / `mes` / `activo_web` en `pipeline_releases` + `plantilla.csv` e `import-csv` en hallazgos (match con `scan_id`+`branch`). **C3** — `kanban.liberacion` en `system_settings`. **D1** — catálogo de estatus con `clasificacion_ciclo` + `transiciones_permitidas` + `GET /vulnerabilidads/config/flujo` + reglas en `VulnerabilidadService`. **D2** — contadores de SLA vencido en agregados de dashboard ajustados a aceptación de riesgo y excepción vigente.  
 - **Cerrado reciente (API):** permisos `catalogs.*` en §3.1; exports CSV con `audit_record` (auditorías, temas emergentes, programas SAST/DAST); tests de regresión (readonly, exports, triaje IA `super_admin`). `tests/conftest.py`: `TRUNCATE` abarca cadenas SAST/pipeline/revisión de código; reintentos ante **deadlock** en PostgreSQL. *Desarrollo con Docker (sin bind-mount del backend):* tras tocar `backend/`, `docker compose build backend` (o `make test` con imagen al día).  
-- **Siguiente prioridad (huecos mayores):**  
-  1. **A2** — extender import + plantilla a más catálogos BRD (reutilizar patrón inventario).  
-  2. **B1** — actividades/pesos en settings o entidad de config, reflejados en scoring mensual.  
-  3. **D1** — matriz de estatus de vulnerabilidad **admin** (no solo `flujo_estatus` por usuario).  
-  4. **F2/F3** — drill-down y filtros §13.2 en dashboards.  
-  5. **G2** — notificaciones §14.3 (umbrales).  
+- **Auditoría de huecos en fases ya entregadas (A–D, P7–P12, F) + orden de implementación** → [`AUDITORIA_HUECOS_Y_ORDEN.md`](AUDITORIA_HUECOS_Y_ORDEN.md) (incluye **mapeo dashboards** explícitamente al final, vía `MAPEO_DASHBOARDS_BRD_DIFERIDO.md`).  
+- **Fases E, G, H y remanentes C/D/F técnicos:** [`ANALISIS_FASES_E_G_H.md`](ANALISIS_FASES_E_G_H.md) — **E1/E2** (motor de indicadores y madurez), **G2** (reglas **§14.3**), **G3**, **G4**, **H** (cobertura, runbook, aceptación formal), filtros/heatmaps homogéneos. Runbook: `docs/operations/RUNBOOK.md` (esqueleto; ampliar con el equipo de infra).
 - Ejecutar `make types` tras cambios de OpenAPI y commitear `frontend/src/types/api.ts`.
+
+---
+
+## 5. Fases E, G, H (referencia de ejecución)
+
+| Fase | Documento de trabajo | Cierre “100%” (resumen) |
+|------|----------------------|-------------------------|
+| **E** | `ANALISIS_FASES_E_G_H.md` (sección E) | Fórmulas oficiales evaluadas, seeds BRD, tablero de resultados, madurez con roll-up y pruebas. |
+| **G** | misma, sección G | Umbrales automáticos **§14.3**, G3, matriz de pruebas por rol, E2E IA. |
+| **H** | misma, sección H + `PERFORMANCE_OPTIMIZATION.md` + `docs/operations/RUNBOOK.md` | Criterio de cobertura acordado, performance verificada, acta de negocio, sin regresión en `make test` / `npm run lint`. |
 
 ---
 
