@@ -1,57 +1,111 @@
-"use client";
+'use client';
 
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Activity, AlertTriangle, BarChart3, GitBranch, Kanban, LayoutGrid, Layers, ShieldCheck, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useDashboards } from '@/hooks/useDashboard';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, Plus } from 'lucide-react';
 
-import { Card, CardContent, PageHeader, PageWrapper } from '@/components/ui';
+export default function DashboardsPage() {
+  const router = useRouter();
+  const { data: dashboards, isLoading, error } = useDashboards({ is_system: false });
 
-/** BRD mód. 11 — nueve tableros + hub operativo + kanban (liberaciones). */
-const DASHBOARDS: { href: string; label: string; brd?: string; icon: typeof BarChart3 }[] = [
-  { href: '/dashboards/hub', label: 'Hub operativo', icon: LayoutGrid, brd: 'Atajo con filtros' },
-  { href: '/dashboards/executive', label: '1 · Ejecutivo (general)', icon: BarChart3, brd: 'Dashboard 1' },
-  { href: '/dashboards/team', label: '2 · Equipo', icon: Users, brd: 'Dashboard 2' },
-  { href: '/dashboards/programs', label: '3 · Programas (consolidado)', icon: GitBranch, brd: 'Dashboard 3' },
-  { href: '/dashboards/program-detail', label: '4 · Zoom por programa', icon: Layers, brd: 'Dashboard 4' },
-  { href: '/dashboards/vulnerabilities', label: '5 · Vulnerabilidades (multi-dim.)', icon: ShieldCheck, brd: 'Dashboard 5' },
-  { href: '/dashboards/releases', label: '6 · Liberaciones (tabla)', icon: Activity, brd: 'Dashboard 6' },
-  { href: '/kanban', label: '7 · Kanban de liberaciones', icon: Kanban, brd: 'Dashboard 7' },
-  { href: '/dashboards/initiatives', label: '8 · Iniciativas', icon: Layers, brd: 'Dashboard 8' },
-  { href: '/dashboards/emerging-themes', label: '9 · Temas emergentes', icon: AlertTriangle, brd: 'Dashboard 9' },
-];
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-export default function DashboardsIndexPage() {
-  const sp = useSearchParams();
-  const suffix = sp.toString() ? `?${sp.toString()}` : '';
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 text-destructive p-4 bg-destructive/10 rounded-lg">
+        <AlertCircle className="h-5 w-5" />
+        <span>Error cargando dashboards</span>
+      </div>
+    );
+  }
 
   return (
-    <PageWrapper className="space-y-6 p-6">
-      <PageHeader
-        title="Dashboards AppSec"
-        description="Nueve tableros del Prompt Maestro (BRD §11) con drill-down jerárquico; los filtros de la URL se propagan donde aplica."
-      />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {DASHBOARDS.map((dash) => {
-          const Icon = dash.icon;
-          return (
-            <Link key={dash.href} href={`${dash.href}${suffix}`}>
-              <Card className="transition hover:border-primary/50">
-                <CardContent className="flex items-center gap-3 p-5">
-                  <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{dash.label}</div>
-                    {dash.brd && (
-                      <div className="text-xs text-muted-foreground mt-0.5">{dash.brd}</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboards</h1>
+          <p className="text-muted-foreground mt-2">Gestiona tus dashboards personalizados</p>
+        </div>
+        <Button
+          onClick={() => router.push('/dashboards/builder')}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Nuevo Dashboard
+        </Button>
       </div>
-    </PageWrapper>
+
+      {dashboards && dashboards.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {dashboards.map((dashboard) => (
+            <Card
+              key={dashboard.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => router.push(`/dashboards/${dashboard.id}`)}
+            >
+              <CardHeader>
+                <CardTitle className="truncate">{dashboard.nombre}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {dashboard.descripcion || 'Sin descripción'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {dashboard.is_system ? 'Sistema' : 'Personalizado'}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/dashboards/${dashboard.id}/edit`);
+                    }}
+                  >
+                    Editar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+            <p className="text-muted-foreground text-center">
+              No hay dashboards personalizados. Crea uno nuevo para comenzar.
+            </p>
+            <Button
+              onClick={() => router.push('/dashboards/builder')}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Crear Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

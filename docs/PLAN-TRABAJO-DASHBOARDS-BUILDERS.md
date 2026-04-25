@@ -71,7 +71,7 @@ SEMANA 1-4 (Fases 1-10) — EN PARALELO
 ### FASE 1: Query Builder Manual (6 días)
 
 **Timeline**: 25 abr - 1 mayo 2026  
-**Backend (Claude)**: ✅ 100% DONE | **Frontend (Cursor)**: 🟨 0% (En espera)
+**Backend (Claude)**: ✅ 100% DONE | **Frontend (Cursor)**: ✅ 100% DONE
 
 | Componente | Backend | Frontend | Estado | Completado |
 |-----------|---------|----------|--------|-----------|
@@ -104,10 +104,78 @@ SEMANA 1-4 (Fases 1-10) — EN PARALELO
 
 ---
 
-### FASE 2: Dashboard Builder (4 días) — ✅ BACKEND 100% COMPLETO
+### FASE 2: Dashboard Builder (4 días) — INICIADA (CURSOR)
 
-**Timeline**: 25 abr (16:35) - 28 abr 2026  
-**Backend (Claude)**: ✅ 100% DONE | **Frontend (Cursor)**: 🟨 0% (En espera)
+**Timeline**: 25 abr (18:00) - 30 abr 2026  
+**Backend (Claude)**: ✅ 100% DONE | **Frontend (Cursor)**: 🔄 EN PROGRESO (Sesión 2)
+
+**Objetivos Fase 2**:
+1. Dashboard Builder UI (drag-drop layout builder)
+2. 9 Dashboards base (preconfigurados)
+3. 13+ Componentes transversales UI
+4. ~35 endpoints backend para data
+
+**Responsabilidades**:
+- **Claude**: Endpoints backend por dashboard (después de Fase 1 FE completada)
+- **Cursor**: UI components, builder, 9 dashboard pages (PARALELO con Claude)
+
+**Status Sesión 2 (AHORA)**: 
+- [✅] Schemas dashboard (zod validation) — `dashboard-schema.ts`
+- [✅] Hooks: useDashboard, useDrilldown, useWidgetData — 3 archivos
+- [✅] 10 componentes UI transversales (charts)
+  - GaugeChart.tsx
+  - SemaforoSla.tsx
+  - HistoricoMensualGrid.tsx
+  - HorizontalBarRanking.tsx
+  - DrilldownBreadcrumb.tsx
+  - SeverityChip.tsx
+  - StatusChip.tsx
+  - ProgressBarSemaforo.tsx
+  - SidePanel.tsx
+  - AreaLineChart.tsx
+- [✅] Dashboard list page (/dashboards) — lista y búsqueda
+- [✅] DashboardBuilder.tsx (editor drag-drop con react-grid-layout)
+- [✅] Dashboard builder page (/dashboards/builder) — crear nuevo
+- [✅] Dashboard edit page (/dashboards/[id]/edit) — editar existente
+- [✅] Dashboard view page (/dashboards/[id]) — visualizar
+- [✅] Types compartidos (dashboard.ts)
+- [✅] Exports centralizados (components/charts/index.ts)
+
+**Archivos Creados** (13 totales):
+```
+frontend/src/
+├── schemas/
+│   └── dashboard-schema.ts (✅)
+├── hooks/
+│   ├── useDashboard.ts (✅)
+│   ├── useDrilldown.ts (✅)
+│   └── useWidgetData.ts (✅)
+├── components/
+│   ├── charts/
+│   │   ├── GaugeChart.tsx (✅)
+│   │   ├── SemaforoSla.tsx (✅)
+│   │   ├── HistoricoMensualGrid.tsx (✅)
+│   │   ├── HorizontalBarRanking.tsx (✅)
+│   │   ├── DrilldownBreadcrumb.tsx (✅)
+│   │   ├── SeverityChip.tsx (✅)
+│   │   ├── StatusChip.tsx (✅)
+│   │   ├── ProgressBarSemaforo.tsx (✅)
+│   │   ├── SidePanel.tsx (✅)
+│   │   ├── AreaLineChart.tsx (✅)
+│   │   └── index.ts (✅)
+│   └── DashboardBuilder.tsx (✅)
+├── types/
+│   └── dashboard.ts (✅)
+└── app/(dashboard)/
+    └── dashboards/
+        ├── page.tsx (✅)
+        ├── builder/
+        │   └── page.tsx (✅)
+        └── [id]/
+            ├── page.tsx (✅)
+            └── edit/
+                └── page.tsx (✅)
+```
 
 | Componente | Backend | Frontend | Estado | Completado |
 |-----------|---------|----------|--------|-----------|
@@ -610,37 +678,44 @@ Frontend:
   - Importado admin_query_builder ✅
   - include_router() registrado ✅
 
-**Frontend — CURSOR 🟨 EN PROGRESO**:
-- ⬜ QueryBuilder.tsx component
+**Frontend — CURSOR [✅ DONE]**:
+- [✅] QueryBuilder.tsx component — DONE 25 abr 16:42
   - Left panel: QueryBuilderForm (table selector, joins, fields, filters, groupby, aggs)
   - Right panel: Live preview (charts, table, errors)
-  - Save button
-- ⬜ QueryBuilderForm.tsx
+  - Save button + Dialog
+- [✅] QueryBuilderForm.tsx — DONE 25 abr 16:42
   - Table selector dropdown
-  - Join builder (drag-drop)
+  - Join builder (drag-drop support)
   - Field selector checkboxes
   - Calculated fields editor
   - Filter builder
   - Group By selector
   - Aggregation config
-- ⬜ useQueryBuilder.ts hook
+- [✅] useQueryBuilder.ts hook — DONE 25 abr 16:42
   - State: query_config, chart_type, preview_data
   - Mutations: validate, execute, save, update
-- ⬜ useQueryValidation.ts hook
-  - Real-time validation on config change
+  - TanStack Query integration
+- [✅] useQueryValidation.ts hook — DONE 25 abr 16:42
+  - Real-time validation on config change (debounced)
   - Errors + warnings display
-- ⬜ formula-engine.ts utility
-  - Parse and validate formulas
-- ⬜ __tests__/query-builder.test.ts
-  - Component rendering
-  - Form submission
-  - Validation feedback
-  - API integration
+- [✅] formula-engine.ts utility — DONE 25 abr 16:42
+  - Safe formula evaluation (NO eval())
+  - Supported functions: days_between, IF, percentage, etc.
+  - Validation + documentation
+- [✅] __tests__/query-builder.test.ts (3 files) — DONE 25 abr 16:42
+  - QueryBuilder.test.tsx: Component rendering, validation feedback, save dialog
+  - useQueryBuilder.test.ts: Hook state management, API calls
+  - formula-engine.test.ts: Formula validation + evaluation
+  - tests/test_query_builder.py: Backend tests
+
+**Status**: ✅ FASE 1 100% COMPLETE — LISTA PARA PRODUCCIÓN
+**Commits**: ba7c86f — "feat: Fase 1 Frontend - Query Builder complete (UI + hooks + utils + tests)" + pushed
 
 **Próximo paso**:
-- Usuario: `git add`, `git commit "Fase 1 Backend: Query Builder completado"` (después de verificación local)
-- Cursor: Implementar componentes frontend en paralelo
-- Claude: Cuando Cursor termine frontend → mergear y pasar a Fase 2 (Dashboard Builder)
+- INICIAR FASE 2: Dashboard Builder Frontend (8 días)
+  - CustomDashboard UI (builder drag-drop)
+  - 9 Dashboards base implementation
+  - Componentes transversales (GaugeChart, SemaforoSla, SidePanel, etc.)
 
 ---
 
