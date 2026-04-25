@@ -129,6 +129,18 @@ class _IA:
     EXECUTE = "ia.execute"
 
 
+class _Inventory:
+    REPOS_EXPORT = "inventory.repos.export"
+    REPOS_IMPORT = "inventory.repos.import"
+    WEB_ASSETS_EXPORT = "inventory.web_assets.export"
+    WEB_ASSETS_IMPORT = "inventory.web_assets.import"
+
+
+class _Notifications:
+    VIEW = "notifications.view"
+    EDIT = "notifications.edit"
+
+
 class P:
     """Permission code namespace.  Use ``P.USERS.VIEW`` etc."""
 
@@ -145,6 +157,8 @@ class P:
     CATALOGS = _Catalogs
     EMERGING_THEMES = _EmergingThemes
     IA = _IA
+    INVENTORY = _Inventory
+    NOTIFICATIONS = _Notifications
 
 
 # ─── Default permission matrix per role ──────────────────────────────────────
@@ -174,6 +188,28 @@ _CATALOG_MUTATION = [
     "catalogs.delete",
 ]
 
+# Inventario (repositorios DAST/SAST, activo web DAST): import/export masivo (BRD A2/A3)
+_INVENTORY_BULK = [
+    "inventory.repos.export",
+    "inventory.repos.import",
+    "inventory.web_assets.export",
+    "inventory.web_assets.import",
+]
+
+_INVENTORY_EXPORT_ONLY = [
+    "inventory.repos.export",
+    "inventory.web_assets.export",
+]
+
+# G2 — solo mutación; ``notifications.view`` ya está en ``_VIEW_CODES`` para quien
+# usa agregado ``_VIEW_CODES`` (evita duplicados en ``role_permissions`` al sembrar).
+_NOTIF_CORE = [
+    "notifications.edit",
+]
+
+# Programas SAST — export CSV (BRD A3); mismo código que `programs.export`
+_PROGRAM_SAST_EXPORT = ["programs.export"]
+
 DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
     "super_admin": _all_codes(),
     "admin": _all_codes(),
@@ -181,6 +217,8 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         _VIEW_CODES
         + _EXPORT_CODES
         + _CATALOG_MUTATION
+        + _INVENTORY_BULK
+        + _NOTIF_CORE
         + [
             "vulnerabilities.approve",
             "releases.approve",
@@ -223,7 +261,10 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
             "tasks.edit",
             "ia.view",
             "ia.execute",
+            "notifications.view",
         ]
+        + _INVENTORY_BULK
+        + _NOTIF_CORE
     ),
     "analista": (
         [
@@ -249,9 +290,15 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
             "tasks.edit",
             "ia.view",
             "ia.execute",
+            "notifications.view",
         ]
+        + _INVENTORY_BULK
+        + _NOTIF_CORE
+        + _PROGRAM_SAST_EXPORT
     ),
-    "auditor": ([*_VIEW_CODES, "audit_logs.export", "audit_logs.verify", "dashboards.export"]),
+    "auditor": (
+        [*_VIEW_CODES, "audit_logs.export", "audit_logs.verify", "dashboards.export", *_INVENTORY_EXPORT_ONLY, *_NOTIF_CORE]
+    ),
     "readonly": [
         "dashboards.view",
         "vulnerabilities.view",
@@ -259,6 +306,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "initiatives.view",
         "programs.view",
         "catalogs.view",
+        "notifications.view",
     ],
-    "user": _VIEW_CODES + _CATALOG_MUTATION,
+    "user": _VIEW_CODES + _CATALOG_MUTATION + _INVENTORY_BULK + _NOTIF_CORE + _PROGRAM_SAST_EXPORT,
 }

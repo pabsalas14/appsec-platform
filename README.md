@@ -23,6 +23,10 @@
 | **Auditoría interna** | Auditorías, hallazgos, evidencias, planes de remediación. |
 | **Gobierno (BRD §3)** | Subdirección → Gerencia → Organización → Célula; inventario (repositorios, activos web, servicios, apps móviles, tipos de prueba, controles de seguridad). |
 | **Transversal** | Flujos de estatus, indicadores con fórmulas JSON, filtros guardados, configuración de widgets de dashboard, changelog, uploads por usuario. |
+| **Notificaciones in-app (G2)** | API `/notificacions` (listado, marcar leídas, PBAC `notifications.view` / `notifications.edit`) y campana en la barra superior. |
+| **Inventario CSV (A2/A3)** | En UI: exportar, descargar plantilla e importar en **Repositorios** y **Activos web**; permisos `inventory.repos.*` / `inventory.web_assets.*`. |
+| **Dashboard home** | Tarjetas métricas con enlace a detalle (tareas, vulnerabilidades con filtros en URL, releases, tableros); **filtros jerárquicos en la URL** (compartir vista / back-forward) además de localStorage; índice `/dashboards` reenvía la query a cada panel. |
+| **Audit logs (admin)** | Listado con **filtros y paginación reflejados en la URL** (`action`, `entity`, `actor`, fechas, `page`). |
 | **IA opcional** | Configuración global (`/api/v1/admin/ia-config`) y sugerencias en sesiones de threat modeling; el producto **funciona sin IA**. |
 | **Observabilidad** | Logs estructurados en backend, `client-logs` en frontend, `audit_logs` en base, cadena de hash verificable en API. |
 

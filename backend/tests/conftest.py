@@ -28,7 +28,7 @@ from collections.abc import AsyncGenerator
 
 import asyncpg.exceptions
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import (
@@ -167,11 +167,29 @@ async def _apply_db_override(
 # ─── HTTP client & auth helpers ──────────────────────────────────────────────
 
 
+class _DrainingAsyncClient(AsyncClient):
+    """Consume response bodies so ASGI puede finalizar el scope y ejecutar
+    el código tras ``yield`` en ``get_db`` (commit) antes del siguiente request.
+
+    Con ``httpx.ASGITransport``, si no se lee el body, el teardown de
+    dependencias queda diferido; register→login en la misma prueba veía
+    todavía 401 (usuario no confirmado en BD).
+    """
+
+    async def request(self, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
+        r = await super().request(*args, **kwargs)
+        ct = (r.headers.get("content-type") or "").lower()
+        if "text/event-stream" in ct:
+            return r
+        await r.aread()
+        return r
+
+
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Async httpx client wired to the FastAPI app via ASGI transport."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with _DrainingAsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 

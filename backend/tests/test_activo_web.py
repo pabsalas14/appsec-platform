@@ -76,3 +76,35 @@ async def test_activo_web_rejects_private_url(client: AsyncClient, auth_headers:
     }
     resp = await client.post(BASE_URL, headers=auth_headers, json=payload)
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_activo_web_export_and_template(client: AsyncClient, auth_headers: dict):
+    r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+    assert r.status_code == 200, r.text
+    assert "nombre,url,ambiente" in r.text
+    t = await client.get(f"{BASE_URL}/import-template.csv", headers=auth_headers)
+    assert t.status_code == 200, t.text
+    assert "celula_id" in t.text
+
+
+@pytest.mark.asyncio
+async def test_activo_web_import_csv_creates(client: AsyncClient, auth_headers: dict):
+    cel_id = await create_celula_id(client, auth_headers)
+    csv_text = "\n".join(
+        [
+            "nombre,url,ambiente,tipo,celula_id",
+            f"w1,https://import-w.example.com/web,prod,sitio,{cel_id}",
+        ]
+    )
+    resp = await client.post(
+        f"{BASE_URL}/import",
+        headers=auth_headers,
+        files={"file": ("webs.csv", csv_text, "text/csv")},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["created"] == 1
+    assert data["errors"] == []
+    listed = await client.get(BASE_URL, headers=auth_headers)
+    assert len(listed.json()["data"]) == 1

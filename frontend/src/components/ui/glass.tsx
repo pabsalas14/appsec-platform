@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -40,6 +41,8 @@ interface StatCardProps {
   iconBg?: string;
   trend?: { value: number; label: string };
   className?: string;
+  /** Enlace opcional (drill-down BRD §13.1) */
+  href?: string;
 }
 
 export function StatCard({
@@ -50,9 +53,16 @@ export function StatCard({
   iconBg = 'bg-primary-500/10',
   trend,
   className,
+  href,
 }: StatCardProps) {
-  return (
-    <GlassCard className={cn('p-5', className)}>
+  const inner = (
+    <GlassCard
+      className={cn(
+        'p-5',
+        !href && className,
+        href && 'transition-colors group-hover:border-primary/25 group-hover:bg-accent/[0.03]',
+      )}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-sm text-muted-foreground truncate">{label}</p>
@@ -84,6 +94,22 @@ export function StatCard({
       </div>
     </GlassCard>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          'group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          className,
+        )}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return inner;
 }
 
 /* ─────────────────────────────────────────────

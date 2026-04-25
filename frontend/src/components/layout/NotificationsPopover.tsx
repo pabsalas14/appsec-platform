@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Check } from 'lucide-react';
-import { useState } from 'react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Bell, Check, Loader2 } from 'lucide-react';
 
 import {
   Popover,
@@ -10,43 +11,32 @@ import {
   ScrollArea,
   Separator,
 } from '@/components/ui';
+import {
+  useMarcarTodasNotificacionesLeidas,
+  useNotificacions,
+  useUpdateNotificacion,
+} from '@/hooks/useNotificacions';
 import { cn } from '@/lib/utils';
+import type { Notificacion } from '@/lib/schemas/notificacion.schema';
 
-export type Notification = {
-  id: string;
-  title: string;
-  body?: string;
-  at: string;
-  read?: boolean;
-};
-
-const MOCK: Notification[] = [
-  {
-    id: '1',
-    title: 'Welcome to the framework',
-    body: 'This panel is a stub — wire it to SSE or polling when ready.',
-    at: 'just now',
-  },
-  {
-    id: '2',
-    title: 'New audit entry',
-    body: 'An admin updated a system setting.',
-    at: '2m ago',
-  },
-  {
-    id: '3',
-    title: 'Backup completed',
-    body: 'Daily backup finished successfully.',
-    at: '1h ago',
-    read: true,
-  },
-];
+function atLabel(n: Notificacion) {
+  try {
+    return formatDistanceToNow(parseISO(n.created_at), { addSuffix: true, locale: es });
+  } catch {
+    return n.created_at;
+  }
+}
 
 export function NotificationsPopover() {
-  const [items, setItems] = useState<Notification[]>(MOCK);
-  const unread = items.filter((n) => !n.read).length;
+  const { data: items = [], isLoading, isError } = useNotificacions();
+  const markAll = useMarcarTodasNotificacionesLeidas();
+  const update = useUpdateNotificacion();
+  const unread = items.filter((n) => !n.leida).length;
 
-  const markAllRead = () => setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  const onMarkOne = (n: Notificacion) => {
+    if (n.leida) return;
+    update.mutate({ id: n.id, leida: true });
+  };
 
   return (
     <Popover>
@@ -63,41 +53,61 @@ export function NotificationsPopover() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-sm font-semibold">Notifications</span>
+          <span className="text-sm font-semibold">Notificaciones</span>
           {unread > 0 && (
             <button
               type="button"
-              onClick={markAllRead}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
             >
-              <Check className="h-3 w-3" /> Mark all read
+              {markAll.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Check className="h-3 w-3" />
+              )}
+              Marcar todas
             </button>
           )}
         </div>
         <Separator />
         <ScrollArea className="max-h-80">
-          {items.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">No notifications</div>
-          ) : (
+          {isLoading && (
+            <div className="flex justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          )}
+          {isError && (
+            <div className="p-6 text-center text-sm text-destructive">No se pudo cargar el centro de avisos.</div>
+          )}
+          {!isLoading && !isError && items.length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground">Sin notificaciones</div>
+          )}
+          {!isLoading && !isError && items.length > 0 && (
             <ul>
               {items.map((n) => (
                 <li
                   key={n.id}
                   className={cn(
                     'border-b border-border/60 px-4 py-3 transition-colors last:border-b-0 hover:bg-accent/50',
-                    !n.read && 'bg-primary/[0.03]',
+                    !n.leida && 'bg-primary/[0.03]',
                   )}
                 >
-                  <div className="flex items-start gap-2">
-                    {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-foreground">{n.title}</div>
-                      {n.body && (
-                        <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
-                      )}
-                      <div className="mt-1 text-[11px] text-muted-foreground/80">{n.at}</div>
+                  <button
+                    type="button"
+                    onClick={() => onMarkOne(n)}
+                    className="w-full text-left"
+                    disabled={update.isPending}
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.leida && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-foreground">{n.titulo}</div>
+                        {n.cuerpo && <div className="mt-0.5 text-xs text-muted-foreground">{n.cuerpo}</div>}
+                        <div className="mt-1 text-[11px] text-muted-foreground/80">{atLabel(n)}</div>
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 </li>
               ))}
             </ul>

@@ -147,27 +147,55 @@ async def _create_control_seguridad(client: AsyncClient, headers: dict[str, str]
     return resp.json()["data"]["id"]
 
 
+async def _create_notificacion(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/notificacions",
+        headers=headers,
+        json={"titulo": "OwnedNotif", "cuerpo": "x", "leida": False},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
+# patch_body: cuerpo válido para PATCH (detección IDOR) según el schema de cada entidad
 OWNED_ENTITIES = [
-    pytest.param("tasks", _create_task, "/api/v1/tasks/{id}", id="tasks"),
-    pytest.param("projects", _create_project, "/api/v1/projects/{id}", id="projects"),
-    pytest.param("subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", id="subdireccions"),
-    pytest.param("celulas", _create_celula, "/api/v1/celulas/{id}", id="celulas"),
-    pytest.param("repositorios", _create_repositorio, "/api/v1/repositorios/{id}", id="repositorios"),
-    pytest.param("activo_webs", _create_activo_web, "/api/v1/activo_webs/{id}", id="activo_webs"),
-    pytest.param("servicios", _create_servicio, "/api/v1/servicios/{id}", id="servicios"),
+    pytest.param("tasks", _create_task, "/api/v1/tasks/{id}", {"title": "pwn"}, id="tasks"),
+    pytest.param("projects", _create_project, "/api/v1/projects/{id}", {"name": "pwn"}, id="projects"),
     pytest.param(
-        "aplicacion_movils", _create_aplicacion_movil, "/api/v1/aplicacion_movils/{id}", id="aplicacion_movils"
+        "subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", {"nombre": "PwnN"}, id="subdireccions"
     ),
-    pytest.param("tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", id="tipo_pruebas"),
+    pytest.param("celulas", _create_celula, "/api/v1/celulas/{id}", {"nombre": "PwnC"}, id="celulas"),
+    pytest.param("repositorios", _create_repositorio, "/api/v1/repositorios/{id}", {"nombre": "PwnR"}, id="repositorios"),
+    pytest.param("activo_webs", _create_activo_web, "/api/v1/activo_webs/{id}", {"nombre": "PwnA"}, id="activo_webs"),
+    pytest.param("servicios", _create_servicio, "/api/v1/servicios/{id}", {"nombre": "PwnS"}, id="servicios"),
     pytest.param(
-        "control_seguridads", _create_control_seguridad, "/api/v1/control_seguridads/{id}", id="control_seguridads"
+        "aplicacion_movils",
+        _create_aplicacion_movil,
+        "/api/v1/aplicacion_movils/{id}",
+        {"nombre": "PwnM"},
+        id="aplicacion_movils",
+    ),
+    pytest.param("tipo_pruebas", _create_tipo_prueba, "/api/v1/tipo_pruebas/{id}", {"nombre": "PwnT"}, id="tipo_pruebas"),
+    pytest.param(
+        "control_seguridads",
+        _create_control_seguridad,
+        "/api/v1/control_seguridads/{id}",
+        {"nombre": "PwnCS"},
+        id="control_seguridads",
+    ),
+    pytest.param(
+        "notificacions",
+        _create_notificacion,
+        "/api/v1/notificacions/{id}",
+        {"titulo": "pwn"},
+        id="notificacions",
     ),
 ]
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method", ["GET", "PATCH", "DELETE"])
-@pytest.mark.parametrize("name, creator, path_tpl", OWNED_ENTITIES)
+@pytest.mark.parametrize("name, creator, path_tpl, patch_body", OWNED_ENTITIES)
 async def test_idor_returns_404_for_other_user(
     client: AsyncClient,
     auth_headers: dict[str, str],
@@ -176,6 +204,7 @@ async def test_idor_returns_404_for_other_user(
     name: str,
     creator,
     path_tpl: str,
+    patch_body: dict,
 ):
     """User B must not see/modify User A's resources — they should 404."""
     resource_id = await creator(client, auth_headers)
@@ -184,7 +213,7 @@ async def test_idor_returns_404_for_other_user(
     if method == "GET":
         resp = await client.get(url, headers=other_auth_headers)
     elif method == "PATCH":
-        resp = await client.patch(url, headers=other_auth_headers, json={"title": "pwn"})
+        resp = await client.patch(url, headers=other_auth_headers, json=patch_body)
     else:
         resp = await client.delete(url, headers=other_auth_headers)
 
@@ -192,7 +221,7 @@ async def test_idor_returns_404_for_other_user(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("name, creator, path_tpl", OWNED_ENTITIES)
+@pytest.mark.parametrize("name, creator, path_tpl, patch_body", OWNED_ENTITIES)
 async def test_list_is_scoped_to_user(
     client: AsyncClient,
     auth_headers: dict[str, str],
@@ -200,8 +229,10 @@ async def test_list_is_scoped_to_user(
     name: str,
     creator,
     path_tpl: str,
+    patch_body: dict,
 ):
     """User B must not see User A's resources in the list endpoint."""
+    _ = patch_body
     await creator(client, auth_headers)
 
     list_url = path_tpl.rsplit("/{id}", 1)[0]

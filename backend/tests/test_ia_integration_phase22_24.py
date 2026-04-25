@@ -11,6 +11,8 @@ Tests for:
 import pytest
 from httpx import AsyncClient
 
+from tests.graph_helpers import create_sesion_tm_id
+
 
 class TestPhase22ThreatModeling:
     """Fase 22: Threat Modeling asistido by IA."""
@@ -21,24 +23,9 @@ class TestPhase22ThreatModeling:
         client: AsyncClient,
         auth_headers: dict,
     ):
-        """POST /sesion_threat_modelings triggers IA threat generation."""
-        resp = await client.post(
-            "/api/v1/sesion_threat_modelings",
-            json={
-                "titulo": "E2E Threat Model Test",
-                "descripcion": "Test threat modeling session",
-                "tecnologia_stack": ["Python", "FastAPI", "PostgreSQL"],
-                "contexto": "Banking application with sensitive data",
-            },
-            headers=auth_headers,
-        )
-
-        # Should create session successfully
-        if resp.status_code in (201, 404):
-            # 201 if endpoint exists, 404 if not yet implemented (deferred to later phase)
-            assert True, "Threat modeling endpoint available or deferred"
-        else:
-            pytest.fail(f"Unexpected status: {resp.status_code}")
+        """POST /sesion_threat_modelings con payload BRD (programa_tm_id, fecha, estado, …)."""
+        sid = await create_sesion_tm_id(client, auth_headers)
+        assert sid, "debe devolver id de sesión creada"
 
     @pytest.mark.asyncio
     async def test_threat_model_generates_stride_threats(
@@ -46,35 +33,14 @@ class TestPhase22ThreatModeling:
         client: AsyncClient,
         auth_headers: dict,
     ):
-        """Threat modeling should generate STRIDE-categorized threats."""
-        # Create session
-        resp_create = await client.post(
-            "/api/v1/sesion_threat_modelings",
-            json={
-                "titulo": "STRIDE Generation Test",
-                "descripcion": "Test STRIDE threat generation",
-                "tecnologia_stack": ["React", "Node.js", "MongoDB"],
-                "contexto": "E-commerce platform",
-            },
-            headers=auth_headers,
-        )
-
-        if resp_create.status_code == 404:
-            pytest.skip("Threat modeling endpoint not yet implemented")
-
-        assert resp_create.status_code == 201
-        session = resp_create.json()["data"]
-        session_id = session["id"]
-
-        # Threats should be generated (check if amenazas endpoint exists)
+        """Con sesión válida, el listado de amenazas (si existe) responde 200."""
+        session_id = await create_sesion_tm_id(client, auth_headers)
         resp_threats = await client.get(
             f"/api/v1/amenazas?sesion_id={session_id}",
             headers=auth_headers,
         )
-
         if resp_threats.status_code == 200:
             threats = resp_threats.json()["data"]
-            # Verify STRIDE categories are present
             if threats:
                 threat = threats[0]
                 assert "categoria_stride" in threat or "stride" in threat.get("titulo", "").lower(), (
@@ -87,26 +53,15 @@ class TestPhase22ThreatModeling:
         client: AsyncClient,
         auth_headers: dict,
     ):
-        """Generated threats should have DREAD scores (D, R, E, A, D)."""
-        resp = await client.post(
-            "/api/v1/sesion_threat_modelings",
-            json={
-                "titulo": "DREAD Scoring Test",
-                "descripcion": "Test DREAD score generation",
-                "tecnologia_stack": ["Java", "Spring Boot", "MySQL"],
-                "contexto": "Financial services",
-            },
+        """La sesión creada expone un estado de dominio (Planificada, En Progreso, …)."""
+        session_id = await create_sesion_tm_id(client, auth_headers)
+        r = await client.get(
+            f"/api/v1/sesion_threat_modelings/{session_id}",
             headers=auth_headers,
         )
-
-        if resp.status_code == 404:
-            pytest.skip("Threat modeling not yet implemented")
-
-        assert resp.status_code == 201
-        session = resp.json()["data"]
-
-        # Verify DREAD fields are present in session or related amenazas
-        assert session.get("estado") in ("Abierta", "Generada", None), "Session should have proper state"
+        assert r.status_code == 200
+        st = r.json()["data"]["estado"]
+        assert st in ("Planificada", "En Progreso", "Completada", "Cancelada")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -122,15 +77,23 @@ class TestPhase23FPTriage:
         auth_headers: dict,
     ):
         """POST /hallazgo_sasts/{id}/triage-ia should accept triage request."""
-        # First create a hallazgo_sast
+        from tests.graph_helpers import create_actividad_mensual_sast_id
+
+        aid = await create_actividad_mensual_sast_id(client, auth_headers)
+        # First create a hallazgo_sast (esquema real: actividad_sast_id, severidad, estado, …)
         resp_create = await client.post(
             "/api/v1/hallazgo_sasts",
             json={
+                "actividad_sast_id": aid,
+                "vulnerabilidad_id": None,
                 "titulo": "Test FP Triage",
                 "descripcion": "SQL Injection in login",
                 "severidad": "Alta",
-                "tipo_motor": "SAST",
-                "codigo_snippet": "SELECT * FROM users WHERE id = '" + id + "'",  # noqa: S608
+                "herramienta": "SAST",
+                "regla": "sql",
+                "archivo": "x.py",
+                "linea": 1,
+                "estado": "Abierto",
             },
             headers=auth_headers,
         )

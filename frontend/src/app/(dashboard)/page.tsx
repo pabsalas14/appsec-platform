@@ -77,6 +77,7 @@ export default function DashboardHomePage() {
           icon={ListTodo}
           iconColor="text-primary"
           iconBg="bg-primary/10"
+          href="/tasks"
         />
         <StatCard
           label="Completed"
@@ -84,6 +85,7 @@ export default function DashboardHomePage() {
           icon={CheckCircle2}
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/10"
+          href="/tasks"
         />
         <StatCard
           label="Pending"
@@ -91,6 +93,7 @@ export default function DashboardHomePage() {
           icon={Circle}
           iconColor="text-amber-400"
           iconBg="bg-amber-500/10"
+          href="/tasks"
         />
         <StatCard
           label={isAdmin ? 'Active users' : 'Your status'}
@@ -100,6 +103,7 @@ export default function DashboardHomePage() {
           icon={isAdmin ? UserCheck : ShieldCheck}
           iconColor="text-sky-400"
           iconBg="bg-sky-500/10"
+          href={isAdmin ? '/admin/users' : '/profile'}
         />
       </div>
 
@@ -114,6 +118,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-rose-400"
             iconBg="bg-rose-500/10"
+            href="/vulnerabilidads"
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.critical_count') && (
@@ -123,6 +128,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-orange-400"
             iconBg="bg-orange-500/10"
+            href="/vulnerabilidads?severidad=Critica"
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.overdue_sla') && (
@@ -132,6 +138,7 @@ export default function DashboardHomePage() {
             icon={Circle}
             iconColor="text-amber-400"
             iconBg="bg-amber-500/10"
+            href="/vulnerabilidads?sla=vencida"
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.risk_level') && (
@@ -141,6 +148,7 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-violet-400"
             iconBg="bg-violet-500/10"
+            href="/dashboards/executive"
           />
         )}
       </div>
@@ -152,6 +160,7 @@ export default function DashboardHomePage() {
           icon={Users}
           iconColor="text-cyan-400"
           iconBg="bg-cyan-500/10"
+          href="/dashboards/team"
         />
         <StatCard
           label="Releases (total)"
@@ -159,6 +168,7 @@ export default function DashboardHomePage() {
           icon={ListTodo}
           iconColor="text-blue-400"
           iconBg="bg-blue-500/10"
+          href="/service_releases"
         />
         <StatCard
           label="Releases en progreso"
@@ -166,6 +176,7 @@ export default function DashboardHomePage() {
           icon={Activity}
           iconColor="text-indigo-400"
           iconBg="bg-indigo-500/10"
+          href="/service_releases"
         />
         <StatCard
           label="Pendientes aprobación"
@@ -173,6 +184,7 @@ export default function DashboardHomePage() {
           icon={Circle}
           iconColor="text-fuchsia-400"
           iconBg="bg-fuchsia-500/10"
+          href="/service_releases"
         />
       </div>
 

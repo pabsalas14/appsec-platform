@@ -40,8 +40,8 @@ class TestOWASPS3PropertyLevelAuthz:
 
     @pytest.mark.asyncio
     async def test_s3_user_password_not_exposed(self, client: AsyncClient, auth_headers: dict):
-        """GET /users/me should NOT expose hashed_password."""
-        resp = await client.get("/api/v1/users/me", headers=auth_headers)
+        """GET /auth/me should NOT expose hashed_password."""
+        resp = await client.get("/api/v1/auth/me", headers=auth_headers)
         assert resp.status_code == 200
 
         data = resp.json()["data"]
@@ -50,8 +50,8 @@ class TestOWASPS3PropertyLevelAuthz:
 
     @pytest.mark.asyncio
     async def test_s3_refresh_token_not_exposed(self, client: AsyncClient, auth_headers: dict):
-        """GET /users/me should NOT expose refresh_tokens."""
-        resp = await client.get("/api/v1/users/me", headers=auth_headers)
+        """GET /auth/me should NOT expose refresh_tokens."""
+        resp = await client.get("/api/v1/auth/me", headers=auth_headers)
         assert resp.status_code == 200
 
         data = resp.json()["data"]
@@ -309,12 +309,12 @@ class TestAuditabilityA4HashChain:
     """A4: Hash chain in AuditLog."""
 
     @pytest.mark.asyncio
-    async def test_a4_hash_chain_structure(self, client: AsyncClient, admin_headers: dict):
+    async def test_a4_hash_chain_structure(self, client: AsyncClient, admin_auth_headers: dict):
         """AuditLog should have previous_hash and current_hash fields."""
         # Get recent audit logs
         resp = await client.get(
             "/api/v1/audit-logs?limit=5",
-            headers=admin_headers,
+            headers=admin_auth_headers,
         )
 
         if resp.status_code == 200:
@@ -330,13 +330,9 @@ class TestAuditabilityA7Export:
 
     @pytest.mark.asyncio
     async def test_a7_export_requires_permission(self, client: AsyncClient, auth_headers: dict):
-        """Export endpoint should exist and be auditable."""
-        # Try to export vulnerabilities (if endpoint exists)
+        """Export exige `vulnerabilities.export`; usuario base sin permiso recibe 403."""
         resp = await client.get(
             "/api/v1/vulnerabilidads/export.csv",
             headers=auth_headers,
         )
-
-        # If endpoint exists (200), great - it's auditable
-        # If endpoint doesn't exist (404), that's OK for now - deferred
-        assert resp.status_code in (200, 404), f"A7: Unexpected status for export (got {resp.status_code})"
+        assert resp.status_code in (403, 404), f"A7: se espera 403 sin permiso o 404 (got {resp.status_code})"

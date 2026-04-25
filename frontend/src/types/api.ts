@@ -1064,6 +1064,66 @@ export interface paths {
         patch: operations["update_celula_api_v1_celulas__id__patch"];
         trace?: never;
     };
+    "/api/v1/repositorios/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Repositorios Csv
+         * @description Exporta repositorios del usuario a CSV; auditoría A7 (BRD A3).
+         */
+        get: operations["export_repositorios_csv_api_v1_repositorios_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositorios/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Repositorio Import Template
+         * @description Plantilla CSV para import masivo (BRD A2).
+         */
+        get: operations["download_repositorio_import_template_api_v1_repositorios_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositorios/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Repositorios Csv
+         * @description Importa repositorios desde CSV; filas con error se omiten; auditoría A7.
+         */
+        post: operations["import_repositorios_csv_api_v1_repositorios_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/repositorios": {
         parameters: {
             query?: never;
@@ -1114,6 +1174,66 @@ export interface paths {
          * @description Partially update an owned repositorio (404 if not owned).
          */
         patch: operations["update_repositorio_api_v1_repositorios__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/activo_webs/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Activo Webs Csv
+         * @description Exporta activos web del usuario a CSV; auditoría A7 (BRD A3).
+         */
+        get: operations["export_activo_webs_csv_api_v1_activo_webs_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activo_webs/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Activo Web Import Template
+         * @description Plantilla CSV para import masivo (BRD A2).
+         */
+        get: operations["download_activo_web_import_template_api_v1_activo_webs_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/activo_webs/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Activo Webs Csv
+         * @description Importa activos web desde CSV; filas con error se omiten; auditoría A7.
+         */
+        post: operations["import_activo_webs_csv_api_v1_activo_webs_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/activo_webs": {
@@ -1405,7 +1525,7 @@ export interface paths {
         };
         /**
          * List Vulnerabilidads
-         * @description List vulnerabilidads owned by the current user.
+         * @description List vulnerabilidads owned by the current user (paginated).
          */
         get: operations["list_vulnerabilidads_api_v1_vulnerabilidads_get"];
         put?: never;
@@ -2157,6 +2277,26 @@ export interface paths {
         head?: never;
         /** Update Hallazgo Tercero */
         patch: operations["update_hallazgo_tercero_api_v1_hallazgo_terceros__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_sasts/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Programa Sasts Csv
+         * @description Exporta programas SAST del usuario a CSV; auditoría A7 (BRD A3).
+         */
+        get: operations["export_programa_sasts_csv_api_v1_programa_sasts_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/programa_sasts": {
@@ -3300,7 +3440,7 @@ export interface paths {
         };
         /**
          * List Iniciativas
-         * @description List iniciativas owned by the current user.
+         * @description List iniciativas owned by the current user (paginated).
          */
         get: operations["list_iniciativas_api_v1_iniciativas_get"];
         put?: never;
@@ -3704,7 +3844,7 @@ export interface paths {
         };
         /**
          * List Temas Emergentes
-         * @description List temas emergentes owned by the current user.
+         * @description List temas emergentes owned by the current user (paginated).
          */
         get: operations["list_temas_emergentes_api_v1_temas_emergentes_get"];
         put?: never;
@@ -3964,7 +4104,7 @@ export interface paths {
         };
         /**
          * List Filtros Guardados
-         * @description List filtros guardados owned by the current user.
+         * @description List filtros guardados owned by the current user (paginated).
          */
         get: operations["list_filtros_guardados_api_v1_filtros_guardados_get"];
         put?: never;
@@ -4149,6 +4289,78 @@ export interface paths {
          * @description Update a changelog entry — super_admin only.
          */
         patch: operations["update_changelog_entrada_api_v1_changelog_entradas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/notificacions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notificacions
+         * @description List notificacions owned by the current user (más recientes primero).
+         */
+        get: operations["list_notificacions_api_v1_notificacions_get"];
+        put?: never;
+        /**
+         * Create Notificacion
+         * @description Crea un aviso in-app propio (sistema/background puede usar en fases futuras).
+         */
+        post: operations["create_notificacion_api_v1_notificacions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificacions/marcar-todas-leidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Marcar Todas Leidas
+         * @description Marca como leídas todas las notificaciones del usuario actual.
+         */
+        post: operations["marcar_todas_leidas_api_v1_notificacions_marcar_todas_leidas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notificacions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Notificacion
+         * @description Get a single owned notificacion by ID (404 if not owned).
+         */
+        get: operations["get_notificacion_api_v1_notificacions__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Notificacion
+         * @description Delete an owned notificacion (404 if not owned).
+         */
+        delete: operations["delete_notificacion_api_v1_notificacions__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Notificacion
+         * @description Partially update an owned notificacion (404 if not owned).
+         */
+        patch: operations["update_notificacion_api_v1_notificacions__id__patch"];
         trace?: never;
     };
     "/api/health": {
@@ -4529,6 +4741,24 @@ export interface components {
             /**
              * File
              * Format: binary
+             */
+            file: string;
+        };
+        /** Body_import_activo_webs_csv_api_v1_activo_webs_import_post */
+        Body_import_activo_webs_csv_api_v1_activo_webs_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_repositorios_csv_api_v1_repositorios_import_post */
+        Body_import_repositorios_csv_api_v1_repositorios_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
              */
             file: string;
         };
@@ -5783,6 +6013,33 @@ export interface components {
             password: string;
         };
         /**
+         * NotificacionCreate
+         * @description Fields required to create a notificacion. user_id is set from auth context.
+         */
+        NotificacionCreate: {
+            /** Titulo */
+            titulo: string;
+            /** Cuerpo */
+            cuerpo?: string | null;
+            /**
+             * Leida
+             * @default false
+             */
+            leida: boolean;
+        };
+        /**
+         * NotificacionUpdate
+         * @description All fields optional for partial updates.
+         */
+        NotificacionUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Cuerpo */
+            cuerpo?: string | null;
+            /** Leida */
+            leida?: boolean | null;
+        };
+        /**
          * OrganizacionCreate
          * @description Fields required to create a organizacion. user_id is set from auth context.
          */
@@ -6728,6 +6985,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /**
          * VulnerabilidadCreate
@@ -9589,6 +9850,112 @@ export interface operations {
             };
         };
     };
+    export_repositorios_csv_api_v1_repositorios_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_repositorio_import_template_api_v1_repositorios_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_repositorios_csv_api_v1_repositorios_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_repositorios_csv_api_v1_repositorios_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_repositorios_api_v1_repositorios_get: {
         parameters: {
             query?: never;
@@ -9744,6 +10111,112 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RepositorioUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_activo_webs_csv_api_v1_activo_webs_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_activo_web_import_template_api_v1_activo_webs_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_activo_webs_csv_api_v1_activo_webs_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_activo_webs_csv_api_v1_activo_webs_import_post"];
             };
         };
         responses: {
@@ -10693,7 +11166,10 @@ export interface operations {
     };
     list_vulnerabilidads_api_v1_vulnerabilidads_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -10770,7 +11246,9 @@ export interface operations {
                 /** @description Bearer <token> */
                 authorization?: string | null;
             };
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: {
                 access_token?: string | null;
             };
@@ -12992,6 +13470,40 @@ export interface operations {
                 "application/json": components["schemas"]["HallazgoTerceroUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_programa_sasts_csv_api_v1_programa_sasts_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -16859,7 +17371,10 @@ export interface operations {
     };
     list_iniciativas_api_v1_iniciativas_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -18173,7 +18688,10 @@ export interface operations {
     };
     list_temas_emergentes_api_v1_temas_emergentes_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -19063,7 +19581,10 @@ export interface operations {
     };
     list_filtros_guardados_api_v1_filtros_guardados_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -19657,6 +20178,218 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ChangelogEntradaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notificacions_api_v1_notificacions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_notificacion_api_v1_notificacions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_todas_leidas_api_v1_notificacions_marcar_todas_leidas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_notificacion_api_v1_notificacions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_notificacion_api_v1_notificacions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_notificacion_api_v1_notificacions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificacionUpdate"];
             };
         };
         responses: {

@@ -28,4 +28,5 @@ class TooManyRequestsException(HTTPException):
 
 class ValidationException(HTTPException):
     def __init__(self, detail: str = "Validation error"):
-        super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
+        # 422 explícito evita depredación de alias HTTP_422_UNPROCESSABLE_ENTITY (Starlette/FastAPI recientes)
+        super().__init__(status_code=422, detail=detail)

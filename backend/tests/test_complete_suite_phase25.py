@@ -488,11 +488,11 @@ class TestAuditabilityA7Export:
     """A7: Exports are logged with hash."""
 
     @pytest.mark.asyncio
-    async def test_a7_export_has_audit_trail(self, client: AsyncClient, auth_headers: dict):
-        """Export endpoint should be auditable."""
-        resp = await client.get("/api/v1/iniciativas/export.csv", headers=auth_headers)
+    async def test_a7_export_has_audit_trail(self, client: AsyncClient, admin_auth_headers: dict):
+        """Export endpoint should be auditable (PBAC: requiere ``initiatives.export``)."""
+        resp = await client.get("/api/v1/iniciativas/export.csv", headers=admin_auth_headers)
 
-        # If endpoint exists, it should return CSV or 404
+        # Si el endpoint existe, CSV 200 o recurso ausente 404
         assert resp.status_code in (200, 404), "A7: Unexpected status for export"
 
 

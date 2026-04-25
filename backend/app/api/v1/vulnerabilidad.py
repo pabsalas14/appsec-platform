@@ -74,7 +74,7 @@ def _parse_triage_output(
 @router.get("/export.csv")
 async def export_vulnerabilidades_csv(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.EXPORT)),
 ):
     """Exporta hallazgos del usuario a CSV; deja huella en auditoría (A7)."""
     items = await vulnerabilidad_svc.list(db, filters={"user_id": current_user.id})

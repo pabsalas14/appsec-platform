@@ -1,8 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLink, GitBranch, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Download, ExternalLink, FileSpreadsheet, GitBranch, Loader2, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -48,6 +49,7 @@ import {
 import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
+import { downloadCsvFromApi, importCsvToApi } from '@/lib/csvDownload';
 import { logger } from '@/lib/logger';
 import {
   RepositorioCreateSchema,
@@ -226,6 +228,9 @@ function RepositorioForm({
 }
 
 export default function RepositoriosPage() {
+  const qc = useQueryClient();
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [csvBusy, setCsvBusy] = useState(false);
   const { data: rows, isLoading, isError } = useRepositorios();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
@@ -302,6 +307,45 @@ export default function RepositoriosPage() {
     return fromFilter;
   }, [filteredCelulas, orgName, edit, celulas]);
 
+  const onExportCsv = async () => {
+    try {
+      await downloadCsvFromApi('/repositorios/export.csv', 'repositorios.csv');
+      toast.success('CSV exportado');
+    } catch (e) {
+      logger.error('repositorio.csv_export.failed', { error: e });
+      toast.error(extractErrorMessage(e, 'No se pudo exportar'));
+    }
+  };
+
+  const onTemplateCsv = async () => {
+    try {
+      await downloadCsvFromApi('/repositorios/import-template.csv', 'repositorios_import_template.csv');
+      toast.success('Plantilla descargada');
+    } catch (e) {
+      logger.error('repositorio.csv_template.failed', { error: e });
+      toast.error(extractErrorMessage(e, 'No se pudo descargar la plantilla'));
+    }
+  };
+
+  const onPickImport = () => importInputRef.current?.click();
+
+  const onImportFile = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    setCsvBusy(true);
+    try {
+      await importCsvToApi('/repositorios/import', file);
+      toast.success('Importación aplicada');
+      await qc.invalidateQueries({ queryKey: ['repositorios'] });
+    } catch (e) {
+      logger.error('repositorio.csv_import.failed', { error: e });
+      toast.error(extractErrorMessage(e, 'Error al importar'));
+    } finally {
+      setCsvBusy(false);
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
+  };
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows || [])
@@ -325,23 +369,50 @@ export default function RepositoriosPage() {
         title="Repositorios (BRD §3.2)"
         description="Código bajo célula; vinculado a riesgo y a ejecuciones (CI/CD) en fases posteriores."
       >
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo repositorio</DialogTitle>
-            </DialogHeader>
-            <RepositorioForm
-              onSuccess={() => setCreateOpen(false)}
-              celulaOptions={celulaFormOptions}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => void onImportFile(e.target.files)}
+          />
+          <Button type="button" variant="outline" size="sm" onClick={() => void onExportCsv()}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => void onTemplateCsv()}>
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Plantilla
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={csvBusy}
+            onClick={onPickImport}
+          >
+            {csvBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            Importar
+          </Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nuevo
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo repositorio</DialogTitle>
+              </DialogHeader>
+              <RepositorioForm
+                onSuccess={() => setCreateOpen(false)}
+                celulaOptions={celulaFormOptions}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
 
       <Card>

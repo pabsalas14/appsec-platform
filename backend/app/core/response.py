@@ -44,6 +44,8 @@ def paginated(
         "status": "success",
         "data": data,
         "meta": pagination_meta,
+        # Compat: tests y clientes legados que esperan `pagination` de nivel raíz
+        "pagination": pagination_meta,
     }
     return response
 

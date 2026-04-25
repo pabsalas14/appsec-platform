@@ -41,7 +41,8 @@ async def ensure_roles_permissions_seeded(db: AsyncSession) -> None:
     for role_name in VALID_ROLES:
         if role_name in existing_roles:
             continue
-        role_perms_codes = DEFAULT_ROLE_PERMISSIONS.get(role_name, [])
+        # Evita PK duplicada en role_permissions (p. ej. ``_EXPORT_CODES`` + ``_INVENTORY_BULK``).
+        role_perms_codes = list(dict.fromkeys(DEFAULT_ROLE_PERMISSIONS.get(role_name, [])))
         role = Role(
             name=role_name,
             description=f"Platform role '{role_name}'",

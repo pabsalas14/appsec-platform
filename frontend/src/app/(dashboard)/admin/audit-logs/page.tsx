@@ -2,7 +2,7 @@
 
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   Badge,
@@ -22,6 +22,7 @@ import {
   Select,
 } from '@/components/ui';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 const ACTION_OPTIONS = [
   { value: '', label: 'All actions' },
@@ -56,12 +57,26 @@ function toIsoDay(yyyymmdd: string | undefined, endOfDay = false): string | unde
 }
 
 export default function AdminAuditLogsPage() {
+  const { getNumParam, setParam, setParams, searchParams } = useUrlFilters();
   const [action, setAction] = useState('');
   const [entity, setEntity] = useState('');
   const [actorId, setActorId] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
+
+  const syncFromUrl = useCallback(() => {
+    setAction(searchParams.get('action') ?? '');
+    setEntity(searchParams.get('entity') ?? '');
+    setActorId(searchParams.get('actor') ?? '');
+    setFrom(searchParams.get('from') ?? '');
+    setTo(searchParams.get('to') ?? '');
+    setPage(getNumParam('page') ?? 1);
+  }, [searchParams, getNumParam]);
+
+  useEffect(() => {
+    syncFromUrl();
+  }, [syncFromUrl]);
 
   const params = {
     action: action || undefined,
@@ -79,7 +94,7 @@ export default function AdminAuditLogsPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Audit Logs"
-        description="Read-only trail of every mutation in the system. Useful for compliance and incident investigation."
+        description="Read-only trail of every mutation in the system. Filtros y paginación se reflejan en la URL (compartir, historial del navegador)."
       >
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
           <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -91,20 +106,55 @@ export default function AdminAuditLogsPage() {
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
           <div className="flex-1 min-w-[180px]">
             <label className="block text-xs font-medium text-muted-foreground">Action</label>
-            <Select className="mt-1" value={action} onChange={(e) => setAction(e.target.value)} options={ACTION_OPTIONS} />
+            <Select
+              className="mt-1"
+              value={action}
+              onChange={(e) => {
+                const v = e.target.value;
+                setAction(v);
+                setParam('action', v || null);
+              }}
+              options={ACTION_OPTIONS}
+            />
           </div>
           <div className="flex-1 min-w-[180px]">
             <label className="block text-xs font-medium text-muted-foreground">Entity</label>
-            <Select className="mt-1" value={entity} onChange={(e) => setEntity(e.target.value)} options={ENTITY_OPTIONS} />
+            <Select
+              className="mt-1"
+              value={entity}
+              onChange={(e) => {
+                const v = e.target.value;
+                setEntity(v);
+                setParam('entity', v || null);
+              }}
+              options={ENTITY_OPTIONS}
+            />
           </div>
           <div className="flex-1 min-w-[220px]">
             <label className="block text-xs font-medium text-muted-foreground">Actor user UUID</label>
-            <Input className="mt-1" value={actorId} onChange={(e) => setActorId(e.target.value)} placeholder="Optional UUID" />
+            <Input
+              className="mt-1"
+              value={actorId}
+              onChange={(e) => {
+                const v = e.target.value;
+                setActorId(v);
+                setParam('actor', v.trim() || null);
+              }}
+              placeholder="Optional UUID"
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground">Date range</label>
             <div className="mt-1">
-              <DateRangePicker from={from} to={to} onChange={(f, t) => { setFrom(f); setTo(t); }} />
+              <DateRangePicker
+                from={from}
+                to={to}
+                onChange={(f, t) => {
+                  setFrom(f);
+                  setTo(t);
+                  setParams({ from: f || null, to: t || null });
+                }}
+              />
             </div>
           </div>
         </CardContent>
@@ -182,14 +232,27 @@ export default function AdminAuditLogsPage() {
             Page {data.pagination.page} / {data.pagination.total_pages} ({data.pagination.total} entries)
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => {
+                const p = page - 1;
+                setPage(p);
+                setParam('page', p <= 1 ? null : p);
+              }}
+            >
               Previous
             </Button>
             <Button
               variant="outline"
               size="sm"
               disabled={page >= data.pagination.total_pages}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => {
+                const p = page + 1;
+                setPage(p);
+                setParam('page', p);
+              }}
             >
               Next
             </Button>

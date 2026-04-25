@@ -1,13 +1,45 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 
-import { Badge, Card, CardContent, PageHeader, PageWrapper, Skeleton } from '@/components/ui';
+import { Badge, Card, CardContent, Input, PageHeader, PageWrapper, Select, Skeleton } from '@/components/ui';
 import { useVulnerabilidads } from '@/hooks/useVulnerabilidads';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { formatDate } from '@/lib/utils';
+
+const SEVERIDAD_OPTS = [
+  { value: '', label: 'Todas' },
+  { value: 'Critica', label: 'Crítica' },
+  { value: 'Alta', label: 'Alta' },
+  { value: 'Media', label: 'Media' },
+  { value: 'Baja', label: 'Baja' },
+];
 
 export default function VulnerabilidadsPage() {
   const { data, isLoading, error } = useVulnerabilidads();
+  const { getParam, setParam, setParams } = useUrlFilters();
+  const q = (getParam('q') ?? '').trim().toLowerCase();
+  const severidad = getParam('severidad') ?? '';
+  const sla = getParam('sla') ?? '';
+
+  const filtered = useMemo(() => {
+    if (!data?.length) return data ?? [];
+    const now = Date.now();
+    return data.filter((item) => {
+      if (severidad && item.severidad !== severidad) return false;
+      if (q) {
+        const blob = `${item.titulo} ${item.descripcion ?? ''} ${item.fuente} ${item.estado}`.toLowerCase();
+        if (!blob.includes(q)) return false;
+      }
+      if (sla === 'vencida') {
+        if (!item.fecha_limite_sla) return false;
+        const lim = new Date(item.fecha_limite_sla).getTime();
+        if (Number.isNaN(lim) || lim >= now) return false;
+      }
+      return true;
+    });
+  }, [data, q, severidad, sla]);
 
   if (isLoading) {
     return (
@@ -36,10 +68,49 @@ export default function VulnerabilidadsPage() {
     <PageWrapper>
       <PageHeader
         title="Vulnerabilidades"
-        description="Hallazgos unificados (Módulo 9). Abre un registro para triaje IA de falsos positivos según el motor (SAST, DAST, etc.)."
+        description="Hallazgos unificados (Módulo 9). Filtros y enlaces se sincronizan con la URL (compartir vista, drill-down desde el dashboard)."
       />
+      <div className="mb-4 flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium">Buscar</label>
+          <Input
+            className="mt-1"
+            placeholder="Título, descripción, fuente, estado…"
+            value={getParam('q') ?? ''}
+            onChange={(e) => setParam('q', e.target.value || null)}
+          />
+        </div>
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium">Severidad</label>
+          <Select
+            className="mt-1"
+            value={severidad}
+            onChange={(e) => setParam('severidad', e.target.value || null)}
+            options={SEVERIDAD_OPTS}
+          />
+        </div>
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium">SLA</label>
+          <Select
+            className="mt-1"
+            value={sla}
+            onChange={(e) => setParam('sla', e.target.value || null)}
+            options={[
+              { value: '', label: 'Todas' },
+              { value: 'vencida', label: 'Vencida' },
+            ]}
+          />
+        </div>
+        <button
+          type="button"
+          className="text-sm text-muted-foreground underline-offset-2 hover:underline"
+          onClick={() => setParams({ q: null, severidad: null, sla: null })}
+        >
+          Limpiar filtros
+        </button>
+      </div>
       <ul className="space-y-3">
-        {data?.map((item) => (
+        {filtered?.map((item) => (
           <li key={item.id}>
             <Link href={`/vulnerabilidads/${item.id}`} className="block">
               <Card className="transition-colors hover:border-primary/30 hover:bg-accent/5">
@@ -62,6 +133,11 @@ export default function VulnerabilidadsPage() {
                   )}
                   <p className="mt-2 text-xs text-muted-foreground">
                     Actualizado {formatDate(item.updated_at)}
+                    {item.fecha_limite_sla && (
+                      <span className="ml-2">
+                        · SLA {formatDate(item.fecha_limite_sla)}
+                      </span>
+                    )}
                   </p>
                 </CardContent>
               </Card>
@@ -69,6 +145,9 @@ export default function VulnerabilidadsPage() {
           </li>
         ))}
       </ul>
+      {filtered?.length === 0 && (
+        <p className="mt-4 text-sm text-muted-foreground">Ningún registro con los filtros actuales.</p>
+      )}
     </PageWrapper>
   );
 }
