@@ -960,6 +960,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subdireccions/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Subdirecciones Csv
+         * @description Exporta subdirecciones a CSV (BRD A3).
+         */
+        get: operations["export_subdirecciones_csv_api_v1_subdireccions_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subdireccions/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Subdireccion Import Template
+         * @description Plantilla CSV import masivo (BRD A2).
+         */
+        get: operations["download_subdireccion_import_template_api_v1_subdireccions_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subdireccions/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Subdirecciones Csv
+         * @description Importa subdirecciones; filas erróneas se reportan (BRD A2).
+         */
+        post: operations["import_subdirecciones_csv_api_v1_subdireccions_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/subdireccions": {
         parameters: {
             query?: never;
@@ -1010,6 +1070,57 @@ export interface paths {
          * @description Partially update an owned subdireccion (404 if not owned).
          */
         patch: operations["update_subdireccion_api_v1_subdireccions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/celulas/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Celulas Csv */
+        get: operations["export_celulas_csv_api_v1_celulas_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/celulas/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Celula Import Template */
+        get: operations["download_celula_import_template_api_v1_celulas_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/celulas/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Celulas Csv */
+        post: operations["import_celulas_csv_api_v1_celulas_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/celulas": {
@@ -1288,6 +1399,57 @@ export interface paths {
         patch: operations["update_activo_web_api_v1_activo_webs__id__patch"];
         trace?: never;
     };
+    "/api/v1/servicios/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Servicios Csv */
+        get: operations["export_servicios_csv_api_v1_servicios_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/servicios/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Servicio Import Template */
+        get: operations["download_servicio_import_template_api_v1_servicios_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/servicios/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Servicios Csv */
+        post: operations["import_servicios_csv_api_v1_servicios_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/servicios": {
         parameters: {
             query?: never;
@@ -1392,6 +1554,57 @@ export interface paths {
         patch: operations["update_aplicacion_movil_api_v1_aplicacion_movils__id__patch"];
         trace?: never;
     };
+    "/api/v1/tipo_pruebas/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Tipo Pruebas Csv */
+        get: operations["export_tipo_pruebas_csv_api_v1_tipo_pruebas_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tipo_pruebas/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Tipo Prueba Import Template */
+        get: operations["download_tipo_prueba_import_template_api_v1_tipo_pruebas_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tipo_pruebas/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Tipo Pruebas Csv */
+        post: operations["import_tipo_pruebas_csv_api_v1_tipo_pruebas_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tipo_pruebas": {
         parameters: {
             query?: never;
@@ -1442,6 +1655,57 @@ export interface paths {
          * @description Partially update an owned tipo_prueba (404 if not owned).
          */
         patch: operations["update_tipo_prueba_api_v1_tipo_pruebas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/control_seguridads/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Control Seguridads Csv */
+        get: operations["export_control_seguridads_csv_api_v1_control_seguridads_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/control_seguridads/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Control Seguridad Import Template */
+        get: operations["download_control_seguridad_import_template_api_v1_control_seguridads_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/control_seguridads/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Control Seguridads Csv */
+        post: operations["import_control_seguridads_csv_api_v1_control_seguridads_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/control_seguridads": {
@@ -2349,6 +2613,46 @@ export interface paths {
          * @description Partially update an owned programa_sast (404 if not owned).
          */
         patch: operations["update_programa_sast_api_v1_programa_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/actividad_mensual_sasts/config/scoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Actividad Mensual Sast Scoring Config
+         * @description Expose B1 config: sub-estados sugeridos y pesos de severidad.
+         */
+        get: operations["get_actividad_mensual_sast_scoring_config_api_v1_actividad_mensual_sasts_config_scoring_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actividad_mensual_sasts/{id}/sincronizar-hallazgos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sincronizar Hallazgos Actividad Mensual Sast
+         * @description B2: recalcula conteos desde `hallazgo_sasts` vinculados y el score (BRD).
+         */
+        post: operations["sincronizar_hallazgos_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__sincronizar_hallazgos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/actividad_mensual_sasts": {
@@ -3327,6 +3631,57 @@ export interface paths {
         patch: operations["update_hallazgo_mast_api_v1_hallazgo_masts__id__patch"];
         trace?: never;
     };
+    "/api/v1/organizacions/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Organizacions Csv */
+        get: operations["export_organizacions_csv_api_v1_organizacions_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizacions/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Organizacion Import Template */
+        get: operations["download_organizacion_import_template_api_v1_organizacions_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizacions/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Organizacions Csv */
+        post: operations["import_organizacions_csv_api_v1_organizacions_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizacions": {
         parameters: {
             query?: never;
@@ -3377,6 +3732,57 @@ export interface paths {
          * @description Partially update an owned organizacion (404 if not owned).
          */
         patch: operations["update_organizacion_api_v1_organizacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/gerencias/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Gerencias Csv */
+        get: operations["export_gerencias_csv_api_v1_gerencias_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gerencias/import-template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Gerencia Import Template */
+        get: operations["download_gerencia_import_template_api_v1_gerencias_import_template_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/gerencias/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Gerencias Csv */
+        post: operations["import_gerencias_csv_api_v1_gerencias_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/gerencias": {
@@ -4462,7 +4868,7 @@ export interface components {
         };
         /**
          * ActividadMensualSastCreate
-         * @description Fields required to create a actividad_mensual_sast. user_id is set from auth context.
+         * @description Crear actividad; el score se calcula en servidor desde `scoring.pesos_severidad`.
          */
         ActividadMensualSastCreate: {
             /**
@@ -4484,14 +4890,14 @@ export interface components {
             medios?: number | null;
             /** Bajos */
             bajos?: number | null;
-            /** Score */
-            score?: number | null;
+            /** Sub Estado */
+            sub_estado?: string | null;
             /** Notas */
             notas?: string | null;
         };
         /**
          * ActividadMensualSastUpdate
-         * @description All fields optional for partial updates.
+         * @description Todos los campos opcionales; el score nunca se edita a mano.
          */
         ActividadMensualSastUpdate: {
             /** Mes */
@@ -4508,8 +4914,8 @@ export interface components {
             medios?: number | null;
             /** Bajos */
             bajos?: number | null;
-            /** Score */
-            score?: number | null;
+            /** Sub Estado */
+            sub_estado?: string | null;
             /** Notas */
             notas?: string | null;
         };
@@ -4773,8 +5179,71 @@ export interface components {
              */
             file: string;
         };
+        /** Body_import_celulas_csv_api_v1_celulas_import_post */
+        Body_import_celulas_csv_api_v1_celulas_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_control_seguridads_csv_api_v1_control_seguridads_import_post */
+        Body_import_control_seguridads_csv_api_v1_control_seguridads_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_gerencias_csv_api_v1_gerencias_import_post */
+        Body_import_gerencias_csv_api_v1_gerencias_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_organizacions_csv_api_v1_organizacions_import_post */
+        Body_import_organizacions_csv_api_v1_organizacions_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
         /** Body_import_repositorios_csv_api_v1_repositorios_import_post */
         Body_import_repositorios_csv_api_v1_repositorios_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_servicios_csv_api_v1_servicios_import_post */
+        Body_import_servicios_csv_api_v1_servicios_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_subdirecciones_csv_api_v1_subdireccions_import_post */
+        Body_import_subdirecciones_csv_api_v1_subdireccions_import_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV con cabecera (ver import-template)
+             */
+            file: string;
+        };
+        /** Body_import_tipo_pruebas_csv_api_v1_tipo_pruebas_import_post */
+        Body_import_tipo_pruebas_csv_api_v1_tipo_pruebas_import_post: {
             /**
              * File
              * Format: binary
@@ -6227,6 +6696,8 @@ export interface components {
              * @description Activo | Inactivo | Completado | Cancelado
              */
             estado: string;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaDastUpdate
@@ -6243,6 +6714,8 @@ export interface components {
             activo_web_id?: string | null;
             /** Estado */
             estado?: string | null;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaSastCreate
@@ -6265,6 +6738,8 @@ export interface components {
              * @description Activo | Inactivo | Completado | Cancelado
              */
             estado: string;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaSastUpdate
@@ -6281,6 +6756,8 @@ export interface components {
             repositorio_id?: string | null;
             /** Estado */
             estado?: string | null;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaSourceCodeCreate
@@ -6303,6 +6780,8 @@ export interface components {
              * @description Activo | Inactivo | Completado | Cancelado
              */
             estado: string;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaSourceCodeUpdate
@@ -6319,6 +6798,8 @@ export interface components {
             repositorio_id?: string | null;
             /** Estado */
             estado?: string | null;
+            /** Metadatos Motor */
+            metadatos_motor?: Record<string, never> | null;
         };
         /**
          * ProgramaThreatModelingCreate
@@ -6759,6 +7240,16 @@ export interface components {
              * @default false
              */
             ia_utilizada: boolean;
+            /** Backlog Tareas */
+            backlog_tareas?: string | null;
+            /** Plan Trabajo */
+            plan_trabajo?: string | null;
+            /** Activo Web Secundario Id */
+            activo_web_secundario_id?: string | null;
+            /** Activos Web Relacionados Ids */
+            activos_web_relacionados_ids?: string[] | null;
+            /** Adjuntos Referencias */
+            adjuntos_referencias?: Record<string, never>[] | null;
         };
         /**
          * SesionThreatModelingIASuggestRequest
@@ -6793,6 +7284,16 @@ export interface components {
             estado?: string | null;
             /** Ia Utilizada */
             ia_utilizada?: boolean | null;
+            /** Backlog Tareas */
+            backlog_tareas?: string | null;
+            /** Plan Trabajo */
+            plan_trabajo?: string | null;
+            /** Activo Web Secundario Id */
+            activo_web_secundario_id?: string | null;
+            /** Activos Web Relacionados Ids */
+            activos_web_relacionados_ids?: string[] | null;
+            /** Adjuntos Referencias */
+            adjuntos_referencias?: Record<string, never>[] | null;
         };
         /**
          * SubdireccionCreate
@@ -9518,6 +10019,112 @@ export interface operations {
             };
         };
     };
+    export_subdirecciones_csv_api_v1_subdireccions_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_subdireccion_import_template_api_v1_subdireccions_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_subdirecciones_csv_api_v1_subdireccions_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_subdirecciones_csv_api_v1_subdireccions_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_subdireccions_api_v1_subdireccions_get: {
         parameters: {
             query?: never;
@@ -9673,6 +10280,112 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SubdireccionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_celulas_csv_api_v1_celulas_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_celula_import_template_api_v1_celulas_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_celulas_csv_api_v1_celulas_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_celulas_csv_api_v1_celulas_import_post"];
             };
         };
         responses: {
@@ -10442,6 +11155,112 @@ export interface operations {
             };
         };
     };
+    export_servicios_csv_api_v1_servicios_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_servicio_import_template_api_v1_servicios_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_servicios_csv_api_v1_servicios_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_servicios_csv_api_v1_servicios_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_servicios_api_v1_servicios_get: {
         parameters: {
             query?: never;
@@ -10798,6 +11617,112 @@ export interface operations {
             };
         };
     };
+    export_tipo_pruebas_csv_api_v1_tipo_pruebas_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_tipo_prueba_import_template_api_v1_tipo_pruebas_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_tipo_pruebas_csv_api_v1_tipo_pruebas_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_tipo_pruebas_csv_api_v1_tipo_pruebas_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_tipo_pruebas_api_v1_tipo_pruebas_get: {
         parameters: {
             query?: never;
@@ -10953,6 +11878,112 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TipoPruebaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_control_seguridads_csv_api_v1_control_seguridads_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_control_seguridad_import_template_api_v1_control_seguridads_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_control_seguridads_csv_api_v1_control_seguridads_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_control_seguridads_csv_api_v1_control_seguridads_import_post"];
             };
         };
         responses: {
@@ -13708,6 +14739,76 @@ export interface operations {
                 "application/json": components["schemas"]["ProgramaSastUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_actividad_mensual_sast_scoring_config_api_v1_actividad_mensual_sasts_config_scoring_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sincronizar_hallazgos_actividad_mensual_sast_api_v1_actividad_mensual_sasts__id__sincronizar_hallazgos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -17039,6 +18140,112 @@ export interface operations {
             };
         };
     };
+    export_organizacions_csv_api_v1_organizacions_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_organizacion_import_template_api_v1_organizacions_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_organizacions_csv_api_v1_organizacions_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_organizacions_csv_api_v1_organizacions_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_organizacions_api_v1_organizacions_get: {
         parameters: {
             query?: never;
@@ -17194,6 +18401,112 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OrganizacionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_gerencias_csv_api_v1_gerencias_export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_gerencia_import_template_api_v1_gerencias_import_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_gerencias_csv_api_v1_gerencias_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_gerencias_csv_api_v1_gerencias_import_post"];
             };
         };
         responses: {

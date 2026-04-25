@@ -22,6 +22,19 @@ import type { SystemSetting } from '@/types';
 type Draft = Record<string, unknown>;
 
 function renderEditor(setting: SystemSetting, value: unknown, onChange: (v: unknown) => void) {
+  if (
+    (setting.value !== null && typeof setting.value === 'object') ||
+    (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')))
+  ) {
+    return (
+      <textarea
+        className="min-h-[132px] w-full rounded-md border bg-background px-3 py-2 font-mono text-xs"
+        value={String(value ?? '')}
+        onChange={(e) => onChange(e.target.value)}
+        spellCheck={false}
+      />
+    );
+  }
   if (typeof setting.value === 'boolean' || typeof value === 'boolean') {
     return <Switch checked={Boolean(value)} onCheckedChange={onChange} />;
   }
@@ -50,6 +63,18 @@ function renderEditor(setting: SystemSetting, value: unknown, onChange: (v: unkn
   return <Input value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />;
 }
 
+function normalizeDraftValue(setting: SystemSetting, draftValue: unknown): unknown {
+  if (setting.value !== null && typeof setting.value === 'object') {
+    if (typeof draftValue !== 'string') return draftValue;
+    try {
+      return JSON.parse(draftValue);
+    } catch {
+      throw new Error('JSON inválido');
+    }
+  }
+  return draftValue;
+}
+
 export default function AdminSettingsPage() {
   const { data, isLoading } = useSystemSettings();
   const upsert = useUpsertSystemSetting();
@@ -58,16 +83,21 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (!data) return;
     const initial: Draft = {};
-    for (const row of data) initial[row.key] = row.value;
+    for (const row of data) {
+      initial[row.key] =
+        row.value !== null && typeof row.value === 'object' ? JSON.stringify(row.value, null, 2) : row.value;
+    }
     setDraft(initial);
   }, [data]);
 
   const onSave = async (setting: SystemSetting) => {
     try {
-      await upsert.mutateAsync({ key: setting.key, value: draft[setting.key] });
+      const value = normalizeDraftValue(setting, draft[setting.key]);
+      await upsert.mutateAsync({ key: setting.key, value });
       toast.success(`${setting.key} saved`);
-    } catch (_e) {
-      toast.error(`Failed to save ${setting.key}`);
+    } catch (e) {
+      const msg = e instanceof Error && e.message === 'JSON inválido' ? 'JSON inválido' : `Failed to save ${setting.key}`;
+      toast.error(msg);
     }
   };
 
@@ -85,7 +115,11 @@ export default function AdminSettingsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {(data ?? []).map((setting) => {
-            const dirty = draft[setting.key] !== setting.value;
+            const original =
+              setting.value !== null && typeof setting.value === 'object'
+                ? JSON.stringify(setting.value, null, 2)
+                : setting.value;
+            const dirty = draft[setting.key] !== original;
             return (
               <Card key={setting.key}>
                 <CardHeader>
@@ -101,7 +135,7 @@ export default function AdminSettingsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDraft((d) => ({ ...d, [setting.key]: setting.value }))}
+                        onClick={() => setDraft((d) => ({ ...d, [setting.key]: original }))}
                       >
                         Discard
                       </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpAZ, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -38,12 +38,15 @@ import {
   Select,
   Textarea,
 } from '@/components/ui';
+import { CatalogCsvToolbar } from '@/components/catalog/CatalogCsvToolbar';
+import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import {
   useCreateGerencia,
   useDeleteGerencia,
   useGerencias,
   useUpdateGerencia,
 } from '@/hooks/useGerencias';
+import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
 import { GerenciaCreateSchema, type Gerencia, type GerenciaCreate } from '@/lib/schemas/gerencia.schema';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
@@ -154,6 +157,7 @@ export default function GerenciasPage() {
   const { data: rows, isLoading, isError } = useGerencias();
   const { data: subdireccions } = useSubdireccions();
   const [q, setQ] = useState('');
+  const [sortDesc, setSortDesc] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<Gerencia | null>(null);
   const deleteMut = useDeleteGerencia();
@@ -174,37 +178,62 @@ export default function GerenciasPage() {
     });
   }, [rows, q, subById]);
 
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      const cmp = a.nombre.localeCompare(b.nombre, 'es');
+      return sortDesc ? -cmp : cmp;
+    });
+    return list;
+  }, [filtered, sortDesc]);
+
+  const list = useClientPagedList(sorted, [q, sortDesc]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Gerencias"
         description="BRD §3.1 — N gerencias por subdirección. Define nombre y vinculación a subdirección."
       >
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Nueva
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nueva gerencia</DialogTitle>
-            </DialogHeader>
-            <GerenciaForm onSuccess={() => setCreateOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <CatalogCsvToolbar
+            basePath="/gerencias"
+            exportFileName="gerencias.csv"
+            templateFileName="gerencias_import_template.csv"
+            invalidateQueries={[['gerencias']]}
+          />
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Nueva
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nueva gerencia</DialogTitle>
+              </DialogHeader>
+              <GerenciaForm onSuccess={() => setCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
 
       <Card>
         <CardContent className="p-4">
-          <div className="mb-4 max-w-md">
-            <label className="text-sm font-medium">Buscar</label>
-            <Input
-              className="mt-1"
-              placeholder="Nombre, descripción o subdirección…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="max-w-md flex-1">
+              <label className="text-sm font-medium">Buscar</label>
+              <Input
+                className="mt-1"
+                placeholder="Nombre, descripción o subdirección…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)}>
+              {sortDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
+              Orden: {sortDesc ? 'Z-A' : 'A-Z'}
+            </Button>
           </div>
           {isLoading && (
             <div className="flex justify-center py-12 text-muted-foreground">
@@ -215,7 +244,7 @@ export default function GerenciasPage() {
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay gerencias. Crea una o primero defina subdirecciones.</p>
           )}
-          {filtered && filtered.length > 0 && (
+          {list.total > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
@@ -227,7 +256,7 @@ export default function GerenciasPage() {
                 </tr>
               </DataTableHead>
               <DataTableBody>
-                {filtered.map((item) => (
+                {list.paged.map((item) => (
                   <DataTableRow key={item.id}>
                     <DataTableCell className="font-medium">{item.nombre}</DataTableCell>
                     <DataTableCell className="text-muted-foreground">
@@ -278,6 +307,19 @@ export default function GerenciasPage() {
               </DataTableBody>
             </DataTable>
           )}
+          <CatalogPaginationBar
+            page={list.page}
+            pageCount={list.pageCount}
+            total={list.total}
+            from={list.from}
+            to={list.to}
+            pageSize={list.pageSize}
+            onPageChange={list.setPage}
+            onPageSizeChange={(n) => {
+              list.setPageSize(n);
+              list.setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 

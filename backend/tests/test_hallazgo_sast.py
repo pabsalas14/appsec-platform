@@ -72,3 +72,46 @@ async def test_hallazgo_sast_idor_protected(
     ]:
         r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"
+
+
+@pytest.mark.asyncio
+async def test_hallazgo_sast_syncs_actividad_mensual_automatically(client: AsyncClient, auth_headers: dict):
+    aid = await create_actividad_mensual_sast_id(client, auth_headers)
+    payload = {
+        "actividad_sast_id": aid,
+        "vulnerabilidad_id": None,
+        "titulo": "SQL Injection",
+        "descripcion": "Potential SQL injection",
+        "severidad": "Alta",
+        "herramienta": "Semgrep",
+        "regla": "sql-injection",
+        "archivo": "users.py",
+        "linea": 42,
+        "estado": "Abierto",
+    }
+
+    created = await client.post(BASE_URL, headers=auth_headers, json=payload)
+    assert created.status_code == 201, created.text
+    hid = created.json()["data"]["id"]
+
+    act = await client.get(f"/api/v1/actividad_mensual_sasts/{aid}", headers=auth_headers)
+    assert act.status_code == 200, act.text
+    assert act.json()["data"]["altos"] == 1
+    assert act.json()["data"]["total_hallazgos"] == 1
+
+    patched = await client.patch(
+        f"{BASE_URL}/{hid}",
+        headers=auth_headers,
+        json={"severidad": "Critica"},
+    )
+    assert patched.status_code == 200, patched.text
+    act2 = await client.get(f"/api/v1/actividad_mensual_sasts/{aid}", headers=auth_headers)
+    assert act2.status_code == 200, act2.text
+    assert act2.json()["data"]["criticos"] == 1
+    assert act2.json()["data"]["altos"] == 0
+
+    deleted = await client.delete(f"{BASE_URL}/{hid}", headers=auth_headers)
+    assert deleted.status_code == 200, deleted.text
+    act3 = await client.get(f"/api/v1/actividad_mensual_sasts/{aid}", headers=auth_headers)
+    assert act3.status_code == 200, act3.text
+    assert act3.json()["data"]["total_hallazgos"] == 0

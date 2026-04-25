@@ -1,9 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Download, ExternalLink, FileSpreadsheet, GitBranch, Loader2, Pencil, Plus, Trash2, Upload } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { ArrowDownAZ, ArrowUpAZ, ExternalLink, GitBranch, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -39,6 +38,8 @@ import {
   Select,
   Switch,
 } from '@/components/ui';
+import { CatalogCsvToolbar } from '@/components/catalog/CatalogCsvToolbar';
+import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import { useCelulas } from '@/hooks/useCelulas';
 import {
   useCreateRepositorio,
@@ -49,7 +50,7 @@ import {
 import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
-import { downloadCsvFromApi, importCsvToApi } from '@/lib/csvDownload';
+import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { logger } from '@/lib/logger';
 import {
   RepositorioCreateSchema,
@@ -228,15 +229,13 @@ function RepositorioForm({
 }
 
 export default function RepositoriosPage() {
-  const qc = useQueryClient();
-  const importInputRef = useRef<HTMLInputElement>(null);
-  const [csvBusy, setCsvBusy] = useState(false);
   const { data: rows, isLoading, isError } = useRepositorios();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: orgs } = useOrganizacions();
   const { data: celulas } = useCelulas();
   const [q, setQ] = useState('');
+  const [nombreOrderDesc, setNombreOrderDesc] = useState(false);
   const [gerenciaF, setGerenciaF] = useState<string>(ALL);
   const [orgF, setOrgF] = useState<string>(ALL);
   const [celulaF, setCelulaF] = useState<string>(ALL);
@@ -307,45 +306,6 @@ export default function RepositoriosPage() {
     return fromFilter;
   }, [filteredCelulas, orgName, edit, celulas]);
 
-  const onExportCsv = async () => {
-    try {
-      await downloadCsvFromApi('/repositorios/export.csv', 'repositorios.csv');
-      toast.success('CSV exportado');
-    } catch (e) {
-      logger.error('repositorio.csv_export.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'No se pudo exportar'));
-    }
-  };
-
-  const onTemplateCsv = async () => {
-    try {
-      await downloadCsvFromApi('/repositorios/import-template.csv', 'repositorios_import_template.csv');
-      toast.success('Plantilla descargada');
-    } catch (e) {
-      logger.error('repositorio.csv_template.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'No se pudo descargar la plantilla'));
-    }
-  };
-
-  const onPickImport = () => importInputRef.current?.click();
-
-  const onImportFile = async (fileList: FileList | null) => {
-    const file = fileList?.[0];
-    if (!file) return;
-    setCsvBusy(true);
-    try {
-      await importCsvToApi('/repositorios/import', file);
-      toast.success('Importación aplicada');
-      await qc.invalidateQueries({ queryKey: ['repositorios'] });
-    } catch (e) {
-      logger.error('repositorio.csv_import.failed', { error: e });
-      toast.error(extractErrorMessage(e, 'Error al importar'));
-    } finally {
-      setCsvBusy(false);
-      if (importInputRef.current) importInputRef.current.value = '';
-    }
-  };
-
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows || [])
@@ -363,6 +323,17 @@ export default function RepositoriosPage() {
       });
   }, [rows, q, celulaF, celulaShort]);
 
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      const cmp = a.nombre.localeCompare(b.nombre, 'es');
+      return nombreOrderDesc ? -cmp : cmp;
+    });
+    return list;
+  }, [filtered, nombreOrderDesc]);
+
+  const paged = useClientPagedList(sorted, [q, nombreOrderDesc, celulaF, gerenciaF, orgF]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
@@ -370,31 +341,12 @@ export default function RepositoriosPage() {
         description="Código bajo célula; vinculado a riesgo y a ejecuciones (CI/CD) en fases posteriores."
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={(e) => void onImportFile(e.target.files)}
+          <CatalogCsvToolbar
+            basePath="/repositorios"
+            exportFileName="repositorios.csv"
+            templateFileName="repositorios_import_template.csv"
+            invalidateQueries={[['repositorios']]}
           />
-          <Button type="button" variant="outline" size="sm" onClick={() => void onExportCsv()}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => void onTemplateCsv()}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Plantilla
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={csvBusy}
-            onClick={onPickImport}
-          >
-            {csvBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Importar
-          </Button>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -473,14 +425,20 @@ export default function RepositoriosPage() {
               />
             </div>
           </div>
-          <div className="max-w-md">
-            <label className="text-sm font-medium">Buscar</label>
-            <Input
-              className="mt-1"
-              placeholder="Nombre, URL, plataforma, rama…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="max-w-md flex-1">
+              <label className="text-sm font-medium">Buscar</label>
+              <Input
+                className="mt-1"
+                placeholder="Nombre, URL, plataforma, rama…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setNombreOrderDesc((v) => !v)}>
+              {nombreOrderDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
+              Orden: {nombreOrderDesc ? 'Z-A' : 'A-Z'}
+            </Button>
           </div>
 
           {isLoading && (
@@ -492,7 +450,7 @@ export default function RepositoriosPage() {
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay repositorios. Crea uno o defina células primero.</p>
           )}
-          {filtered && filtered.length > 0 && (
+          {paged.total > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
@@ -507,7 +465,7 @@ export default function RepositoriosPage() {
                 </tr>
               </DataTableHead>
               <DataTableBody>
-                {filtered.map((r) => {
+                {paged.paged.map((r) => {
                   const c = celulas?.find((x) => x.id === r.celula_id);
                   const o = c ? orgName.get(c.organizacion_id) : undefined;
                   const g = o ? gerName.get(o.gerencia_id) : undefined;
@@ -591,6 +549,19 @@ export default function RepositoriosPage() {
               </DataTableBody>
             </DataTable>
           )}
+          <CatalogPaginationBar
+            page={paged.page}
+            pageCount={paged.pageCount}
+            total={paged.total}
+            from={paged.from}
+            to={paged.to}
+            pageSize={paged.pageSize}
+            onPageChange={paged.setPage}
+            onPageSizeChange={(n) => {
+              paged.setPageSize(n);
+              paged.setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 

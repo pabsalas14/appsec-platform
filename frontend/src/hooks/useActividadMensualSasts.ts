@@ -1,17 +1,37 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import api from '@/lib/api';
-import type { ActividadMensualSast, ActividadMensualSastCreate, ActividadMensualSastUpdate } from '@/lib/schemas/actividad_mensual_sast.schema';
+import type {
+  ActividadMensualSast,
+  ActividadMensualSastCreate,
+  ActividadMensualSastUpdate,
+} from '@/lib/schemas/actividad_mensual_sast.schema';
 
 type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['actividad_mensual_sasts'] as const;
+const KEY_CFG = ['actividad_mensual_sasts', 'config'] as const;
 
 export function useActividadMensualSasts() {
   return useQuery({
     queryKey: KEY,
     queryFn: async () => {
       const { data } = await api.get<Envelope<ActividadMensualSast[]>>('/actividad_mensual_sasts/');
+      return data.data;
+    },
+  });
+}
+
+type ScoringConfig = {
+  sub_estados_mes: string[];
+  pesos_severidad: Record<string, number>;
+};
+
+export function useActividadMensualSastScoringConfig() {
+  return useQuery({
+    queryKey: KEY_CFG,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<ScoringConfig>>('/actividad_mensual_sasts/config/scoring');
       return data.data;
     },
   });
@@ -44,6 +64,19 @@ export function useDeleteActividadMensualSast() {
   return useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/actividad_mensual_sasts/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useSincronizarHallazgosActividadMensualSast() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<Envelope<ActividadMensualSast>>(
+        `/actividad_mensual_sasts/${id}/sincronizar-hallazgos`,
+      );
+      return data.data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });

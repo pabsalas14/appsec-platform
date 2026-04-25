@@ -15,18 +15,18 @@ class ActividadMensualSastBase(BaseModel):
     altos: int | None = Field(None, ge=0)
     medios: int | None = Field(None, ge=0)
     bajos: int | None = Field(None, ge=0)
-    score: float | None = Field(None, ge=0.0, le=100.0)
+    sub_estado: str | None = Field(None, max_length=100)
     notas: str | None = None
 
 
 class ActividadMensualSastCreate(ActividadMensualSastBase):
-    """Fields required to create a actividad_mensual_sast. user_id is set from auth context."""
+    """Crear actividad; el score se calcula en servidor desde `scoring.pesos_severidad`."""
 
     pass
 
 
 class ActividadMensualSastUpdate(BaseModel):
-    """All fields optional for partial updates."""
+    """Todos los campos opcionales; el score nunca se edita a mano."""
 
     mes: int | None = Field(None, ge=1, le=12)
     ano: int | None = Field(None, ge=2000, le=2100)
@@ -35,16 +35,17 @@ class ActividadMensualSastUpdate(BaseModel):
     altos: int | None = Field(None, ge=0)
     medios: int | None = Field(None, ge=0)
     bajos: int | None = Field(None, ge=0)
-    score: float | None = Field(None, ge=0.0, le=100.0)
+    sub_estado: str | None = Field(None, max_length=100)
     notas: str | None = None
 
 
 class ActividadMensualSastRead(ActividadMensualSastBase):
-    """Full actividad_mensual_sast representation returned from the API."""
+    """Representación de API incluye score computado y metadatos."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     user_id: UUID
+    score: float | None = Field(None, ge=0.0, le=100.0)
     created_at: datetime
     updated_at: datetime

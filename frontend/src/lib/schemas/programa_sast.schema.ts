@@ -3,21 +3,23 @@ import { z } from 'zod';
 export const ProgramaSastSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-nombre: z.string(),
-ano: z.number().int(),
-descripcion: z.string().nullable().optional(),
-repositorio_id: z.string().uuid(),
-estado: z.string(),
-created_at: z.string(),
+  nombre: z.string(),
+  ano: z.number().int(),
+  descripcion: z.string().nullable().optional(),
+  repositorio_id: z.string().uuid(),
+  estado: z.string(),
+  metadatos_motor: z.record(z.string(), z.unknown()).nullable().optional(),
+  created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const ProgramaSastCreateSchema = z.object({
-nombre: z.string(),
-ano: z.number().int(),
-descripcion: z.string().nullable().optional(),
-repositorio_id: z.string().uuid(),
-estado: z.string(),
+  nombre: z.string(),
+  ano: z.number().int(),
+  descripcion: z.string().nullable().optional(),
+  repositorio_id: z.string().uuid(),
+  estado: z.string(),
+  metadatos_motor: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const ProgramaSastUpdateSchema = ProgramaSastCreateSchema.partial();

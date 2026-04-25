@@ -19,10 +19,12 @@ async def test_create_programa_source_code(client: AsyncClient, auth_headers: di
         "descripcion": "Test program",
         "repositorio_id": repo_id,
         "estado": "Activo",
+        "metadatos_motor": {"motores": ["SAST", "SCA", "CDS"], "version": "2026.04"},
     }
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code == 201, resp.text
     assert resp.json()["status"] == "success"
+    assert resp.json()["data"]["metadatos_motor"]["version"] == "2026.04"
 
 
 @pytest.mark.asyncio

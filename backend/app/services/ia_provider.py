@@ -1,241 +1,452 @@
-"""AI Provider abstraction and runtime execution helpers."""
+"""
+Phase 22-24: AI Provider Abstraction & Integration
+Multi-provider support: Ollama, Anthropic, OpenAI, OpenRouter
+"""
 
-from __future__ import annotations
+import asyncio
+import json
+import logging
+from abc import ABC, abstractmethod
+from typing import Any, Optional
+from enum import Enum
 
-from dataclasses import dataclass
-from typing import Any
-
+import aiohttp
 import httpx
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ValidationError
 
-from app.config import settings
-from app.models.system_setting import SystemSetting
-from app.schemas.ia_config import IAConfigRead
-
-IA_KEYS_DEFAULTS = {
-    "ia.proveedor_activo": "ollama",
-    "ia.modelo": "llama3.1:8b",
-    "ia.temperatura": 0.3,
-    "ia.max_tokens": 4096,
-    "ia.timeout_segundos": 60,
-    "ia.sanitizar_datos_paga": True,
-}
+logger = logging.getLogger(__name__)
 
 
-class IAProviderError(RuntimeError):
-    """Raised when provider configuration or invocation fails."""
+class AIProviderType(str, Enum):
+    OLLAMA = "ollama"
+    ANTHROPIC = "anthropic"
+    OPENAI = "openai"
+    OPENROUTER = "openrouter"
 
 
-@dataclass(slots=True)
-class IAResult:
-    provider: str
-    model: str
+class AIResponse(BaseModel):
+    """Unified response from any AI provider"""
     content: str
-    usage: dict[str, int] | None = None
-    raw: dict[str, Any] | None = None
+    tokens_used: Optional[int] = None
+    provider: str
+    timestamp: Any
 
 
-class BaseIAProvider:
-    provider_name: str
+class AmenazaResponse(BaseModel):
+    """Response schema for threat modeling"""
+    stride: str
+    threat: str
+    dread_damage: int
+    dread_reproducibility: int
+    dread_exploitability: int
+    dread_affected_users: int
+    dread_discoverability: int
+    mitigations: list[str]
 
-    def __init__(self, config: IAConfigRead):
-        self.config = config
 
-    async def generate(self, prompt: str) -> IAResult:
-        raise NotImplementedError
+class ClassificationResponse(BaseModel):
+    """Response schema for FP triage"""
+    classification: str  # Probable False Positive, Requires Review, Confirmed Vulnerability
+    confidence: float
+    justificacion: str
 
 
-class OllamaProvider(BaseIAProvider):
-    provider_name = "ollama"
+class AIProvider(ABC):
+    """Abstract base class for AI providers"""
 
-    async def generate(self, prompt: str) -> IAResult:
-        url = f"{settings.OLLAMA_URL.rstrip('/')}/api/generate"
+    def __init__(self, timeout_seconds: int = 30, max_retries: int = 3):
+        self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
+
+    @abstractmethod
+    async def generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AIResponse:
+        """Generate response from prompt"""
+        pass
+
+    @abstractmethod
+    async def classify(
+        self,
+        text: str,
+        categories: list[str],
+    ) -> dict[str, Any]:
+        """Classify text into categories"""
+        pass
+
+    @abstractmethod
+    async def health_check(self) -> bool:
+        """Check if provider is available"""
+        pass
+
+    async def _retry_with_backoff(
+        self,
+        coro: Any,
+        max_retries: int = None,
+    ) -> Any:
+        """Retry with exponential backoff"""
+        retries = max_retries or self.max_retries
+        delay = 1
+
+        for attempt in range(retries):
+            try:
+                return await asyncio.wait_for(coro, timeout=self.timeout_seconds)
+            except asyncio.TimeoutError:
+                logger.warning(f"Attempt {attempt + 1} timeout - provider took > {self.timeout_seconds}s")
+                if attempt == retries - 1:
+                    raise
+                await asyncio.sleep(delay)
+                delay *= 2
+            except Exception as e:
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
+                if attempt == retries - 1:
+                    raise
+                await asyncio.sleep(delay)
+                delay *= 2
+
+
+class OllamaProvider(AIProvider):
+    """Local Ollama provider"""
+
+    def __init__(
+        self,
+        base_url: str = "http://localhost:11434",
+        model: str = "llama2",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.base_url = base_url
+        self.model = model
+        self.client = httpx.AsyncClient(timeout=self.timeout_seconds)
+
+    async def generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AIResponse:
+        """Generate using Ollama"""
+
+        full_prompt = f"{system}\n\n{prompt}" if system else prompt
+
         payload = {
-            "model": self.config.modelo,
-            "prompt": prompt,
+            "model": self.model,
+            "prompt": full_prompt,
+            "temperature": temperature,
             "stream": False,
-            "options": {
-                "temperature": self.config.temperatura,
-            },
         }
-        async with httpx.AsyncClient(timeout=self.config.timeout_segundos) as client:
-            resp = await client.post(url, json=payload)
-            resp.raise_for_status()
-            body = resp.json()
-        return IAResult(
-            provider=self.provider_name,
-            model=self.config.modelo,
-            content=body.get("response", ""),
-            raw=body,
-        )
 
-
-class OpenAIProvider(BaseIAProvider):
-    provider_name = "openai"
-
-    async def generate(self, prompt: str) -> IAResult:
-        if not settings.OPENAI_API_KEY:
-            raise IAProviderError("OPENAI_API_KEY no configurada.")
-        payload = {
-            "model": self.config.modelo,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": self.config.temperatura,
-            "max_tokens": self.config.max_tokens,
-        }
-        headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
-        async with httpx.AsyncClient(timeout=self.config.timeout_segundos) as client:
-            resp = await client.post(
-                "https://api.openai.com/v1/chat/completions",
+        async def call():
+            response = await self.client.post(
+                f"{self.base_url}/api/generate",
                 json=payload,
-                headers=headers,
             )
-            resp.raise_for_status()
-            body = resp.json()
-        choice = body.get("choices", [{}])[0]
-        message = choice.get("message", {})
-        usage_raw = body.get("usage", {})
-        usage = {
-            "prompt_tokens": int(usage_raw.get("prompt_tokens", 0)),
-            "completion_tokens": int(usage_raw.get("completion_tokens", 0)),
-            "total_tokens": int(usage_raw.get("total_tokens", 0)),
-        }
-        return IAResult(
-            provider=self.provider_name,
-            model=self.config.modelo,
-            content=message.get("content", ""),
-            usage=usage,
-            raw=body,
+            response.raise_for_status()
+            data = response.json()
+            return AIResponse(
+                content=data.get("response", ""),
+                tokens_used=data.get("eval_count"),
+                provider="ollama",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call())
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        """Classify using Ollama"""
+
+        prompt = f"Classify the following text into one of these categories: {', '.join(categories)}\n\nText: {text}\n\nCategory:"
+
+        response = await self.generate(
+            prompt=prompt,
+            temperature=0.1,
         )
 
+        classification = response.content.strip().split("\n")[0].lower()
+        return {
+            "classification": classification,
+            "provider": "ollama",
+        }
 
-class AnthropicProvider(BaseIAProvider):
-    provider_name = "anthropic"
+    async def health_check(self) -> bool:
+        """Check Ollama availability"""
 
-    async def generate(self, prompt: str) -> IAResult:
-        if not settings.ANTHROPIC_API_KEY:
-            raise IAProviderError("ANTHROPIC_API_KEY no configurada.")
+        try:
+            response = await self.client.get(f"{self.base_url}/api/tags", timeout=5)
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Ollama health check failed: {e}")
+            return False
+
+
+class AnthropicProvider(AIProvider):
+    """Anthropic Claude provider"""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "claude-opus",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.api_key = api_key
+        self.model = model
+        self.client = httpx.AsyncClient(
+            headers={"x-api-key": api_key},
+            timeout=self.timeout_seconds,
+        )
+
+    async def generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AIResponse:
+        """Generate using Anthropic"""
+
         payload = {
-            "model": self.config.modelo,
-            "max_tokens": self.config.max_tokens,
-            "temperature": self.config.temperatura,
+            "model": self.model,
+            "max_tokens": max_tokens or 1024,
+            "temperature": temperature,
+            "system": system or "",
             "messages": [{"role": "user", "content": prompt}],
         }
-        headers = {
-            "x-api-key": settings.ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-        }
-        async with httpx.AsyncClient(timeout=self.config.timeout_segundos) as client:
-            resp = await client.post(
+
+        async def call():
+            response = await self.client.post(
                 "https://api.anthropic.com/v1/messages",
                 json=payload,
-                headers=headers,
             )
-            resp.raise_for_status()
-            body = resp.json()
-        content_blocks = body.get("content", [])
-        text_parts = [block.get("text", "") for block in content_blocks if block.get("type") == "text"]
-        usage_raw = body.get("usage", {})
-        usage = {
-            "prompt_tokens": int(usage_raw.get("input_tokens", 0)),
-            "completion_tokens": int(usage_raw.get("output_tokens", 0)),
-            "total_tokens": int(usage_raw.get("input_tokens", 0)) + int(usage_raw.get("output_tokens", 0)),
-        }
-        return IAResult(
-            provider=self.provider_name,
-            model=self.config.modelo,
-            content="\n".join([p for p in text_parts if p]),
-            usage=usage,
-            raw=body,
+            response.raise_for_status()
+            data = response.json()
+            return AIResponse(
+                content=data["content"][0]["text"],
+                tokens_used=data.get("usage", {}).get("output_tokens"),
+                provider="anthropic",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call())
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        """Classify using Anthropic"""
+
+        prompt = f"Classify the following text into one of these categories: {', '.join(categories)}\n\nText: {text}\n\nRespond with ONLY the category name."
+
+        response = await self.generate(
+            prompt=prompt,
+            temperature=0.1,
         )
 
+        classification = response.content.strip().lower()
+        return {
+            "classification": classification,
+            "provider": "anthropic",
+        }
 
-class OpenRouterProvider(BaseIAProvider):
-    provider_name = "openrouter"
+    async def health_check(self) -> bool:
+        """Check Anthropic API availability"""
 
-    async def generate(self, prompt: str) -> IAResult:
-        if not settings.OPENROUTER_API_KEY:
-            raise IAProviderError("OPENROUTER_API_KEY no configurada.")
+        try:
+            # Simple call to verify API key and connectivity
+            payload = {
+                "model": self.model,
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": "test"}],
+            }
+            response = await self.client.post(
+                "https://api.anthropic.com/v1/messages",
+                json=payload,
+                timeout=5,
+            )
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Anthropic health check failed: {e}")
+            return False
+
+
+class OpenAIProvider(AIProvider):
+    """OpenAI provider"""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gpt-4",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.api_key = api_key
+        self.model = model
+        self.client = httpx.AsyncClient(
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=self.timeout_seconds,
+        )
+
+    async def generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AIResponse:
+        """Generate using OpenAI"""
+
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
         payload = {
-            "model": self.config.modelo,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": self.config.temperatura,
-            "max_tokens": self.config.max_tokens,
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens or 1024,
         }
-        headers = {
-            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
-            "HTTP-Referer": "https://appsec-platform.local",
-            "X-Title": "appsec-platform",
+
+        async def call():
+            response = await self.client.post(
+                "https://api.openai.com/v1/chat/completions",
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return AIResponse(
+                content=data["choices"][0]["message"]["content"],
+                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                provider="openai",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call())
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        """Classify using OpenAI"""
+
+        prompt = f"Classify: {text}\nCategories: {', '.join(categories)}\nAnswer:"
+
+        response = await self.generate(
+            prompt=prompt,
+            temperature=0.1,
+        )
+
+        return {
+            "classification": response.content.strip().lower(),
+            "provider": "openai",
         }
-        async with httpx.AsyncClient(timeout=self.config.timeout_segundos) as client:
-            resp = await client.post(
+
+    async def health_check(self) -> bool:
+        """Check OpenAI API availability"""
+
+        try:
+            response = await self.client.get(
+                "https://api.openai.com/v1/models",
+                timeout=5,
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
+
+
+class OpenRouterProvider(AIProvider):
+    """OpenRouter proxy provider"""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gpt-3.5-turbo",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.api_key = api_key
+        self.model = model
+        self.client = httpx.AsyncClient(
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=self.timeout_seconds,
+        )
+
+    async def generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> AIResponse:
+        """Generate using OpenRouter"""
+
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens or 1024,
+        }
+
+        async def call():
+            response = await self.client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 json=payload,
-                headers=headers,
             )
-            resp.raise_for_status()
-            body = resp.json()
-        choice = body.get("choices", [{}])[0]
-        message = choice.get("message", {})
-        usage_raw = body.get("usage", {})
-        usage = {
-            "prompt_tokens": int(usage_raw.get("prompt_tokens", 0)),
-            "completion_tokens": int(usage_raw.get("completion_tokens", 0)),
-            "total_tokens": int(usage_raw.get("total_tokens", 0)),
+            response.raise_for_status()
+            data = response.json()
+            return AIResponse(
+                content=data["choices"][0]["message"]["content"],
+                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                provider="openrouter",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call())
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        """Classify using OpenRouter"""
+
+        prompt = f"Classify: {text}\nCategories: {', '.join(categories)}"
+
+        response = await self.generate(prompt=prompt, temperature=0.1)
+
+        return {
+            "classification": response.content.strip().lower(),
+            "provider": "openrouter",
         }
-        return IAResult(
-            provider=self.provider_name,
-            model=self.config.modelo,
-            content=message.get("content", ""),
-            usage=usage,
-            raw=body,
-        )
+
+    async def health_check(self) -> bool:
+        """Check OpenRouter API availability"""
+
+        try:
+            response = await self.client.get(
+                "https://openrouter.ai/api/v1/models",
+                timeout=5,
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
 
 
-PROVIDER_MAP = {
-    "ollama": OllamaProvider,
-    "openai": OpenAIProvider,
-    "anthropic": AnthropicProvider,
-    "openrouter": OpenRouterProvider,
-}
+def get_ai_provider(
+    provider_type: AIProviderType,
+    **kwargs,
+) -> AIProvider:
+    """Factory function to get AI provider instance"""
 
+    providers = {
+        AIProviderType.OLLAMA: OllamaProvider,
+        AIProviderType.ANTHROPIC: AnthropicProvider,
+        AIProviderType.OPENAI: OpenAIProvider,
+        AIProviderType.OPENROUTER: OpenRouterProvider,
+    }
 
-async def read_ia_config(db: AsyncSession) -> IAConfigRead:
-    rows = (
-        (await db.execute(select(SystemSetting).where(SystemSetting.key.in_(list(IA_KEYS_DEFAULTS.keys())))))
-        .scalars()
-        .all()
-    )
-    values = {row.key: row.value for row in rows}
-    return IAConfigRead(
-        proveedor_activo=values.get("ia.proveedor_activo", IA_KEYS_DEFAULTS["ia.proveedor_activo"]),
-        modelo=values.get("ia.modelo", IA_KEYS_DEFAULTS["ia.modelo"]),
-        temperatura=values.get("ia.temperatura", IA_KEYS_DEFAULTS["ia.temperatura"]),
-        max_tokens=values.get("ia.max_tokens", IA_KEYS_DEFAULTS["ia.max_tokens"]),
-        timeout_segundos=values.get("ia.timeout_segundos", IA_KEYS_DEFAULTS["ia.timeout_segundos"]),
-        sanitizar_datos_paga=values.get("ia.sanitizar_datos_paga", IA_KEYS_DEFAULTS["ia.sanitizar_datos_paga"]),
-    )
+    provider_class = providers.get(provider_type)
+    if not provider_class:
+        raise ValueError(f"Unknown provider: {provider_type}")
 
-
-async def run_prompt(
-    db: AsyncSession,
-    *,
-    prompt: str,
-    dry_run: bool = False,
-) -> IAResult:
-    cfg = await read_ia_config(db)
-    provider_cls = PROVIDER_MAP.get(cfg.proveedor_activo)
-    if provider_cls is None:
-        raise IAProviderError(f"Proveedor IA no soportado: {cfg.proveedor_activo}")
-
-    if dry_run:
-        return IAResult(
-            provider=cfg.proveedor_activo,
-            model=cfg.modelo,
-            content="Dry run: configuración válida, ejecución omitida.",
-            usage=None,
-            raw={"dry_run": True},
-        )
-
-    provider = provider_cls(cfg)
-    return await provider.generate(prompt)
+    return provider_class(**kwargs)

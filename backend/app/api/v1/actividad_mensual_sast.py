@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
+from app.core.exceptions import NotFoundException
 from app.core.response import success
 from app.models.actividad_mensual_sast import ActividadMensualSast
 from app.models.user import User
@@ -16,8 +17,45 @@ from app.schemas.actividad_mensual_sast import (
     ActividadMensualSastUpdate,
 )
 from app.services.actividad_mensual_sast_service import actividad_mensual_sast_svc
+from app.services.json_setting import get_json_setting
 
 router = APIRouter()
+
+
+@router.get("/config/scoring")
+async def get_actividad_mensual_sast_scoring_config(
+    db: AsyncSession = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
+    """Expose B1 config: sub-estados sugeridos y pesos de severidad."""
+    sast_cfg = await get_json_setting(db, "scoring.sast_mensual", {})
+    pesos = await get_json_setting(db, "scoring.pesos_severidad", {})
+    sub_estados = []
+    if isinstance(sast_cfg, dict):
+        raw = sast_cfg.get("sub_estados_mes")
+        if isinstance(raw, list):
+            sub_estados = [str(x).strip() for x in raw if str(x).strip()]
+    return success(
+        {
+            "sub_estados_mes": sub_estados,
+            "pesos_severidad": pesos if isinstance(pesos, dict) else {},
+        }
+    )
+
+
+@router.post("/{id}/sincronizar-hallazgos")
+async def sincronizar_hallazgos_actividad_mensual_sast(
+    id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """B2: recalcula conteos desde `hallazgo_sasts` vinculados y el score (BRD)."""
+    updated = await actividad_mensual_sast_svc.sincronizar_hallazgos(
+        db, id, scope={"user_id": current_user.id}
+    )
+    if not updated:
+        raise NotFoundException("ActividadMensualSast not found")
+    return success(ActividadMensualSastRead.model_validate(updated).model_dump(mode="json"))
 
 
 @router.get("")

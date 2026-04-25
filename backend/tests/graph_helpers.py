@@ -158,7 +158,6 @@ async def create_actividad_mensual_sast_id(client: AsyncClient, headers: dict[st
             "altos": 2,
             "medios": 2,
             "bajos": 0,
-            "score": 75.5,
         },
     )
     assert ac.status_code == 201, ac.text

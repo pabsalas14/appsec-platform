@@ -1,297 +1,326 @@
-# AppSec Platform — Performance Optimization Guide
+# Performance & Optimization Guide - Phase 26
 
-## Phase 26 Optimizations
+## Database Optimization
 
-### Database Optimization
+### Indexing Strategy
 
-#### 1. Index Strategy
-
-**Critical Indexes (already in place):**
 ```sql
--- User ownership queries (IDOR filtering)
-CREATE INDEX idx_vulnerabilidads_user_id ON vulnerabilidads(user_id);
-CREATE INDEX idx_iniciativas_user_id ON iniciativas(user_id);
-CREATE INDEX idx_audit_logs_user_id ON audit_logs(actor_user_id);
+-- Primary indexes (auto-created on FK/PK)
+CREATE INDEX idx_vulnerabilidad_severidad ON vulnerabilidades(severidad);
+CREATE INDEX idx_vulnerabilidad_estado ON vulnerabilidades(estado);
+CREATE INDEX idx_vulnerabilidad_created_at ON vulnerabilidades(created_at DESC);
+CREATE INDEX idx_vulnerabilidad_sla_dias ON vulnerabilidades(sla_dias);
+CREATE INDEX idx_vulnerabilidad_soft_delete ON vulnerabilidades(deleted_at);
 
--- Time-based queries
-CREATE INDEX idx_audit_logs_ts ON audit_logs(ts DESC);
-CREATE INDEX idx_vulnerabilidads_created_at ON vulnerabilidads(created_at DESC);
+-- Composite indexes for common filters
+CREATE INDEX idx_vuln_severity_estado ON vulnerabilidades(severidad, estado);
+CREATE INDEX idx_vuln_fuente_estado ON vulnerabilidades(fuente, estado);
 
--- SLA tracking
-CREATE INDEX idx_vulnerabilidads_fecha_sla ON vulnerabilidads(fecha_limite_sla);
-CREATE INDEX idx_vulnerabilidads_estado ON vulnerabilidads(estado);
+-- Partial index for soft delete (optimize list queries)
+CREATE INDEX idx_vuln_active ON vulnerabilidades(id) WHERE deleted_at IS NULL;
 
--- Soft delete filtering
-CREATE INDEX idx_vulnerabilidads_deleted_at ON vulnerabilidads(deleted_at) 
-  WHERE deleted_at IS NULL;
+-- Full text search (if applicable)
+CREATE INDEX idx_vuln_titulo_desc_fts ON vulnerabilidades 
+  USING GIN (to_tsvector('spanish', titulo || ' ' || descripcion));
 ```
 
-**Query Optimization:**
+### Query Optimization
+
+1. **N+1 Query Prevention**
+   - Use SQLAlchemy `joinedload()` and `selectinload()`
+   - Load relationships eagerly in list endpoints
+   - Batch load related entities
+
+2. **Pagination Enforcement**
+   - Default page_size: 50
+   - Maximum page_size: 100
+   - Required for all list endpoints
+
+3. **Connection Pooling**
+   ```python
+   # In database.py
+   engine = create_async_engine(
+       DATABASE_URL,
+       echo=False,
+       pool_size=20,
+       max_overflow=40,
+       pool_pre_ping=True,  # Verify connection before use
+   )
+   ```
+
+4. **Soft Delete Queries**
+   - Automatic filtering: `WHERE deleted_at IS NULL`
+   - Use partial index for active records
+   - Partition audit logs by month if > 1M rows
+
+### Database Maintenance
+
+```sql
+-- Analyze query plans
+ANALYZE vulnerabilidades;
+
+-- Reindex if fragmented
+REINDEX INDEX CONCURRENTLY idx_vulnerabilidad_created_at;
+
+-- Vacuum (cleanup)
+VACUUM ANALYZE vulnerabilidades;
+
+-- Monitor slow queries
+ALTER SYSTEM SET log_min_duration_statement = 500;  -- Log queries > 500ms
+SELECT query, mean_exec_time FROM pg_stat_statements 
+  WHERE mean_exec_time > 500 
+  ORDER BY mean_exec_time DESC;
+```
+
+---
+
+## API Optimization
+
+### Response Caching
+
 ```python
-# BAD: N+1 query
-for vuln in vulnerabilidads:
-    user = session.query(User).filter(User.id == vuln.user_id).first()
+# Use Redis for expensive calculations
+from fastapi import BackgroundTasks
+from redis import Redis
+
+redis_client = Redis(host='localhost', port=6379, db=0)
+
+@router.get("/indicators/{indicator_id}/trend")
+async def get_indicator_trend(indicator_id: str):
+    # Check cache first (TTL: 1 hour)
+    cache_key = f"indicator_trend:{indicator_id}"
+    cached = redis_client.get(cache_key)
     
-# GOOD: Single query with relationship loading
-vulns = session.query(Vulnerabilidad).options(
-    joinedload(Vulnerabilidad.usuario)
-).all()
-
-# GOOD: Selective loading
-vulns = session.query(Vulnerabilidad).filter(...).limit(100)
+    if cached:
+        return json.loads(cached)
+    
+    # Calculate and cache
+    result = await calculate_trend(indicator_id)
+    redis_client.setex(cache_key, 3600, json.dumps(result))
+    
+    return result
 ```
 
-#### 2. Connection Pooling
+### Request/Response Compression
 
-**Settings in `database.py`:**
 ```python
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    pool_size=10,           # Number of connections to keep open
-    max_overflow=20,        # Max additional connections
-    pool_pre_ping=True,     # Verify connection before use
-    pool_recycle=3600,      # Recycle connections after 1 hour
-)
+# In main.py
+from fastapi.middleware.gzip import GZIPMiddleware
+
+app.add_middleware(GZIPMiddleware, minimum_size=1000)
+
+# Nginx gzip (docker-compose.yml)
+gzip on;
+gzip_types text/plain application/json application/javascript;
+gzip_min_length 1000;
+gzip_vary on;
 ```
 
-#### 3. Query Analysis
+### Batch Operations Optimization
+
+```python
+# Bulk insert instead of individual inserts
+from sqlalchemy import insert
+
+def bulk_create_vulnerabilities(vulns_data: list[dict]):
+    stmt = insert(Vulnerabilidad).values(vulns_data)
+    db.execute(stmt)
+    db.commit()
+    # 100 inserts: 5 seconds → 0.2 seconds
+```
+
+### Connection Reuse
+
+```python
+# Reuse AsyncSession across endpoints
+async def get_db() -> AsyncSession:
+    async with async_session_maker() as session:
+        yield session
+        # Auto-close on function exit
+
+# All endpoints use this dependency
+@router.get("/vulnerabilities")
+async def list_vulnerabilities(db: AsyncSession = Depends(get_db)):
+    # Single pooled connection, auto-recycled
+    pass
+```
+
+---
+
+## Frontend Optimization
+
+### Bundle Size Analysis
 
 ```bash
-# Log slow queries (> 100ms)
-# In PostgreSQL:
-ALTER SYSTEM SET log_min_duration_statement = 100;
-SELECT pg_reload_conf();
+# Analyze bundle
+npm run build
+npx webpack-bundle-analyzer dist/stats.json
 
-# View slow log
-docker-compose exec db tail -f /var/log/postgresql/postgresql.log | grep Duration
+# Expected output < 500KB gzipped
+# Target: Critical path < 100KB
 ```
 
-### API Optimization
-
-#### 1. Pagination Defaults
-
-```python
-# backend/app/api/deps.py
-class PaginationParams:
-    DEFAULT_PAGE_SIZE = 50
-    MAX_PAGE_SIZE = 100
-    
-    def __init__(self, page: int = 1, page_size: int = DEFAULT_PAGE_SIZE):
-        self.page = max(1, page)
-        self.page_size = min(page_size, self.MAX_PAGE_SIZE)
-```
-
-#### 2. Response Compression
-
-**In Nginx:**
-```nginx
-gzip on;
-gzip_types application/json text/plain;
-gzip_min_length 1000;
-gzip_comp_level 6;
-```
-
-**Reduces payload by ~60% for JSON**
-
-#### 3. Selective Field Loading
-
-```python
-# BAD: Load all fields
-vulnerabilidad_full = session.query(Vulnerabilidad).get(id)
-
-# GOOD: Load only needed fields for list view
-vulnerabilidades = session.query(
-    Vulnerabilidad.id,
-    Vulnerabilidad.titulo,
-    Vulnerabilidad.estado,
-    Vulnerabilidad.severidad,
-    Vulnerabilidad.fecha_limite_sla,
-).filter(...).all()
-```
-
-#### 4. Caching Strategy
-
-**For frequently accessed, slow-changing data:**
-```python
-from redis import Redis
-import json
-
-cache = Redis(host='redis', port=6379)
-
-# Cache catalog configs (5 min TTL)
-@cache.cached(timeout=300)
-async def get_severity_config():
-    return await system_setting_svc.get(db, "sla.severidades")
-
-# Cache user roles (1 min TTL, refreshed on role change)
-async def get_user_roles(user_id: UUID, force_refresh: bool = False):
-    if not force_refresh:
-        cached = cache.get(f"user_roles:{user_id}")
-        if cached:
-            return json.loads(cached)
-    
-    roles = await role_svc.get_by_user(db, user_id)
-    cache.setex(f"user_roles:{user_id}", 60, json.dumps([r.to_dict() for r in roles]))
-    return roles
-```
-
-#### 5. Batch Operations
-
-```python
-# BAD: Update one at a time (N queries)
-for vuln_id in vulnerability_ids:
-    update_vulnerability(db, vuln_id, {"estado": "En Revision"})
-
-# GOOD: Batch update (1 query)
-await db.execute(
-    update(Vulnerabilidad)
-    .where(Vulnerabilidad.id.in_(vulnerability_ids))
-    .values({"estado": "En Revision", "updated_at": datetime.utcnow()})
-)
-await db.flush()
-```
-
-### Frontend Optimization
-
-#### 1. Code Splitting
+### Code Splitting
 
 ```typescript
-// pages/dashboards/[id].tsx
-const DashboardExecutivo = dynamic(() => import("@/components/dashboards/Ejecutivo"), {
-  loading: () => <div>Loading dashboard...</div>,
-  ssr: false, // Don't server-side render heavy components
-});
+// pages/dashboards/index.tsx
+const DashboardExecutivo = dynamic(
+  () => import('./dashboards/ejecutivo'),
+  { loading: () => <Skeleton /> }
+);
+
+const VulnerabilitiesDashboard = dynamic(
+  () => import('./dashboards/vulnerabilities'),
+  { loading: () => <Skeleton /> }
+);
 ```
 
-#### 2. Image Optimization
+### Image Optimization
 
-```typescript
-import Image from 'next/image';
-
-<Image
-  src="/icons/vulnerability.svg"
-  alt="Vulnerability"
-  width={24}
-  height={24}
-  quality={85}  // Reduce quality for faster load
-/>
-```
-
-#### 3. Query Prefetching
-
-```typescript
-const { data, isLoading } = useQuery({
-  queryKey: ["vulnerabilities"],
-  queryFn: async () => {
-    const res = await fetch("/api/v1/vulnerabilidads?page_size=10");
-    return res.json();
+```javascript
+// next.config.js
+module.exports = {
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200],
   },
-});
-
-// Prefetch next page on mount
-const queryClient = useQueryClient();
-useEffect(() => {
-  queryClient.prefetchInfiniteQuery({
-    queryKey: ["vulnerabilities"],
-    queryFn: async ({ pageParam = 1 }) => {
-      const res = await fetch(`/api/v1/vulnerabilidads?page=${pageParam + 1}`);
-      return res.json();
+  experimental: {
+    optimizePackageImports: {
+      'lucide-react': ['Icon'], // Only import used icons
     },
-  });
-}, []);
+  },
+};
 ```
 
-### Monitoring & Benchmarking
+### Prefetching Strategy
 
-#### 1. Response Time Tracking
+```typescript
+// prefetch common queries
+import { useQuery } from '@tanstack/react-query';
+
+export function usePrefetchVulnerabilities() {
+  const queryClient = useQueryClient();
+  
+  return useCallback(() => {
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ['vulnerabilities'],
+      queryFn: ({ pageParam = 1 }) => fetchVulnerabilities(pageParam),
+      getNextPageParam: (last) => last.nextPage,
+    });
+  }, [queryClient]);
+}
+```
+
+---
+
+## Monitoring & Metrics
+
+### Application Performance Monitoring (APM)
 
 ```python
-# Middleware to track endpoint performance
+# backend/app/core/monitoring.py
+import logging
+from prometheus_client import Counter, Histogram, start_http_server
+import time
+
+request_count = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+request_duration = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'endpoint']
+)
+
 @app.middleware("http")
-async def timing_middleware(request: Request, call_next):
+async def track_metrics(request: Request, call_next):
     start = time.time()
     response = await call_next(request)
-    duration = (time.time() - start) * 1000
+    duration = time.time() - start
     
-    logger.info(
-        f"{request.method} {request.url.path}",
-        extra={
-            "status": response.status_code,
-            "duration_ms": duration,
-            "event": "api_timing",
-        }
-    )
+    request_count.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
     
-    if duration > 500:  # Log slow endpoints
-        logger.warning(f"Slow endpoint: {duration}ms", extra={"slow": True})
+    request_duration.labels(
+        method=request.method,
+        endpoint=request.url.path
+    ).observe(duration)
     
     return response
 ```
 
-#### 2. Database Query Metrics
+### Database Monitoring
+
+```sql
+-- Monitor active queries
+SELECT pid, query, query_start, state
+FROM pg_stat_activity
+WHERE state != 'idle'
+ORDER BY query_start DESC;
+
+-- Monitor index usage
+SELECT schemaname, tablename, indexname, idx_scan
+FROM pg_stat_user_indexes
+ORDER BY idx_scan DESC;
+
+-- Find unused indexes
+SELECT schemaname, tablename, indexname
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+ORDER BY pg_relation_size(indexrelid) DESC;
+```
+
+### Health Check Endpoint
 
 ```python
-# SQLAlchemy event listener for query logging
-from sqlalchemy import event
-
-@event.listens_for(Engine, "before_cursor_execute")
-def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    context._query_start_time = time.time()
-
-@event.listens_for(Engine, "after_cursor_execute")
-def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    total_time = time.time() - context._query_start_time
-    if total_time > 0.5:  # Log queries > 500ms
-        logger.warning(f"Slow query ({total_time:.2f}s): {statement[:100]}...")
+@router.get("/health")
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """System health check"""
+    
+    checks = {
+        "database": await check_database(db),
+        "cache": await check_redis(),
+        "api_latency_ms": await measure_api_latency(),
+        "memory_usage_mb": get_memory_usage(),
+    }
+    
+    overall = "healthy" if all(checks.values()) else "degraded"
+    
+    return {
+        "status": overall,
+        "timestamp": datetime.utcnow(),
+        "checks": checks,
+    }
 ```
-
-#### 3. Load Testing
-
-```bash
-# Using Apache Bench
-ab -n 1000 -c 10 -H "Authorization: Bearer $TOKEN" \
-   http://localhost:8000/api/v1/vulnerabilidads
-
-# Using wrk
-wrk -t12 -c400 -d30s \
-    -H "Authorization: Bearer $TOKEN" \
-    http://localhost:8000/api/v1/vulnerabilidads
-```
-
-**Expected Performance:**
-- API P95: < 500ms
-- Database query P95: < 100ms
-- API error rate: < 1%
-- Throughput: > 100 req/sec
-
-### Capacity Planning
-
-| Metric | Current | Target | Action |
-|--------|---------|--------|--------|
-| Users | 100 | 10,000 | Add connection pooling |
-| Vulnerabilities | 10K | 1M | Partition audit logs, add caching |
-| Audit entries/day | 50K | 5M | Archive old logs, optimize indices |
-| Peak QPS | 10 | 100 | Add load balancer, replicas |
-
-### Rollback Optimization
-
-If optimization causes issues:
-
-1. **Revert cache:** `redis-cli FLUSHALL`
-2. **Revert indices:** `DROP INDEX idx_name;`
-3. **Revert connection pool:** `ALTER SYSTEM SET max_connections = 100;`
 
 ---
 
-**Target Performance Metrics:**
-- API P95 latency: < 500ms
-- Database query P95: < 100ms
-- Page load time: < 2s
-- Error rate: < 1%
-- Throughput: > 100 req/sec
+## Performance Targets
 
-**Monitoring Tools:**
-- Prometheus for metrics collection
-- Grafana for visualization
-- ELK Stack for log analysis
+| Metric | Target | Current |
+|--------|--------|---------|
+| Page Load (LCP) | < 2.5s | TBD |
+| API Response | < 200ms | TBD |
+| Database Query | < 100ms | TBD |
+| Bundle Size | < 500KB | TBD |
+| Cache Hit Rate | > 80% | TBD |
+
+---
+
+## Deployment Checklist
+
+- [ ] Database indexes created and analyzed
+- [ ] Redis cache configured
+- [ ] CDN configured for static assets
+- [ ] Gzip compression enabled
+- [ ] HTTP/2 enabled
+- [ ] Security headers configured
+- [ ] Rate limiting deployed
+- [ ] Monitoring alerts configured
+- [ ] Backup strategy implemented

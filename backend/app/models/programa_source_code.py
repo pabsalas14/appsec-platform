@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -42,6 +42,7 @@ class ProgramaSourceCode(SoftDeleteMixin, Base):
     ano: Mapped[int] = mapped_column(Integer(), nullable=False, index=True)
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Activo")
+    metadatos_motor: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
