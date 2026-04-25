@@ -512,6 +512,12 @@ async def put_setting(
     row = (
         await db.execute(select(SystemSetting).where(SystemSetting.key == key))
     ).scalar_one_or_none()
+
+    # Capture old value for audit diff (Rule A5)
+    old_value = row.value if row else None
+    old_description = row.description if row else None
+    is_new = row is None
+
     if row is None:
         row = SystemSetting(
             key=key, value=payload.value, description=payload.description
@@ -524,11 +530,27 @@ async def put_setting(
     await db.flush()
     await db.refresh(row)
 
+    # Audit with diff for tamper-evident trail (Rule A5)
     await audit_record(
         db,
-        action="system_setting.update",
+        action="system_setting.update" if not is_new else "system_setting.create",
         entity_type="system_settings",
         entity_id=key,
-        metadata={"key": key},
+        metadata={
+            "key": key,
+            "changes": {
+                "value": {
+                    "old": old_value,
+                    "new": row.value
+                },
+                "description": {
+                    "old": old_description,
+                    "new": row.description
+                }
+            } if not is_new else {
+                "value": row.value,
+                "description": row.description
+            }
+        },
     )
     return success(SystemSettingRead.model_validate(row).model_dump(mode="json"))
