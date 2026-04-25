@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import api from '@/lib/api';
-import type { ActividadMensualSast, ActividadMensualSastCreate, ActividadMensualSastUpdate } from '@/lib/schemas/actividad_mensual_sast.schema';
+import type {
+  ActividadMensualSast,
+  ActividadMensualSastCreate,
+  ActividadMensualSastUpdate,
+} from '@/lib/schemas/actividad_mensual_sast.schema';
 
 type Envelope<T> = { status: 'success'; data: T };
 
@@ -44,6 +48,19 @@ export function useDeleteActividadMensualSast() {
   return useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/actividad_mensual_sasts/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useSincronizarHallazgosActividadMensualSast() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<Envelope<ActividadMensualSast>>(
+        `/actividad_mensual_sasts/${id}/sincronizar-hallazgos`,
+      );
+      return data.data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });

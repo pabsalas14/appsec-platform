@@ -10,7 +10,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, Text, text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -46,6 +46,8 @@ class ActividadMensualSast(SoftDeleteMixin, Base):
     altos: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     medios: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     bajos: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    # Sub-estado del mes (lista sugerida en admin `scoring.sast_mensual`, BRD B1)
+    sub_estado: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # Score calculado desde pesos de configuración
     score: Mapped[float | None] = mapped_column(Float(), nullable=True)
     notas: Mapped[str | None] = mapped_column(Text(), nullable=True)

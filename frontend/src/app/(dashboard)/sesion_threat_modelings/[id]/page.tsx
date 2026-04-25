@@ -1,9 +1,10 @@
 'use client';
 
-import { ChevronLeft, Loader2, Sparkles } from 'lucide-react';
+import { ChevronLeft, Loader2, Save, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   Badge,
@@ -16,14 +17,17 @@ import {
   Label,
   PageHeader,
   PageWrapper,
+  Select,
   Separator,
   Switch,
   Textarea,
 } from '@/components/ui';
+import { useActivoWebs } from '@/hooks/useActivoWebs';
 import { useAmenazasBySesion } from '@/hooks/useAmenazas';
 import {
   useSesionThreatModeling,
   useSuggestSesionThreatModelingIa,
+  useUpdateSesionThreatModeling,
 } from '@/hooks/useSesionThreatModelings';
 import { logger } from '@/lib/logger';
 import type { SesionThreatModelingIASuggestResponse } from '@/lib/schemas/sesion_threat_modeling_ia_suggest_response.schema';
@@ -36,12 +40,32 @@ export default function SesionThreatModelingDetailPage() {
   const { data: sesion, isLoading, error } = useSesionThreatModeling(id);
   const { data: amenazas, isLoading: loadingAmenazas } = useAmenazasBySesion(id);
   const suggest = useSuggestSesionThreatModelingIa();
+  const { data: activoWebs } = useActivoWebs();
+  const updateSesion = useUpdateSesionThreatModeling();
+  const [backlog, setBacklog] = useState('');
+  const [planTrabajo, setPlanTrabajo] = useState('');
+  const [activoSecId, setActivoSecId] = useState('');
 
   const [contextoAdicional, setContextoAdicional] = useState('');
   const [dryRun, setDryRun] = useState(true);
   const [crearAmenazas, setCrearAmenazas] = useState(false);
   const [ultimaRespuesta, setUltimaRespuesta] = useState<SesionThreatModelingIASuggestResponse | null>(
     null,
+  );
+
+  useEffect(() => {
+    if (!sesion) return;
+    setBacklog(sesion.backlog_tareas ?? '');
+    setPlanTrabajo(sesion.plan_trabajo ?? '');
+    setActivoSecId(sesion.activo_web_secundario_id ?? '');
+  }, [sesion]);
+
+  const activoOptions = useMemo(
+    () => [
+      { value: '', label: '— Ninguno' },
+      ...(activoWebs ?? []).map((a) => ({ value: a.id, label: a.nombre })),
+    ],
+    [activoWebs],
   );
 
   if (!id) {
@@ -158,6 +182,73 @@ export default function SesionThreatModelingDetailPage() {
                 </Badge>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Backlog y plan (MDA)</CardTitle>
+            <CardDescription>
+              Tareas y plan de trabajo; activo web secundario de referencia (BRD 3.3).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="backlog_tareas">Backlog de tareas</Label>
+              <Textarea
+                id="backlog_tareas"
+                rows={3}
+                value={backlog}
+                onChange={(e) => setBacklog(e.target.value)}
+                className="resize-y"
+                maxLength={8000}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="plan_trabajo">Plan de trabajo</Label>
+              <Textarea
+                id="plan_trabajo"
+                rows={3}
+                value={planTrabajo}
+                onChange={(e) => setPlanTrabajo(e.target.value)}
+                className="resize-y"
+                maxLength={8000}
+              />
+            </div>
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Activo web secundario</span>
+              <Select
+                className="mt-0"
+                value={activoSecId}
+                onChange={(e) => setActivoSecId(e.target.value)}
+                options={activoOptions}
+              />
+            </div>
+            <Button
+              type="button"
+              className="gap-2"
+              disabled={updateSesion.isPending}
+              onClick={() => {
+                updateSesion.mutate(
+                  {
+                    id: sesion.id,
+                    backlog_tareas: backlog.trim() || null,
+                    plan_trabajo: planTrabajo.trim() || null,
+                    activo_web_secundario_id: activoSecId || null,
+                  },
+                  {
+                    onSuccess: () => toast.success('Sesión actualizada'),
+                    onError: (e) => {
+                      logger.error('sesion_threat_modeling.mda_update.failed', { id: sesion.id, error: e });
+                      toast.error(extractErrorMessage(e, 'No se pudo guardar'));
+                    },
+                  },
+                );
+              }}
+            >
+              {updateSesion.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Guardar backlog / plan
+            </Button>
           </CardContent>
         </Card>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpAZ, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -38,12 +38,15 @@ import {
   Select,
   Textarea,
 } from '@/components/ui';
+import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import {
   useActividadMensualSasts,
   useCreateActividadMensualSast,
   useDeleteActividadMensualSast,
+  useSincronizarHallazgosActividadMensualSast,
   useUpdateActividadMensualSast,
 } from '@/hooks/useActividadMensualSasts';
+import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { useProgramaSasts } from '@/hooks/useProgramaSasts';
 import { logger } from '@/lib/logger';
 import {
@@ -80,7 +83,7 @@ function FormFields({
           altos: initial.altos ?? null,
           medios: initial.medios ?? null,
           bajos: initial.bajos ?? null,
-          score: initial.score ?? null,
+          sub_estado: initial.sub_estado ?? null,
           notas: initial.notas ?? null,
         }
       : {
@@ -92,7 +95,7 @@ function FormFields({
           altos: null,
           medios: null,
           bajos: null,
-          score: null,
+          sub_estado: null,
           notas: null,
         },
   });
@@ -117,7 +120,7 @@ function FormFields({
       altos: data.altos ?? null,
       medios: data.medios ?? null,
       bajos: data.bajos ?? null,
-      score: data.score ?? null,
+      sub_estado: data.sub_estado?.trim() || null,
       notas: data.notas?.trim() || null,
     };
     if (isEdit && initial) {
@@ -169,12 +172,21 @@ function FormFields({
           <Input className="mt-1" type="number" {...form.register('ano', { valueAsNumber: true })} />
         </div>
       </div>
-      {(['total_hallazgos', 'criticos', 'altos', 'medios', 'bajos', 'score'] as const).map((f) => (
+      {(['total_hallazgos', 'criticos', 'altos', 'medios', 'bajos'] as const).map((f) => (
         <div key={f}>
           <label className="text-sm font-medium">{f}</label>
           <Input className="mt-1" type="number" {...nOpt(f)} />
         </div>
       ))}
+      <div>
+        <label className="text-sm font-medium">Sub-estado</label>
+        <Input className="mt-1" placeholder="P. ej. Pendiente, En análisis…" {...form.register('sub_estado')} />
+      </div>
+      {isEdit && initial && (
+        <p className="text-xs text-muted-foreground">
+          Score: {initial.score != null ? initial.score.toFixed(2) : '—'} (recalculado al sincronizar hallazgos)
+        </p>
+      )}
       <div>
         <label className="text-sm font-medium">Notas</label>
         <Textarea className="mt-1" rows={2} {...form.register('notas')} />
@@ -198,9 +210,12 @@ export default function ActividadMensualSastsPage() {
   const { data: rows, isLoading, isError } = useActividadMensualSasts();
   const { data: progs } = useProgramaSasts();
   const [q, setQ] = useState('');
+  const [sortDesc, setSortDesc] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<ActividadMensualSast | null>(null);
   const deleteMut = useDeleteActividadMensualSast();
+  const syncMut = useSincronizarHallazgosActividadMensualSast();
+  const [syncingId, setSyncingId] = useState<string | null>(null);
 
   const progOptions = useMemo(
     () => (progs ?? []).map((p) => ({ value: p.id, label: p.nombre })),
@@ -220,9 +235,23 @@ export default function ActividadMensualSastsPage() {
         String(r.mes).includes(n) ||
         String(r.ano).includes(n) ||
         progName(r.programa_sast_id).toLowerCase().includes(n) ||
-        (r.notas && r.notas.toLowerCase().includes(n)),
+        (r.notas && r.notas.toLowerCase().includes(n)) ||
+        (r.sub_estado && r.sub_estado.toLowerCase().includes(n)),
     );
   }, [rows, q, progName]);
+
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      const ta = a.ano * 100 + a.mes;
+      const tb = b.ano * 100 + b.mes;
+      const cmp = ta - tb;
+      return sortDesc ? -cmp : cmp;
+    });
+    return list;
+  }, [filtered, sortDesc]);
+
+  const list = useClientPagedList(sorted, [q, sortDesc]);
 
   return (
     <PageWrapper className="space-y-6 p-6">
@@ -244,25 +273,39 @@ export default function ActividadMensualSastsPage() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="mb-4 max-w-md">
-            <Input placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="max-w-md flex-1">
+              <label className="text-sm font-medium">Buscar</label>
+              <Input
+                className="mt-1"
+                placeholder="Programa, mes, año, notas, sub-estado…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)}>
+              {sortDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
+              Periodo: {sortDesc ? 'reciente primero' : 'antiguo primero'}
+            </Button>
           </div>
           {isLoading && <Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}
           {isError && <p className="text-destructive">Error al cargar.</p>}
           {rows && !rows.length && !isLoading && <p className="text-muted-foreground">Sin datos.</p>}
-          {filtered && filtered.length > 0 && (
+          {list.total > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
                   <DataTableTh>Programa</DataTableTh>
                   <DataTableTh>Mes / año</DataTableTh>
+                  <DataTableTh>Sub-estado</DataTableTh>
                   <DataTableTh>Total</DataTableTh>
+                  <DataTableTh>Score</DataTableTh>
                   <DataTableTh>Actualizado</DataTableTh>
-                  <DataTableTh className="w-[100px]"> </DataTableTh>
+                  <DataTableTh className="w-[140px]"> </DataTableTh>
                 </tr>
               </DataTableHead>
               <DataTableBody>
-                {filtered.map((item) => (
+                {list.paged.map((item) => (
                   <DataTableRow key={item.id}>
                     <DataTableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
                       {progName(item.programa_sast_id)}
@@ -270,12 +313,40 @@ export default function ActividadMensualSastsPage() {
                     <DataTableCell>
                       {item.mes}/{item.ano}
                     </DataTableCell>
+                    <DataTableCell className="text-sm">{item.sub_estado ?? '—'}</DataTableCell>
                     <DataTableCell>{item.total_hallazgos ?? '—'}</DataTableCell>
+                    <DataTableCell className="text-sm tabular-nums">
+                      {item.score != null ? item.score.toFixed(2) : '—'}
+                    </DataTableCell>
                     <DataTableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDate(item.updated_at)}
                     </DataTableCell>
                     <DataTableCell>
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          title="Sincronizar conteos y score desde hallazgos SAST"
+                          disabled={syncMut.isPending}
+                          onClick={() => {
+                            setSyncingId(item.id);
+                            syncMut.mutate(item.id, {
+                              onSuccess: () => toast.success('Hallazgos sincronizados'),
+                              onError: (e) => {
+                                logger.error('actividad_mensual_sast.sync.failed', { id: item.id, error: e });
+                                toast.error(extractErrorMessage(e, 'Error al sincronizar'));
+                              },
+                              onSettled: () => setSyncingId(null),
+                            });
+                          }}
+                        >
+                          {syncMut.isPending && syncingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4" />
+                          )}
+                        </Button>
                         <Button type="button" variant="ghost" size="xs" onClick={() => setEdit(item)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -315,6 +386,19 @@ export default function ActividadMensualSastsPage() {
               </DataTableBody>
             </DataTable>
           )}
+          <CatalogPaginationBar
+            page={list.page}
+            pageCount={list.pageCount}
+            total={list.total}
+            from={list.from}
+            to={list.to}
+            pageSize={list.pageSize}
+            onPageChange={list.setPage}
+            onPageSizeChange={(n) => {
+              list.setPageSize(n);
+              list.setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -323,7 +407,9 @@ export default function ActividadMensualSastsPage() {
           <DialogHeader>
             <DialogTitle>Editar actividad</DialogTitle>
           </DialogHeader>
-          {edit && <FormFields key={edit.id} initial={edit} onSuccess={() => setEdit(null)} progOptions={progOptions} />}
+          {edit && (
+            <FormFields key={edit.id} initial={edit} onSuccess={() => setEdit(null)} progOptions={progOptions} />
+          )}
         </DialogContent>
       </Dialog>
     </PageWrapper>

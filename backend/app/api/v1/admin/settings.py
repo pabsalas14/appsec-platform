@@ -190,6 +190,15 @@ DEFAULT_SETTINGS: list[dict] = [
         },
         "description": "Pesos por severidad para el cálculo de scoring. Deben sumar 100.",
     },
+    {
+        "key": "scoring.sast_mensual",
+        "value": {
+            "sub_estados_mes": ["Pendiente", "En análisis", "Cerrado", "Bloqueado"],
+            "notas": "Sub-estados sugeridos para el campo `sub_estado` de actividad mensual SAST. "
+            "El score usa `scoring.pesos_severidad` y los conteos (manual o vía /sincronizar-hallazgos).",
+        },
+        "description": "B1: sub-estados y documentación; el cálculo lee `scoring.pesos_severidad`.",
+    },
     # ── 9. Tipos de temas emergentes ──────────────────────────────────────────
     {
         "key": "catalogo.tipos_tema_emergente",

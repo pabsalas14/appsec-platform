@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpAZ, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -36,12 +36,15 @@ import {
   PageWrapper,
   Textarea,
 } from '@/components/ui';
+import { CatalogCsvToolbar } from '@/components/catalog/CatalogCsvToolbar';
+import { CatalogPaginationBar } from '@/components/catalog/CatalogPaginationBar';
 import {
   useCreateTipoPrueba,
   useDeleteTipoPrueba,
   useTipoPruebas,
   useUpdateTipoPrueba,
 } from '@/hooks/useTipoPruebas';
+import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { logger } from '@/lib/logger';
 import { TipoPruebaCreateSchema, type TipoPrueba, type TipoPruebaCreate } from '@/lib/schemas/tipo_prueba.schema';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
@@ -138,6 +141,7 @@ function TipoPruebaForm({
 export default function TipoPruebasPage() {
   const { data: rows, isLoading, isError } = useTipoPruebas();
   const [q, setQ] = useState('');
+  const [sortDesc, setSortDesc] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<TipoPrueba | null>(null);
   const deleteMut = useDeleteTipoPrueba();
@@ -154,34 +158,59 @@ export default function TipoPruebasPage() {
     );
   }, [rows, q]);
 
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      const cmp = a.nombre.localeCompare(b.nombre, 'es');
+      return sortDesc ? -cmp : cmp;
+    });
+    return list;
+  }, [filtered, sortDesc]);
+
+  const list = useClientPagedList(sorted, [q, sortDesc]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader title="Tipos de prueba" description="Catálogo de tipos y categorías de prueba.">
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Nueva
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo tipo de prueba</DialogTitle>
-            </DialogHeader>
-            <TipoPruebaForm onSuccess={() => setCreateOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <CatalogCsvToolbar
+            basePath="/tipo_pruebas"
+            exportFileName="tipo_pruebas.csv"
+            templateFileName="tipo_pruebas_import_template.csv"
+            invalidateQueries={[['tipo_pruebas']]}
+          />
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Nueva
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo tipo de prueba</DialogTitle>
+              </DialogHeader>
+              <TipoPruebaForm onSuccess={() => setCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
 
       <Card>
         <CardContent className="p-4">
-          <div className="mb-4 max-w-md">
-            <label className="text-sm font-medium">Buscar</label>
-            <Input
-              className="mt-1"
-              placeholder="Nombre, categoría…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="max-w-md flex-1">
+              <label className="text-sm font-medium">Buscar</label>
+              <Input
+                className="mt-1"
+                placeholder="Nombre, categoría…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => setSortDesc((v) => !v)}>
+              {sortDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
+              Orden: {sortDesc ? 'Z-A' : 'A-Z'}
+            </Button>
           </div>
           {isLoading && (
             <div className="flex justify-center py-12 text-muted-foreground">
@@ -192,7 +221,7 @@ export default function TipoPruebasPage() {
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay registros. Crea el primero con «Nueva».</p>
           )}
-          {filtered && filtered.length > 0 && (
+          {list.total > 0 && (
             <DataTable>
               <DataTableHead>
                 <tr>
@@ -204,7 +233,7 @@ export default function TipoPruebasPage() {
                 </tr>
               </DataTableHead>
               <DataTableBody>
-                {filtered.map((item) => (
+                {list.paged.map((item) => (
                   <DataTableRow key={item.id}>
                     <DataTableCell className="font-medium">{item.nombre}</DataTableCell>
                     <DataTableCell>{item.categoria}</DataTableCell>
@@ -255,6 +284,19 @@ export default function TipoPruebasPage() {
               </DataTableBody>
             </DataTable>
           )}
+          <CatalogPaginationBar
+            page={list.page}
+            pageCount={list.pageCount}
+            total={list.total}
+            from={list.from}
+            to={list.to}
+            pageSize={list.pageSize}
+            onPageChange={list.setPage}
+            onPageSizeChange={(n) => {
+              list.setPageSize(n);
+              list.setPage(0);
+            }}
+          />
         </CardContent>
       </Card>
 

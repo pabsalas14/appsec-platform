@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
+from app.core.exceptions import NotFoundException
 from app.core.response import success
 from app.models.actividad_mensual_sast import ActividadMensualSast
 from app.models.user import User
@@ -18,6 +19,21 @@ from app.schemas.actividad_mensual_sast import (
 from app.services.actividad_mensual_sast_service import actividad_mensual_sast_svc
 
 router = APIRouter()
+
+
+@router.post("/{id}/sincronizar-hallazgos")
+async def sincronizar_hallazgos_actividad_mensual_sast(
+    id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """B2: recalcula conteos desde `hallazgo_sasts` vinculados y el score (BRD)."""
+    updated = await actividad_mensual_sast_svc.sincronizar_hallazgos(
+        db, id, scope={"user_id": current_user.id}
+    )
+    if not updated:
+        raise NotFoundException("ActividadMensualSast not found")
+    return success(ActividadMensualSastRead.model_validate(updated).model_dump(mode="json"))
 
 
 @router.get("")

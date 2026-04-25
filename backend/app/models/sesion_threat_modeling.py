@@ -18,6 +18,7 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
+    from app.models.activo_web import ActivoWeb
     from app.models.amenaza import Amenaza
     from app.models.programa_threat_modeling import ProgramaThreatModeling
 
@@ -45,6 +46,14 @@ class SesionThreatModeling(SoftDeleteMixin, Base):
     estado: Mapped[str] = mapped_column(String(50), nullable=False, default="Planificada")
     # True si fue asistida por IA (entrada al Módulo 13.1)
     ia_utilizada: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
+    backlog_tareas: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    plan_trabajo: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    activo_web_secundario_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("activo_webs.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -53,4 +62,5 @@ class SesionThreatModeling(SoftDeleteMixin, Base):
     )
 
     programa_tm: Mapped[ProgramaThreatModeling] = relationship(back_populates="sesiones")
+    activo_web_secundario: Mapped[ActivoWeb | None] = relationship("ActivoWeb", lazy="noload")
     amenazas: Mapped[list[Amenaza]] = relationship("Amenaza", back_populates="sesion", lazy="noload")

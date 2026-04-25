@@ -22,6 +22,7 @@ from app.schemas.sesion_threat_modeling import (
     SesionThreatModelingRead,
     SesionThreatModelingUpdate,
 )
+from app.services.activo_web_service import activo_web_svc
 from app.services.amenaza_service import amenaza_svc
 from app.services.audit_service import record as audit_record
 from app.services.ia_provider import run_prompt
@@ -126,6 +127,12 @@ async def create_sesion_threat_modeling(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new sesion de threat modeling for the current user."""
+    if entity_in.activo_web_secundario_id is not None:
+        aw = await activo_web_svc.get(
+            db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id}
+        )
+        if not aw:
+            raise NotFoundException("Activo web secundario no encontrado")
     entity = await sesion_threat_modeling_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(SesionThreatModelingRead.model_validate(entity).model_dump(mode="json"))
 
@@ -223,6 +230,12 @@ async def update_sesion_threat_modeling(
     entity: SesionThreatModeling = Depends(require_ownership(sesion_threat_modeling_svc)),
 ):
     """Partially update an owned sesion de threat modeling."""
+    if entity_in.activo_web_secundario_id is not None:
+        aw = await activo_web_svc.get(
+            db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id}
+        )
+        if not aw:
+            raise NotFoundException("Activo web secundario no encontrado")
     updated = await sesion_threat_modeling_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(SesionThreatModelingRead.model_validate(updated).model_dump(mode="json"))
 

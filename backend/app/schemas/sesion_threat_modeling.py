@@ -15,6 +15,9 @@ class SesionThreatModelingBase(BaseModel):
     contexto: str | None = None
     estado: str = Field(..., description="Planificada | En Progreso | Completada | Cancelada")
     ia_utilizada: bool = False
+    backlog_tareas: str | None = None
+    plan_trabajo: str | None = None
+    activo_web_secundario_id: UUID | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado not in ESTADOS_SESION:
@@ -35,6 +38,9 @@ class SesionThreatModelingUpdate(BaseModel):
     contexto: str | None = None
     estado: str | None = None
     ia_utilizada: bool | None = None
+    backlog_tareas: str | None = None
+    plan_trabajo: str | None = None
+    activo_web_secundario_id: UUID | None = None
 
     def model_post_init(self, _: dict) -> None:
         if self.estado is not None and self.estado not in ESTADOS_SESION:
