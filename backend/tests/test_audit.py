@@ -92,7 +92,7 @@ async def test_audit_log_list_works_for_admin(
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["status"] == "success"
-    assert "pagination" in body
+    assert "meta" in body
     assert isinstance(body["data"], list)
     assert any(entry["action"] == "task.create" for entry in body["data"])
 

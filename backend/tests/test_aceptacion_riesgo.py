@@ -176,8 +176,10 @@ async def test_aprobar_aceptacion_success_with_admin(
 
 
 @pytest.mark.asyncio
-async def test_aceptacion_export_requires_permission(client: AsyncClient, auth_headers: dict):
-    resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+async def test_aceptacion_export_requires_permission(
+    client: AsyncClient, readonly_auth_headers: dict[str, str]
+):
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert resp.status_code == 403
     assert "vulnerabilities.export" in resp.text
 

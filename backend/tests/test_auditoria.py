@@ -27,8 +27,8 @@ async def test_create_and_list_auditoria(client: AsyncClient, auth_headers: dict
 
 
 @pytest.mark.asyncio
-async def test_auditoria_export_forbidden_user(client: AsyncClient, auth_headers: dict):
-    r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+async def test_auditoria_export_forbidden_user(client: AsyncClient, readonly_auth_headers: dict[str, str]):
+    r = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert r.status_code == 403
     assert "audits.export" in r.text
 

@@ -329,10 +329,12 @@ class TestAuditabilityA7Export:
     """A7: Export logging."""
 
     @pytest.mark.asyncio
-    async def test_a7_export_requires_permission(self, client: AsyncClient, auth_headers: dict):
-        """Export exige `vulnerabilities.export`; usuario base sin permiso recibe 403."""
+    async def test_a7_export_requires_permission(
+        self, client: AsyncClient, readonly_auth_headers: dict[str, str]
+    ):
+        """Export exige `vulnerabilities.export`; rol sin permiso recibe 403."""
         resp = await client.get(
             "/api/v1/vulnerabilidads/export.csv",
-            headers=auth_headers,
+            headers=readonly_auth_headers,
         )
-        assert resp.status_code in (403, 404), f"A7: se espera 403 sin permiso o 404 (got {resp.status_code})"
+        assert resp.status_code == 403, f"A7: se espera 403 sin permiso (got {resp.status_code})"

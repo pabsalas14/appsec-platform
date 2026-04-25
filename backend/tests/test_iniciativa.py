@@ -56,9 +56,11 @@ async def test_iniciativa_idor_protected(
 
 
 @pytest.mark.asyncio
-async def test_iniciativa_export_requires_permission(client: AsyncClient, auth_headers: dict):
-    """El rol user no puede exportar sin initiatives.export."""
-    resp = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+async def test_iniciativa_export_requires_permission(
+    client: AsyncClient, readonly_auth_headers: dict[str, str]
+):
+    """Rol readonly (sin initiatives.export) no puede exportar."""
+    resp = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert resp.status_code == 403
     assert "initiatives.export" in resp.text
 

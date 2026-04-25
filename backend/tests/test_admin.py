@@ -18,7 +18,7 @@ async def test_admin_can_list_users(client: AsyncClient, admin_auth_headers: dic
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "success"
-    assert "pagination" in body
+    assert "meta" in body
 
 
 @pytest.mark.asyncio
@@ -55,7 +55,7 @@ async def test_admin_audit_logs_endpoint(client: AsyncClient, admin_auth_headers
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "success"
-    assert "pagination" in body
+    assert "meta" in body
 
 
 @pytest.mark.asyncio

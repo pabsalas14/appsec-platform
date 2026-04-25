@@ -114,9 +114,11 @@ async def test_vulnerabilidad_idor_protected(
 
 
 @pytest.mark.asyncio
-async def test_export_csv_requires_export_permission(client: AsyncClient, auth_headers: dict):
-    """Rol user (solo .view) no puede exportar sin vulnerabilities.export."""
-    r = await client.get(f"{BASE_URL}/export.csv", headers=auth_headers)
+async def test_export_csv_requires_export_permission(
+    client: AsyncClient, readonly_auth_headers: dict[str, str]
+):
+    """Rol readonly (vulnerabilities.view, sin .export) no puede exportar CSV."""
+    r = await client.get(f"{BASE_URL}/export.csv", headers=readonly_auth_headers)
     assert r.status_code == 403
     assert "vulnerabilities.export" in r.text
 
