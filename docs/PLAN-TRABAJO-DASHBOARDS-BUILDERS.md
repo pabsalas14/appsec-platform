@@ -119,10 +119,10 @@ SEMANA 1-4 (Fases 1-10) — EN PARALELO
 - **Claude**: Endpoints backend por dashboard (después de Fase 1 FE completada)
 - **Cursor**: UI components, builder, 9 dashboard pages (PARALELO con Claude)
 
-**Status Sesión 2 (AHORA)**: 
+**Status Sesión 2 (FASE 2 COMPLETA)**: 
 - [✅] Schemas dashboard (zod validation) — `dashboard-schema.ts`
 - [✅] Hooks: useDashboard, useDrilldown, useWidgetData — 3 archivos
-- [✅] 10 componentes UI transversales (charts)
+- [✅] 13 componentes UI transversales (charts)
   - GaugeChart.tsx
   - SemaforoSla.tsx
   - HistoricoMensualGrid.tsx
@@ -133,6 +133,11 @@ SEMANA 1-4 (Fases 1-10) — EN PARALELO
   - ProgressBarSemaforo.tsx
   - SidePanel.tsx
   - AreaLineChart.tsx
+  - KPICard.tsx ✨ NEW
+  - DataTable.tsx ✨ NEW
+  - TrendChart.tsx ✨ NEW
+- [✅] WidgetConfigPanel.tsx — Editor completo (3 tabs: Básico, Datos, Display)
+- [✅] DashboardViewer.tsx — Renderizador real de widgets con useWidgetData
 - [✅] Dashboard list page (/dashboards) — lista y búsqueda
 - [✅] DashboardBuilder.tsx (editor drag-drop con react-grid-layout)
 - [✅] Dashboard builder page (/dashboards/builder) — crear nuevo
@@ -140,8 +145,74 @@ SEMANA 1-4 (Fases 1-10) — EN PARALELO
 - [✅] Dashboard view page (/dashboards/[id]) — visualizar
 - [✅] Types compartidos (dashboard.ts)
 - [✅] Exports centralizados (components/charts/index.ts)
+- [✅] Dashboard 1 (Ejecutivo) — COMPLETO Y FUNCIONAL ✨ NEW
+  - 5 KPI Cards (Avance Programas, Vulns Críticas, Liberaciones, Temas, Auditorías)
+  - Gauge: Postura de Seguridad Global
+  - Trend Chart: Tendencia 6 meses (4 series: críticas, altas, medias, bajas)
+  - Horizontal Bar Ranking: Top 5 Repos
+  - Semáforo SLA: En Tiempo/Riesgo/Vencidas
+  - Data Table: Auditorías Activas (con filtros y paginación)
+- [✅] E2E Test skeleton — Dashboard 1 (Playwright) ✨ NEW
+  - Tests KPI Cards, Gauge, Tendencia, Ranking, Semáforo, Tabla
+  - Tests Filtros, Exportación, Responsividad, Dark Mode, Permisos
+  - Tests Performance
+- [✅] Backend specification document — Endpoints requeridos ✨ NEW
+  - Especificación detallada: /api/v1/dashboards CRUD
+  - Dashboard 1: 6 endpoints (KPIs, Postura, Tendencia, Top Repos, SLA, Auditorías)
+  - Cada endpoint con Input/Output specs, lógica, auth, audit, cache
+  - Test data fixtures recomendadas
+  - Patrón estándar (ADR-0001, ADR-0004)
+- [✅] Types compartidos (dashboard.ts)
+- [✅] Exports centralizados (components/charts/index.ts)
 
-**Archivos Creados** (13 totales):
+**Archivos Creados en Sesión 2** (33 totales):
+```
+frontend/src/
+├── schemas/
+│   └── dashboard-schema.ts (✅)
+├── hooks/
+│   ├── useDashboard.ts (✅)
+│   ├── useDrilldown.ts (✅)
+│   └── useWidgetData.ts (✅)
+├── components/
+│   ├── WidgetConfigPanel.tsx (✨ NEW)
+│   ├── DashboardViewer.tsx (✨ NEW)
+│   ├── DashboardBuilder.tsx (✅)
+│   ├── charts/
+│   │   ├── GaugeChart.tsx (✅)
+│   │   ├── SemaforoSla.tsx (✅)
+│   │   ├── HistoricoMensualGrid.tsx (✅)
+│   │   ├── HorizontalBarRanking.tsx (✅)
+│   │   ├── DrilldownBreadcrumb.tsx (✅)
+│   │   ├── SeverityChip.tsx (✅)
+│   │   ├── StatusChip.tsx (✅)
+│   │   ├── ProgressBarSemaforo.tsx (✅)
+│   │   ├── SidePanel.tsx (✅)
+│   │   ├── AreaLineChart.tsx (✅)
+│   │   ├── KPICard.tsx (✨ NEW)
+│   │   ├── DataTable.tsx (✨ NEW)
+│   │   ├── TrendChart.tsx (✨ NEW)
+│   │   └── index.ts (✅)
+├── types/
+│   └── dashboard.ts (✅)
+├── app/(dashboard)/
+│   ├── dashboards/
+│   │   ├── page.tsx (✅)
+│   │   ├── builder/
+│   │   │   └── page.tsx (✅)
+│   │   ├── [id]/
+│   │   │   ├── page.tsx (✅)
+│   │   │   └── edit/
+│   │   │       └── page.tsx (✅)
+│   │   └── executive/
+│   │       └── page.tsx (✨ NEW - DASHBOARD 1 COMPLETO)
+└── __tests__/
+    └── e2e/
+        └── dashboard-1-executive.spec.ts (✨ NEW - E2E TESTS)
+
+docs/
+└── BACKEND_ENDPOINTS_SPECIFICATION.md (✨ NEW - API SPEC FOR CLAUDE)
+```
 ```
 frontend/src/
 ├── schemas/

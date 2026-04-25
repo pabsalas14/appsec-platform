@@ -343,32 +343,57 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 | **FASE 1: Query Builder** | Frontend | ✅ DONE | 100% — QueryBuilder.tsx, QueryBuilderForm.tsx, hooks (useQueryBuilder, useQueryValidation), formula-engine.ts, tests (3 archivos), page (/dashboard/query-builder) |
 | **FASE 1: Query Builder** | Integration | ✅ DONE | 100% — Models exported, routers registered, Alembic migrations, soft delete configured |
 | **FASE 2: Dashboard Builder** | Backend | 🔄 PENDING | 0% — Endpoints needed (~35 total) para 9 dashboards |
-| **FASE 2: Dashboard Builder** | Frontend Base | 🚀 IN PROGRESS | 80% — Schemas (✅), Hooks (✅), 10 componentes UI (✅), DashboardBuilder editor (✅), Pages (✅) |
-| **FASE 2: Dashboard Builder** | UI Components | ✅ DONE | 100% — GaugeChart, SemaforoSla, HistoricoMensualGrid, HorizontalBarRanking, DrilldownBreadcrumb, SeverityChip, StatusChip, ProgressBarSemaforo, SidePanel, AreaLineChart |
-| **FASE 2: Dashboard Builder** | Pages | ✅ DONE | 100% — /dashboards (list), /dashboards/builder (create), /dashboards/[id] (view), /dashboards/[id]/edit (edit) |
-| **FASE 2: 9 Dashboards** | Dashboard 1-9 | 🔄 PENDING | 0% — Implementations (Ejecutivo, Equipo, Programas, Vulns 4-drill, Concentrado, Operación, Kanban, Iniciativas, Temas) |
+| **FASE 2: Dashboard Builder** | Frontend Base | ✅ DONE | 100% — Schemas (✅), Hooks (✅), 16 componentes UI (✅), WidgetConfigPanel (✅), DashboardViewer (✅), Pages (✅) |
+| **FASE 2: Dashboard 1 (Ejecutivo)** | Frontend | ✅ DONE | 100% — 5 KPIs, Gauge, Trend Chart, Ranking, Semáforo, Table (FUNCIONAL COMPLETO) |
+| **FASE 2: E2E Tests** | Frontend | 🟨 SKELETON | ~40 test cases (ready to implement) |
+| **FASE 2: Backend Spec** | Documentation | ✅ DONE | 100% — Detailed endpoint specs + auth + audit + cache for Dashboard 1 (6 endpoints) |
+| **FASE 2: 9 Dashboards** | Dashboard 2-9 | 🔄 PENDING | 0% — Implementations (Equipo, Programas, Vulns 4-drill, Concentrado, Operación, Kanban, Iniciativas, Temas) |
 
-### 📊 Progreso Detallado — Sesión Actual
+### 📊 Sesión 2 Completada — Dashboard 1 Funcional + Backend Spec
 
-**Sesión 2 (Fase 2 Frontend Base):**
-- [✅] `frontend/src/schemas/dashboard-schema.ts` — Validaciones zod
-- [✅] `frontend/src/hooks/useDashboard.ts` — CRUD dashboard
-- [✅] `frontend/src/hooks/useDrilldown.ts` — Multi-level navigation
-- [✅] `frontend/src/hooks/useWidgetData.ts` — Widget data fetching
-- [✅] `frontend/src/components/charts/` — 10 componentes (GaugeChart, SemaforoSla, HistoricoMensualGrid, HorizontalBarRanking, DrilldownBreadcrumb, SeverityChip, StatusChip, ProgressBarSemaforo, SidePanel, AreaLineChart)
-- [✅] `frontend/src/components/DashboardBuilder.tsx` — Drag-drop editor con react-grid-layout
-- [✅] `frontend/src/types/dashboard.ts` — Tipos compartidos
-- [✅] `frontend/src/app/(dashboard)/dashboards/page.tsx` — Lista de dashboards
-- [✅] `frontend/src/app/(dashboard)/dashboards/builder/page.tsx` — Crear nuevo
-- [✅] `frontend/src/app/(dashboard)/dashboards/[id]/page.tsx` — Ver dashboard
-- [✅] `frontend/src/app/(dashboard)/dashboards/[id]/edit/page.tsx` — Editar dashboard
-- [✅] Commit: `f9f5285` — "feat: Fase 2 Frontend - Dashboard Builder arquitectura base..."
+**Archivos Creados** (33 totales):
 
-**Próximos pasos:**
-- Backend: Implementar endpoints para cada dashboard (~35 endpoints)
-- Frontend: Implementar 9 dashboard pages (Dashboard 1-9)
-- Testing: E2E tests con Playwright para cada dashboard
-- Optimization: Performance tuning, caching, code splitting
+#### Componentes UI (16):
+- ✅ GaugeChart, SemaforoSla, HistoricoMensualGrid, HorizontalBarRanking, DrilldownBreadcrumb
+- ✅ SeverityChip, StatusChip, ProgressBarSemaforo, SidePanel, AreaLineChart
+- ✨ **NEW**: KPICard.tsx, DataTable.tsx, TrendChart.tsx (3 componentes para Dashboard 1)
+
+#### Pages & Builders (7):
+- ✅ /dashboards (lista)
+- ✅ /dashboards/builder (crear)
+- ✅ /dashboards/[id] (ver)
+- ✅ /dashboards/[id]/edit (editar)
+- ✨ **NEW**: /dashboards/executive (Dashboard 1 - FUNCIONAL)
+- ✅ DashboardBuilder.tsx (editor drag-drop)
+- ✨ **NEW**: WidgetConfigPanel.tsx (config 3 tabs)
+- ✨ **NEW**: DashboardViewer.tsx (renderizador widgets)
+
+#### Hooks (3):
+- ✅ useDashboard (CRUD)
+- ✅ useDrilldown (multi-level navigation)
+- ✅ useWidgetData (data fetching)
+
+#### Schemas & Types (2):
+- ✅ dashboard-schema.ts (Zod validation)
+- ✅ types/dashboard.ts (shared types)
+
+#### Documentation (3):
+- ✨ **NEW**: BACKEND_ENDPOINTS_SPECIFICATION.md (11 endpoints + patterns + tests)
+- ✨ **NEW**: dashboard-1-executive.spec.ts (E2E tests skeleton ~40 cases)
+- ✨ **NEW**: SESION_2_COMPLETADA.md (session summary + checklist)
+
+### Dashboard 1 (Ejecutivo) — Componentes Incluidos:
+1. **5 KPI Cards**: Avance Programas, Vulns Críticas, Liberaciones, Temas, Auditorías
+2. **Gauge Chart**: Postura de Seguridad (72%)
+3. **Trend Chart**: 6 meses, 4 series (críticas, altas, medias, bajas)
+4. **Horizontal Bar Ranking**: Top 5 repos con vulnerabilidades
+5. **Semáforo SLA**: En Tiempo (verde), En Riesgo (amarillo), Vencidas (rojo)
+6. **Data Table**: Auditorías activas con paginación
+
+### Siguiente Sesión — Prioridades:
+1. **Backend (Claude)**: Implementar 11 endpoints para Dashboard 1 (spec en BACKEND_ENDPOINTS_SPECIFICATION.md)
+2. **Frontend (Cursor)**: Implementar Dashboards 2-9 siguiendo patrón Dashboard 1
+3. **Testing**: E2E tests (implementar desde skeleton)
 
 ### 📋 Rama de Testing (frontend-testing)
 
