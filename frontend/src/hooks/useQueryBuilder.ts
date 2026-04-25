@@ -10,12 +10,12 @@ interface QueryConfig {
   base_table: string;
   joins?: Array<{ table: string; on_field: string; type: string }>;
   select_fields?: string[];
-  filters?: Array<{ field: string; operator: string; value: any }>;
+  filters?: Array<{ field: string; operator: string; value: unknown }>;
   group_by?: string[];
   aggregations?: Array<{ field: string; alias?: string }>;
   order_by?: Array<{ field: string; direction: string }>;
   limit?: number;
-}
+};
 
 export const useQueryBuilder = () => {
   const [config, setConfig] = useState<QueryConfig>({

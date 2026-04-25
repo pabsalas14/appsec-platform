@@ -534,7 +534,7 @@ describe('Permission Logic', () => {
 
       const canSeeFeature = (role: string, feature: string): boolean => {
         const allowedRoles = featurePermissions[feature];
-        return allowedRoles?.includes('all') || allowedRoles?.includes(role) ?? false;
+        return (allowedRoles?.includes('all') ?? false) || (allowedRoles?.includes(role) ?? false);
       };
 
       expect(canSeeFeature('super_admin', 'admin_panel')).toBe(true);

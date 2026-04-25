@@ -9,14 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface QueryBuilderFormProps {
-  config: any;
-  schema: any;
-  onConfigChange: (updates: any) => void;
+  config: Record<string, unknown>;
+  schema: Record<string, unknown>;
+  onConfigChange: (updates: Record<string, unknown>) => void;
   onValidate: () => void;
   onExecute: () => void;
   isValidating?: boolean;
   isExecuting?: boolean;
-  validationResult?: any;
+  validationResult?: ValidationResult;
+};
+
+interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings?: string[];
 }
 
 export const QueryBuilderForm: React.FC<QueryBuilderFormProps> = ({

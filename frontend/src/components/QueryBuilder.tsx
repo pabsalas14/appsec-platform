@@ -1,9 +1,3 @@
-/**
- * QueryBuilder — main component for Query Builder (Fase 1)
- * Left panel: QueryBuilderForm
- * Right panel: Live preview (charts, tables, errors)
- */
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +8,7 @@ import { useQueryValidation } from "@/hooks/useQueryValidation";
 
 interface QueryBuilderProps {
   onSave?: (widgetId: string) => void;
-}
+};
 
 export const QueryBuilder: React.FC<QueryBuilderProps> = ({ onSave }) => {
   const {

@@ -10,14 +10,14 @@ interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-}
+};
 
-export const useQueryValidation = (config: any) => {
+export const useQueryValidation = (config: Record<string, unknown>) => {
   const [result, setResult] = useState<ValidationResult>({ valid: true, errors: [], warnings: [] });
   const [isDebouncing, setIsDebouncing] = useState(false);
 
   const validateMutation = useMutation({
-    mutationFn: (queryConfig: any) =>
+    mutationFn: (queryConfig: Record<string, unknown>) =>
       apiClient.post("/admin/query-builder/validate", queryConfig),
   });
 
