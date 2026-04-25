@@ -180,8 +180,8 @@ async def get_vulnerabilidad(
     # Validate UUID format
     try:
         entity_id = UUID(id)
-    except (ValueError, TypeError):
-        raise NotFoundException(f"Invalid ID format: {id}")
+    except (ValueError, TypeError) as e:
+        raise NotFoundException(f"Invalid ID format: {id}") from e
 
     # Fetch entity
     entity = await vulnerabilidad_svc.get(db, entity_id, scope={"user_id": current_user.id})
