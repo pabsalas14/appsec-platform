@@ -7,16 +7,23 @@ only needs to mount this single router.
 
 from fastapi import APIRouter
 
+from app.api.v1.admin import ai_automation_rules as admin_ai_automation_rules
+from app.api.v1.admin import builders as admin_builders
+from app.api.v1.admin import configuracion_ia as admin_configuracion_ia
 from app.api.v1.admin import dashboard_builder as admin_dashboard_builder
 from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 from app.api.v1.admin import ia_config as admin_ia_config
+from app.api.v1.admin import module_views as admin_module_views
+from app.api.v1.admin import navigation_items as admin_navigation_items
 from app.api.v1.admin import query_builder as admin_query_builder
 from app.api.v1.admin import regla_sods as admin_regla_sods
 from app.api.v1.admin import roles as admin_roles
 from app.api.v1.admin import settings as admin_settings
+from app.api.v1.admin import system_catalogs as admin_system_catalogs
 from app.api.v1.admin import system_health as admin_system_health
 from app.api.v1.admin import test_data as admin_test_data
 from app.api.v1.admin import users as admin_users
+from app.api.v1.admin import validation_rules as admin_validation_rules
 
 admin_router = APIRouter()
 
@@ -44,5 +51,36 @@ admin_router.include_router(
     prefix="/test-data",
     tags=["Admin · Test Data (SEMANA 0)"],
 )
+admin_router.include_router(
+    admin_system_catalogs.router,
+    prefix="/system-catalogs",
+    tags=["Admin · System Catalog"],
+)
+admin_router.include_router(
+    admin_configuracion_ia.router,
+    prefix="/configuraciones-ia",
+    tags=["Admin · Configuración IA"],
+)
+admin_router.include_router(
+    admin_module_views.router,
+    prefix="/module-views",
+    tags=["Admin · Module Views"],
+)
+admin_router.include_router(
+    admin_validation_rules.router,
+    prefix="/validation-rules",
+    tags=["Admin · Validation Rules"],
+)
+admin_router.include_router(
+    admin_ai_automation_rules.router,
+    prefix="/ai-automation-rules",
+    tags=["Admin · IA Automation Rules"],
+)
+admin_router.include_router(
+    admin_navigation_items.router,
+    prefix="/navigation-items",
+    tags=["Admin · Navigation Items"],
+)
 admin_router.include_router(admin_query_builder.router)
 admin_router.include_router(admin_dashboard_builder.router)
+admin_router.include_router(admin_builders.builders_router, tags=["Admin · Builders"])
