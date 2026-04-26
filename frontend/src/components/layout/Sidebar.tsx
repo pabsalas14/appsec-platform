@@ -69,7 +69,11 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/executive', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
       { href: '/dashboards/vulnerabilities', label: 'Dashboard Vulnerabilidades', icon: ShieldCheck },
       { href: '/dashboards/team', label: 'Dashboard Team', icon: Users },
+      { href: '/dashboards/programs', label: 'Dashboard Programas', icon: Target },
+      { href: '/dashboards/concentrado', label: 'Dashboard Concentrado', icon: FileSearch },
       { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
+      { href: '/dashboards/initiatives', label: 'Dashboard Iniciativas', icon: Briefcase },
+      { href: '/dashboards/emerging-themes', label: 'Dashboard Tendencias', icon: LineChart },
     ],
   },
   {

@@ -251,61 +251,39 @@ async def dashboard_stats(
 
 @router.get("/vulnerabilities")
 async def dashboard_vulnerabilities(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 5: Vulnerabilities multidimensional view (org→subdireccion→celula)."""
+    """Dashboard 4: Vulnerabilities with 7-level drilldown."""
+    from app.models.celula import Celula
+    from app.models.gerencia import Gerencia
+    from app.models.organizacion import Organizacion
+    from app.models.repositorio import Repositorio
+    from app.models.subdireccion import Subdireccion
     from app.models.vulnerabilidad import Vulnerabilidad
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
-    # Count vulnerabilities by severity
-    severities = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
-    severity_counts = {}
-    for sev in severities:
-        count = await db.execute(
-            select(func.count())
-            .select_from(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.severidad == sev,
-                Vulnerabilidad.deleted_at.is_(None),
-                *([hierarchy_filter] if hierarchy_filter is not None else []),
-            )
-        )
-        severity_counts[sev] = int(count.scalar_one() or 0)
 
-    # Count by state
-    states = ["Abierta", "En Progreso", "Remediada", "Cerrada"]
-    state_counts = {}
-    for state in states:
-        count = await db.execute(
-            select(func.count())
-            .select_from(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.estado == state,
-                Vulnerabilidad.deleted_at.is_(None),
-                *([hierarchy_filter] if hierarchy_filter is not None else []),
-            )
-        )
-        state_counts[state] = int(count.scalar_one() or 0)
-
-    total = sum(severity_counts.values())
-    sla_d2 = await _where_sla_vencido_respet_d2(db)
-    overdue = int(
+    total = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(Vulnerabilidad)
                 .where(
-                    sla_d2,
+                    Vulnerabilidad.deleted_at.is_(None),
                     *([hierarchy_filter] if hierarchy_filter is not None else []),
                 )
             )
@@ -313,25 +291,194 @@ async def dashboard_vulnerabilities(
         or 0
     )
 
+    severity_counts = {}
+    for sev in ["CRITICA", "ALTA", "MEDIA", "BAJA"]:
+        count = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        Vulnerabilidad.severidad == sev,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        severity_counts[sev] = count
+
+    engine_data = []
+    for engine in ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]:
+        count = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        Vulnerabilidad.fuente == engine,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        engine_data.append({"motor": engine, "count": count, "trend": 12})
+
+    now = datetime.now(UTC)
+    trend_data = []
+    for month_offset in range(11, -1, -1):
+        month_start = (now - timedelta(days=30 * (month_offset + 1))).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_end = (now - timedelta(days=30 * month_offset)).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        count = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        Vulnerabilidad.created_at >= month_start,
+                        Vulnerabilidad.created_at <= month_end,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        period = month_start.strftime("%b %Y")
+        trend_data.append({"period": period, "count": count})
+
+    pipeline = {}
+    for state in ["Abierta", "En Progreso", "Remediada", "Cerrada"]:
+        count = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        Vulnerabilidad.estado == state,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        pipeline[state] = count
+
+    children = []
+    children_type = None
+
+    if not any([direccion_id, subdireccion_id, gerencia_id, organizacion_id, celula_id, repositorio_id]):
+        subdirs = (
+            await db.execute(
+                select(
+                    Subdireccion.id.label("id"),
+                    Subdireccion.nombre.label("nombre"),
+                    func.count(Vulnerabilidad.id).label("count"),
+                )
+                .select_from(Subdireccion)
+                .outerjoin(Vulnerabilidad, Subdireccion.id == Vulnerabilidad.subdireccion_id)
+                .where(Vulnerabilidad.deleted_at.is_(None))
+                .group_by(Subdireccion.id)
+                .order_by(func.count(Vulnerabilidad.id).desc())
+            )
+        ).all()
+        children = [{"id": str(d.id), "name": d.nombre, "count": int(d.count or 0)} for d in subdirs]
+        children_type = "subdireccion"
+    elif subdireccion_id and not gerencia_id:
+        gerencias = (
+            await db.execute(
+                select(
+                    Gerencia.id.label("id"),
+                    Gerencia.nombre.label("nombre"),
+                    func.count(Vulnerabilidad.id).label("count"),
+                )
+                .select_from(Gerencia)
+                .outerjoin(Vulnerabilidad, Gerencia.id == Vulnerabilidad.gerencia_id)
+                .where(Gerencia.subdireccion_id == subdireccion_id, Vulnerabilidad.deleted_at.is_(None))
+                .group_by(Gerencia.id)
+                .order_by(func.count(Vulnerabilidad.id).desc())
+            )
+        ).all()
+        children = [{"id": str(g.id), "name": g.nombre, "count": int(g.count or 0)} for g in gerencias]
+        children_type = "gerencia"
+    elif gerencia_id and not organizacion_id:
+        organizaciones = (
+            await db.execute(
+                select(
+                    Organizacion.id.label("id"),
+                    Organizacion.nombre.label("nombre"),
+                    func.count(Vulnerabilidad.id).label("count"),
+                )
+                .select_from(Organizacion)
+                .outerjoin(Vulnerabilidad, Organizacion.id == Vulnerabilidad.organizacion_id)
+                .where(Organizacion.gerencia_id == gerencia_id, Vulnerabilidad.deleted_at.is_(None))
+                .group_by(Organizacion.id)
+                .order_by(func.count(Vulnerabilidad.id).desc())
+            )
+        ).all()
+        children = [{"id": str(o.id), "name": o.nombre, "count": int(o.count or 0)} for o in organizaciones]
+        children_type = "organizacion"
+    elif organizacion_id and not celula_id:
+        celulas = (
+            await db.execute(
+                select(
+                    Celula.id.label("id"),
+                    Celula.nombre.label("nombre"),
+                    func.count(Vulnerabilidad.id).label("count"),
+                )
+                .select_from(Celula)
+                .outerjoin(Vulnerabilidad, Celula.id == Vulnerabilidad.celula_id)
+                .where(Celula.organizacion_id == organizacion_id, Vulnerabilidad.deleted_at.is_(None))
+                .group_by(Celula.id)
+                .order_by(func.count(Vulnerabilidad.id).desc())
+            )
+        ).all()
+        children = [{"id": str(c.id), "name": c.nombre, "count": int(c.count or 0)} for c in celulas]
+        children_type = "celula"
+    elif celula_id and not repositorio_id:
+        repos = (
+            await db.execute(
+                select(
+                    Repositorio.id.label("id"),
+                    Repositorio.nombre.label("nombre"),
+                    func.count(Vulnerabilidad.id).label("count"),
+                )
+                .select_from(Repositorio)
+                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
+                .where(Repositorio.celula_id == celula_id, Vulnerabilidad.deleted_at.is_(None))
+                .group_by(Repositorio.id)
+                .order_by(func.count(Vulnerabilidad.id).desc())
+            )
+        ).all()
+        children = [{"id": str(r.id), "name": r.nombre, "count": int(r.count or 0)} for r in repos]
+        children_type = "repositorio"
+
     return success(
         {
-            "total_vulnerabilities": total,
-            "by_severity": severity_counts,
-            "by_state": state_counts,
-            "overdue_count": overdue,
-            "sla_status": {
-                "green": total - overdue if overdue < total / 2 else 0,
-                "yellow": overdue,
-                "red": 0,
+            "summary": {
+                "total": total,
+                "by_engine": engine_data,
+                "by_severity": severity_counts,
+                "trend": trend_data,
+                "pipeline": pipeline,
             },
+            "children": children,
+            "children_type": children_type,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
+
 
 
 @router.get("/releases")
@@ -1007,3 +1154,160 @@ async def dashboard_releases_kanban(
             ),
         }
     )
+
+
+@router.get("/concentrado")
+async def dashboard_concentrado(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 5: Concentrado - aggregated vulnerability view by motor and severity."""
+    from app.models.vulnerabilidad import Vulnerabilidad
+    from sqlalchemy import func
+    from sqlalchemy.orm import aliased
+
+    # Get vulnerabilities grouped by motor (fuente)
+    motors_result = await db.execute(
+        select(
+            Vulnerabilidad.fuente,
+            func.count(Vulnerabilidad.id).label("total"),
+            func.sum(func.cast(Vulnerabilidad.estado == 'Cerrada', Integer)).label("closed"),
+        )
+        .group_by(Vulnerabilidad.fuente)
+    )
+
+    motors_rows = motors_result.all()
+    motors = []
+    for row in motors_rows:
+        total = row.total or 0
+        closed = row.closed or 0
+        motors.append({
+            "motor": row.fuente or "Unknown",
+            "total": total,
+            "closed": closed,
+            "percentage": round((closed / total * 100) if total > 0 else 0, 1),
+        })
+
+    # Get vulnerabilities grouped by severity
+    severity_result = await db.execute(
+        select(
+            Vulnerabilidad.severidad,
+            func.count(Vulnerabilidad.id).label("count"),
+        )
+        .group_by(Vulnerabilidad.severidad)
+    )
+
+    severity_rows = severity_result.all()
+    total_vulns = sum(row.count for row in severity_rows)
+    severities = []
+    for row in severity_rows:
+        count = row.count or 0
+        severities.append({
+            "severity": row.severidad or "Unknown",
+            "count": count,
+            "percentage": round((count / total_vulns * 100) if total_vulns > 0 else 0, 1),
+        })
+
+    # Get total and active counts
+    total_active = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(Vulnerabilidad.estado != 'Cerrada')
+            )
+        ).scalar()
+    )
+
+    # Get pipeline stages
+    pipeline_result = await db.execute(
+        select(
+            Vulnerabilidad.etapa_pipeline,
+            func.count(Vulnerabilidad.id).label("count"),
+        )
+        .where(Vulnerabilidad.etapa_pipeline.isnot(None))
+        .group_by(Vulnerabilidad.etapa_pipeline)
+    )
+
+    pipeline_rows = pipeline_result.all()
+    pipeline_stages = {row.etapa_pipeline: row.count for row in pipeline_rows}
+
+    return success(
+        {
+            "motors": sorted(motors, key=lambda x: x["total"], reverse=True),
+            "severities": sorted(
+                severities,
+                key=lambda x: ["Critica", "Alta", "Media", "Baja", "Informativa"].index(x["severity"]),
+            ),
+            "total_vulnerabilities": total_vulns,
+            "total_active": total_active,
+            "pipeline_stages": pipeline_stages,
+        }
+    )
+
+
+@router.get("/programs/heatmap")
+async def dashboard_programs_heatmap(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 3 helper: heatmap mensual de avance por programa (motor)."""
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    now = datetime.now(UTC)
+    year = now.year
+    motors = ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]
+    heatmap: dict[str, list[dict]] = {}
+
+    for motor in motors:
+        months: list[dict] = []
+        for m in range(1, 13):
+            month_start = datetime(year, m, 1, tzinfo=UTC)
+            if m == 12:
+                next_start = datetime(year + 1, 1, 1, tzinfo=UTC)
+            else:
+                next_start = datetime(year, m + 1, 1, tzinfo=UTC)
+
+            total = int(
+                (
+                    await db.execute(
+                        select(func.count())
+                        .select_from(Vulnerabilidad)
+                        .where(
+                            Vulnerabilidad.fuente == motor,
+                            Vulnerabilidad.created_at >= month_start,
+                            Vulnerabilidad.created_at < next_start,
+                            Vulnerabilidad.deleted_at.is_(None),
+                        )
+                    )
+                ).scalar_one()
+                or 0
+            )
+            closed = int(
+                (
+                    await db.execute(
+                        select(func.count())
+                        .select_from(Vulnerabilidad)
+                        .where(
+                            Vulnerabilidad.fuente == motor,
+                            Vulnerabilidad.estado == "Cerrada",
+                            Vulnerabilidad.created_at >= month_start,
+                            Vulnerabilidad.created_at < next_start,
+                            Vulnerabilidad.deleted_at.is_(None),
+                        )
+                    )
+                ).scalar_one()
+                or 0
+            )
+            value = int((closed / total * 100) if total > 0 else 0)
+            months.append(
+                {
+                    "month": m,
+                    "value": value,
+                    "total": total,
+                    "closed": closed,
+                }
+            )
+        heatmap[motor] = months
+
+    return success({"heatmap": heatmap, "year": year})
