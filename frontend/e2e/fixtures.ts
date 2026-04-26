@@ -3,8 +3,28 @@
  * Provides test data setup, authentication, and cleanup
  */
 
-import { test as base, expect, type Page } from "@playwright/test";
+import { test as base, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { TestDataAPI } from "./helpers/api-helpers";
+
+async function ensureApiSession(request: APIRequestContext, apiRoot: string): Promise<string> {
+  const rawUser = process.env.E2E_USERNAME ?? "admin";
+  const username = rawUser.includes("@") ? "admin" : rawUser;
+  const password = process.env.E2E_PASSWORD ?? "Changeme123!";
+
+  const loginRes = await request.post(`${apiRoot}/api/v1/auth/login`, {
+    data: { username, password },
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!loginRes.ok()) {
+    throw new Error(`E2E API login failed: ${loginRes.status()} ${await loginRes.text()}`);
+  }
+  const state = await request.storageState();
+  const csrf = state.cookies.find((c) => c.name === "csrf_token")?.value;
+  if (!csrf) {
+    throw new Error("Missing csrf_token cookie after API login");
+  }
+  return csrf;
+}
 
 interface TestFixtures {
   /** Page after cookie login (E2E_USERNAME / E2E_PASSWORD); navigated to /tasks. */
@@ -45,8 +65,14 @@ export const test = base.extend<TestFixtures>({
   },
 
   testData: async ({ request }, use) => {
-    const baseURL = process.env.TEST_BASE_URL || "http://localhost:8000";
-    const api = new TestDataAPI(request, baseURL);
+    const apiRoot = (
+      process.env.TEST_API_BASE_URL ??
+      process.env.E2E_API_URL ??
+      "http://127.0.0.1:8000"
+    ).replace(/\/$/, "");
+    const csrf = await ensureApiSession(request, apiRoot);
+    const api = new TestDataAPI(request, apiRoot);
+    api.setCsrfToken(csrf);
 
     // SETUP: Seed test data
     let organizacionId = "";

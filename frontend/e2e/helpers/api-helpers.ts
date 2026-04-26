@@ -28,6 +28,7 @@ export class TestDataAPI {
   private request: APIRequestContext;
   private baseURL: string;
   private authToken?: string;
+  private csrfToken?: string;
 
   constructor(request: APIRequestContext, baseURL: string, authToken?: string) {
     this.request = request;
@@ -42,6 +43,11 @@ export class TestDataAPI {
     this.authToken = token;
   }
 
+  /** Cookie session + double-submit CSRF for mutating admin routes */
+  setCsrfToken(token: string): void {
+    this.csrfToken = token;
+  }
+
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -49,6 +55,9 @@ export class TestDataAPI {
 
     if (this.authToken) {
       headers["Authorization"] = `Bearer ${this.authToken}`;
+    }
+    if (this.csrfToken) {
+      headers["X-CSRF-Token"] = this.csrfToken;
     }
 
     return headers;

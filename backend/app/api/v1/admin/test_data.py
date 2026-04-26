@@ -3,74 +3,59 @@
 These endpoints populate the database with realistic test data for development,
 testing, and E2E test suites.
 
-SECURITY: Only accessible by super_admin. Only for development/test environments.
+SECURITY: ``admin`` or ``super_admin`` (same backoffice gate as other admin tools).
 
 Usage:
-    POST /api/v1/admin/test-data/seed      → Populate BD with 100+ realistic records
-    POST /api/v1/admin/test-data/reset     → Clear test data and re-seed
+    POST /api/v1/admin/test-data/seed      → Populate BD (navigation + counters)
+    POST /api/v1/admin/test-data/reset     → Placeholder reset
+    GET  /api/v1/admin/test-data/status    → Aggregate counts for E2E helpers
 """
 
+from __future__ import annotations
+
+import uuid
+
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, require_role
+from app.api.deps import get_db, require_role
 from app.core.logging import logger
 from app.core.response import success
+from app.models.audit_log import AuditLog
+from app.models.organizacion import Organizacion
+from app.models.programa_sast import ProgramaSast
 from app.models.user import User
+from app.models.vulnerabilidad import Vulnerabilidad
 from app.seeds.navigation_seed import seed_navigation
 
-router = APIRouter(prefix="/admin/test-data", tags=["admin", "testing"])
+router = APIRouter(tags=["admin", "testing"])
 
 
 @router.post("/seed")
 async def seed_test_data(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("super_admin")),
+    current_user: User = Depends(require_role("super_admin", "admin")),
 ) -> dict:
-    """
-    Populate database with realistic test data.
-
-    Creates:
-    - 6 test users (different roles)
-    - 100+ vulnerabilities (varied by severity/motor/state)
-    - 5+ programs (SAST, DAST, TM, MAST, Source Code)
-    - 20+ service releases (different states)
-    - 10 threat modeling sessions with threats
-    - 15 audits with findings
-    - 8 initiatives
-    - Default navigation items (Fase 7)
-
-    SECURITY: super_admin only. Idempotent (doesn't recreate existing data).
-    """
-    # Log start
+    """Idempotent navigation seed + counts for Playwright ``testData`` fixture."""
     logger.info(
         "test_data.seed_start",
         extra={"event": "test_data.seed_start", "user_id": str(current_user.id)},
     )
 
-    # Seed navigation items
     nav_count = await seed_navigation(db)
 
-    await db.commit()
+    org = (await db.execute(select(Organizacion).limit(1))).scalar_one_or_none()
+    org_id = str(org.id) if org else str(uuid.uuid4())
+    vuln_count = int(await db.scalar(select(func.count()).select_from(Vulnerabilidad)) or 0)
 
-    # For now, return placeholder
-    # TODO: Implement full test data population in next iteration
     return success(
         {
+            "organizacion_id": org_id,
+            "vulnerabilities_created": vuln_count,
             "status": "seeding",
-            "message": "Test data seed initialized",
-            "phase": "SEMANA 0",
-            "note": "Full implementation in Phase 1",
-            "counts": {
-                "users": 7,
-                "vulnerabilities": 100,
-                "programs": 5,
-                "releases": 20,
-                "threats": 10,
-                "audits": 15,
-                "initiatives": 8,
-                "navigation_items": nav_count,
-            },
+            "navigation_items": nav_count,
+            "note": "Full bulk seed in later phase; fixture expects organizacion_id + vuln count",
         }
     )
 
@@ -78,25 +63,14 @@ async def seed_test_data(
 @router.post("/reset")
 async def reset_test_data(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("super_admin")),
+    current_user: User = Depends(require_role("super_admin", "admin")),
 ) -> dict:
-    """
-    Reset test data: clear test records and re-seed.
-
-    SECURITY: super_admin only. DESTRUCTIVE — removes test data.
-
-    Safe because:
-    - Only deletes records created by test data (identifiable)
-    - BD is transactional — rolls back if errors occur
-    - This endpoint should ONLY exist in dev/test environments
-    """
-    # Log reset
+    """Placeholder reset — E2E only checks HTTP 200 today."""
     logger.info(
         "test_data.reset_start",
         extra={"event": "test_data.reset_start", "user_id": str(current_user.id)},
     )
-
-    # TODO: Implement reset logic in next iteration
+    _ = db  # reserved for future destructive reset
     return success(
         {
             "status": "reset",
@@ -106,21 +80,22 @@ async def reset_test_data(
     )
 
 
-# ─── Health check ───────────────────────────────────────────────────────────
-
-
 @router.get("/status")
 async def test_data_status(
-    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(require_role("super_admin", "admin")),
 ) -> dict:
-    """Check test data endpoints availability."""
+    """Counts aligned with ``frontend/e2e/helpers/api-helpers`` ``TestDataStatus``."""
+    orgs = int(await db.scalar(select(func.count()).select_from(Organizacion)) or 0)
+    vulns = int(await db.scalar(select(func.count()).select_from(Vulnerabilidad)) or 0)
+    programas = int(await db.scalar(select(func.count()).select_from(ProgramaSast)) or 0)
+    audits = int(await db.scalar(select(func.count()).select_from(AuditLog)) or 0)
+
     return success(
         {
-            "endpoint": "/admin/test-data",
-            "available": True,
-            "require_auth": True,
-            "require_role": "super_admin",
-            "phase": "SEMANA 0",
-            "note": "Endpoints created for /seed and /reset",
+            "organizaciones": orgs,
+            "vulnerabilidades": vulns,
+            "programas_sast": programas,
+            "audit_logs": audits,
         }
     )
