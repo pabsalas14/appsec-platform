@@ -56,7 +56,7 @@ export function useVulnDrilldown(params: DrilldownParams) {
       if (params.repositorio_id) queryParams.append('repositorio_id', params.repositorio_id);
 
       const response = await apiClient.get<{ data: DrilldownResponse }>(
-        `/api/v1/dashboard/vulnerabilities?${queryParams}`
+        `/dashboard/vulnerabilities?${queryParams}`
       );
       return response.data.data;
     },
