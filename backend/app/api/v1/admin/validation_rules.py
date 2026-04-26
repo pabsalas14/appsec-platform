@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_backoffice
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import BadRequestException, NotFoundException
 from app.core.logging import logger
 from app.core.response import paginated, success
 from app.models.validation_rule import ValidationRule
@@ -18,10 +18,11 @@ from app.schemas.validation_rule import (
     ValidationRuleCreate,
     ValidationRuleList,
     ValidationRuleRead,
+    ValidationRuleTest,
     ValidationRuleUpdate,
 )
 from app.services.audit_service import record as audit_record
-from app.services.validation_rule_service import validation_rule_svc
+from app.services.validation_rule_service import validation_rule_svc, validate_rule
 
 router = APIRouter()
 
@@ -141,4 +142,38 @@ async def delete_rule(
     )
     logger.info("validation_rule.delete", extra={"rule_id": str(rule_id)})
     return None
+
+
+@router.post("/{rule_id}/test")
+async def test_rule(
+    rule_id: uuid.UUID,
+    payload: ValidationRuleTest,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(require_backoffice),
+):
+    """Test validation rule with sample data."""
+    rule = await validation_rule_svc.get(db, rule_id)
+    if not rule:
+        raise NotFoundException("Rule not found")
+
+    try:
+        is_valid = await validate_rule(rule, payload.data)
+        logger.info("validation_rule.test", extra={"rule_id": str(rule_id), "valid": is_valid})
+        return success({
+            "rule_id": str(rule_id),
+            "valid": is_valid,
+            "rule_type": rule.rule_type,
+            "message": None if is_valid else rule.error_message,
+        })
+    except BadRequestException as e:
+        logger.warning("validation_rule.test", extra={"rule_id": str(rule_id), "error": str(e)})
+        return success({
+            "rule_id": str(rule_id),
+            "valid": False,
+            "rule_type": rule.rule_type,
+            "message": str(e),
+        })
+    except Exception as e:
+        logger.error("validation_rule.test", extra={"rule_id": str(rule_id), "error": str(e)})
+        raise BadRequestException(f"Error testing rule: {str(e)}")
 

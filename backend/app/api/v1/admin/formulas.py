@@ -167,13 +167,13 @@ async def test_formula(
     try:
         result = FormulaEngine.execute(payload.formula_text, payload.data)
         logger.info("formula.test", extra={"success": True, "formula_len": len(payload.formula_text)})
-        return FormulaTestResult(success=True, result=result)
+        return success(FormulaTestResult(success=True, result=result).model_dump(mode="json"))
     except FormulaError as e:
         logger.warning("formula.test", extra={"error": str(e), "formula_len": len(payload.formula_text)})
-        return FormulaTestResult(success=False, error=str(e))
+        return success(FormulaTestResult(success=False, error=str(e)).model_dump(mode="json"))
     except Exception as e:
         logger.error("formula.test", extra={"error": str(e)})
-        return FormulaTestResult(success=False, error="Unexpected error during execution")
+        return success(FormulaTestResult(success=False, error="Unexpected error during execution").model_dump(mode="json"))
 
 
 @router.get("/functions/supported")

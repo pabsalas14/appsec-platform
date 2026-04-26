@@ -275,6 +275,24 @@ function useValidationRules() {
     }
   };
 
+  const testRule = async (id: string, data: Record<string, unknown>) => {
+    try {
+      const res = await fetch(`/api/v1/admin/validation-rules/${id}/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!res.ok) throw new Error("Failed to test rule");
+      const result = await res.json();
+      logger.info("validation_rule.test", { id, valid: result.data?.valid });
+      return result.data;
+    } catch (error) {
+      logger.error("validation_rule.test", { error: String(error) });
+      toast.error(String(error));
+      return { valid: false, message: String(error) };
+    }
+  };
+
   return {
     rules,
     loading,
@@ -282,6 +300,7 @@ function useValidationRules() {
     createRule,
     updateRule,
     deleteRule,
+    testRule,
   };
 }
 
@@ -485,14 +504,19 @@ function ValidationRuleForm({
   initialData,
   onSubmit,
   isLoading,
+  onTest,
 }: {
   initialData?: Partial<ValidationRuleFormData>;
   onSubmit: (data: ValidationRuleFormData) => Promise<void>;
   isLoading: boolean;
+  onTest?: (data: Record<string, unknown>) => Promise<{ valid: boolean; message?: string }>;
 }) {
   const [form, setForm] = useState<ValidationRuleFormData>(
     initialData ? { ...DEFAULT_VALIDATION_RULE, ...initialData } : { ...DEFAULT_VALIDATION_RULE }
   );
+  const [testData, setTestData] = useState<Record<string, unknown>>({});
+  const [testResult, setTestResult] = useState<{ valid: boolean; message?: string } | null>(null);
+  const [testing, setTesting] = useState(false);
 
   const handleChange = (key: keyof ValidationRuleFormData, value: unknown) => {
     if (key === "condition" && typeof value === "string") {
@@ -503,6 +527,25 @@ function ValidationRuleForm({
       }
     } else {
       setForm((prev) => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleAddTestField = () => {
+    setTestData((prev) => ({ ...prev, [`field_${Object.keys(prev).length}`]: "" }));
+  };
+
+  const handleTestFieldChange = (key: string, value: unknown) => {
+    setTestData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleTest = async () => {
+    if (!onTest) return;
+    setTesting(true);
+    try {
+      const result = await onTest(testData);
+      setTestResult(result);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -559,6 +602,78 @@ function ValidationRuleForm({
           placeholder="Mensaje a mostrar cuando la validación falla"
         />
       </div>
+
+      {/* Test Section */}
+      {onTest && (
+        <div className="rounded-lg border p-4 space-y-3">
+          <h4 className="font-semibold text-sm">Testear Regla</h4>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium">Datos de Prueba</label>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAddTestField}
+              >
+                <Plus className="w-4 h-4 mr-1" /> Agregar Campo
+              </Button>
+            </div>
+
+            {Object.entries(testData).map(([key, value]) => (
+              <div key={key} className="flex gap-2">
+                <Input
+                  value={key}
+                  readOnly
+                  className="w-1/3"
+                  placeholder="Field name"
+                />
+                <Input
+                  value={String(value)}
+                  onChange={(e) => handleTestFieldChange(key, e.target.value)}
+                  className="w-2/3"
+                  placeholder="Field value"
+                />
+              </div>
+            ))}
+          </div>
+
+          <Button
+            onClick={handleTest}
+            disabled={testing}
+            size="sm"
+            className="w-full"
+          >
+            {testing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Testando...
+              </>
+            ) : (
+              "Ejecutar Test"
+            )}
+          </Button>
+
+          {testResult && (
+            <div className={`rounded p-3 text-sm ${
+              testResult.valid
+                ? "bg-green-50 border border-green-200 text-green-900"
+                : "bg-red-50 border border-red-200 text-red-900"
+            }`}>
+              {testResult.valid ? (
+                <>
+                  <Check className="w-4 h-4 inline mr-1" />
+                  ✓ Validación: PASÓ
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Validación: FALLÓ{testResult.message && ` - ${testResult.message}`}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">Habilitar</label>
