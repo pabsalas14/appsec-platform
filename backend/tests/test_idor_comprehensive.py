@@ -8,10 +8,10 @@ Valida que TODAS las entities con user_id/usuario_id:
   4. require_ownership() está correctamente implementado en routers
 """
 
-import uuid
-
 import pytest
 from httpx import AsyncClient
+
+from tests.graph_helpers import create_activo_web_id
 
 # ─── IDOR Test Matrix ────────────────────────────────────────────────────────
 
@@ -76,19 +76,7 @@ IDOR_TEST_ENTITIES = [
 
 async def _create_activo_web_for_test(client: AsyncClient, auth_headers: dict) -> str:
     """Helper: Create an ActivoWeb and return its ID."""
-    resp = await client.post(
-        "/api/v1/activo_webs",
-        json={
-            "nombre": f"Test Web {uuid.uuid4().hex[:6]}",
-            "url": "https://example.com",
-            "ambiente": "Test",
-            "tipo": "app",
-        },
-        headers=auth_headers,
-    )
-    if resp.status_code != 201:
-        pytest.skip(f"Failed to create ActivoWeb: {resp.text}")
-    return resp.json()["data"]["id"]
+    return await create_activo_web_id(client, auth_headers)
 
 
 @pytest.mark.asyncio
@@ -116,8 +104,7 @@ async def test_idor_get_other_user_resource(
         headers=auth_headers,
     )
 
-    if resp_a.status_code != 201:
-        pytest.skip(f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}")
+    assert resp_a.status_code == 201, f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}"
 
     resource_id = resp_a.json()["data"]["id"]
 
@@ -158,8 +145,7 @@ async def test_idor_patch_other_user_resource(
         headers=auth_headers,
     )
 
-    if resp_a.status_code != 201:
-        pytest.skip(f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}")
+    assert resp_a.status_code == 201, f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}"
 
     resource_id = resp_a.json()["data"]["id"]
 
@@ -201,8 +187,7 @@ async def test_idor_delete_other_user_resource(
         headers=auth_headers,
     )
 
-    if resp_a.status_code != 201:
-        pytest.skip(f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}")
+    assert resp_a.status_code == 201, f"Failed to create {entity_name} (status={resp_a.status_code}): {resp_a.text}"
 
     resource_id = resp_a.json()["data"]["id"]
 

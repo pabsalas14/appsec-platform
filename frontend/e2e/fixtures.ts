@@ -6,6 +6,18 @@
 import { test as base, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { TestDataAPI } from "./helpers/api-helpers";
 
+const allowDynamicSkip = process.env.E2E_ALLOW_DYNAMIC_SKIP === "1";
+if (!allowDynamicSkip) {
+  // Prevent try/catch + test.skip() from masking real regressions.
+  Object.defineProperty(base, "skip", {
+    configurable: true,
+    value: (...args: unknown[]) => {
+      const reason = typeof args[0] === "string" ? args[0] : "Runtime test.skip() is disabled.";
+      throw new Error(`Illegal runtime test.skip(): ${reason}`);
+    },
+  });
+}
+
 async function ensureApiSession(request: APIRequestContext, apiRoot: string): Promise<string> {
   const rawUser = process.env.E2E_USERNAME ?? "admin";
   const username = rawUser.includes("@") ? "admin" : rawUser;
