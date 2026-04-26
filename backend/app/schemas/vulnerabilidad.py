@@ -4,7 +4,7 @@ Validaciones de negocio:
   - exactamente uno de repositorio_id / activo_web_id / servicio_id / aplicacion_movil_id
     debe estar presente en Create (validado en el service/router, no aquí para no
     bloquear Updates parciales).
-  - fuente: SAST | DAST | SCA | TM | MAST | Auditoria | Tercero
+  - fuente: SAST | DAST | SCA | CDS | MDA | TM | MAST | Auditoria | Tercero
   - severidad: Critica | Alta | Media | Baja
   - estado validado contra config (sla.estatus_vulnerabilidad)
 """
@@ -17,7 +17,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-FUENTES_VALIDAS = {"SAST", "DAST", "SCA", "TM", "MAST", "Auditoria", "Tercero"}
+FUENTES_VALIDAS = {"SAST", "DAST", "SCA", "CDS", "MDA", "TM", "MAST", "Auditoria", "Tercero"}
 SEVERIDADES_VALIDAS = {"Critica", "Alta", "Media", "Baja"}
 
 

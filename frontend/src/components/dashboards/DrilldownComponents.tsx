@@ -1,14 +1,26 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  AreaChart, Area, PieChart, Pie, Cell
+import {
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
-import { cn } from '@/lib/utils';
-import { ChevronRight, Shield, ShieldCheck, ShieldAlert, Cpu, Database, Smartphone, Lock, Activity } from 'lucide-react';
+import { ChevronRight, Shield, ShieldCheck, Cpu, Database, Smartphone, Lock, Activity } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const ENGINE_ICONS: Record<string, any> = {
+type EngineStat = { count: number; trend: string };
+
+const ENGINE_ICONS: Record<string, LucideIcon> = {
   SAST: Lock,
   DAST: Activity,
   SCA: Database,
@@ -27,11 +39,11 @@ const ENGINE_COLORS: Record<string, string> = {
 };
 
 // 1. Barra de Motores Superior
-export function EngineStatsBar({ data }: { data: any }) {
+export function EngineStatsBar({ data }: { data: Record<string, EngineStat> | null | undefined }) {
   if (!data) return null;
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {Object.entries(data).map(([engine, stats]: [string, any]) => {
+      {Object.entries(data).map(([engine, stats]) => {
         const Icon = ENGINE_ICONS[engine] || Shield;
         return (
           <div key={engine} className="bg-card/40 border border-border/50 rounded-2xl p-4 flex flex-col items-center group hover:bg-card hover:border-primary/50 transition-all cursor-default">
@@ -50,8 +62,10 @@ export function EngineStatsBar({ data }: { data: any }) {
   );
 }
 
+type TrendPoint = { month: string; activas: number; solventadas: number; nuevas: number };
+
 // 2. Gráfica de Tendencia Anual
-export function AnnualTrendChart({ data }: { data: any[] }) {
+export function AnnualTrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <Card className="bg-card/30 border-border/50 overflow-hidden backdrop-blur-sm">
       <CardHeader className="pb-2">
@@ -87,8 +101,15 @@ export function AnnualTrendChart({ data }: { data: any[] }) {
   );
 }
 
+type PipelineSummary = {
+  total_scans: number;
+  approved: number;
+  rejected: number;
+  approval_rate: number;
+};
+
 // 3. Indicadores de Pipeline
-export function PipelineIndicators({ data }: { data: any }) {
+export function PipelineIndicators({ data }: { data: PipelineSummary }) {
   if (!data) return null;
   return (
     <Card className="bg-card/30 border-border/50 backdrop-blur-sm">
@@ -130,8 +151,20 @@ export function PipelineIndicators({ data }: { data: any }) {
   );
 }
 
+type DiscoveryChild = {
+  name: string;
+  total: number;
+  engines: Record<string, number>;
+};
+
 // 4. Tarjeta de Descubrimiento Avanzada (Direcciones/Subdirecciones)
-export function AdvancedDiscoveryCard({ child, type, onClick }: { child: any, type: string, onClick: () => void }) {
+export function AdvancedDiscoveryCard({
+  child,
+  onClick,
+}: {
+  child: DiscoveryChild;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -149,7 +182,7 @@ export function AdvancedDiscoveryCard({ child, type, onClick }: { child: any, ty
 
       {/* Mini-engine bars */}
       <div className="grid grid-cols-6 gap-2 mt-4">
-        {Object.entries(child.engines || {}).map(([eng, count]: [string, any]) => (
+        {Object.entries(child.engines || {}).map(([eng, count]) => (
           <div key={eng} className="space-y-1">
             <p className="text-[8px] font-bold text-muted-foreground uppercase">{eng}</p>
             <div className="h-1 bg-white/5 rounded-full overflow-hidden">

@@ -20,7 +20,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -33,8 +32,8 @@ import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import {
   Table,
@@ -118,13 +117,6 @@ const SEVERITY_COLORS: Record<string, string> = {
   INFORMATIVA: '#6b7280',
 };
 
-const SEVERITY_BG: Record<string, string> = {
-  CRITICA: 'bg-red-500/10 text-red-500 border-red-500/30',
-  ALTA: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
-  MEDIA: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30',
-  BAJA: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
-};
-
 // ─── Subcomponents ─────────────────────────────────────────────────────
 
 function LevelSidebar({
@@ -189,7 +181,7 @@ function LevelSidebar({
   );
 }
 
-function EngineCard({ engine, count, trend }: EngineStat) {
+function EngineCard({ motor: engine, count, trend }: EngineStat) {
   const color = ENGINE_COLORS[engine] ?? '#6b7280';
   const sparkData = Array.from({ length: 7 }, (_, i) => ({
     x: i,

@@ -18,6 +18,14 @@ _MOTOR_HINTS: dict[str, str] = {
         "Composición: ojo a versiones mal detectadas, dependencias transitivas no usadas, CVE en binarios "
         "no empaquetados, o riesgo mitigado por build sin el componente afectado. Separa parche vs ruido."
     ),
+    "CDS": (
+        "Secretos/credenciales: distingue falso patrón (tests, .env de ejemplo) de filtración real; valida "
+        "rotación, alcance (repo interno) y validez del secreto (revocado, placeholder)."
+    ),
+    "MDA": (
+        "Modelado de amenazas documentado: el FP suele ser desalineación de contexto, duplicado con otro riesgo "
+        "o riesgo ya aceptado; prioriza cierre o recategorización con evidencia de mitigación."
+    ),
     "TM": (
         "Threat model: riesgo de diseño; suele requerir contexto. Marca falso positivo solo si el escenario "
         "no aplica (p.ej. activo o trust boundary distinto) o quedó obsoleto; si dudas, needs_review."

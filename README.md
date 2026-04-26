@@ -117,6 +117,8 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 
 **Negocio, fases y matriz de requisitos:** [`docs/brd/`](docs/brd/).
 
+**Especificación UX de módulos (drawers, exportación, jerarquía, inventario unificado):** matriz de cumplimiento y backlog en [`docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md`](docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md). Implementación destacada: **`/organizacion/jerarquia`** (árbol Dirección → Célula), **`/inventario`** (hub repositorios / activos web), listado de vulnerabilidades con **filtros en panel lateral, chips, Excel/impresión y vista rápida en `Sheet`**.
+
 ---
 
 ## Módulos (API ↔ dominio)
@@ -139,7 +141,8 @@ El prefijo de API es siempre `/api/v1/`. A continuación, agrupación alineada a
 
 | Entidad (prefijo API) | Pantalla UI típica |
 |-----------------------|--------------------|
-| `subdireccions`, `gerencias`, `organizacions`, `celulas` | Subdirecciones, Gerencias, Organizaciones, Células |
+| `direccions` | Direcciones |
+| `subdireccions`, `gerencias`, `organizacions`, `celulas` | Subdirecciones, Gerencias, Organizaciones, Células; vista de **árbol** en `/organizacion/jerarquia` |
 
 ### Inventario y entrega
 

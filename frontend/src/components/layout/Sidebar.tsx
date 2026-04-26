@@ -81,6 +81,8 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Organización (BRD)',
     items: [
+      { href: '/direccions', label: 'Direcciones', icon: Network },
+      { href: '/organizacion/jerarquia', label: 'Jerarquía (árbol)', icon: Network },
       { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
       { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
       { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
@@ -90,6 +92,7 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Inventario (BRD)',
     items: [
+      { href: '/inventario', label: 'Inventario (hub)', icon: Package },
       { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
       { href: '/activo_webs', label: 'Activos web', icon: Link2 },
     ],
