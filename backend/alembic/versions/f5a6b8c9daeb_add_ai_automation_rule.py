@@ -41,9 +41,11 @@ def upgrade() -> None:
     op.create_index("ix_ai_automation_rules_enabled", "ai_automation_rules", ["enabled"], unique=False)
     op.create_index("ix_ai_automation_rules_created_by", "ai_automation_rules", ["created_by"], unique=False)
     op.create_index("ix_ai_automation_rules_deleted_at", "ai_automation_rules", ["deleted_at"], unique=False)
+    op.execute("CREATE INDEX ix_ai_automation_rule_trigger_enabled ON ai_automation_rules(trigger_type, enabled) WHERE deleted_at IS NULL")
 
 
 def downgrade() -> None:
+    op.execute("DROP INDEX IF EXISTS ix_ai_automation_rule_trigger_enabled")
     op.drop_index("ix_ai_automation_rules_deleted_at", table_name="ai_automation_rules")
     op.drop_index("ix_ai_automation_rules_created_by", table_name="ai_automation_rules")
     op.drop_index("ix_ai_automation_rules_enabled", table_name="ai_automation_rules")

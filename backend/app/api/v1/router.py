@@ -14,6 +14,7 @@ from app.api.v1 import (
     # ── Módulo 6 — Auditorías ─────────────────────────────────────────────────
     auditoria,
     auth,
+    catalogs,
     celula,
     changelog_entrada,
     cierre_conclusion,
@@ -49,6 +50,7 @@ from app.api.v1 import (
     # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
     iniciativa,
     madurez,
+    navigation,
     notificacion,
     # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
     organizacion,
@@ -88,9 +90,11 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(navigation.router, prefix="/navigation", tags=["Navigation"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
 api_router.include_router(admin_router, prefix="/admin")
 
 

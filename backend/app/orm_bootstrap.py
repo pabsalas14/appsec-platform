@@ -17,6 +17,7 @@ def import_all_orm() -> None:
     import app.models.attachment
     import app.models.audit_log
     import app.models.auditoria
+    import app.models.catalog
     import app.models.celula
     import app.models.changelog_entrada
     import app.models.cierre_conclusion
@@ -46,6 +47,7 @@ def import_all_orm() -> None:
     import app.models.hito_iniciativa
     import app.models.indicador_formula
     import app.models.iniciativa
+    import app.models.kanban_column
     import app.models.notificacion
     import app.models.organizacion
     import app.models.pipeline_release

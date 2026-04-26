@@ -1,50 +1,51 @@
-"""Catalog schemas."""
+"""Catalog schemas — dynamic enum management."""
+
+from __future__ import annotations
 
 from datetime import datetime
-from uuid import UUID
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CatalogValueCreate(BaseModel):
-    value: str = Field(..., min_length=1, max_length=255)
-    display_name: str = Field(..., min_length=1, max_length=255)
-    order: int = 0
-    is_active: bool = True
+class CatalogValueItem(BaseModel):
+    """Individual item in a catalog's values array."""
+
+    label: str = Field(..., description="Display label")
+    value: str = Field(..., description="Internal value")
+    color: str | None = Field(None, description="Optional hex color code")
+    order: int = Field(0, description="Display order")
+    description: str | None = Field(None, description="Optional description")
 
 
-class CatalogValueRead(CatalogValueCreate):
+class CatalogRead(BaseModel):
+    """Catalog read response."""
+
     model_config = ConfigDict(from_attributes=True)
 
-    id: UUID
+    id: str
+    type: str
+    display_name: str
+    description: str | None = None
+    values: list[dict[str, Any]] = Field(default_factory=list)
+    is_active: bool
     created_at: datetime
     updated_at: datetime
 
 
-class CatalogBase(BaseModel):
-    key: str = Field(..., min_length=1, max_length=255)
-    name: str = Field(..., min_length=1, max_length=255)
+class CatalogCreate(BaseModel):
+    """Catalog creation payload."""
+
+    type: str = Field(..., description="Catalog type (e.g. 'severidades')")
+    display_name: str = Field(..., description="Display name")
     description: str | None = None
-    is_global: bool = False
-
-
-class CatalogCreate(CatalogBase):
-    pass
+    values: list[dict[str, Any]] = Field(default_factory=list, description="Initial values array")
 
 
 class CatalogUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=255)
+    """Catalog update payload."""
+
+    display_name: str | None = None
     description: str | None = None
-    is_global: bool | None = None
-
-
-class CatalogRead(CatalogBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-
-class CatalogReadWithValues(CatalogRead):
-    values: list[CatalogValueRead] = []
+    values: list[dict[str, Any]] | None = None
+    is_active: bool | None = None

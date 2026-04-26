@@ -11,7 +11,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, String, Text, text
+from sqlalchemy import DateTime, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,5 +36,5 @@ class SystemCatalog(Base):
     )
 
     __table_args__ = (
-        ("UQ_system_catalog_tipo_key", "UNIQUE (tipo, key)"),
+        UniqueConstraint("tipo", "key", name="uq_system_catalog_tipo_key"),
     )

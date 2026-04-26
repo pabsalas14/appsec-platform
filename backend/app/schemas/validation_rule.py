@@ -1,18 +1,19 @@
 """Validation Rule schemas."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class ValidationRuleBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    entity_type: str = Field(..., min_length=1, max_length=100)
-    rule_type: str = Field(..., min_length=1, max_length=50)
-    condition: str = Field(..., min_length=1)
-    error_message: str | None = None
-    is_active: bool = True
+    nombre: str = Field(..., min_length=1, max_length=255, description="Rule name")
+    entity_type: str = Field(..., min_length=1, max_length=100, description="Entity type (e.g., vulnerability, release)")
+    rule_type: str = Field(..., min_length=1, max_length=50, description="Rule type: required, regex, conditional, formula")
+    condition: dict[str, Any] = Field(..., description="Condition JSON structure")
+    error_message: str = Field(..., min_length=1, max_length=500, description="Error message")
+    enabled: bool = True
 
 
 class ValidationRuleCreate(ValidationRuleBase):
@@ -20,19 +21,28 @@ class ValidationRuleCreate(ValidationRuleBase):
 
 
 class ValidationRuleUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=255)
+    nombre: str | None = Field(None, min_length=1, max_length=255)
     rule_type: str | None = Field(None, min_length=1, max_length=50)
-    condition: str | None = None
-    error_message: str | None = None
-    is_active: bool | None = None
+    condition: dict[str, Any] | None = None
+    error_message: str | None = Field(None, min_length=1, max_length=500)
+    enabled: bool | None = None
 
 
 class ValidationRuleRead(ValidationRuleBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    created_by: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class ValidationRuleList(BaseModel):
+    """Paginated list response."""
+    items: list[ValidationRuleRead] = Field(default_factory=list)
+    total: int
+    skip: int
+    limit: int
 
 
 class ValidationRuleTest(BaseModel):
@@ -40,9 +50,9 @@ class ValidationRuleTest(BaseModel):
 
 
 class FormulaValidate(BaseModel):
-    formula: str = Field(..., min_length=1, description="Formula syntax to validate")
+    formula_text: str = Field(..., min_length=1, description="Formula syntax to validate")
 
 
 class FormulaExecute(BaseModel):
-    formula: str = Field(..., min_length=1, description="Formula to execute")
-    data: dict = Field(..., description="Data context for formula execution")
+    formula_text: str = Field(..., min_length=1, description="Formula to execute")
+    data: dict = Field(default_factory=dict, description="Data context for formula execution")

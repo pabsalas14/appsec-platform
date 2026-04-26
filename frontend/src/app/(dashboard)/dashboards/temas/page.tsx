@@ -54,7 +54,6 @@ export default function TemasDashboardPage() {
   const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'fecha' | 'impacto' | 'estado'>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedTheme, setSelectedTheme] = useState<TemaDetail | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard-temas-summary'],
@@ -77,7 +76,7 @@ export default function TemasDashboardPage() {
   });
 
   if (selectedData && expandedTheme) {
-    setSelectedTheme(selectedData);
+    // Theme detail is stored in selectedData and shown in the panel below
   }
 
   const getDaysColor = (days: number): string => {
@@ -95,7 +94,8 @@ export default function TemasDashboardPage() {
 
   const sortedThemes = data?.themes
     ? [...data.themes].sort((a, b) => {
-        let compareA: any, compareB: any;
+        let compareA: number | string;
+        let compareB: number | string;
 
         if (sortBy === 'fecha') {
           compareA = new Date(a.fecha_identificacion).getTime();
@@ -107,9 +107,17 @@ export default function TemasDashboardPage() {
         } else if (sortBy === 'estado') {
           compareA = a.estado.toLowerCase();
           compareB = b.estado.toLowerCase();
+        } else {
+          return 0;
         }
 
-        return sortOrder === 'asc' ? compareA - compareB : compareB - compareA;
+        if (typeof compareA === 'number' && typeof compareB === 'number') {
+          return sortOrder === 'asc' ? compareA - compareB : compareB - compareA;
+        }
+
+        return sortOrder === 'asc'
+          ? String(compareA).localeCompare(String(compareB))
+          : String(compareB).localeCompare(String(compareA));
       })
     : [];
 

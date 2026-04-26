@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Float, Integer, String, text
+from sqlalchemy import DateTime, Float, Index, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -41,5 +41,5 @@ class ConfiguracionIA(Base):
     )
 
     __table_args__ = (
-        ("IX_configuracion_ia_provider_enabled", "CREATE INDEX ix_configuracion_ia_provider_enabled ON configuracion_ia(provider, enabled)"),
+        Index("ix_configuracion_ia_provider_enabled", "provider", "enabled"),
     )

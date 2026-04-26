@@ -24,6 +24,7 @@ from app.orm_bootstrap import import_all_orm
 
 import_all_orm()
 
+from app.models.catalog import Catalog
 from app.models.control_seguridad import ControlSeguridad
 from app.models.herramienta_externa import HerramientaExterna
 from app.models.indicador_formula import IndicadorFormula
@@ -529,7 +530,233 @@ async def _seed_herramientas(db, admin_id: uuid.UUID) -> None:
     )
 
 
-# ─── Entry point ─────────────────────────────────────────────────────────────
+# ─── Kanban Columns ──────────────────────────────────────────────────────────
+
+KANBAN_COLUMN_SEEDS = [
+    {
+        "nombre": "Borrador",
+        "color": "#6b7280",
+        "icono": "file-text",
+        "orden": 1,
+        "estado_correspondiente": "Borrador",
+        "descripcion": "Release en etapa de redacción inicial",
+    },
+    {
+        "nombre": "En Revisión de Diseño",
+        "color": "#3b82f6",
+        "icono": "eye",
+        "orden": 2,
+        "estado_correspondiente": "En Revision de Diseno",
+        "descripcion": "Esperando revisión del diseño arquitectónico",
+    },
+    {
+        "nombre": "En Validación de Seguridad",
+        "color": "#8b5cf6",
+        "icono": "shield-check",
+        "orden": 3,
+        "estado_correspondiente": "En Validacion de Seguridad",
+        "descripcion": "En proceso de validación de seguridad",
+    },
+    {
+        "nombre": "Con Observaciones",
+        "color": "#f59e0b",
+        "icono": "alert-circle",
+        "orden": 4,
+        "estado_correspondiente": "Con Observaciones",
+        "descripcion": "Tiene observaciones pendientes de resolver",
+    },
+    {
+        "nombre": "En Pruebas de Seguridad",
+        "color": "#ec4899",
+        "icono": "beaker",
+        "orden": 5,
+        "estado_correspondiente": "En Pruebas de Seguridad",
+        "descripcion": "Ejecutando pruebas de seguridad",
+    },
+    {
+        "nombre": "Pendiente Aprobación",
+        "color": "#f97316",
+        "icono": "check-circle",
+        "orden": 6,
+        "estado_correspondiente": "Pendiente Aprobación",
+        "descripcion": "Esperando aprobación final",
+    },
+    {
+        "nombre": "En QA",
+        "color": "#06b6d4",
+        "icono": "zap",
+        "orden": 7,
+        "estado_correspondiente": "En QA",
+        "descripcion": "En ambiente de Quality Assurance",
+    },
+    {
+        "nombre": "En Producción",
+        "color": "#10b981",
+        "icono": "rocket",
+        "orden": 8,
+        "estado_correspondiente": "En Produccion",
+        "descripcion": "Deployed en producción",
+    },
+]
+
+
+async def _seed_kanban_columns(db) -> None:
+    """Seed kanban columns for release board if they don't exist."""
+    from app.models.kanban_column import KanbanColumn
+
+    count = 0
+    for col_data in KANBAN_COLUMN_SEEDS:
+        stmt = (
+            pg_insert(KanbanColumn)
+            .values(
+                id=uuid.uuid4(),
+                **col_data,
+            )
+            .on_conflict_do_nothing(index_elements=[KanbanColumn.estado_correspondiente])
+        )
+        result = await db.execute(stmt)
+        if result.rowcount:
+            count += 1
+    await db.flush()
+    logger.info(
+        "seed.kanban_columns_inserted",
+        extra={"event": "seed.kanban_columns_inserted", "new_count": count},
+    )
+
+
+# ─── Catalogs (dynamic enums) ────────────────────────────────────────────────────
+
+CATALOG_SEEDS = [
+    {
+        "type": "severidades",
+        "display_name": "Severidades",
+        "description": "Niveles de severidad de vulnerabilidades",
+        "values": [
+            {"label": "Crítica", "value": "critica", "color": "#dc2626", "order": 1},
+            {"label": "Alta", "value": "alta", "color": "#ea580c", "order": 2},
+            {"label": "Media", "value": "media", "color": "#f59e0b", "order": 3},
+            {"label": "Baja", "value": "baja", "color": "#22c55e", "order": 4},
+        ],
+    },
+    {
+        "type": "estados",
+        "display_name": "Estados de Vulnerabilidad",
+        "description": "Estados del ciclo de vida de vulnerabilidades",
+        "values": [
+            {"label": "Abierta", "value": "abierta", "color": "#dc2626", "order": 1},
+            {"label": "En Progreso", "value": "en_progreso", "color": "#f59e0b", "order": 2},
+            {"label": "Cerrada", "value": "cerrada", "color": "#22c55e", "order": 3},
+        ],
+    },
+    {
+        "type": "motores",
+        "display_name": "Motores de Análisis",
+        "description": "Herramientas de análisis de seguridad",
+        "values": [
+            {"label": "SAST", "value": "sast", "color": "#3b82f6", "order": 1},
+            {"label": "DAST", "value": "dast", "color": "#8b5cf6", "order": 2},
+            {"label": "SCA", "value": "sca", "color": "#ec4899", "order": 3},
+            {"label": "MAST", "value": "mast", "color": "#f97316", "order": 4},
+            {"label": "MDA", "value": "mda", "color": "#06b6d4", "order": 5},
+            {"label": "Secretos", "value": "secretos", "color": "#14b8a6", "order": 6},
+        ],
+    },
+    {
+        "type": "tipos_cambio",
+        "display_name": "Tipos de Cambio",
+        "description": "Clasificación de cambios en releases",
+        "values": [
+            {"label": "Hotfix", "value": "hotfix", "color": "#dc2626", "order": 1},
+            {"label": "Feature", "value": "feature", "color": "#3b82f6", "order": 2},
+            {"label": "Patch", "value": "patch", "color": "#22c55e", "order": 3},
+        ],
+    },
+    {
+        "type": "criticidades",
+        "display_name": "Criticidades",
+        "description": "Niveles de criticidad",
+        "values": [
+            {"label": "Crítica", "value": "critica", "color": "#dc2626", "order": 1},
+            {"label": "Alta", "value": "alta", "color": "#ea580c", "order": 2},
+            {"label": "Media", "value": "media", "color": "#f59e0b", "order": 3},
+            {"label": "Baja", "value": "baja", "color": "#22c55e", "order": 4},
+        ],
+    },
+    {
+        "type": "programas",
+        "display_name": "Programas de Seguridad",
+        "description": "Programas de prueba de seguridad",
+        "values": [
+            {"label": "SAST", "value": "sast", "color": "#3b82f6", "order": 1},
+            {"label": "DAST", "value": "dast", "color": "#8b5cf6", "order": 2},
+            {"label": "SCA", "value": "sca", "color": "#ec4899", "order": 3},
+            {"label": "MAST", "value": "mast", "color": "#f97316", "order": 4},
+            {"label": "MDA", "value": "mda", "color": "#06b6d4", "order": 5},
+            {"label": "Secretos", "value": "secretos", "color": "#14b8a6", "order": 6},
+        ],
+    },
+    {
+        "type": "estados_flujo_release",
+        "display_name": "Estados Flujo Release",
+        "description": "Etapas del flujo de liberación",
+        "values": [
+            {"label": "Design", "value": "design", "color": "#9333ea", "order": 1},
+            {"label": "Validation", "value": "validation", "color": "#7c3aed", "order": 2},
+            {"label": "Tests", "value": "tests", "color": "#3b82f6", "order": 3},
+            {"label": "QA", "value": "qa", "color": "#06b6d4", "order": 4},
+            {"label": "Prod", "value": "prod", "color": "#10b981", "order": 5},
+        ],
+    },
+    {
+        "type": "tipos_iniciativas",
+        "display_name": "Tipos de Iniciativas",
+        "description": "Clasificación de iniciativas",
+        "values": [
+            {"label": "RFI", "value": "rfi", "color": "#8b5cf6", "order": 1},
+            {"label": "Proceso", "value": "proceso", "color": "#f59e0b", "order": 2},
+            {"label": "Plataforma", "value": "plataforma", "color": "#3b82f6", "order": 3},
+            {"label": "Custom", "value": "custom", "color": "#6b7280", "order": 4},
+        ],
+    },
+    {
+        "type": "tipos_temas",
+        "display_name": "Tipos de Temas",
+        "description": "Clasificación de temas emergentes",
+        "values": [
+            {"label": "Seguridad", "value": "seguridad", "color": "#dc2626", "order": 1},
+            {"label": "Operación", "value": "operacion", "color": "#f59e0b", "order": 2},
+            {"label": "Regulatorio", "value": "regulatorio", "color": "#3b82f6", "order": 3},
+            {"label": "Custom", "value": "custom", "color": "#6b7280", "order": 4},
+        ],
+    },
+]
+
+
+async def _seed_catalogs(db) -> None:
+    """Seed dynamic catalogs if they don't exist."""
+    count = 0
+    for cat_data in CATALOG_SEEDS:
+        stmt = (
+            pg_insert(Catalog)
+            .values(
+                id=uuid.uuid4(),
+                type=cat_data["type"],
+                display_name=cat_data["display_name"],
+                description=cat_data.get("description"),
+                values=cat_data.get("values", []),
+                is_active=True,
+            )
+            .on_conflict_do_nothing(index_elements=[Catalog.type])
+        )
+        result = await db.execute(stmt)
+        if result.rowcount:
+            count += 1
+    await db.flush()
+    logger.info(
+        "seed.catalogs_inserted",
+        extra={"event": "seed.catalogs_inserted", "new_count": count},
+    )
+
 
 
 async def seed() -> None:
@@ -545,6 +772,8 @@ async def seed() -> None:
         await _seed_controles(db, admin.id)
         await _seed_herramientas(db, admin.id)
         await _seed_indicadores_formulas(db, admin.id)
+        await _seed_kanban_columns(db)  # Dashboard 7: Kanban columns
+        await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
 
     logger.info("seed.complete", extra={"event": "seed.complete"})
 

@@ -109,6 +109,7 @@ async def update_rule(
             "changes": {
                 "nombre": {"old": old_values["nombre"], "new": rule.nombre},
                 "enabled": {"old": old_values["enabled"], "new": rule.enabled},
+                "rule_type": {"old": old_values["rule_type"], "new": rule.rule_type},
             }
         },
     )
@@ -122,7 +123,7 @@ async def delete_rule(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_backoffice),
 ):
-    """Delete a validation rule (hard delete)."""
+    """Delete a validation rule (soft delete)."""
     rule = await validation_rule_svc.get(db, rule_id)
     if not rule:
         raise NotFoundException("Rule not found")
@@ -140,3 +141,4 @@ async def delete_rule(
     )
     logger.info("validation_rule.delete", extra={"rule_id": str(rule_id)})
     return None
+

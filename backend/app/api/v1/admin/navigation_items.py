@@ -69,7 +69,7 @@ async def create_item(
     return success(NavigationItemRead.model_validate(item).model_dump(mode="json"))
 
 
-@router.put("/{item_id}")
+@router.patch("/{item_id}")
 async def update_item(
     item_id: uuid.UUID,
     payload: NavigationItemUpdate,
@@ -104,20 +104,31 @@ async def delete_item(
     return success({"deleted": True})
 
 
-@router.patch("/{item_id}/reorder")
-async def reorder_item(
-    item_id: uuid.UUID,
+@router.patch("/batch/reorder")
+async def batch_reorder_items(
     payload: dict,
     db: AsyncSession = Depends(get_db),
     admin: User = Depends(require_backoffice),
 ):
-    """Reorder a navigation item."""
-    item = await navigation_item_svc.get(db, item_id)
-    if not item:
-        raise NotFoundException("Navigation item not found")
+    """
+    Batch reorder navigation items.
     
-    update_payload = NavigationItemUpdate(orden=payload.get("orden", item.orden))
-    item = await navigation_item_svc.update(db, item_id, update_payload)
-    await audit_record(db, admin.id, "navigation_item", "reorder", item.id)
-    logger.info("navigation_item.reorder", extra={"item_id": str(item.id), "orden": item.orden})
-    return success(NavigationItemRead.model_validate(item).model_dump(mode="json"))
+    Payload: {"items": [{"id": "uuid", "orden": 0}, ...]}
+    """
+    items_data = payload.get("items", [])
+    
+    for item_data in items_data:
+        item_id = uuid.UUID(item_data["id"]) if isinstance(item_data["id"], str) else item_data["id"]
+        new_orden = item_data.get("orden", 0)
+        
+        item = await navigation_item_svc.get(db, item_id)
+        if not item:
+            continue
+        
+        update_payload = NavigationItemUpdate(orden=new_orden)
+        item = await navigation_item_svc.update(db, item_id, update_payload)
+        await audit_record(db, admin.id, "navigation_item", "reorder", item.id)
+    
+    logger.info("navigation_item.batch_reorder", extra={"count": len(items_data)})
+    return success({"reordered": len(items_data)})
+

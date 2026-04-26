@@ -3,7 +3,7 @@
 from app.models.ai_automation_rule import AIAutomationRule
 from app.models.ai_rule import AIRule
 from app.models.amenaza import Amenaza
-from app.models.catalog import Catalog, CatalogValue
+from app.models.catalog import Catalog
 from app.models.configuracion_ia import ConfiguracionIA
 from app.models.control_mitigacion import ControlMitigacion
 from app.models.custom_dashboard import CustomDashboard
@@ -24,7 +24,6 @@ __all__ = [
     "AIRule",
     "Amenaza",
     "Catalog",
-    "CatalogValue",
     "ConfiguracionIA",
     "ControlMitigacion",
     "CustomDashboard",

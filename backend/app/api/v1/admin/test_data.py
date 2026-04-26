@@ -18,6 +18,7 @@ from app.api.deps import get_current_user, get_db, require_role
 from app.core.logging import logger
 from app.core.response import success
 from app.models.user import User
+from app.seeds.navigation_seed import seed_navigation
 
 router = APIRouter(prefix="/admin/test-data", tags=["admin", "testing"])
 
@@ -38,6 +39,7 @@ async def seed_test_data(
     - 10 threat modeling sessions with threats
     - 15 audits with findings
     - 8 initiatives
+    - Default navigation items (Fase 7)
 
     SECURITY: super_admin only. Idempotent (doesn't recreate existing data).
     """
@@ -46,6 +48,11 @@ async def seed_test_data(
         "test_data.seed_start",
         extra={"event": "test_data.seed_start", "user_id": str(current_user.id)},
     )
+
+    # Seed navigation items
+    nav_count = await seed_navigation(db)
+    
+    await db.commit()
 
     # For now, return placeholder
     # TODO: Implement full test data population in next iteration
@@ -63,6 +70,7 @@ async def seed_test_data(
                 "threats": 10,
                 "audits": 15,
                 "initiatives": 8,
+                "navigation_items": nav_count,
             },
         }
     )

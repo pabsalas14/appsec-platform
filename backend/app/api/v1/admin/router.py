@@ -9,9 +9,11 @@ from fastapi import APIRouter
 
 from app.api.v1.admin import ai_automation_rules as admin_ai_automation_rules
 from app.api.v1.admin import builders as admin_builders
+from app.api.v1.admin import catalogs as admin_catalogs
 from app.api.v1.admin import configuracion_ia as admin_configuracion_ia
 from app.api.v1.admin import custom_fields as admin_custom_fields
 from app.api.v1.admin import dashboard_builder as admin_dashboard_builder
+from app.api.v1.admin import formulas as admin_formulas
 from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 from app.api.v1.admin import ia_config as admin_ia_config
 from app.api.v1.admin import module_views as admin_module_views
@@ -30,6 +32,7 @@ admin_router = APIRouter()
 
 admin_router.include_router(admin_users.router, prefix="/users", tags=["Admin · Users"])
 admin_router.include_router(admin_roles.router, prefix="/roles", tags=["Admin · Roles"])
+admin_router.include_router(admin_catalogs.router, prefix="/catalogs", tags=["Admin · Catalogs"])
 admin_router.include_router(admin_settings.router, prefix="/settings", tags=["Admin · Settings"])
 admin_router.include_router(admin_regla_sods.router, prefix="/regla-sods", tags=["Admin · ReglaSoD"])
 admin_router.include_router(
@@ -76,6 +79,11 @@ admin_router.include_router(
     admin_validation_rules.router,
     prefix="/validation-rules",
     tags=["Admin · Validation Rules"],
+)
+admin_router.include_router(
+    admin_formulas.router,
+    prefix="/formulas",
+    tags=["Admin · Formulas"],
 )
 admin_router.include_router(
     admin_ai_automation_rules.router,

@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -59,5 +59,5 @@ class AIAutomationRule(Base, SoftDeleteMixin):
     )
 
     __table_args__ = (
-        ("IX_ai_automation_rule_trigger_enabled", "CREATE INDEX ix_ai_automation_rule_trigger_enabled ON ai_automation_rules(trigger_type, enabled) WHERE deleted_at IS NULL"),
+        Index("ix_ai_automation_rule_trigger_enabled", "trigger_type", "enabled", postgresql_where=text("deleted_at IS NULL")),
     )

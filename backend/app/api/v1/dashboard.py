@@ -25,6 +25,7 @@ from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
 from app.schemas.service_release import ServiceReleaseUpdate
+from app.schemas.kanban_release import ReleaseKanbanMove
 
 router = APIRouter()
 
@@ -3930,13 +3931,13 @@ async def dashboard_releases_kanban(
 @router.patch("/service-releases/{id}/move")
 async def move_service_release(
     id: UUID,
-    move_data: dict,
+    move_data: ReleaseKanbanMove,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.RELEASES.UPDATE)),
 ):
     """Dashboard 7.3: Mueve un release a otra columna (drag-drop).
     
-    Aplicavalidación de SoD si aplica.
+    Aplica validación de SoD si aplica.
     
     Request body:
     {
@@ -3965,14 +3966,13 @@ async def move_service_release(
         raise HTTPException(status_code=404, detail="Release no encontrado")
 
     # Obtener columna destino
-    column_id = move_data.get("column_id")
-    if not column_id:
+    if not move_data.column_id:
         raise HTTPException(status_code=400, detail="column_id requerido")
 
     column = (
         await db.execute(
             select(KanbanColumn).where(
-                KanbanColumn.id == column_id,
+                KanbanColumn.id == move_data.column_id,
                 KanbanColumn.deleted_at.is_(None),
             )
         )
