@@ -295,6 +295,8 @@ jobs:
       # Playwright hits /auth/login once per test via APIRequestContext — raise CI ceiling
       AUTH_LOGIN_RATE_LIMIT_PER_MIN: "10000"
       NEXT_PUBLIC_API_URL: ""
+      # next.config.js proxies /api → backend (same-origin cookies for Playwright without Nginx)
+      BACKEND_INTERNAL_URL: http://127.0.0.1:8000
       E2E_BASE_URL: "http://127.0.0.1:3000"
       E2E_API_URL: "http://127.0.0.1:8000"
       E2E_USERNAME: admin
