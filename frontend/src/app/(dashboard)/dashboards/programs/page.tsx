@@ -4,32 +4,53 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DataTable } from '@/components/charts';
-import { AlertCircle, TrendingUp, AlertTriangle } from 'lucide-react';
+import { AlertCircle, TrendingUp, Activity, Code2, Shield, Search } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import { Gauge, GaugeContainer, GaugeValueDisplay } from '@/components/ui/gauge';
+import Link from 'next/link';
 
-interface ProgramBreakdown {
-  program: string;
-  total_findings: number;
-  closed_findings: number;
+interface Program {
+  code: string;
+  name: string;
+  total: number;
+  active: number;
   completion_percentage: number;
+  status: 'active' | 'idle';
 }
 
-interface ProgramsDashboardData {
+interface ProgramsSummary {
   total_programs: number;
-  avg_completion: number;
-  programs_at_risk: number;
-  program_breakdown: ProgramBreakdown[];
+  avg_completion_percentage: number;
+  active_programs: number;
 }
+
+interface ProgramsSummaryData {
+  programs: Program[];
+  summary: ProgramsSummary;
+}
+
+const programIcons: Record<string, React.ReactNode> = {
+  SAST: <Code2 className="h-5 w-5" />,
+  DAST: <Shield className="h-5 w-5" />,
+  THREAT_MODELING: <Activity className="h-5 w-5" />,
+  SOURCE_CODE: <Search className="h-5 w-5" />,
+};
+
+const programColors: Record<string, string> = {
+  SAST: 'from-blue-500/20 to-blue-600/20',
+  DAST: 'from-red-500/20 to-red-600/20',
+  THREAT_MODELING: 'from-purple-500/20 to-purple-600/20',
+  SOURCE_CODE: 'from-green-500/20 to-green-600/20',
+};
 
 export default function ProgramsDashboardPage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboard-programs'],
+    queryKey: ['dashboard3-programs-summary'],
     queryFn: async () => {
-      logger.info('dashboard.programs.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/programs');
-      return response.data.data as ProgramsDashboardData;
+      logger.info('dashboard3.programs_summary.fetch');
+      const response = await apiClient.get('/api/v1/dashboard3/programs-summary');
+      return response.data.data as ProgramsSummaryData;
     },
   });
 
@@ -42,23 +63,16 @@ export default function ProgramsDashboardPage() {
     );
   }
 
-  const columns = [
-    { key: 'program', label: 'Programa' },
-    { key: 'total_findings', label: 'Total Hallazgos' },
-    { key: 'closed_findings', label: 'Hallazgos Cerrados' },
-    { key: 'completion_percentage', label: 'Completitud (%)' },
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard de Programas</h1>
-          <p className="text-muted-foreground mt-1">Estado y progreso de programas de seguridad</p>
+          <p className="text-muted-foreground mt-1">Estado y progreso de programas de seguridad (SAST, DAST, Threat Modeling, Source Code)</p>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card data-testid="total-programs-card">
           <CardHeader className="pb-3">
@@ -71,7 +85,7 @@ export default function ProgramsDashboardPage() {
             {isLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-3xl font-bold">{data?.total_programs || 0}</div>
+              <div className="text-3xl font-bold">{data?.summary.total_programs || 0}</div>
             )}
           </CardContent>
         </Card>
@@ -84,7 +98,7 @@ export default function ProgramsDashboardPage() {
             {isLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-3xl font-bold text-green-600">{data?.avg_completion || 0}%</div>
+              <div className="text-3xl font-bold text-green-600">{data?.summary.avg_completion_percentage || 0}%</div>
             )}
           </CardContent>
         </Card>
@@ -92,38 +106,77 @@ export default function ProgramsDashboardPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Programas en Riesgo
+              <Activity className="h-4 w-4" />
+              Programas Activos
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-3xl font-bold text-red-600">{data?.programs_at_risk || 0}</div>
+              <div className="text-3xl font-bold text-blue-600">{data?.summary.active_programs || 0}</div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabla de Programas */}
-      {isLoading ? (
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-1/3" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
-      ) : data?.program_breakdown ? (
-        <DataTable
-          title="Desglose de Programas"
-          columns={columns}
-          data={data.program_breakdown}
-          data-testid="programs-table"
-        />
-      ) : null}
+      {/* Program Gauges */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {isLoading ? (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="pb-3">
+                  <Skeleton className="h-6 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-32 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          data?.programs.map((program) => (
+            <Link key={program.code} href={`/dashboards/program-detail?code=${program.code}`}>
+              <Card
+                className={`bg-gradient-to-br ${programColors[program.code]} hover:shadow-lg transition-shadow cursor-pointer`}
+                data-testid={`program-card-${program.code}`}
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    {programIcons[program.code]}
+                    {program.code}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">{program.name}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Progreso</span>
+                      <span className="font-semibold">{program.completion_percentage}%</span>
+                    </div>
+                    <GaugeContainer>
+                      <Gauge value={program.completion_percentage} min={0} max={100}>
+                        <GaugeValueDisplay />
+                      </Gauge>
+                    </GaugeContainer>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Total</p>
+                        <p className="font-semibold text-lg">{program.total}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Activos</p>
+                        <p className="font-semibold text-lg text-blue-600">{program.active}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   );
 }

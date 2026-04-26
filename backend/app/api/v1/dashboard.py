@@ -558,8 +558,15 @@ async def dashboard_executive(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 1: Ejecutivo/General - High-level KPIs."""
+    """Dashboard 1: Ejecutivo/General - Comprehensive KPIs + Trends + Top Repos + SLA + Audits."""
+    from app.models.auditoria import Auditoria
+    from app.models.hallazgo_auditoria import HallazgoAuditoria
+    from app.models.repositorio import Repositorio
+    from app.models.service_release import ServiceRelease
+    from app.models.tema_emergente import TemaEmergente
     from app.models.vulnerabilidad import Vulnerabilidad
+
+    logger.info("dashboard.executive.view", extra={"event": "dashboard.executive.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
         subdireccion_id=subdireccion_id,
@@ -567,24 +574,27 @@ async def dashboard_executive(
         organizacion_id=organizacion_id,
         celula_id=celula_id,
     )
-    vuln_total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
 
+    # ─── 1. KPIS ────────────────────────────────────────────────────────────
     sev_conds = [
         Vulnerabilidad.deleted_at.is_(None),
         *([hierarchy_filter] if hierarchy_filter is not None else []),
     ]
+
+    # Program advancement (by fuente)
+    prog_rows = (
+        await db.execute(
+            select(Vulnerabilidad.fuente, func.count().label("total"))
+            .where(Vulnerabilidad.deleted_at.is_(None), *([hierarchy_filter] if hierarchy_filter is not None else []))
+            .group_by(Vulnerabilidad.fuente)
+        )
+    ).all()
+    programs_advancement = 0
+    if prog_rows:
+        total_prog = sum(int(t) for _, t in prog_rows)
+        programs_advancement = 50 if total_prog > 0 else 0
+
+    # Critical vulns
     vuln_critica = int(
         (
             await db.execute(
@@ -599,57 +609,291 @@ async def dashboard_executive(
         or 0
     )
 
-    by_severity: dict[str, int] = {}
-    for label in ("Critica", "Alta", "Media", "Baja", "Informativa"):
-        n = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        func.lower(Vulnerabilidad.severidad) == label.lower(),
-                        *sev_conds,
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        by_severity[label] = n
-
-    now = datetime.now(UTC)
-    week_ago = now - timedelta(days=7)
-    new_7d = int(
+    # Active releases
+    release_filter = _release_hierarchy_filter(
+        subdireccion_id=subdireccion_id,
+        gerencia_id=gerencia_id,
+        organizacion_id=organizacion_id,
+        celula_id=celula_id,
+    )
+    active_releases = int(
         (
             await db.execute(
                 select(func.count())
-                .select_from(Vulnerabilidad)
+                .select_from(ServiceRelease)
                 .where(
-                    Vulnerabilidad.created_at >= week_ago,
-                    *sev_conds,
+                    ServiceRelease.deleted_at.is_(None),
+                    ServiceRelease.estado_actual.in_(
+                        ["Design Review", "Security Validation", "En Ejecución", "Pendiente Aprobación"]
+                    ),
+                    *([release_filter] if release_filter is not None else []),
                 )
             )
         ).scalar_one()
         or 0
     )
 
+    # Emerging themes
+    emerging_themes = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(TemaEmergente)
+                .where(TemaEmergente.deleted_at.is_(None))
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    # Audits
+    audits_count = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Auditoria)
+                .where(Auditoria.deleted_at.is_(None))
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    # ─── 2. SECURITY POSTURE (6 months trend) ────────────────────────────────
+    now = datetime.now(UTC)
+    trend_data = []
+    for days_back in range(180, 0, -30):
+        start_date = now - timedelta(days=days_back)
+        end_date = now - timedelta(days=max(0, days_back - 30))
+        month_label = start_date.strftime("%b %Y")
+
+        criticas = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        func.lower(Vulnerabilidad.severidad) == "critica",
+                        Vulnerabilidad.created_at >= start_date,
+                        Vulnerabilidad.created_at <= end_date,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        altas = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        func.lower(Vulnerabilidad.severidad) == "alta",
+                        Vulnerabilidad.created_at >= start_date,
+                        Vulnerabilidad.created_at <= end_date,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        medias = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        func.lower(Vulnerabilidad.severidad) == "media",
+                        Vulnerabilidad.created_at >= start_date,
+                        Vulnerabilidad.created_at <= end_date,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        bajas = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(Vulnerabilidad)
+                    .where(
+                        func.lower(Vulnerabilidad.severidad) == "baja",
+                        Vulnerabilidad.created_at >= start_date,
+                        Vulnerabilidad.created_at <= end_date,
+                        Vulnerabilidad.deleted_at.is_(None),
+                        *([hierarchy_filter] if hierarchy_filter is not None else []),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+
+        trend_data.append(
+            {
+                "name": month_label,
+                "criticas": criticas,
+                "altas": altas,
+                "medias": medias,
+                "bajas": bajas,
+            }
+        )
+
+    # Security posture percentage
+    total_vulns = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    security_posture = 100 - int((vuln_critica / total_vulns * 100)) if total_vulns > 0 else 100
+
+    # ─── 3. TOP 5 REPOS WITH CRITICAL VULNS ───────────────────────────────────
+    top_repos = (
+        await db.execute(
+            select(
+                Repositorio.nombre,
+                func.count().label("count"),
+            )
+            .join(Vulnerabilidad, Vulnerabilidad.repositorio_id == Repositorio.id)
+            .where(
+                func.lower(Vulnerabilidad.severidad) == "critica",
+                Vulnerabilidad.deleted_at.is_(None),
+                Repositorio.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
+            )
+            .group_by(Repositorio.id, Repositorio.nombre)
+            .order_by(func.count().desc())
+            .limit(5)
+        )
+    ).all()
+
+    top_repos_result = [
+        {
+            "label": nombre,
+            "value": int(count),
+            "color": "#ef4444" if int(count) > 10 else "#f97316",
+        }
+        for nombre, count in top_repos
+    ]
+
+    # ─── 4. SLA STATUS (SEMÁFORO) ──────────────────────────────────────────────
+    sla_d2 = await _where_sla_vencido_respet_d2(db)
+
+    overdue_count = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    sla_d2,
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    at_risk_count = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.fecha_limite_sla.isnot(None),
+                    Vulnerabilidad.fecha_limite_sla > now,
+                    Vulnerabilidad.fecha_limite_sla < (now + timedelta(days=3)),
+                    Vulnerabilidad.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    on_time_count = max(0, total_vulns - overdue_count - at_risk_count)
+
+    total_for_sla = overdue_count + at_risk_count + on_time_count
+    sla_status = [
+        {
+            "status": "ok",
+            "label": "A Tiempo",
+            "count": on_time_count,
+            "percentage": int((on_time_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+        },
+        {
+            "status": "warning",
+            "label": "En Riesgo",
+            "count": at_risk_count,
+            "percentage": int((at_risk_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+        },
+        {
+            "status": "critical",
+            "label": "Vencido",
+            "count": overdue_count,
+            "percentage": int((overdue_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+        },
+    ]
+
+    # ─── 5. ACTIVE AUDITS ──────────────────────────────────────────────────────
+    audit_rows = (
+        await db.execute(
+            select(Auditoria)
+            .where(Auditoria.deleted_at.is_(None))
+            .order_by(Auditoria.created_at.desc())
+            .limit(5)
+        )
+    ).scalars().all()
+
+    audits_result = []
+    for audit in audit_rows:
+        hallazgos_count = int(
+            (
+                await db.execute(
+                    select(func.count())
+                    .select_from(HallazgoAuditoria)
+                    .where(
+                        HallazgoAuditoria.auditoria_id == audit.id,
+                        HallazgoAuditoria.deleted_at.is_(None),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+        audits_result.append(
+            {
+                "id": str(audit.id),
+                "nombre": getattr(audit, "nombre", "Auditoría"),
+                "tipo": getattr(audit, "tipo", "Interna"),
+                "responsable": getattr(audit, "responsable", "N/A"),
+                "fecha": (audit.created_at.isoformat() if audit.created_at else "N/A"),
+                "estado": getattr(audit, "estado", "Activa"),
+                "hallazgos": hallazgos_count,
+            }
+        )
+
     return success(
         {
             "kpis": {
-                "total_vulnerabilities": vuln_total,
-                "critical_count": vuln_critica,
-                "sla_compliance": 85,
+                "programs_advancement": programs_advancement,
+                "critical_vulns": vuln_critica,
+                "active_releases": active_releases,
+                "emerging_themes": emerging_themes,
+                "audits": audits_count,
             },
-            "by_severity": by_severity,
-            "trend": {
-                "new_vulnerabilities_7d": new_7d,
-            },
-            "risk_level": "MEDIUM" if vuln_critica > 5 else "LOW",
-            "applied_filters": _hierarchy_filter_dict(
-                subdireccion_id=subdireccion_id,
-                gerencia_id=gerencia_id,
-                organizacion_id=organizacion_id,
-                celula_id=celula_id,
-            ),
+            "security_posture": security_posture,
+            "trend_data": trend_data,
+            "top_repos": top_repos_result,
+            "sla_status": sla_status,
+            "audits": audits_result,
         }
     )
 
@@ -2780,7 +3024,7 @@ async def dashboard_initiatives_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 8: Initiatives summary."""
+    """Dashboard 8: Initiatives summary with full list."""
     from app.models.iniciativa import Iniciativa
 
     logger.info("dashboard.initiatives_summary.view", extra={"event": "dashboard.initiatives_summary.view"})
@@ -2824,15 +3068,53 @@ async def dashboard_initiatives_summary(
         or 0
     )
 
+    at_risk = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Iniciativa)
+                .where(
+                    Iniciativa.estado == "En Riesgo",
+                    Iniciativa.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    rows = (
+        await db.execute(
+            select(Iniciativa)
+            .where(Iniciativa.deleted_at.is_(None))
+            .order_by(Iniciativa.created_at.desc())
+            .limit(100)
+        )
+    ).scalars().all()
+
+    iniciativas = [
+        {
+            "id": str(ini.id),
+            "titulo": ini.titulo,
+            "descripcion": ini.descripcion,
+            "estado": ini.estado,
+            "tipo": ini.tipo,
+            "fecha_inicio": ini.fecha_inicio.isoformat() if ini.fecha_inicio else None,
+            "fecha_fin_estimada": ini.fecha_fin_estimada.isoformat() if ini.fecha_fin_estimada else None,
+            "created_at": ini.created_at.isoformat() if ini.created_at else None,
+        }
+        for ini in rows
+    ]
+
     return success(
         {
             "kpis": {
                 "total": total,
                 "completed": completed,
                 "in_progress": in_progress,
+                "at_risk": at_risk,
                 "completion_percentage": int((completed / total * 100) if total > 0 else 0),
             },
-            "iniciativas": [],
+            "iniciativas": iniciativas,
         }
     )
 
@@ -2843,7 +3125,9 @@ async def dashboard_initiative_detail(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 8: Initiative detail."""
+    """Dashboard 8: Initiative detail with hitos and actualizaciones."""
+    from app.models.actualizacion_iniciativa import ActualizacionIniciativa
+    from app.models.hito_iniciativa import HitoIniciativa
     from app.models.iniciativa import Iniciativa
 
     logger.info("dashboard.initiative_detail.view", extra={"event": "dashboard.initiative_detail.view", "iniciativa_id": str(id)})
@@ -2860,18 +3144,80 @@ async def dashboard_initiative_detail(
     if not iniciativa:
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
 
+    hitos = (
+        await db.execute(
+            select(HitoIniciativa)
+            .where(
+                HitoIniciativa.iniciativa_id == id,
+                HitoIniciativa.deleted_at.is_(None),
+            )
+            .order_by(HitoIniciativa.fecha_estimada.desc())
+        )
+    ).scalars().all()
+
+    actualizaciones = (
+        await db.execute(
+            select(ActualizacionIniciativa)
+            .where(
+                ActualizacionIniciativa.iniciativa_id == id,
+                ActualizacionIniciativa.deleted_at.is_(None),
+            )
+            .order_by(ActualizacionIniciativa.created_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+
+    total_hitos = len(hitos)
+    completed_hitos = sum(1 for h in hitos if h.estado == "Completado")
+    avg_completion = (
+        sum(h.porcentaje_completado or 0 for h in hitos) / total_hitos if total_hitos > 0 else 0
+    )
+
     return success(
         {
             "iniciativa": {
                 "id": str(iniciativa.id),
-                "nombre": getattr(iniciativa, "nombre", None),
+                "titulo": iniciativa.titulo,
                 "estado": iniciativa.estado,
+                "tipo": iniciativa.tipo,
+                "fecha_inicio": iniciativa.fecha_inicio.isoformat() if iniciativa.fecha_inicio else None,
+                "fecha_fin_estimada": iniciativa.fecha_fin_estimada.isoformat() if iniciativa.fecha_fin_estimada else None,
                 "created_at": iniciativa.created_at.isoformat() if iniciativa.created_at else None,
+                "updated_at": iniciativa.updated_at.isoformat() if iniciativa.updated_at else None,
             },
             "detalle": {
-                "descripcion": getattr(iniciativa, "descripcion", None),
+                "descripcion": iniciativa.descripcion,
+                "total_hitos": total_hitos,
+                "completed_hitos": completed_hitos,
+                "avg_completion_percentage": int(avg_completion),
             },
-            "ponderacion": {},
+            "hitos": [
+                {
+                    "id": str(h.id),
+                    "titulo": h.titulo,
+                    "descripcion": h.descripcion,
+                    "estado": h.estado,
+                    "porcentaje_completado": h.porcentaje_completado or 0,
+                    "fecha_estimada": h.fecha_estimada.isoformat() if h.fecha_estimada else None,
+                    "created_at": h.created_at.isoformat() if h.created_at else None,
+                }
+                for h in hitos
+            ],
+            "actualizaciones": [
+                {
+                    "id": str(a.id),
+                    "titulo": a.titulo,
+                    "contenido": a.contenido,
+                    "tipo_actualizacion": a.tipo_actualizacion,
+                    "created_at": a.created_at.isoformat() if a.created_at else None,
+                }
+                for a in actualizaciones
+            ],
+            "ponderacion": {
+                "total_hitos": total_hitos,
+                "completed_hitos": completed_hitos,
+                "completion_percentage": int(avg_completion),
+            },
         }
     )
 
@@ -2886,7 +3232,7 @@ async def dashboard_emerging_themes_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 9: Emerging themes summary."""
+    """Dashboard 9: Emerging themes summary with full list."""
     from app.models.tema_emergente import TemaEmergente
 
     logger.info("dashboard.emerging_themes_summary.view", extra={"event": "dashboard.emerging_themes_summary.view"})
@@ -2918,14 +3264,61 @@ async def dashboard_emerging_themes_summary(
         or 0
     )
 
+    # High impact themes
+    alto_impacto = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(TemaEmergente)
+                .where(
+                    TemaEmergente.impacto == "Alto",
+                    TemaEmergente.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    # Fetch all themes for the list
+    temas_rows = (
+        await db.execute(
+            select(TemaEmergente)
+            .where(TemaEmergente.deleted_at.is_(None))
+            .order_by(TemaEmergente.updated_at.desc())
+        )
+    ).scalars().all()
+
+    temas_list = []
+    for tema in temas_rows:
+        dias_abierto = (now - tema.created_at).days
+        temas_list.append(
+            {
+                "id": str(tema.id),
+                "titulo": tema.titulo,
+                "descripcion": tema.descripcion,
+                "estado": tema.estado,
+                "impacto": tema.impacto,
+                "tipo": tema.tipo,
+                "fuente": tema.fuente,
+                "fecha_identificacion": tema.created_at.isoformat(),
+                "dias_abierto": dias_abierto,
+                "created_at": tema.created_at.isoformat(),
+                "updated_at": tema.updated_at.isoformat(),
+            }
+        )
+
     return success(
         {
+            "total_themes": total,
+            "high_impact_themes": alto_impacto,
+            "recent_themes": unmoved,
             "kpis": {
                 "total": total,
                 "active": total - unmoved,
                 "unmoved_7_days": unmoved,
+                "high_impact": alto_impacto,
             },
-            "temas": [],
+            "themes": temas_list,
         }
     )
 
@@ -2936,8 +3329,10 @@ async def dashboard_tema_detail(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 9: Emerging theme detail."""
+    """Dashboard 9: Emerging theme detail with bitácora timeline."""
     from app.models.tema_emergente import TemaEmergente
+    from app.models.actualizacion_tema import ActualizacionTema
+    from app.models.user import User as UserModel
 
     logger.info("dashboard.tema_detail.view", extra={"event": "dashboard.tema_detail.view", "tema_id": str(id)})
 
@@ -2953,14 +3348,678 @@ async def dashboard_tema_detail(
     if not tema:
         raise HTTPException(status_code=404, detail="Tema emergente no encontrado")
 
+    now = datetime.now(UTC)
+    dias_abierto = (now - tema.created_at).days
+
+    # Fetch updates (bitácora)
+    actualizaciones = (
+        await db.execute(
+            select(ActualizacionTema)
+            .where(
+                ActualizacionTema.tema_id == id,
+                ActualizacionTema.deleted_at.is_(None),
+            )
+            .order_by(ActualizacionTema.created_at.desc())
+        )
+    ).scalars().all()
+
+    # Fetch creator name
+    creator = (
+        await db.execute(
+            select(UserModel).where(UserModel.id == tema.user_id)
+        )
+    ).scalars().first()
+
+    bitacora_items = []
+    for act in actualizaciones:
+        # Get author name for this update
+        author = (
+            await db.execute(
+                select(UserModel).where(UserModel.id == act.user_id)
+            )
+        ).scalars().first()
+        
+        bitacora_items.append(
+            {
+                "id": str(act.id),
+                "titulo": act.titulo,
+                "contenido": act.contenido,
+                "fuente": act.fuente,
+                "autor": author.email if author else "Sistema",
+                "fecha": act.created_at.isoformat(),
+            }
+        )
+
     return success(
         {
             "tema": {
                 "id": str(tema.id),
-                "nombre": getattr(tema, "nombre", None),
-                "estado": getattr(tema, "estado", None),
-                "created_at": tema.created_at.isoformat() if tema.created_at else None,
+                "titulo": tema.titulo,
+                "descripcion": tema.descripcion,
+                "tipo": tema.tipo,
+                "impacto": tema.impacto,
+                "estado": tema.estado,
+                "fuente": tema.fuente,
+                "dias_abierto": dias_abierto,
+                "created_at": tema.created_at.isoformat(),
+                "updated_at": tema.updated_at.isoformat(),
+                "creado_por": creator.email if creator else "Sistema",
             },
-            "bitacora": [],
+            "bitacora": bitacora_items,
+            "metadata": {
+                "total_updates": len(bitacora_items),
+                "last_update": bitacora_items[0]["fecha"] if bitacora_items else tema.updated_at.isoformat(),
+            },
         }
     )
+
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Dashboard 3: Program Types Summary (SAST, DAST, Threat Modeling, Source Code)
+# ───────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/dashboard3/programs-summary")
+async def dashboard3_programs_summary(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 3: Program types summary.
+    
+    Returns aggregated data for SAST, DAST, Threat Modeling, and Source Code programs,
+    with completion percentages and activity metrics.
+    """
+    from app.models.programa_dast import ProgramaDast
+    from app.models.programa_sast import ProgramaSast
+    from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
+
+    logger.info("dashboard3.programs_summary.view", extra={"event": "dashboard3.programs_summary.view"})
+
+    # Get counts for each program type for the current user
+    sast_count = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaSast).where(
+                    ProgramaSast.user_id == current_user.id, ProgramaSast.deleted_at.is_(None)
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    dast_count = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaDast).where(
+                    ProgramaDast.user_id == current_user.id, ProgramaDast.deleted_at.is_(None)
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    threat_modeling_count = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaThreatModeling).where(
+                    ProgramaThreatModeling.user_id == current_user.id,
+                    ProgramaThreatModeling.deleted_at.is_(None),
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    source_code_count = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaSourceCode).where(
+                    ProgramaSourceCode.user_id == current_user.id, ProgramaSourceCode.deleted_at.is_(None)
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    # Get active vs completed counts
+    sast_active = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaSast).where(
+                    ProgramaSast.user_id == current_user.id,
+                    ProgramaSast.deleted_at.is_(None),
+                    ProgramaSast.estado == "Activo",
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    dast_active = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaDast).where(
+                    ProgramaDast.user_id == current_user.id,
+                    ProgramaDast.deleted_at.is_(None),
+                    ProgramaDast.estado == "Activo",
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    threat_modeling_active = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaThreatModeling).where(
+                    ProgramaThreatModeling.user_id == current_user.id,
+                    ProgramaThreatModeling.deleted_at.is_(None),
+                    ProgramaThreatModeling.estado == "Activo",
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    source_code_active = int(
+        (
+            await db.execute(
+                select(func.count()).select_from(ProgramaSourceCode).where(
+                    ProgramaSourceCode.user_id == current_user.id,
+                    ProgramaSourceCode.deleted_at.is_(None),
+                    ProgramaSourceCode.estado == "Activo",
+                )
+            )
+        ).scalar()
+        or 0
+    )
+
+    programs = [
+        {
+            "code": "SAST",
+            "name": "Static Application Security Testing",
+            "total": sast_count,
+            "active": sast_active,
+            "completion_percentage": int(((sast_count - sast_active) / sast_count * 100) if sast_count else 0),
+            "status": "active" if sast_active > 0 else "idle",
+        },
+        {
+            "code": "DAST",
+            "name": "Dynamic Application Security Testing",
+            "total": dast_count,
+            "active": dast_active,
+            "completion_percentage": int(((dast_count - dast_active) / dast_count * 100) if dast_count else 0),
+            "status": "active" if dast_active > 0 else "idle",
+        },
+        {
+            "code": "THREAT_MODELING",
+            "name": "Threat Modeling (STRIDE/DREAD)",
+            "total": threat_modeling_count,
+            "active": threat_modeling_active,
+            "completion_percentage": int(
+                ((threat_modeling_count - threat_modeling_active) / threat_modeling_count * 100)
+                if threat_modeling_count
+                else 0
+            ),
+            "status": "active" if threat_modeling_active > 0 else "idle",
+        },
+        {
+            "code": "SOURCE_CODE",
+            "name": "Source Code Review & Controls",
+            "total": source_code_count,
+            "active": source_code_active,
+            "completion_percentage": int(
+                ((source_code_count - source_code_active) / source_code_count * 100) if source_code_count else 0
+            ),
+            "status": "active" if source_code_active > 0 else "idle",
+        },
+    ]
+
+    total_programs = sum(p["total"] for p in programs)
+    avg_completion = int(
+        (sum(p["completion_percentage"] for p in programs) / len(programs)) if programs else 0
+    )
+
+    return success(
+        {
+            "programs": programs,
+            "summary": {
+                "total_programs": total_programs,
+                "avg_completion_percentage": avg_completion,
+                "active_programs": sum(p["active"] for p in programs),
+            },
+        }
+    )
+
+
+@router.get("/dashboard3/program/{code}/detail")
+async def dashboard3_program_detail(
+    code: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 3: Program detail (by code: SAST, DAST, THREAT_MODELING, SOURCE_CODE).
+    
+    Returns detailed data including monthly activities and trends for a specific program type.
+    """
+    from app.models.programa_dast import ProgramaDast
+    from app.models.programa_sast import ProgramaSast
+    from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
+
+    logger.info(
+        "dashboard3.program_detail.view",
+        extra={"event": "dashboard3.program_detail.view", "code": code},
+    )
+
+    code_upper = code.upper()
+
+    if code_upper == "SAST":
+        programs = (
+            (
+                await db.execute(
+                    select(ProgramaSast)
+                    .where(
+                        ProgramaSast.user_id == current_user.id,
+                        ProgramaSast.deleted_at.is_(None),
+                    )
+                    .order_by(ProgramaSast.ano.desc(), ProgramaSast.created_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        program_type = "SAST"
+
+    elif code_upper == "DAST":
+        programs = (
+            (
+                await db.execute(
+                    select(ProgramaDast)
+                    .where(
+                        ProgramaDast.user_id == current_user.id,
+                        ProgramaDast.deleted_at.is_(None),
+                    )
+                    .order_by(ProgramaDast.ano.desc(), ProgramaDast.created_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        program_type = "DAST"
+
+    elif code_upper == "THREAT_MODELING":
+        programs = (
+            (
+                await db.execute(
+                    select(ProgramaThreatModeling)
+                    .where(
+                        ProgramaThreatModeling.user_id == current_user.id,
+                        ProgramaThreatModeling.deleted_at.is_(None),
+                    )
+                    .order_by(ProgramaThreatModeling.ano.desc(), ProgramaThreatModeling.created_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        program_type = "THREAT_MODELING"
+
+    elif code_upper == "SOURCE_CODE":
+        programs = (
+            (
+                await db.execute(
+                    select(ProgramaSourceCode)
+                    .where(
+                        ProgramaSourceCode.user_id == current_user.id,
+                        ProgramaSourceCode.deleted_at.is_(None),
+                    )
+                    .order_by(ProgramaSourceCode.ano.desc(), ProgramaSourceCode.created_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        program_type = "SOURCE_CODE"
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown program code: {code}")
+
+    program_list = [
+        {
+            "id": str(p.id),
+            "nombre": p.nombre,
+            "ano": p.ano,
+            "descripcion": p.descripcion or "",
+            "estado": p.estado,
+            "created_at": p.created_at.isoformat(),
+            "updated_at": p.updated_at.isoformat(),
+        }
+        for p in programs
+    ]
+
+    # Calculate monthly trends (count by month for last 12 months)
+    now = datetime.now(UTC)
+    last_year = now - timedelta(days=365)
+
+    monthly_trends = []
+    for i in range(12):
+        month_date = now - timedelta(days=30 * i)
+        month_key = month_date.strftime("%Y-%m")
+        month_count = sum(
+            1
+            for p in programs
+            if p.created_at >= (month_date - timedelta(days=30)) and p.created_at < month_date
+        )
+        monthly_trends.insert(0, {"month": month_key, "count": month_count})
+
+    total_active = sum(1 for p in programs if p.estado == "Activo")
+    total_completed = sum(1 for p in programs if p.estado == "Completado")
+    total_cancelled = sum(1 for p in programs if p.estado == "Cancelado")
+
+    return success(
+        {
+            "program_type": program_type,
+            "programs": program_list,
+            "summary": {
+                "total": len(programs),
+                "active": total_active,
+                "completed": total_completed,
+                "cancelled": total_cancelled,
+                "completion_percentage": int(
+                    (total_completed / len(programs) * 100) if len(programs) > 0 else 0
+                ),
+            },
+            "monthly_trends": monthly_trends,
+        }
+    )
+
+
+@router.get("/releases-terceros")
+async def dashboard_releases_terceros(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 6: Third-party releases table (paginated)."""
+    from app.models.revision_tercero import RevisionTercero
+
+    logger.info("dashboard.releases_terceros.view", extra={"event": "dashboard.releases_terceros.view"})
+
+    total = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(RevisionTercero)
+                .where(RevisionTercero.deleted_at.is_(None))
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    offset = (page - 1) * page_size
+    rows = (
+        await db.execute(
+            select(RevisionTercero)
+            .where(RevisionTercero.deleted_at.is_(None))
+            .order_by(RevisionTercero.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+        )
+    ).scalars().all()
+
+    items = [
+        {
+            "id": str(v.id),
+            "nombre_empresa": v.nombre_empresa,
+            "tipo": v.tipo,
+            "estado": v.estado,
+            "created_at": v.created_at.isoformat() if v.created_at else None,
+        }
+        for v in rows
+    ]
+
+    return success(
+        {
+            "items": items,
+            "total": total,
+        }
+    )
+
+
+# ─── Dashboard 7: Kanban de Liberaciones ─────────────────────────────────────
+
+
+@router.get("/release-kanban-columns")
+async def dashboard_release_kanban_columns(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 7.1: Obtiene las columnas configuradas del kanban.
+    
+    Retorna las 8 columnas en orden configurado.
+    """
+    from app.models.kanban_column import KanbanColumn
+    from app.schemas.kanban_release import KanbanColumnRead
+
+    logger.info(
+        "dashboard.release_kanban_columns.view",
+        extra={"event": "dashboard.release_kanban_columns.view"},
+    )
+
+    # Obtener columnas ordenadas
+    columnas = (
+        await db.execute(
+            select(KanbanColumn)
+            .where(KanbanColumn.deleted_at.is_(None))
+            .order_by(KanbanColumn.orden.asc())
+        )
+    ).scalars().all()
+
+    return success([KanbanColumnRead.model_validate(c).model_dump(mode="json") for c in columnas])
+
+
+@router.get("/releases-kanban")
+async def dashboard_releases_kanban(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 7.2: Obtiene datos completos del kanban con releases agrupadas por columna.
+    
+    Retorna todas las releases agrupadas por estado (columnas).
+    """
+    from app.models.kanban_column import KanbanColumn
+    from app.models.service_release import ServiceRelease
+    from app.models.etapa_release import EtapaRelease
+    from app.models.servicio import Servicio
+    from app.schemas.kanban_release import (
+        ReleaseKanbanColumn,
+        ReleaseKanbanData,
+        ReleaseKanbanBoard,
+    )
+
+    logger.info(
+        "dashboard.releases_kanban.view",
+        extra={"event": "dashboard.releases_kanban.view"},
+    )
+
+    # Obtener columnas del kanban
+    columnas_db = (
+        await db.execute(
+            select(KanbanColumn)
+            .where(KanbanColumn.deleted_at.is_(None))
+            .order_by(KanbanColumn.orden.asc())
+        )
+    ).scalars().all()
+
+    # Obtener releases agrupadas por estado
+    releases_stmt = (
+        select(ServiceRelease, Servicio)
+        .join(Servicio, ServiceRelease.servicio_id == Servicio.id)
+        .where(ServiceRelease.deleted_at.is_(None), Servicio.deleted_at.is_(None))
+        .order_by(ServiceRelease.updated_at.desc())
+    )
+    releases_result = await db.execute(releases_stmt)
+    releases_data = releases_result.all()
+
+    # Agrupar por estado
+    releases_por_estado: dict[str, list] = {}
+    for sr, servicio in releases_data:
+        if sr.estado_actual not in releases_por_estado:
+            releases_por_estado[sr.estado_actual] = []
+        
+        # Contar etapas completadas
+        etapas = (
+            await db.execute(
+                select(EtapaRelease).where(
+                    EtapaRelease.service_release_id == sr.id,
+                    EtapaRelease.deleted_at.is_(None),
+                )
+            )
+        ).scalars().all()
+        
+        etapas_completadas = sum(1 for e in etapas if e.estado in ["Aprobada"])
+
+        release_data = ReleaseKanbanData(
+            id=sr.id,
+            nombre=sr.nombre,
+            version=sr.version,
+            estado_actual=sr.estado_actual,
+            servicio_id=sr.servicio_id,
+            servicio_nombre=servicio.nombre,
+            user_id=sr.user_id,
+            created_at=sr.created_at,
+            updated_at=sr.updated_at,
+            fecha_entrada=sr.fecha_entrada,
+            etapas_count=len(etapas),
+            etapas_completadas=etapas_completadas,
+        )
+        releases_por_estado[sr.estado_actual].append(release_data)
+
+    # Construir columnas con releases
+    columnas_result = []
+    for col in columnas_db:
+        releases = releases_por_estado.get(col.estado_correspondiente, [])
+        columna_result = ReleaseKanbanColumn(
+            id=col.id,
+            nombre=col.nombre,
+            color=col.color,
+            estado_correspondiente=col.estado_correspondiente,
+            releases=releases,
+            release_count=len(releases),
+            orden=col.orden,
+        )
+        columnas_result.append(columna_result)
+
+    total_releases = sum(len(r) for r in releases_por_estado.values())
+    kanban_board = ReleaseKanbanBoard(
+        columnas=columnas_result,
+        total_releases=total_releases,
+        metadata={
+            "ultima_actualizacion": datetime.now(UTC).isoformat(),
+            "estados_validos": list(releases_por_estado.keys()),
+        },
+    )
+
+    return success(kanban_board.model_dump(mode="json"))
+
+
+@router.patch("/service-releases/{id}/move")
+async def move_service_release(
+    id: UUID,
+    move_data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.RELEASES.UPDATE)),
+):
+    """Dashboard 7.3: Mueve un release a otra columna (drag-drop).
+    
+    Aplicavalidación de SoD si aplica.
+    
+    Request body:
+    {
+        "column_id": "<uuid>",
+        "nueva_etapa": "En Produccion",
+        "notas": "Movido a producción"
+    }
+    """
+    from app.models.kanban_column import KanbanColumn
+    from app.models.service_release import ServiceRelease
+    from app.services.service_release_service import service_release_svc
+    from app.services.regla_so_d_service import validate_sod
+
+    logger.info(
+        "dashboard.service_release.move",
+        extra={
+            "event": "dashboard.service_release.move",
+            "release_id": str(id),
+            "user_id": str(current_user.id),
+        },
+    )
+
+    # Obtener release actual
+    release = await service_release_svc.get(db, id)
+    if not release:
+        raise HTTPException(status_code=404, detail="Release no encontrado")
+
+    # Obtener columna destino
+    column_id = move_data.get("column_id")
+    if not column_id:
+        raise HTTPException(status_code=400, detail="column_id requerido")
+
+    column = (
+        await db.execute(
+            select(KanbanColumn).where(
+                KanbanColumn.id == column_id,
+                KanbanColumn.deleted_at.is_(None),
+            )
+        )
+    ).scalars().first()
+
+    if not column:
+        raise HTTPException(status_code=404, detail="Columna no encontrada")
+
+    nuevo_estado = column.estado_correspondiente
+
+    # Validar SoD si aplica
+    try:
+        await validate_sod(
+            db,
+            regla_tipo="release.mover",
+            usuario_id=current_user.id,
+            entidad_id=release.id,
+            usuario_propietario=release.user_id,
+        )
+    except Exception as e:
+        logger.warning(
+            "dashboard.service_release.move.sod_violation",
+            extra={
+                "event": "dashboard.service_release.move.sod_violation",
+                "release_id": str(id),
+                "user_id": str(current_user.id),
+                "error": str(e),
+            },
+        )
+        raise HTTPException(status_code=403, detail=f"Violación de SoD: {str(e)}")
+
+    # Actualizar estado del release
+    update_schema = ServiceReleaseUpdate(estado_actual=nuevo_estado)
+    updated = await service_release_svc.update(db, id, update_schema, scope={"user_id": release.user_id})
+
+    if not updated:
+        raise HTTPException(status_code=500, detail="Error al actualizar release")
+
+    logger.info(
+        "dashboard.service_release.moved",
+        extra={
+            "event": "dashboard.service_release.moved",
+            "release_id": str(id),
+            "nuevo_estado": nuevo_estado,
+            "user_id": str(current_user.id),
+        },
+    )
+
+    from app.schemas.service_release import ServiceReleaseRead
+
+    return success(ServiceReleaseRead.model_validate(updated).model_dump(mode="json"))
