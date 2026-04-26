@@ -18,26 +18,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create module_views table (FASE 3)
-    op.create_table(
-        "module_views",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("description", sa.Text(), nullable=True),
-        sa.Column("entity_type", sa.String(length=100), nullable=False),
-        sa.Column("display_type", sa.String(length=50), nullable=False, server_default="table"),
-        sa.Column("config", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_by", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["deleted_by"], ["users.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_module_views_entity_type"), "module_views", ["entity_type"], unique=False)
-    op.create_index(op.f("ix_module_views_name"), "module_views", ["name"], unique=False)
-    op.create_index(op.f("ix_module_views_deleted_at"), "module_views", ["deleted_at"], unique=False)
-
+    # Module views is handled by d3e4f5a6b8c9_add_module_view.py migration
+    # op.create_table(
+    #     "module_views",
+    #     ...
+    # )
+    
     # Create custom_fields table (FASE 4)
     op.create_table(
         "custom_fields",
@@ -202,8 +188,8 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_custom_fields_entity_type"), table_name="custom_fields")
     op.drop_table("custom_fields")
 
-    # Drop module views table
-    op.drop_index(op.f("ix_module_views_deleted_at"), table_name="module_views")
-    op.drop_index(op.f("ix_module_views_name"), table_name="module_views")
-    op.drop_index(op.f("ix_module_views_entity_type"), table_name="module_views")
-    op.drop_table("module_views")
+    # Drop module views table (handled by d3e4f5a6b8c9_add_module_view.py migration)
+    # op.drop_index(op.f("ix_module_views_deleted_at"), table_name="module_views")
+    # op.drop_index(op.f("ix_module_views_name"), table_name="module_views")
+    # op.drop_index(op.f("ix_module_views_entity_type"), table_name="module_views")
+    # op.drop_table("module_views")

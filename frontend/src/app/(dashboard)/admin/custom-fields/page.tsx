@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -14,16 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/Dialog';
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/AlertDialog';
+} from '@/components/ui/alert-dialog';
 import { CustomField, ENTITY_TYPES, FIELD_TYPES, customFieldSchema } from '@/lib/schemas/admin';
 import {
   useCustomFields,
@@ -86,7 +87,7 @@ export default function CustomFieldsPage() {
     } else {
       setEditingField(null);
       setFormData({
-        entity_type: activeTab,
+        entity_type: activeTab as typeof ENTITY_TYPES[number],
         field_type: 'text',
         is_required: false,
         is_searchable: false,
@@ -97,7 +98,7 @@ export default function CustomFieldsPage() {
     setIsFormOpen(true);
   };
 
-  const handleFormChange = (field: string, value: any) => {
+  const handleFormChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: '' }));
@@ -106,14 +107,15 @@ export default function CustomFieldsPage() {
 
   const handleSubmit = async () => {
     try {
-      const payload = {
+      const payload: Partial<CustomField> = {
         name: formData.name || '',
         field_type: formData.field_type || 'text',
-        entity_type: formData.entity_type || activeTab,
+        entity_type: (formData.entity_type || activeTab) as typeof ENTITY_TYPES[number],
         label: formData.label,
         description: formData.description,
         is_required: formData.is_required || false,
         is_searchable: formData.is_searchable || false,
+        order: formData.order || 0,
         config: formData.config,
       };
 
@@ -122,7 +124,7 @@ export default function CustomFieldsPage() {
       if (editingField?.id) {
         await updateMutation.mutateAsync(payload);
       } else {
-        await createMutation.mutateAsync(payload);
+        await createMutation.mutateAsync(payload as Omit<CustomField, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>);
       }
 
       setIsFormOpen(false);
@@ -131,7 +133,7 @@ export default function CustomFieldsPage() {
     } catch (err) {
       if (err instanceof ZodError) {
         const errors: Record<string, string> = {};
-        err.errors.forEach((error) => {
+        err.issues.forEach((error) => {
           const path = String(error.path[0] || 'general');
           errors[path] = error.message;
         });
@@ -277,16 +279,16 @@ export default function CustomFieldsPage() {
                         <div className="flex items-start gap-3 flex-1">
                           <GripVertical className="h-5 w-5 text-muted-foreground mt-1 cursor-grab active:cursor-grabbing" />
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold">{field.name}</h3>
-                              <Badge variant="outline">
-                                {FIELD_TYPE_LABELS[field.field_type]}
-                              </Badge>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold">{field.name}</h3>
+                            <Badge variant="primary">
+                              {FIELD_TYPE_LABELS[field.field_type]}
+                            </Badge>
                               {field.is_required && (
-                                <Badge variant="destructive">Requerido</Badge>
+                                <Badge variant="primary">Requerido</Badge>
                               )}
                               {field.is_searchable && (
-                                <Badge variant="secondary">Searchable</Badge>
+                                <Badge variant="success">Searchable</Badge>
                               )}
                             </div>
                             {field.label && (

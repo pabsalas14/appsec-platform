@@ -1,7 +1,7 @@
 """Add catalogs table for dynamic enums
 
 Revision ID: p6m7n8o9p0q1
-Revises: g1h2i3j4k5l6
+Revises: f7a1c2b3d4e5
 Create Date: 2026-04-25 23:50:00.000000
 """
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "p6m7n8o9p0q1"
-down_revision: Union[str, None] = "g1h2i3j4k5l6"
+down_revision: Union[str, None] = "f7a1c2b3d4e5"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

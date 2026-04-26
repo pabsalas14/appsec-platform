@@ -181,3 +181,12 @@ export function LineChartCard({
     </ChartCard>
   );
 }
+
+// ─── Export specialized components ──────────────────────────────────────────
+
+export { GaugeChart } from './GaugeChart';
+export { AreaLineChart } from './AreaLineChart';
+export { HorizontalBarRanking } from './HorizontalBarRanking';
+export { SemaforoSla } from './SemaforoSla';
+export { DataTable } from './DataTable';
+export { KPICard } from './KPICard';

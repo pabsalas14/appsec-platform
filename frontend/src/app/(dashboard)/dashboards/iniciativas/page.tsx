@@ -16,6 +16,8 @@ import {
   FileText,
   CheckSquare,
   MessageCircle,
+  Clock,
+  ListChecks,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
@@ -328,10 +330,64 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ initiative, onClose }) => {
   );
 };
 
+interface TablaIniciativa {
+  id: string;
+  titulo: string;
+  estado: string;
+  propietario: string;
+  porcentaje_progreso: number;
+  fecha_vencimiento?: string;
+  fecha_inicio?: string;
+  tipo: string;
+  hitos_completados: number;
+  total_hitos: number;
+}
+
+interface TablaData {
+  tabla: TablaIniciativa[];
+  total_registros: number;
+}
+
+interface TimelineEvent {
+  id: string;
+  iniciativa_id: string;
+  iniciativa_titulo: string;
+  hito_titulo: string;
+  estado: string;
+  porcentaje_completado: number;
+  fecha_estimada?: string;
+  descripcion?: string;
+}
+
+interface TimelineData {
+  timeline: TimelineEvent[];
+  proximos_hitos: TimelineEvent[];
+  hitos_proximos_30_dias: TimelineEvent[];
+  total_hitos: number;
+  hitos_completados: number;
+}
+
+interface ResumenData {
+  resumen: {
+    total: number;
+    completadas: number;
+    en_progreso: number;
+    retrasadas: number;
+    no_iniciadas: number;
+    porcentaje_completado: number;
+  };
+  estadisticas: {
+    tasa_finalizacion: string;
+    iniciativas_atrasadas: number;
+    iniciativas_en_riesgo_porcentaje: number;
+  };
+}
+
 export default function InitiativesDashboardPage() {
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [activeTab, setActiveTab] = useState('resumen');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard-initiatives'],
@@ -339,6 +395,33 @@ export default function InitiativesDashboardPage() {
       logger.info('dashboard.initiatives.fetch');
       const response = await apiClient.get('/api/v1/dashboard/initiatives-summary');
       return response.data.data as InitiativesDashboardData;
+    },
+  });
+
+  const { data: resumenData, isLoading: resumenLoading } = useQuery({
+    queryKey: ['dashboard-initiatives-resumen'],
+    queryFn: async () => {
+      logger.info('dashboard.initiatives.resumen.fetch');
+      const response = await apiClient.get('/api/v1/dashboard/initiatives/resumen');
+      return response.data.data as ResumenData;
+    },
+  });
+
+  const { data: tablaData, isLoading: tablaLoading } = useQuery({
+    queryKey: ['dashboard-initiatives-tabla'],
+    queryFn: async () => {
+      logger.info('dashboard.initiatives.tabla.fetch');
+      const response = await apiClient.get('/api/v1/dashboard/initiatives/tabla');
+      return response.data.data as TablaData;
+    },
+  });
+
+  const { data: timelineData, isLoading: timelineLoading } = useQuery({
+    queryKey: ['dashboard-initiatives-timeline'],
+    queryFn: async () => {
+      logger.info('dashboard.initiatives.timeline.fetch');
+      const response = await apiClient.get('/api/v1/dashboard/initiatives/timeline');
+      return response.data.data as TimelineData;
     },
   });
 
@@ -382,194 +465,3 @@ export default function InitiativesDashboardPage() {
     if (sortField !== field) return <span className="text-gray-300 ml-2">⬍</span>;
     return <span className="ml-2">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard de Iniciativas</h1>
-          <p className="text-muted-foreground mt-1">Seguimiento de iniciativas estratégicas</p>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Total
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold">{data?.kpis.total || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              Completadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-green-600">{data?.kpis.completed || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              En Progreso
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-blue-600">{data?.kpis.in_progress || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              En Riesgo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-yellow-600">{data?.kpis.at_risk || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              % Avance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-blue-600">{data?.kpis.completion_percentage || 0}%</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabla de Iniciativas */}
-      {isLoading ? (
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-1/3" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
-      ) : data?.iniciativas && data.iniciativas.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Iniciativas (Sorteable)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left p-3 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('titulo')}>
-                      Título <SortIcon field="titulo" />
-                    </th>
-                    <th className="text-left p-3 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('estado')}>
-                      Estado <SortIcon field="estado" />
-                    </th>
-                    <th className="text-left p-3 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('fecha_inicio')}>
-                      Inicio <SortIcon field="fecha_inicio" />
-                    </th>
-                    <th className="text-left p-3 font-semibold">Descripción</th>
-                    <th className="text-left p-3 font-semibold">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedInitiatives.map(ini => (
-                    <tr
-                      key={ini.id}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                      data-testid={`initiative-row-${ini.id}`}
-                    >
-                      <td className="p-3 font-medium">{ini.titulo}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            ini.estado === 'Completada'
-                              ? 'bg-green-100 text-green-700'
-                              : ini.estado === 'En Progreso'
-                              ? 'bg-blue-100 text-blue-700'
-                              : ini.estado === 'En Riesgo'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {ini.estado}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {ini.fecha_inicio
-                          ? new Date(ini.fecha_inicio).toLocaleDateString('es-ES')
-                          : '—'}
-                      </td>
-                      <td className="p-3 text-gray-600 max-w-xs truncate">
-                        {ini.descripcion || '—'}
-                      </td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => setSelectedInitiative(ini)}
-                          className="inline-flex items-center gap-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        >
-                          Ver
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-gray-500">No hay iniciativas registradas</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Side Panel Detail */}
-      {selectedInitiative && (
-        <DetailPanel
-          initiative={selectedInitiative}
-          onClose={() => setSelectedInitiative(null)}
-        />
-      )}
-    </div>
-  );
-}

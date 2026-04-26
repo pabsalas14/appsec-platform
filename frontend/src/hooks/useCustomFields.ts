@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { CustomField, CustomFieldValue } from '@/lib/schemas/admin';
+import type { CustomField } from '@/lib/schemas/admin';
 
 interface PaginatedResponse<T> {
   status: string;
   data: T[];
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
   pagination?: {
     page: number;
     page_size: number;
