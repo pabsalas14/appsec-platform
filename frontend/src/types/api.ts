@@ -1960,7 +1960,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/test-data/admin/test-data/seed": {
+    "/api/v1/admin/test-data/seed": {
         parameters: {
             query?: never;
             header?: never;
@@ -1971,28 +1971,16 @@ export interface paths {
         put?: never;
         /**
          * Seed Test Data
-         * @description Populate database with realistic test data.
-         *
-         *     Creates:
-         *     - 6 test users (different roles)
-         *     - 100+ vulnerabilities (varied by severity/motor/state)
-         *     - 5+ programs (SAST, DAST, TM, MAST, Source Code)
-         *     - 20+ service releases (different states)
-         *     - 10 threat modeling sessions with threats
-         *     - 15 audits with findings
-         *     - 8 initiatives
-         *     - Default navigation items (Fase 7)
-         *
-         *     SECURITY: super_admin only. Idempotent (doesn't recreate existing data).
+         * @description Idempotent navigation seed + counts for Playwright ``testData`` fixture.
          */
-        post: operations["seed_test_data_api_v1_admin_test_data_admin_test_data_seed_post"];
+        post: operations["seed_test_data_api_v1_admin_test_data_seed_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/test-data/admin/test-data/reset": {
+    "/api/v1/admin/test-data/reset": {
         parameters: {
             query?: never;
             header?: never;
@@ -2003,23 +1991,16 @@ export interface paths {
         put?: never;
         /**
          * Reset Test Data
-         * @description Reset test data: clear test records and re-seed.
-         *
-         *     SECURITY: super_admin only. DESTRUCTIVE — removes test data.
-         *
-         *     Safe because:
-         *     - Only deletes records created by test data (identifiable)
-         *     - BD is transactional — rolls back if errors occur
-         *     - This endpoint should ONLY exist in dev/test environments
+         * @description Placeholder reset — E2E only checks HTTP 200 today.
          */
-        post: operations["reset_test_data_api_v1_admin_test_data_admin_test_data_reset_post"];
+        post: operations["reset_test_data_api_v1_admin_test_data_reset_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/test-data/admin/test-data/status": {
+    "/api/v1/admin/test-data/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -2028,9 +2009,9 @@ export interface paths {
         };
         /**
          * Test Data Status
-         * @description Check test data endpoints availability.
+         * @description Counts aligned with ``frontend/e2e/helpers/api-helpers`` ``TestDataStatus``.
          */
-        get: operations["test_data_status_api_v1_admin_test_data_admin_test_data_status_get"];
+        get: operations["test_data_status_api_v1_admin_test_data_status_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -15521,7 +15502,7 @@ export interface operations {
             };
         };
     };
-    seed_test_data_api_v1_admin_test_data_admin_test_data_seed_post: {
+    seed_test_data_api_v1_admin_test_data_seed_post: {
         parameters: {
             query?: never;
             header?: {
@@ -15555,7 +15536,7 @@ export interface operations {
             };
         };
     };
-    reset_test_data_api_v1_admin_test_data_admin_test_data_reset_post: {
+    reset_test_data_api_v1_admin_test_data_reset_post: {
         parameters: {
             query?: never;
             header?: {
@@ -15589,7 +15570,7 @@ export interface operations {
             };
         };
     };
-    test_data_status_api_v1_admin_test_data_admin_test_data_status_get: {
+    test_data_status_api_v1_admin_test_data_status_get: {
         parameters: {
             query?: never;
             header?: {
