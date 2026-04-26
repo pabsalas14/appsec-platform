@@ -18,7 +18,7 @@
 # ──────────────────────────────────────────────────────────────────────
 
 .PHONY: up up-prod down restart build logs logs-back logs-front \
-        status stats shell-back shell-db test test-cov clean seed help \
+        status stats shell-back shell-db test test-cov clean seed seed-uat-volumen help \
         new-entity types lint test-e2e
 
 # Colors
@@ -126,6 +126,12 @@ types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI 
 
 seed: ## Re-run seed (restarts backend with RUN_SEED=true)
 	docker compose exec backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
+
+# UAT: carga 5.000 vulnerabilidades de prueba (solo BD desechable; requiere `make seed` antes).
+# Ejecuta con: make seed-uat-volumen
+seed-uat-volumen: ## ⚠ 5000 filas [DEMO-VOL] — set SEED_UAT_VOLUME=1; usa `make clean` si la DB no es desechable
+	@printf "$(RED)⚠  Inserta 5000 Vulnerabilidad. Úsalo solo en base POSTGRES de un solo uso.$(NC)\n"
+	docker compose exec -e SEED_UAT_VOLUME=1 backend python -m app.seeds.seed_uat_volume
 
 clean: ## ⚠ Stop containers and remove ALL volumes (destructive)
 	@printf "$(RED)⚠  This will delete ALL data volumes!$(NC)\n"

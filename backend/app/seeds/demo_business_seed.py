@@ -165,6 +165,7 @@ async def _ensure_demo_business_context(db: AsyncSession, admin: User) -> Ctx:
         repo = Repositorio(
             id=uuid.uuid4(),
             user_id=uid,
+            organizacion_id=org.id,
             celula_id=cel.id,
             nombre=DEMO_REPO_NOMBRE,
             url="https://github.com/appsec-platform-demo/core-banking-api",

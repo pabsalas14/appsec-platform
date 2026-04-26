@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Users, ClipboardList, AlertTriangle, Target, ChevronRight, Download, ChevronDown, Activity } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { apiClient } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +55,13 @@ export default function TeamDashboardPremium() {
 
   const selectedAnalyst = selectedAnalystId && dashboardData ? dashboardData.analistas.find(a => a.id === selectedAnalystId) : null;
   const analystDetail = selectedAnalystId && dashboardData ? dashboardData.detalle[selectedAnalystId] : null;
+
+  // Prepare donut chart data from analistas
+  const donutData = dashboardData?.analistas ? [
+    { name: 'Activos', value: dashboardData.analistas.filter(a => a.riesgo === 'activo' || a.vencer === 0).length, color: '#22c55e' },
+    { name: 'En Riesgo', value: dashboardData.analistas.filter(a => a.riesgo === 'en_riesgo' || (a.vencer > 0 && a.vencer <= 3)).length, color: '#eab308' },
+    { name: 'Vencidas', value: dashboardData.analistas.filter(a => a.riesgo === 'vencidas' || a.vencer > 3).length, color: '#ef4444' },
+  ].filter(d => d.value > 0) : [];
 
   if (isLoading) {
     return (
@@ -119,23 +126,62 @@ export default function TeamDashboardPremium() {
         </div>
       </div>
 
-      {/* KPIS ROW */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {dashboardData.kpis.map((kpi, i) => {
-          const IconComponent = ICONS[i] || Users;
-          return (
-            <div key={i} className={`bg-card border border-border rounded-xl p-5 border-b-4 ${kpi.border} shadow-sm`}>
-              <div className="flex items-center gap-3">
-                <IconComponent className={`w-6 h-6 ${kpi.border.replace('border-b-', 'text-')}`} />
-                <h3 className="text-muted-foreground text-sm font-medium w-3/4">{kpi.title}</h3>
+      {/* KPIS + DONUT ROW */}
+      <div className="grid grid-cols-5 gap-4 mb-6">
+        {/* KPI Cards (4 columns) */}
+        <div className="col-span-4 grid grid-cols-4 gap-4">
+          {dashboardData.kpis.map((kpi, i) => {
+            const IconComponent = ICONS[i] || Users;
+            return (
+              <div key={i} className={`bg-card border border-border rounded-xl p-5 border-b-4 ${kpi.border} shadow-sm`}>
+                <div className="flex items-center gap-3">
+                  <IconComponent className={`w-6 h-6 ${kpi.border.replace('border-b-', 'text-')}`} />
+                  <h3 className="text-muted-foreground text-sm font-medium w-3/4">{kpi.title}</h3>
+                </div>
+                <div className="mt-4">
+                  <p className={`text-3xl font-bold ${kpi.valColor}`}>{kpi.value}</p>
+                  <p className={`text-xs font-medium mt-1 ${kpi.subColor}`}>{kpi.sub}</p>
+                </div>
               </div>
-              <div className="mt-4">
-                <p className={`text-3xl font-bold ${kpi.valColor}`}>{kpi.value}</p>
-                <p className={`text-xs font-medium mt-1 ${kpi.subColor}`}>{kpi.sub}</p>
+            );
+          })}
+        </div>
+
+        {/* Donut Chart (1 column) */}
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col">
+          <h3 className="text-sm font-semibold text-card-foreground mb-3">Distribución<br/>de Analistas</h3>
+          <div className="flex-1 flex items-center justify-center">
+            {donutData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {donutData.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground">Sin datos</p>
+            )}
+          </div>
+          <div className="mt-3 space-y-2">
+            {donutData.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                <span className="text-muted-foreground">{item.name}: {item.value}</span>
               </div>
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* MAIN CONTENT AREA */}

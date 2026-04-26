@@ -12,6 +12,10 @@
 - Fallas concentradas en suites de módulos nuevos: `actualizacion_*`, `cierre_conclusion`, `evidencia_auditoria`, `hito_iniciativa`, `indicador_formula`, `madurez`, `plan_remediacion`, `okr_*`, y `test_bloque_b_filtro_guardado`.
 - `cd frontend && npm run lint`: no ejecuta en este entorno por dependencia faltante (`next: command not found`).
 
+**Docker / imagen backend:** el servicio `backend` del Compose **no monta** el código por volumen; tras cambios en `backend/` hay que **`docker compose build backend`** (o `make up` que reconstruye) para que el contenedor use el código nuevo.
+
+**QA / UAT (dataset masivo desechable):** decisiones en [`docs/qa/DECISIONES_UAT.md`](docs/qa/DECISIONES_UAT.md); checklist en [`docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md`](docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md). Carga única de **5.000** vulnerabilidades de prueba: `make seed` y luego `make seed-uat-volumen` (solo con base PostgreSQL desechable; ver `Makefile`).
+
 **Avance global (orientativo)**: ~**88%** — suite backend amplia en verde (pytest + cobertura ~69%); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión.
 
 | Fase | Nombre | Estado | Fecha |

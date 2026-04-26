@@ -73,6 +73,9 @@ async def _create_celula(client: AsyncClient, headers: dict[str, str]) -> str:
 
 async def _create_repositorio(client: AsyncClient, headers: dict[str, str]) -> str:
     celula_id = await _make_celula_for_ownership(client, headers)
+    cel = await client.get(f"/api/v1/celulas/{celula_id}", headers=headers)
+    assert cel.status_code == 200, cel.text
+    organizacion_id = cel.json()["data"]["organizacion_id"]
     resp = await client.post(
         "/api/v1/repositorios",
         headers=headers,
@@ -82,6 +85,7 @@ async def _create_repositorio(client: AsyncClient, headers: dict[str, str]) -> s
             "plataforma": "github",
             "rama_default": "main",
             "activo": True,
+            "organizacion_id": organizacion_id,
             "celula_id": celula_id,
         },
     )

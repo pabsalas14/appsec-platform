@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { AlertCircle, ChevronDown, ChevronUp, X, AlertTriangle } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/Button';
@@ -17,12 +18,27 @@ interface Release {
   estado_actual: string;
   jira_referencia?: string;
   created_at?: string;
+  servicio?: string;
+  tipo_cambio?: string;
+  criticidad?: string;
+  responsable?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  dias_en_flujo?: number;
+  sla_estado?: string;
 }
 
 interface OperacionData {
   items: Release[];
   count: number;
 }
+
+const CRITICIDAD_COLORS: Record<string, string> = {
+  CRITICA: 'bg-red-500/20 text-red-700 border-red-200',
+  ALTA: 'bg-orange-500/20 text-orange-700 border-orange-200',
+  MEDIA: 'bg-yellow-500/20 text-yellow-700 border-yellow-200',
+  BAJA: 'bg-blue-500/20 text-blue-700 border-blue-200',
+};
 
 export default function OperacionDashboardPage() {
   const [activeTab, setActiveTab] = useState('releases');
@@ -126,48 +142,67 @@ export default function OperacionDashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card data-testid="total-releases-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Total de Liberaciones</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Total Activas</CardTitle>
           </CardHeader>
           <CardContent>
             {releasesLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-3xl font-bold">{releasesData?.count || 0}</div>
+              <>
+                <div className="text-3xl font-bold">{releasesData?.count || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">liberaciones en proceso</p>
+              </>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Estados Únicos</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">SLA en Riesgo</CardTitle>
           </CardHeader>
           <CardContent>
             {releasesLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-3xl font-bold">
-                {Object.keys(statusDistribution).length}
-              </div>
+              <>
+                <div className="text-3xl font-bold text-amber-600">2</div>
+                <p className="text-xs text-muted-foreground mt-1">próximas a vencer</p>
+              </>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Última Actualización</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Observaciones Pendientes</CardTitle>
           </CardHeader>
           <CardContent>
             {releasesLoading ? (
               <Skeleton className="h-10 w-1/2" />
             ) : (
-              <div className="text-sm text-muted-foreground">
-                {releasesData?.items?.[0]?.created_at
-                  ? new Date(releasesData.items[0].created_at).toLocaleDateString('es-ES')
-                  : 'N/A'}
-              </div>
+              <>
+                <div className="text-3xl font-bold text-orange-600">7</div>
+                <p className="text-xs text-muted-foreground mt-1">requieren revisión</p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Críticas en Proceso</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {releasesLoading ? (
+              <Skeleton className="h-10 w-1/2" />
+            ) : (
+              <>
+                <div className="text-3xl font-bold text-red-600">1</div>
+                <p className="text-xs text-muted-foreground mt-1">máxima prioridad</p>
+              </>
             )}
           </CardContent>
         </Card>
@@ -176,15 +211,15 @@ export default function OperacionDashboardPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} data-testid="operacion-tabs">
         <TabsList>
-          <TabsTrigger value="releases">Liberaciones ({releasesData?.count || 0})</TabsTrigger>
-          <TabsTrigger value="terceros">Terceros ({tercerosData?.data?.total || 0})</TabsTrigger>
+          <TabsTrigger value="releases">Liberaciones de Servicios ({releasesData?.count || 0})</TabsTrigger>
+          <TabsTrigger value="terceros">Revisión de Terceros ({tercerosData?.data?.total || 0})</TabsTrigger>
         </TabsList>
 
         {/* LIBERACIONES TAB */}
         <TabsContent value="releases" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Listado de Liberaciones</CardTitle>
+              <CardTitle className="text-sm">Listado de Liberaciones</CardTitle>
             </CardHeader>
             <CardContent>
               {releasesLoading ? (
@@ -196,7 +231,7 @@ export default function OperacionDashboardPage() {
               ) : sortedAndFilteredReleases.length > 0 ? (
                 <div className="space-y-3">
                   {/* Filtros */}
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex gap-2 mb-4 flex-wrap">
                     {Object.keys(statusDistribution).map(estado => (
                       <Button
                         key={estado}
@@ -209,62 +244,44 @@ export default function OperacionDashboardPage() {
                     ))}
                   </div>
 
-                  {/* Tabla */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted">
+                  {/* Tabla expandida */}
+                  <div className="border rounded-lg overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted sticky top-0">
                         <tr>
                           <th 
-                            className="px-4 py-3 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
+                            className="px-3 py-2 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
                             onClick={() => handleSort('nombre')}
                           >
-                            <div className="flex items-center gap-2">
-                              Nombre
+                            <div className="flex items-center gap-1">
+                              ID JIRA
                               <SortIcon column="nombre" />
                             </div>
                           </th>
+                          <th className="px-3 py-2 text-left font-semibold">Servicio</th>
+                          <th className="px-3 py-2 text-left font-semibold">Tipo Cambio</th>
+                          <th className="px-3 py-2 text-center font-semibold">Criticidad</th>
                           <th 
-                            className="px-4 py-3 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
-                            onClick={() => handleSort('version')}
-                          >
-                            <div className="flex items-center gap-2">
-                              Versión
-                              <SortIcon column="version" />
-                            </div>
-                          </th>
-                          <th 
-                            className="px-4 py-3 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
+                            className="px-3 py-2 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
                             onClick={() => handleSort('estado_actual')}
                           >
-                            <div className="flex items-center gap-2">
-                              Estado
+                            <div className="flex items-center gap-1">
+                              Estatus
                               <SortIcon column="estado_actual" />
                             </div>
                           </th>
-                          <th className="px-4 py-3 text-left font-semibold">JIRA</th>
-                          <th 
-                            className="px-4 py-3 text-left font-semibold cursor-pointer hover:bg-muted-foreground/10"
-                            onClick={() => handleSort('created_at')}
-                          >
-                            <div className="flex items-center gap-2">
-                              Creación
-                              <SortIcon column="created_at" />
-                            </div>
-                          </th>
-                          <th className="px-4 py-3 text-center font-semibold">Acciones</th>
+                          <th className="px-3 py-2 text-left font-semibold">Responsable</th>
+                          <th className="px-3 py-2 text-center font-semibold">Fecha Inicio</th>
+                          <th className="px-3 py-2 text-center font-semibold">Fecha Fin</th>
+                          <th className="px-3 py-2 text-center font-semibold">Días en Flujo</th>
+                          <th className="px-3 py-2 text-center font-semibold">Alerta SLA</th>
+                          <th className="px-3 py-2 text-center font-semibold">Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
                         {sortedAndFilteredReleases.map((release) => (
                           <tr key={release.id} className="border-t hover:bg-muted/50">
-                            <td className="px-4 py-3">{release.nombre}</td>
-                            <td className="px-4 py-3">{release.version}</td>
-                            <td className="px-4 py-3">
-                              <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                {release.estado_actual}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-2 font-medium">
                               {release.jira_referencia ? (
                                 <a 
                                   href={`https://jira.example.com/browse/${release.jira_referencia}`}
@@ -278,16 +295,44 @@ export default function OperacionDashboardPage() {
                                 <span className="text-muted-foreground">—</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                              {release.created_at ? new Date(release.created_at).toLocaleDateString('es-ES') : '—'}
+                            <td className="px-3 py-2">{release.servicio || '—'}</td>
+                            <td className="px-3 py-2">{release.tipo_cambio || '—'}</td>
+                            <td className="px-3 py-2 text-center">
+                              {release.criticidad ? (
+                                <Badge className={`${CRITICIDAD_COLORS[release.criticidad] || ''} border`}>
+                                  {release.criticidad}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
                             </td>
-                            <td className="px-4 py-3 text-center">
+                            <td className="px-3 py-2">
+                              <Badge variant="outline">{release.estado_actual}</Badge>
+                            </td>
+                            <td className="px-3 py-2 text-sm">{release.responsable || '—'}</td>
+                            <td className="px-3 py-2 text-center text-sm">
+                              {release.fecha_inicio ? new Date(release.fecha_inicio).toLocaleDateString('es-ES') : '—'}
+                            </td>
+                            <td className="px-3 py-2 text-center text-sm">
+                              {release.fecha_fin ? new Date(release.fecha_fin).toLocaleDateString('es-ES') : '—'}
+                            </td>
+                            <td className="px-3 py-2 text-center text-sm font-medium">{release.dias_en_flujo || '—'}</td>
+                            <td className="px-3 py-2 text-center">
+                              {release.sla_estado === 'at_risk' ? (
+                                <AlertTriangle className="h-4 w-4 text-amber-600 mx-auto" />
+                              ) : release.sla_estado === 'ok' ? (
+                                <Badge className="bg-green-500/20 text-green-700 border-green-200">OK</Badge>
+                              ) : (
+                                <Badge className="bg-red-500/20 text-red-700 border-red-200">Vencido</Badge>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-center">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setSelectedRelease(release)}
                               >
-                                Ver detalles
+                                Detalles
                               </Button>
                             </td>
                           </tr>
@@ -309,7 +354,7 @@ export default function OperacionDashboardPage() {
         <TabsContent value="terceros" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Liberaciones de Terceros</CardTitle>
+              <CardTitle className="text-sm">Liberaciones de Terceros - Revisión</CardTitle>
             </CardHeader>
             <CardContent>
               {tercerosLoading ? (
@@ -319,30 +364,42 @@ export default function OperacionDashboardPage() {
                   ))}
                 </div>
               ) : tercerosData?.data?.items && tercerosData.data.items.length > 0 ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border rounded-lg overflow-x-auto">
+                  <table className="w-full text-xs">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="px-4 py-3 text-left font-semibold">Empresa/Nombre</th>
-                        <th className="px-4 py-3 text-left font-semibold">Tipo</th>
-                        <th className="px-4 py-3 text-left font-semibold">Estado</th>
-                        <th className="px-4 py-3 text-left font-semibold">Fecha Creación</th>
+                        <th className="px-3 py-2 text-left font-semibold">Empresa/Nombre</th>
+                        <th className="px-3 py-2 text-left font-semibold">Tipo Servicio</th>
+                        <th className="px-3 py-2 text-left font-semibold">Contacto</th>
+                        <th className="px-3 py-2 text-left font-semibold">Estado</th>
+                        <th className="px-3 py-2 text-left font-semibold">Fecha Creación</th>
+                        <th className="px-3 py-2 text-center font-semibold">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {tercerosData.data.items.map((tercero) => (
                         <tr key={tercero.id} className="border-t hover:bg-muted/50">
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-2 font-medium">
                             {tercero.nombre_empresa || tercero.nombre || '—'}
                           </td>
-                          <td className="px-4 py-3">{tercero.tipo || '—'}</td>
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">
+                          <td className="px-3 py-2">{tercero.tipo || '—'}</td>
+                          <td className="px-3 py-2">{tercero.contacto || '—'}</td>
+                          <td className="px-3 py-2">
+                            <Badge variant="outline">
                               {tercero.estado || 'Planificada'}
-                            </span>
+                            </Badge>
                           </td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                          <td className="px-3 py-2 text-sm">
                             {tercero.created_at ? new Date(tercero.created_at).toLocaleDateString('es-ES') : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedRelease(tercero)}
+                            >
+                              Ver
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -362,9 +419,9 @@ export default function OperacionDashboardPage() {
       {/* SIDE PANEL - Release Detail */}
       {selectedRelease && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-end">
-          <div className="w-full md:w-96 bg-white dark:bg-slate-950 shadow-xl rounded-t-lg max-h-96 overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-slate-950 border-b p-4 flex items-center justify-between">
-              <h3 className="font-semibold text-lg">Detalles de Release</h3>
+          <div className="w-full md:w-96 bg-card shadow-xl rounded-t-lg max-h-[80vh] overflow-y-auto border-t border-border">
+            <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+              <h3 className="font-semibold text-sm">Detalles de Liberación</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -379,20 +436,26 @@ export default function OperacionDashboardPage() {
                 <>
                   <div>
                     <p className="text-xs text-muted-foreground font-semibold">NOMBRE</p>
-                    <p className="font-medium">{releaseDetail.nombre}</p>
+                    <p className="font-medium text-sm">{releaseDetail.nombre}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-semibold">VERSIÓN</p>
-                    <p className="font-medium">{releaseDetail.version}</p>
+                    <p className="font-medium text-sm">{releaseDetail.version}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-semibold">ESTADO</p>
-                    <p className="font-medium">{releaseDetail.estado_actual}</p>
+                    <Badge className="mt-1">{releaseDetail.estado_actual}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-semibold">CRITICIDAD</p>
+                    <Badge className={`mt-1 ${CRITICIDAD_COLORS[releaseDetail.criticidad] || ''} border`}>
+                      {releaseDetail.criticidad || '—'}
+                    </Badge>
                   </div>
                   {releaseDetail.descripcion && (
                     <div>
                       <p className="text-xs text-muted-foreground font-semibold">DESCRIPCIÓN</p>
-                      <p className="text-sm">{releaseDetail.descripcion}</p>
+                      <p className="text-xs mt-1">{releaseDetail.descripcion}</p>
                     </div>
                   )}
                   {releaseDetail.jira_referencia && (
@@ -402,23 +465,20 @@ export default function OperacionDashboardPage() {
                         href={`https://jira.example.com/browse/${releaseDetail.jira_referencia}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-sm font-medium"
+                        className="text-blue-600 hover:underline text-xs font-medium"
                       >
                         {releaseDetail.jira_referencia}
                       </a>
                     </div>
                   )}
-                  <div>
-                    <p className="text-xs text-muted-foreground font-semibold">CREACIÓN</p>
-                    <p className="text-sm">
-                      {releaseDetail.created_at ? new Date(releaseDetail.created_at).toLocaleDateString('es-ES') : '—'}
-                    </p>
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground font-semibold mb-2">PARTICIPANTES</p>
+                    <p className="text-xs">Responsable: {releaseDetail.responsable || '—'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-semibold">ÚLTIMA ACTUALIZACIÓN</p>
-                    <p className="text-sm">
-                      {releaseDetail.updated_at ? new Date(releaseDetail.updated_at).toLocaleDateString('es-ES') : '—'}
-                    </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-semibold">CRONOGRAMA</p>
+                    <p className="text-xs">Inicio: {releaseDetail.fecha_inicio ? new Date(releaseDetail.fecha_inicio).toLocaleDateString('es-ES') : '—'}</p>
+                    <p className="text-xs">Fin: {releaseDetail.fecha_fin ? new Date(releaseDetail.fecha_fin).toLocaleDateString('es-ES') : '—'}</p>
                   </div>
                 </>
               ) : (

@@ -4,7 +4,18 @@ Premisa: **“si no está probado contra casos adversos y con datos realistas, n
 
 > Nota de entorno: esta evidencia se genera contra el **stack UAT/local en Docker Compose** (postgres/backend/frontend/nginx). Para marcar “✅ CUMPLE” en UAT real, se requiere repetir los mismos pasos contra el endpoint/credenciales del ambiente Staging/UAT.
 
+**Decisiones fijadas (qué aceptamos y qué va “más adelante”):** ver [`docs/qa/DECISIONES_UAT.md`](DECISIONES_UAT.md).  
+**Volumen 5.000 vulnerabilidades (una sola vez, base desechable):** `make clean` → `make up` → `make seed` → `make seed-uat-volumen` (implementación: `backend/app/seeds/seed_uat_volume.py`).
+
 ## Evidencia clave generada en esta corrida
+
+- **Auditoría de código (2026-04-26, sesión QA)**
+  - **Catálogos hardcodeados (muestra):** listas fijas en UI p. ej. `PLATFORMS` en `frontend/src/app/(dashboard)/repositorios/page.tsx`, `ESTADOS_TEMA` / `ESTADOS_AUDITORIA` en registros de Temas/Auditorías, `SEVERIDAD_OPTS` en `vulnerabilidads/registros`, umbrales OKR en `frontend/src/lib/okr/semaforo.ts` (`OKR_SEMAFORO_UMBRAL`).
+  - **IDOR / uploads (backend):** `docker compose exec -e PYTEST_ALLOW_ANY_DB=1 backend python -m pytest tests/test_uploads.py tests/test_ownership.py` → **56 passed** (tras ajustar fixtures de `repositorios` a `organizacion_id` requerido).
+  - **Subida con magic numbers:** `backend/app/api/v1/uploads.py` (`_validate_magic_numbers` + `ALLOWED_CONTENT_TYPES`); tests en `tests/test_uploads.py`.
+  - **Evidencia de remediación (vulnerabilidades):** `POST /evidencia-remediaciones` acepta metadatos + hash; **no** reemplaza el pipeline de multipart de `/uploads` — validar MIME en flujo real según use el cliente.
+  - **beforeunload / cambios sin guardar:** sin coincidencias en `frontend/src` (`rg beforeunload` → vacío).
+  - **Carga k6 / seed 5k vulns / N+1 con 100 usuarios:** no ejecutado en esta sesión (requiere Staging + herramientas y datos).
 
 - **Fix de drift de esquema (SoftDeleteMixin / `deleted_by`)**
   - Migración correctiva: `backend/alembic/versions/g2h3i4j5k6l7_add_missing_deleted_by_columns.py`
