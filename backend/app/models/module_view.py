@@ -53,7 +53,7 @@ class ModuleView(SoftDeleteMixin, Base):
     
     # Owner
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    user: Mapped[User] = relationship("User", lazy="joined")
+    user: Mapped[User] = relationship("User", lazy="joined", foreign_keys=[user_id])
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

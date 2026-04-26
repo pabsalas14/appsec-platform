@@ -41,6 +41,15 @@ class AIRuleRead(AIRuleBase):
     updated_at: datetime
 
 
+class AIRuleList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    items: list[AIRuleRead]
+    total: int
+    page: int
+    per_page: int
+
+
 class AIRuleTest(BaseModel):
     data: dict = Field(..., description="Sample data for dry-run")
 
