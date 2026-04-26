@@ -7,59 +7,32 @@ import { test, expect } from "../fixtures";
 
 test.describe("Authentication", () => {
   test("should redirect unauthenticated users to login", async ({ page }) => {
+    await page.context().clearCookies();
     await page.goto("/");
-    // Should redirect to login page
-    expect(page.url()).toContain("/login");
+    await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
   });
 
-  test("should login with valid credentials", async ({ page, testData }) => {
-    const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-    await page.goto(`${baseURL}/login`);
+  test("should login with valid credentials", async ({ page }) => {
+    const raw = process.env.E2E_USERNAME ?? "admin";
+    const username = raw.includes("@") ? "admin" : raw;
+    const password = process.env.E2E_PASSWORD ?? "Changeme123!";
 
-    // Fill login form
-    await page.fill('input[type="email"], input[name*="email"], input[name*="username"]', "admin@test.com");
-    await page.fill('input[type="password"]', "admin123");
-
-    // Click submit button
-    const submitButton = await page.$('button[type="submit"]');
-    if (submitButton) {
-      await submitButton.click();
-    } else {
-      // Alternative: press Enter
-      await page.press('input[type="password"]', "Enter");
-    }
-
-    // Wait for redirect away from login (max 5 seconds)
-    try {
-      await page.waitForURL((url) => !url.toString().includes("/login"), {
-        timeout: 5000,
-      });
-    } catch {
-      // Login might not be fully implemented in tests, skip
-      test.skip();
-    }
+    await page.goto("/login");
+    await page.locator("#username").fill(username);
+    await page.locator("#password").fill(password);
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.waitForURL((u) => !u.pathname.includes("/login"), { timeout: 15_000 });
   });
 
   test("should show error on invalid credentials", async ({ page }) => {
-    const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-    await page.goto(`${baseURL}/login`);
+    await page.goto("/login");
+    await page.locator("#username").fill("not-a-user-e2e-invalid");
+    await page.locator("#password").fill("wrongpassword-xyz");
 
-    // Fill with invalid credentials
-    await page.fill('input[type="email"], input[name*="email"], input[name*="username"]', "invalid@test.com");
-    await page.fill('input[type="password"]', "wrongpassword");
+    await page.getByRole("button", { name: /^sign in$/i }).click();
 
-    // Click submit
-    const submitButton = await page.$('button[type="submit"]');
-    if (submitButton) {
-      await submitButton.click();
-
-      // Check for error message
-      const errorLocator = page.locator('[role="alert"], .error, .text-red-500');
-      await errorLocator.first().waitFor({ state: "visible", timeout: 3000 }).catch(() => {
-        // Error message might not be implemented
-        test.skip();
-      });
-    }
+    const errorLocator = page.locator('[role="alert"], .error, .text-red-500');
+    await errorLocator.first().waitFor({ state: "visible", timeout: 10_000 });
   });
 
   test("should have test data available", async ({ testData }) => {

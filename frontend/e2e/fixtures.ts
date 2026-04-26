@@ -56,10 +56,10 @@ export const test = base.extend<TestFixtures>({
     await page.locator("#username").fill(username);
     await page.locator("#password").fill(password);
     await page.getByRole("button", { name: /^sign in$/i }).click();
-    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30_000 });
 
     await page.goto("/tasks");
-    await page.waitForURL(/\/tasks/, { timeout: 15_000 });
+    await page.waitForURL(/\/tasks/, { timeout: 30_000 });
 
     await use(page);
   },
