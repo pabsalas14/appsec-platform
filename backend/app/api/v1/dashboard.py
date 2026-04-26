@@ -24,6 +24,7 @@ from app.models.audit_log import AuditLog
 from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
+from app.schemas.service_release import ServiceReleaseUpdate
 
 router = APIRouter()
 
