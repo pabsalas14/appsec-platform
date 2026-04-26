@@ -26,7 +26,7 @@ export interface ModuleView extends ModuleViewBase {
   deleted_at?: string | null;
 }
 
-export interface ModuleViewCreate extends ModuleViewBase {}
+export type ModuleViewCreate = ModuleViewBase;
 
 export interface ModuleViewUpdate {
   nombre?: string;

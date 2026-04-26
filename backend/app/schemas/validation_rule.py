@@ -9,8 +9,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ValidationRuleBase(BaseModel):
     nombre: str = Field(..., min_length=1, max_length=255, description="Rule name")
-    entity_type: str = Field(..., min_length=1, max_length=100, description="Entity type (e.g., vulnerability, release)")
-    rule_type: str = Field(..., min_length=1, max_length=50, description="Rule type: required, regex, conditional, formula")
+    entity_type: str = Field(
+        ..., min_length=1, max_length=100, description="Entity type (e.g., vulnerability, release)"
+    )
+    rule_type: str = Field(
+        ..., min_length=1, max_length=50, description="Rule type: required, regex, conditional, formula"
+    )
     condition: dict[str, Any] = Field(..., description="Condition JSON structure")
     error_message: str = Field(..., min_length=1, max_length=500, description="Error message")
     enabled: bool = True
@@ -39,6 +43,7 @@ class ValidationRuleRead(ValidationRuleBase):
 
 class ValidationRuleList(BaseModel):
     """Paginated list response."""
+
     items: list[ValidationRuleRead] = Field(default_factory=list)
     total: int
     skip: int

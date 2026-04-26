@@ -40,9 +40,7 @@ class FPTriageService:
         """Use IA to classify finding as FP/Review/Confirmed"""
 
         # Fetch vulnerability
-        result = await self.db.execute(
-            select(Vulnerabilidad).where(Vulnerabilidad.id == vulnerabilidad_id)
-        )
+        result = await self.db.execute(select(Vulnerabilidad).where(Vulnerabilidad.id == vulnerabilidad_id))
         vulnerability = result.scalars().first()
 
         if not vulnerability:
@@ -270,9 +268,11 @@ class FPTriageService:
                 results.append({"vulnerabilidad_id": vuln_id, **result})
             except Exception as e:
                 logger.warning(f"Failed to classify {vuln_id}: {e}")
-                results.append({
-                    "vulnerabilidad_id": vuln_id,
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "vulnerabilidad_id": vuln_id,
+                        "error": str(e),
+                    }
+                )
 
         return results

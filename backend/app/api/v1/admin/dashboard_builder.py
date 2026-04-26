@@ -21,6 +21,7 @@ router = APIRouter(prefix="/dashboard-builder", tags=["Admin · Dashboard Builde
 
 # ─── CUSTOM DASHBOARD ENDPOINTS ───
 
+
 @router.post("/dashboards")
 async def create_dashboard(
     data: CustomDashboardCreate,
@@ -142,6 +143,7 @@ async def delete_dashboard(
 
 # ─── DASHBOARD ACCESS ENDPOINTS ───
 
+
 @router.post("/dashboards/{dashboard_id}/access")
 async def grant_access(
     dashboard_id: str,
@@ -164,6 +166,7 @@ async def grant_access(
 
 
 # ─── DASHBOARD CONFIG ENDPOINTS ───
+
 
 @router.post("/dashboards/{dashboard_id}/config")
 async def configure_widget(

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 interface Release {
   id: string;
@@ -16,15 +16,6 @@ interface Release {
   version: string;
   estado_actual: string;
   jira_referencia?: string;
-  created_at?: string;
-}
-
-interface Tercero {
-  id: string;
-  nombre?: string;
-  nombre_empresa?: string;
-  estado?: string;
-  tipo?: string;
   created_at?: string;
 }
 

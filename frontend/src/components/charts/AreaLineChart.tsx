@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 
-interface ChartDataPoint {
+export interface ChartDataPoint {
   name: string;
   [key: string]: string | number;
 }

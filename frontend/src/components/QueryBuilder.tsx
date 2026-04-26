@@ -5,12 +5,13 @@
  */
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QueryBuilderForm } from "./QueryBuilderForm";
-import { useQueryBuilder } from "@/hooks/useQueryBuilder";
+import { useQueryBuilder, type QueryConfig } from "@/hooks/useQueryBuilder";
 import { useQueryValidation } from "@/hooks/useQueryValidation";
+import { logger } from "@/lib/logger";
 
 interface QueryBuilderProps {
   onSave?: (widgetId: string) => void;
@@ -46,7 +47,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({ onSave }) => {
         setWidgetName("");
       }
     } catch (err) {
-      console.error("Save failed:", err);
+      logger.error("query_builder.save_failed", { err: String(err) });
     }
   };
 
@@ -55,9 +56,9 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({ onSave }) => {
       {/* Left Panel: Form */}
       <div className="w-1/3 overflow-y-auto space-y-4">
         <QueryBuilderForm
-          config={config}
-          schema={schema}
-          onConfigChange={updateConfig}
+          config={config as unknown as Record<string, unknown>}
+          schema={schema as unknown as Record<string, unknown>}
+          onConfigChange={(updates) => updateConfig(updates as Partial<QueryConfig>)}
           onValidate={validate}
           onExecute={execute}
           isValidating={isValidating}
@@ -185,7 +186,9 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({ onSave }) => {
 
             {!previewData && !isLoading && !error && (
               <div className="flex items-center justify-center py-8 bg-gray-50 rounded-md">
-                <p className="text-sm text-muted-foreground">Click "Execute" to preview data</p>
+                <p className="text-sm text-muted-foreground">
+                  Click &quot;Execute&quot; to preview data
+                </p>
               </div>
             )}
 

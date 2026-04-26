@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-
 # ========================================
 # FORMULA ENDPOINTS TESTS
 # ========================================
+
 
 @pytest.mark.asyncio
 async def test_non_admin_cannot_list_formulas(client: AsyncClient, auth_headers: dict[str, str]):
@@ -24,9 +24,8 @@ async def test_admin_can_list_formulas(client: AsyncClient, admin_auth_headers: 
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "success"
-    assert "data" in body
-    assert "items" in body["data"]
-    assert "total" in body["data"]
+    assert isinstance(body["data"], list)
+    assert body["meta"]["total"] >= 0
 
 
 @pytest.mark.asyncio
@@ -73,9 +72,7 @@ async def test_admin_can_create_formula_with_supported_functions(
 
 
 @pytest.mark.asyncio
-async def test_admin_cannot_create_formula_with_invalid_syntax(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_cannot_create_formula_with_invalid_syntax(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin cannot create formula with unbalanced parentheses."""
     payload = {
         "nombre": "Invalid Formula",
@@ -92,9 +89,7 @@ async def test_admin_cannot_create_formula_with_invalid_syntax(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_get_single_formula(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_get_single_formula(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can retrieve a single formula by ID."""
     # Create a formula first
     create_payload = {
@@ -198,9 +193,7 @@ async def test_admin_can_test_formula(client: AsyncClient, admin_auth_headers: d
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_formula_with_failure(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_formula_with_failure(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin gets error when testing invalid formula."""
     payload = {
         "formula_text": "IF(1 == 1, 100",  # Invalid
@@ -219,9 +212,7 @@ async def test_admin_can_test_formula_with_failure(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_get_supported_functions(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_get_supported_functions(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can retrieve list of supported formula functions."""
     resp = await client.get(
         "/api/v1/admin/formulas/functions/supported",
@@ -246,10 +237,9 @@ async def test_admin_can_get_supported_functions(
 # VALIDATION RULES ENDPOINTS TESTS
 # ========================================
 
+
 @pytest.mark.asyncio
-async def test_non_admin_cannot_list_validation_rules(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_non_admin_cannot_list_validation_rules(client: AsyncClient, auth_headers: dict[str, str]):
     """Non-admin users cannot access validation rule endpoints."""
     resp = await client.get("/api/v1/admin/validation-rules", headers=auth_headers)
     assert resp.status_code == 403
@@ -262,15 +252,12 @@ async def test_admin_can_list_validation_rules(client: AsyncClient, admin_auth_h
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "success"
-    assert "data" in body
-    assert "items" in body["data"]
-    assert "total" in body["data"]
+    assert isinstance(body["data"], list)
+    assert body["meta"]["total"] >= 0
 
 
 @pytest.mark.asyncio
-async def test_admin_can_create_required_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_create_required_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can create a 'required' type validation rule."""
     payload = {
         "nombre": "Critical must have SLA",
@@ -295,9 +282,7 @@ async def test_admin_can_create_required_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_create_regex_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_create_regex_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can create a 'regex' type validation rule."""
     payload = {
         "nombre": "Email format validation",
@@ -319,9 +304,7 @@ async def test_admin_can_create_regex_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_create_conditional_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_create_conditional_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can create a 'conditional' type validation rule."""
     payload = {
         "nombre": "CRITICA must have mitigation",
@@ -345,17 +328,13 @@ async def test_admin_can_create_conditional_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_create_formula_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_create_formula_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can create a 'formula' type validation rule."""
     payload = {
         "nombre": "CVSS score must be > 7 for CRITICA",
         "entity_type": "vulnerabilidad",
         "rule_type": "formula",
-        "condition": {
-            "formula": "IF(severidad == 'CRITICA', cvss_score > 7, True)"
-        },
+        "condition": {"formula": "IF(severidad == 'CRITICA', cvss_score > 7, True)"},
         "error_message": "CRITICA vulnerabilities must have CVSS > 7",
         "enabled": True,
     }
@@ -368,9 +347,7 @@ async def test_admin_can_create_formula_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_get_single_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_get_single_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can retrieve a single validation rule by ID."""
     # Create a rule first
     create_payload = {
@@ -399,9 +376,7 @@ async def test_admin_can_get_single_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_update_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_update_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can update an existing validation rule."""
     # Create a rule
     create_payload = {
@@ -437,9 +412,7 @@ async def test_admin_can_update_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_delete_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_delete_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can delete (soft delete) a validation rule."""
     # Create a rule
     create_payload = {
@@ -466,9 +439,7 @@ async def test_admin_can_delete_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_required_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_required_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can test a 'required' validation rule."""
     # Create a required rule
     create_payload = {
@@ -498,9 +469,7 @@ async def test_admin_can_test_required_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_required_validation_rule_failure(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_required_validation_rule_failure(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin gets failure when test data doesn't satisfy required rule."""
     # Create a required rule
     create_payload = {
@@ -531,9 +500,7 @@ async def test_admin_can_test_required_validation_rule_failure(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_regex_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_regex_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can test a 'regex' validation rule."""
     create_payload = {
         "nombre": "Email Regex",
@@ -564,9 +531,7 @@ async def test_admin_can_test_regex_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_admin_can_test_conditional_validation_rule(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_admin_can_test_conditional_validation_rule(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Admin can test a 'conditional' validation rule."""
     create_payload = {
         "nombre": "Conditional Test",
@@ -599,9 +564,7 @@ async def test_admin_can_test_conditional_validation_rule(
 
 
 @pytest.mark.asyncio
-async def test_disabled_validation_rule_always_passes(
-    client: AsyncClient, admin_auth_headers: dict[str, str]
-):
+async def test_disabled_validation_rule_always_passes(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Disabled validation rules should always pass validation."""
     create_payload = {
         "nombre": "Disabled Rule",

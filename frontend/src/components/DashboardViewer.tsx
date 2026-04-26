@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { GridLayout, Layouts } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
@@ -12,11 +12,10 @@ import {
   SemaforoSla,
   HistoricoMensualGrid,
   HorizontalBarRanking,
-  SeverityChip,
-  StatusChip,
-  ProgressBarSemaforo,
   AreaLineChart,
+  type SemaforoItem,
 } from '@/components/charts';
+import type { ChartDataPoint } from '@/components/charts/AreaLineChart';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -76,9 +75,18 @@ const WidgetRenderer: React.FC<WidgetRenderProps> = ({ widget }) => {
                     ? data.summary.total.toLocaleString()
                     : '—'}
                 </div>
-                {data?.summary?.trend && (
-                  <div className={data.summary.trend.direction === 'up' ? 'text-green-500' : 'text-red-500'}>
-                    {data.summary.trend.direction === 'up' ? '↑' : '↓'} {data.summary.trend.percentage}%
+                {data?.summary?.trend &&
+                  typeof data.summary.trend === 'object' &&
+                  data.summary.trend !== null && (
+                  <div
+                    className={
+                      (data.summary.trend as { direction?: string }).direction === 'up'
+                        ? 'text-green-500'
+                        : 'text-red-500'
+                    }
+                  >
+                    {(data.summary.trend as { direction?: string }).direction === 'up' ? '↑' : '↓'}{' '}
+                    {(data.summary.trend as { percentage?: number }).percentage ?? 0}%
                   </div>
                 )}
               </div>
@@ -96,19 +104,30 @@ const WidgetRenderer: React.FC<WidgetRenderProps> = ({ widget }) => {
             {/* Semáforo SLA */}
             {widget.type === 'semaforo_sla' && Array.isArray(data?.summary?.items) && (
               <SemaforoSla
-                items={data.summary.items.map((item: any) => ({
-                  status: item.status || 'ok',
-                  label: item.label || '',
-                  count: item.count || 0,
-                  percentage: item.percentage,
-                }))}
+                items={data.summary.items.map(
+                  (item: {
+                    status?: string;
+                    label?: string;
+                    count?: number;
+                    percentage?: number;
+                  }): SemaforoItem => {
+                    const s = item.status;
+                    const status: SemaforoItem['status'] =
+                      s === 'ok' || s === 'warning' || s === 'critical' ? s : 'ok';
+                    return {
+                      status,
+                      label: item.label || '',
+                      count: item.count || 0,
+                      percentage: item.percentage,
+                    };
+                  })}
               />
             )}
 
             {/* Horizontal Ranking */}
             {widget.type === 'ranking_bar' && Array.isArray(data?.summary?.items) && (
               <HorizontalBarRanking
-                data={data.summary.items.map((item: any) => ({
+                data={data.summary.items.map((item: { label?: string; value?: number; color?: string }) => ({
                   label: item.label || '',
                   value: item.value || 0,
                   color: item.color,
@@ -120,10 +139,12 @@ const WidgetRenderer: React.FC<WidgetRenderProps> = ({ widget }) => {
             {/* Area Line Chart */}
             {widget.type === 'area_chart' && Array.isArray(data?.data) && (
               <AreaLineChart
-                data={data.data.map((d: any) => ({
-                  name: d.name || d.date || '',
-                  ...d,
-                }))}
+                data={
+                  data.data.map((d: Record<string, string | number | undefined>) => ({
+                    name: String(d.name ?? d.date ?? ''),
+                    ...d,
+                  })) as ChartDataPoint[]
+                }
                 series={[
                   {
                     key: 'value',
@@ -139,11 +160,13 @@ const WidgetRenderer: React.FC<WidgetRenderProps> = ({ widget }) => {
             {/* Histórico Mensual */}
             {widget.type === 'historic_grid' && Array.isArray(data?.summary?.months) && (
               <HistoricoMensualGrid
-                months={data.summary.months.map((m: any) => ({
-                  month: m.month,
-                  value: m.value || 0,
-                  color: m.color,
-                }))}
+                months={data.summary.months.map(
+                  (m: { month?: string | number; value?: number; color?: string }) => ({
+                    month: typeof m.month === 'number' ? m.month : Number(m.month) || 1,
+                    value: m.value || 0,
+                    color: m.color,
+                  })
+                )}
               />
             )}
 
@@ -161,7 +184,7 @@ const WidgetRenderer: React.FC<WidgetRenderProps> = ({ widget }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.data.slice(0, 5).map((row: any, idx: number) => (
+                    {data.data.slice(0, 5).map((row: Record<string, unknown>, idx: number) => (
                       <tr key={idx} className="border-b hover:bg-muted/50">
                         {Object.entries(row).map(([key, value]) => (
                           <td key={key} className="px-2 py-1 text-xs">

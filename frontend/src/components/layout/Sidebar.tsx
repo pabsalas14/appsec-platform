@@ -18,6 +18,8 @@ import {
   ListChecks,
   ListTodo,
   LineChart,
+  FunctionSquare,
+  LayoutTemplate,
   Package,
   Server,
   Target,
@@ -110,6 +112,19 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: 'Programas anuales',
+    items: [
+      { href: '/programa_sasts', label: 'Programas SAST', icon: Bug },
+      { href: '/actividad_mensual_sasts', label: 'Actividad SAST', icon: LineChart },
+      { href: '/programa_dasts', label: 'Programas DAST', icon: Globe2 },
+      { href: '/actividad_mensual_dasts', label: 'Actividad DAST', icon: LineChart },
+      { href: '/programa_source_codes', label: 'Programas SC', icon: GitBranch },
+      { href: '/actividad_mensual_source_codes', label: 'Actividad SC', icon: LineChart },
+      { href: '/servicio_regulado_registros', label: 'Servicios regulados', icon: Layers },
+      { href: '/actividad_mensual_servicios_regulados', label: 'Actividad SR', icon: LineChart },
+    ],
+  },
+  {
     title: 'Threat modeling',
     items: [
       { href: '/programa_threat_modelings', label: 'Programas TM', icon: Network },
@@ -124,6 +139,8 @@ const SECTIONS: NavSection[] = [
       { href: '/admin/roles', label: 'Roles', icon: ShieldCheck, adminOnly: true },
       { href: '/admin/catalogs', label: 'Catálogos', icon: ListChecks, adminOnly: true },
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
+      { href: '/admin/module-views', label: 'Module Views', icon: LayoutTemplate, adminOnly: true },
+      { href: '/admin/formulas', label: 'Formula Engine', icon: FunctionSquare, adminOnly: true },
       { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
     ],

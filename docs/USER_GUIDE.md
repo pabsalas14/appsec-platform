@@ -7,7 +7,8 @@
 3. [Program Leader Guide](#program-leader-guide)
 4. [Analyst Guide](#analyst-guide)
 5. [Auditor Guide](#auditor-guide)
-6. [Common Tasks](#common-tasks)
+6. [Temas Emergentes](#temas-emergentes)
+7. [Common Tasks](#common-tasks)
 
 ---
 
@@ -515,6 +516,90 @@ Export KRI0025 and supporting data:
 - Remediation trend (6-month view)
 - SLA compliance
 - Vulnerability distribution
+
+---
+
+## Temas Emergentes
+
+### ¿Cuándo usar este módulo?
+
+Para cualquier situación no planificada que requiere atención, seguimiento y cierre:
+- Vulnerabilidades 0-day recién publicadas
+- Solicitudes urgentes de negocio
+- Alertas regulatorias (CNBV, ISO, etc.)
+- Evaluación de nuevas herramientas de seguridad
+- Incidentes de seguridad en curso
+
+### Roles con acceso
+
+| Rol | Puede crear | Puede actualizar bitácora | Puede cerrar |
+|-----|-------------|--------------------------|--------------|
+| Super Admin | ✅ | ✅ | ✅ |
+| Chief AppSec | ✅ | ✅ | ✅ |
+| Program Leader | ✅ | ✅ | ✅ |
+| Analyst | ✅ | ✅ | ❌ |
+| Auditor | ❌ (solo lectura) | ❌ | ❌ |
+
+### Flujo completo de un tema
+
+```
+Identificado → En Seguimiento → En Resolución → Cerrado
+```
+
+### Campos del formulario
+
+| Campo | Descripción | Requerido |
+|-------|-------------|-----------|
+| Título | Nombre corto y descriptivo del tema | ✅ |
+| Tipo | Categoría (configurable en Admin → Catálogos) | ✅ |
+| Descripción | Contexto completo del tema | ✅ |
+| Impacto | Alto / Medio / Bajo | ✅ |
+| Estado | Estado actual del tema | ✅ |
+| Fuente | Origen del tema (correo, ticket, alerta, etc.) | ✅ |
+
+### Indicadores de alerta (código de colores)
+
+El campo **Días Abierto** cambia de color según urgencia:
+
+| Color | Días abierto | Acción sugerida |
+|-------|-------------|----------------|
+| 🟢 Verde | 0–7 días | Normal, en seguimiento |
+| 🟡 Amarillo | 8–14 días | Solicitar actualización |
+| 🟠 Naranja | 15–30 días | Escalar a responsable |
+| 🔴 Rojo | 31+ días | Escalar a Chief AppSec |
+
+### Cómo crear un tema emergente
+
+**Navegar a:** Dashboard → Temas Emergentes → (desde el módulo CRUD en el menú lateral)
+
+1. Click "Nuevo Tema"
+2. Completar formulario con todos los campos requeridos
+3. Click "Crear"
+4. El tema aparece en el dashboard con estado "Identificado"
+
+### Cómo agregar una entrada a la bitácora
+
+La bitácora registra el historial completo de avances y comentarios del tema.
+
+**Navegar a:** Dashboards → Temas Emergentes
+
+1. Localizar el tema en la tabla
+2. Click "Ver" en la columna Acciones — se abre el panel de detalle
+3. En la sección "Bitácora", click **"+ Agregar actualización"**
+4. Completar el formulario:
+   - **Título**: Resumen corto de la actualización (ej. "Evaluación de impacto completada")
+   - **Descripción**: Detalle del avance, hallazgo o comentario
+   - **Fuente** *(opcional)*: Referencia al origen (ticket Jira, correo, URL)
+5. Click "Guardar"
+6. La entrada aparece en el timeline con tu usuario y la fecha actual
+
+> **Buena práctica**: agrega una entrada de bitácora cada vez que haya un avance relevante. Temas sin actualizaciones por más de 7 días se marcan como "Sin Movimiento" en los KPIs del dashboard.
+
+### Cómo cerrar un tema
+
+1. Asegúrate de que el tema tiene al menos una entrada de bitácora documentando la resolución
+2. Desde el módulo CRUD del tema, cambiar estado a "Cerrado"
+3. Registrar el cierre formal vía API o desde el módulo Admin con conclusión y recomendaciones
 
 ---
 

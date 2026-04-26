@@ -55,11 +55,20 @@ const createSchema = z.object({
   filters: z.string().optional(),
   sort_by: z.string().optional(),
   group_by: z.string().optional().nullable(),
-  page_size: z.coerce.number().min(5).max(100).default(25),
+  page_size: z.number().min(5).max(100),
 });
 type CreateFormData = z.infer<typeof createSchema>;
 
-const updateSchema = createSchema.partial();
+const updateSchema = z.object({
+  nombre: z.string().min(1, 'Name required').max(255).optional(),
+  module_name: z.string().min(1, 'Module name required').max(100).optional(),
+  tipo: z.enum(['table', 'kanban', 'calendar', 'cards']).optional(),
+  columns_config: z.string().optional(),
+  filters: z.string().optional(),
+  sort_by: z.string().optional(),
+  group_by: z.string().optional().nullable(),
+  page_size: z.number().min(5).max(100).optional(),
+});
 type UpdateFormData = z.infer<typeof updateSchema>;
 
 const VIEW_TYPE_OPTIONS = [
@@ -123,7 +132,7 @@ function CreateViewDialog({
         },
         onError: (err) => toast.error(extractErrorMessage(err, 'Failed to create view')),
       });
-    } catch (err) {
+    } catch (_err) {
       toast.error('Invalid JSON in configuration fields');
     }
   };
@@ -270,7 +279,7 @@ function EditViewDialog({
           onError: (err) => toast.error(extractErrorMessage(err, 'Failed to update view')),
         }
       );
-    } catch (err) {
+    } catch (_err) {
       toast.error('Invalid JSON in configuration fields');
     }
   };
@@ -428,7 +437,7 @@ export default function ModuleViewsPage() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete view</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete "{deleteView?.nombre}"? This action cannot be undone.
+                            {`Are you sure you want to delete "${deleteView?.nombre ?? ''}"? This action cannot be undone.`}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

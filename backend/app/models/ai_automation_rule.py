@@ -6,12 +6,12 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.mixins import SoftDeleteMixin
 from app.database import Base
+from app.models.mixins import SoftDeleteMixin
 
 
 class AIAutomationRule(Base, SoftDeleteMixin):
@@ -59,5 +59,10 @@ class AIAutomationRule(Base, SoftDeleteMixin):
     )
 
     __table_args__ = (
-        Index("ix_ai_automation_rule_trigger_enabled", "trigger_type", "enabled", postgresql_where=text("deleted_at IS NULL")),
+        Index(
+            "ix_ai_automation_rule_trigger_enabled",
+            "trigger_type",
+            "enabled",
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
     )

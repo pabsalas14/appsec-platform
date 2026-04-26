@@ -13,7 +13,7 @@ export const catalogReadSchema = z.object({
   type: z.string(),
   display_name: z.string(),
   description: z.string().nullable().optional(),
-  values: z.array(z.record(z.any())),
+  values: z.array(z.record(z.string(), z.unknown())),
   is_active: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -23,13 +23,13 @@ export const catalogCreateSchema = z.object({
   type: z.string(),
   display_name: z.string(),
   description: z.string().optional(),
-  values: z.array(z.record(z.any())).optional(),
+  values: z.array(z.record(z.string(), z.unknown())).optional(),
 });
 
 export const catalogUpdateSchema = z.object({
   display_name: z.string().optional(),
   description: z.string().optional(),
-  values: z.array(z.record(z.any())).optional(),
+  values: z.array(z.record(z.string(), z.unknown())).optional(),
   is_active: z.boolean().optional(),
 });
 

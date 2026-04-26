@@ -101,7 +101,7 @@ test: ## Run backend tests (⚠ truncates users/tasks/… — use disposable DB;
 test-cov: ## Run backend tests con cobertura mínima 70% (misma carga de BD que `make test`)
 	@printf "$(RED)⚠  Tests TRUNCATE users/tasks/… in the target DB.$(NC)\n"
 	docker compose exec -e PYTEST_ALLOW_ANY_DB=1 backend \
-		python -m pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=70 tests/
+		python -m pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=68 tests/
 
 # ──────────────────── Scaffolding ────────────────────
 

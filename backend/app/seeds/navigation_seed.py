@@ -31,7 +31,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.navigation_item import NavigationItem
 
-
 DEFAULT_NAVIGATION = [
     # Main items (no parent)
     {
@@ -238,21 +237,21 @@ async def seed_navigation(db: AsyncSession) -> int:
     existing = await db.scalar(select(NavigationItem))
     if existing:
         return 0  # Already seeded
-    
+
     count = 0
     parent_map = {}  # Track parent IDs for children
-    
+
     for item_data in DEFAULT_NAVIGATION:
         children = item_data.pop("children", [])
-        
+
         # Create parent
         parent_item = NavigationItem(**item_data)
         db.add(parent_item)
         await db.flush()  # Flush to get ID
-        
+
         parent_map[item_data["label"]] = parent_item.id
         count += 1
-        
+
         # Create children
         for child_data in children:
             child_item = NavigationItem(
@@ -261,6 +260,6 @@ async def seed_navigation(db: AsyncSession) -> int:
             )
             db.add(child_item)
             count += 1
-    
+
     await db.flush()
     return count

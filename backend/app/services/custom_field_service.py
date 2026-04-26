@@ -1,7 +1,12 @@
 """Custom Field service — admin-managed CRUD."""
 
 from app.models.custom_field import CustomField, CustomFieldValue
-from app.schemas.custom_field import CustomFieldCreate, CustomFieldUpdate, CustomFieldValueCreate, CustomFieldValueUpdate
+from app.schemas.custom_field import (
+    CustomFieldCreate,
+    CustomFieldUpdate,
+    CustomFieldValueCreate,
+    CustomFieldValueUpdate,
+)
 from app.services.base import BaseService
 
 custom_field_svc = BaseService[CustomField, CustomFieldCreate, CustomFieldUpdate](

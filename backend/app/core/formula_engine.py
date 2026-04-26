@@ -5,12 +5,13 @@ Supports 13+ built-in functions for metric calculation and validation.
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
 class FormulaError(Exception):
     """Formula evaluation error."""
+
     pass
 
 
@@ -24,8 +25,8 @@ class FormulaEngine:
     def _days_between(start_date_str: str, end_date_str: str) -> int:
         """Calcula días entre dos fechas (formato ISO)."""
         try:
-            start = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
-            end = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+            start = datetime.fromisoformat(start_date_str.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
             return (end - start).days
         except (ValueError, AttributeError) as e:
             raise FormulaError(f"days_between error: {e}")
@@ -97,7 +98,7 @@ class FormulaEngine:
         text = str(text)
         if length is None:
             return text[start:]
-        return text[start:start + length]
+        return text[start : start + length]
 
     @staticmethod
     def _min(items: list) -> float:
@@ -118,31 +119,31 @@ class FormulaEngine:
     @staticmethod
     def _now() -> str:
         """Retorna timestamp actual en ISO format."""
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     @staticmethod
     def _today() -> str:
         """Retorna fecha actual (YYYY-MM-DD)."""
-        return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        return datetime.now(UTC).strftime("%Y-%m-%d")
 
     # Mapeo de funciones disponibles
     FUNCTIONS = {
-        'days_between': _days_between,
-        'IF': _if,
-        'percentage': _percentage,
-        'round': _round,
-        'count': _count,
-        'sum': _sum,
-        'avg': _avg,
-        'coalesce': _coalesce,
-        'concatenate': _concatenate,
-        'uppercase': _uppercase,
-        'lowercase': _lowercase,
-        'substring': _substring,
-        'min': _min,
-        'max': _max,
-        'now': _now,
-        'today': _today,
+        "days_between": _days_between,
+        "IF": _if,
+        "percentage": _percentage,
+        "round": _round,
+        "count": _count,
+        "sum": _sum,
+        "avg": _avg,
+        "coalesce": _coalesce,
+        "concatenate": _concatenate,
+        "uppercase": _uppercase,
+        "lowercase": _lowercase,
+        "substring": _substring,
+        "min": _min,
+        "max": _max,
+        "now": _now,
+        "today": _today,
     }
 
     @classmethod
@@ -158,11 +159,11 @@ class FormulaEngine:
             return {"valid": False, "errors": ["Formula must be non-empty string"], "functions_used": []}
 
         # Detectar funciones usadas
-        func_pattern = r'\b(' + '|'.join(cls.FUNCTIONS.keys()) + r')\s*\('
+        func_pattern = r"\b(" + "|".join(cls.FUNCTIONS.keys()) + r")\s*\("
         functions_used = list(set(re.findall(func_pattern, formula_text)))
 
         # Verificar paréntesis balanceados
-        if formula_text.count('(') != formula_text.count(')'):
+        if formula_text.count("(") != formula_text.count(")"):
             errors.append("Unbalanced parentheses")
 
         # Verificar comillas balanceadas
@@ -183,11 +184,11 @@ class FormulaEngine:
     def execute(cls, formula_text: str, data: dict[str, Any] = None) -> Any:
         """
         Ejecuta una fórmula de forma segura.
-        
+
         Args:
             formula_text: Texto de fórmula
             data: Contexto de variables
-            
+
         Returns:
             Resultado evaluado
         """
@@ -208,15 +209,27 @@ class FormulaEngine:
             result = eval(formula_text, {"__builtins__": {}}, namespace)
             return result
         except Exception as e:
-            raise FormulaError(f"Execution error: {str(e)}")
+            raise FormulaError(f"Execution error: {e!s}")
 
     @staticmethod
     def get_supported_functions() -> list[dict[str, str]]:
         """Retorna lista de funciones soportadas con descripciones."""
         return [
-            {"name": "days_between", "description": "Calculate days between two ISO dates", "syntax": "days_between(start_date, end_date)"},
-            {"name": "IF", "description": "Conditional: return true_value if condition else false_value", "syntax": "IF(condition, true_value, false_value)"},
-            {"name": "percentage", "description": "Calculate percentage (value/total)*100", "syntax": "percentage(value, total)"},
+            {
+                "name": "days_between",
+                "description": "Calculate days between two ISO dates",
+                "syntax": "days_between(start_date, end_date)",
+            },
+            {
+                "name": "IF",
+                "description": "Conditional: return true_value if condition else false_value",
+                "syntax": "IF(condition, true_value, false_value)",
+            },
+            {
+                "name": "percentage",
+                "description": "Calculate percentage (value/total)*100",
+                "syntax": "percentage(value, total)",
+            },
             {"name": "round", "description": "Round to N decimal places", "syntax": "round(value, decimals)"},
             {"name": "count", "description": "Count list items", "syntax": "count(list)"},
             {"name": "sum", "description": "Sum list items", "syntax": "sum(list)"},
@@ -225,7 +238,11 @@ class FormulaEngine:
             {"name": "concatenate", "description": "Concatenate strings", "syntax": "concatenate(str1, str2, ...)"},
             {"name": "uppercase", "description": "Convert to uppercase", "syntax": "uppercase(text)"},
             {"name": "lowercase", "description": "Convert to lowercase", "syntax": "lowercase(text)"},
-            {"name": "substring", "description": "Extract substring from start for length chars", "syntax": "substring(text, start, length)"},
+            {
+                "name": "substring",
+                "description": "Extract substring from start for length chars",
+                "syntax": "substring(text, start, length)",
+            },
             {"name": "min", "description": "Minimum value in list", "syntax": "min(list)"},
             {"name": "max", "description": "Maximum value in list", "syntax": "max(list)"},
             {"name": "now", "description": "Current timestamp in ISO format", "syntax": "now()"},

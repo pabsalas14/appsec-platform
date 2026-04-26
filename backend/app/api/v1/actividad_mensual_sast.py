@@ -50,9 +50,7 @@ async def sincronizar_hallazgos_actividad_mensual_sast(
     current_user: User = Depends(get_current_user),
 ):
     """B2: recalcula conteos desde `hallazgo_sasts` vinculados y el score (BRD)."""
-    updated = await actividad_mensual_sast_svc.sincronizar_hallazgos(
-        db, id, scope={"user_id": current_user.id}
-    )
+    updated = await actividad_mensual_sast_svc.sincronizar_hallazgos(db, id, scope={"user_id": current_user.id})
     if not updated:
         raise NotFoundException("ActividadMensualSast not found")
     return success(ActividadMensualSastRead.model_validate(updated).model_dump(mode="json"))

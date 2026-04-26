@@ -86,7 +86,6 @@ async def get_schema_info(
     Lists all tables, columns, and relationships.
     """
     try:
-
         from app.database import Base
 
         schema_info = {
@@ -101,28 +100,34 @@ async def get_schema_info(
 
             columns = []
             for col in mapper.columns:
-                columns.append({
-                    "name": col.name,
-                    "type": str(col.type),
-                    "nullable": col.nullable,
-                    "primary_key": col.primary_key,
-                    "foreign_key": bool(col.foreign_keys),
-                })
+                columns.append(
+                    {
+                        "name": col.name,
+                        "type": str(col.type),
+                        "nullable": col.nullable,
+                        "primary_key": col.primary_key,
+                        "foreign_key": bool(col.foreign_keys),
+                    }
+                )
 
-            schema_info["tables"].append({
-                "name": table_name,
-                "model": model_class.__name__,
-                "columns": columns,
-            })
+            schema_info["tables"].append(
+                {
+                    "name": table_name,
+                    "model": model_class.__name__,
+                    "columns": columns,
+                }
+            )
 
             # Extract relationships
             relationships = []
             for relationship_prop in mapper.relationships:
-                relationships.append({
-                    "name": relationship_prop.key,
-                    "target_table": relationship_prop.mapper.class_.__tablename__,
-                    "direction": str(relationship_prop.direction),
-                })
+                relationships.append(
+                    {
+                        "name": relationship_prop.key,
+                        "target_table": relationship_prop.mapper.class_.__tablename__,
+                        "direction": str(relationship_prop.direction),
+                    }
+                )
 
             if relationships:
                 schema_info["relationships"][table_name] = relationships

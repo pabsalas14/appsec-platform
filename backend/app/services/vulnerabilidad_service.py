@@ -69,9 +69,7 @@ class VulnerabilidadService(BaseService[Vulnerabilidad, VulnerabilidadCreate, Vu
             prev = normalize_estado_a_id(record.estado, catalog) or record.estado
             nxt = normalize_estado_a_id(changes["estado"], catalog)
             if nxt is None:
-                raise ValidationException(
-                    f"estado '{changes['estado']}' no coincide con el catálogo administrable"
-                )
+                raise ValidationException(f"estado '{changes['estado']}' no coincide con el catálogo administrable")
             try:
                 assert_transicion_permitida(catalog, str(prev), str(nxt))
             except ValueError as e:

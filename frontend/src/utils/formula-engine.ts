@@ -29,8 +29,6 @@ const ALLOWED_FUNCTIONS = [
   'substring',
 ];
 
-const OPERATORS = ['(', ')', '+', '-', '*', '/', '>', '<', '=', '!', ',', ':'];
-
 export class FormulaEngine {
   /**
    * Parse and validate formula syntax without executing
@@ -96,8 +94,9 @@ export class FormulaEngine {
     try {
       const result = this.evaluateExpression(formula, context);
       return { result };
-    } catch (error: any) {
-      return { result: null, error: error.message || 'Evaluation error' };
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Evaluation error';
+      return { result: null, error: msg };
     }
   }
 
@@ -126,8 +125,9 @@ export class FormulaEngine {
     try {
       const fn = new Function('return ' + expr);
       return fn();
-    } catch (error: any) {
-      throw new Error(`Formula evaluation failed: ${error.message}`);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Formula evaluation failed: ${msg}`);
     }
   }
 

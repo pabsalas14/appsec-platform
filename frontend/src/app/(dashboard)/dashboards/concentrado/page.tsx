@@ -54,7 +54,7 @@ export default function ConcentradoDashboardPage() {
     },
   });
 
-  const { data: tableData, isLoading: loadingTable, error: errorTable } = useQuery({
+  const { data: tableData, isLoading: loadingTable, error: _errorTable } = useQuery({
     queryKey: ['dashboard-concentrado-table', filtroFuente, filtroSeveridad, currentPage],
     queryFn: async () => {
       logger.info('dashboard.concentrado.table.fetch', {

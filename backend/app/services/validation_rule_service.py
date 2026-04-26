@@ -18,14 +18,14 @@ validation_rule_svc = BaseService[ValidationRule, ValidationRuleCreate, Validati
 async def validate_rule(rule: ValidationRule, data: dict[str, Any]) -> bool:
     """
     Validate data against a validation rule.
-    
+
     Args:
         rule: ValidationRule instance
         data: Data dictionary to validate
-        
+
     Returns:
         bool: True if validation passes, False otherwise
-        
+
     Raises:
         BadRequestException: If rule execution fails
     """
@@ -53,7 +53,7 @@ async def validate_rule(rule: ValidationRule, data: dict[str, Any]) -> bool:
         try:
             return bool(re.match(pattern, str(value)))
         except re.error as e:
-            raise BadRequestException(f"Invalid regex pattern: {str(e)}")
+            raise BadRequestException(f"Invalid regex pattern: {e!s}") from e
 
     elif rule_type == "conditional":
         # Check condition, then validate nested check
@@ -87,7 +87,7 @@ async def validate_rule(rule: ValidationRule, data: dict[str, Any]) -> bool:
             result = FormulaEngine.execute(formula_text, data)
             return bool(result)
         except FormulaError as e:
-            raise BadRequestException(f"Formula execution failed: {str(e)}")
+            raise BadRequestException(f"Formula execution failed: {e!s}") from e
 
     else:
         raise BadRequestException(f"Unknown rule type: {rule_type}")

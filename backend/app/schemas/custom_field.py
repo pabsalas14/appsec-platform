@@ -5,7 +5,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # Field type enum: text, number, date, select, boolean, url, user_ref
 FIELD_TYPES = ["text", "number", "date", "select", "boolean", "url", "user_ref"]
 
@@ -46,6 +45,7 @@ class CustomFieldRead(CustomFieldBase):
 
 class CustomFieldList(BaseModel):
     """Paginated list response."""
+
     status: str = "success"
     data: list[CustomFieldRead]
     meta: dict = {}

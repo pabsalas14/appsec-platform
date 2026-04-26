@@ -40,6 +40,4 @@ class ConfiguracionIA(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        Index("ix_configuracion_ia_provider_enabled", "provider", "enabled"),
-    )
+    __table_args__ = (Index("ix_configuracion_ia_provider_enabled", "provider", "enabled"),)

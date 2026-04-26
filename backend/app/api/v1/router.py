@@ -4,7 +4,10 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     aceptacion_riesgo,
+    actividad_mensual_dast,
     actividad_mensual_sast,
+    actividad_mensual_servicios_regulados,
+    actividad_mensual_source_code,
     activo_web,
     actualizacion_iniciativa,
     actualizacion_tema,
@@ -146,6 +149,17 @@ api_router.include_router(hallazgo_tercero.router, prefix="/hallazgo_terceros", 
 api_router.include_router(programa_sast.router, prefix="/programa_sasts", tags=["Programa_sast"])
 api_router.include_router(
     actividad_mensual_sast.router, prefix="/actividad_mensual_sasts", tags=["ActividadMensualSast"]
+)
+api_router.include_router(
+    actividad_mensual_dast.router, prefix="/actividad_mensual_dasts", tags=["ActividadMensualDast"]
+)
+api_router.include_router(
+    actividad_mensual_source_code.router, prefix="/actividad_mensual_source_codes", tags=["ActividadMensualSourceCode"]
+)
+api_router.include_router(
+    actividad_mensual_servicios_regulados.router,
+    prefix="/actividad_mensual_servicios_regulados",
+    tags=["ActividadMensualServiciosRegulados"],
 )
 api_router.include_router(hallazgo_sast.router, prefix="/hallazgo_sasts", tags=["Hallazgo_sast"])
 api_router.include_router(programa_dast.router, prefix="/programa_dasts", tags=["Programa_dast"])

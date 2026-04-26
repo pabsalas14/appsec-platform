@@ -10,7 +10,6 @@ Usage:
     POST /api/v1/admin/test-data/reset     → Clear test data and re-seed
 """
 
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -51,7 +50,7 @@ async def seed_test_data(
 
     # Seed navigation items
     nav_count = await seed_navigation(db)
-    
+
     await db.commit()
 
     # For now, return placeholder
@@ -108,6 +107,7 @@ async def reset_test_data(
 
 
 # ─── Health check ───────────────────────────────────────────────────────────
+
 
 @router.get("/status")
 async def test_data_status(

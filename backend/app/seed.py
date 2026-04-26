@@ -14,6 +14,7 @@ import uuid
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.admin.settings import DEFAULT_SETTINGS
 from app.config import settings
@@ -739,7 +740,7 @@ async def _seed_catalogs(db) -> None:
         stmt = (
             pg_insert(Catalog)
             .values(
-                id=uuid.uuid4(),
+                id=str(uuid.uuid4()),
                 type=cat_data["type"],
                 display_name=cat_data["display_name"],
                 description=cat_data.get("description"),
@@ -758,22 +759,29 @@ async def _seed_catalogs(db) -> None:
     )
 
 
+async def run_seed(db: AsyncSession) -> None:
+    """Ejecuta inserts idempotentes sobre ``db`` (misma transacción que el caller).
+
+    Usar desde tests con el engine de pytest; ``seed()`` delega aquí con ``async_session``.
+    """
+    admin = await _seed_admin(db)
+    await _seed_roles(db)  # SEMANA 0: Crear 4 nuevos roles
+    await _seed_settings(db)
+    await _seed_regla_sods(db, admin.id)
+    await _seed_tipos_prueba(db, admin.id)
+    await _seed_controles(db, admin.id)
+    await _seed_herramientas(db, admin.id)
+    await _seed_indicadores_formulas(db, admin.id)
+    await _seed_kanban_columns(db)  # Dashboard 7: Kanban columns
+    await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
+
 
 async def seed() -> None:
     """Run all seed operations. Safe to run multiple times."""
     logger.info("seed.start", extra={"event": "seed.start"})
 
     async with async_session() as db, db.begin():
-        admin = await _seed_admin(db)
-        await _seed_roles(db)  # SEMANA 0: Crear 4 nuevos roles
-        await _seed_settings(db)
-        await _seed_regla_sods(db, admin.id)
-        await _seed_tipos_prueba(db, admin.id)
-        await _seed_controles(db, admin.id)
-        await _seed_herramientas(db, admin.id)
-        await _seed_indicadores_formulas(db, admin.id)
-        await _seed_kanban_columns(db)  # Dashboard 7: Kanban columns
-        await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
+        await run_seed(db)
 
     logger.info("seed.complete", extra={"event": "seed.complete"})
 

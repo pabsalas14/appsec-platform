@@ -3,11 +3,12 @@
  * Handles: config, chart type, preview data, API calls
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
-interface QueryConfig {
+export interface QueryConfig {
   base_table: string;
   joins?: Array<{ table: string; on_field: string; type: string }>;
   select_fields?: string[];
@@ -44,7 +45,6 @@ export const useQueryBuilder = () => {
   });
 
   const [chartType, setChartType] = useState<string>("data_table");
-  const [widgetName, setWidgetName] = useState<string>("");
 
   // Fetch schema from backend
   const { data: schema = {} } = useQuery({
@@ -54,7 +54,7 @@ export const useQueryBuilder = () => {
         const response = await apiClient.post("/api/v1/admin/query-builder/schema-info", {});
         return response.data;
       } catch (error) {
-        console.error("Failed to fetch schema:", error);
+        logger.error("query_builder.schema_fetch_failed", { error: String(error) });
         return {};
       }
     },
@@ -107,9 +107,7 @@ export const useQueryBuilder = () => {
 
   const save = useCallback(
     async (name: string) => {
-      const result = await saveMutation.mutateAsync(name);
-      setWidgetName("");
-      return result;
+      return saveMutation.mutateAsync(name);
     },
     [saveMutation]
   );

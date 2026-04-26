@@ -5,18 +5,25 @@ import { Plus, Loader2, Trash2, Edit2, ChevronUp, ChevronDown } from 'lucide-rea
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { PageWrapper } from '@/components/layout/PageWrapper';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  PageHeader,
+  PageWrapper,
+  Button,
+  Input,
+  Textarea,
+  Badge,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useCatalogs, useCreateCatalog, useUpdateCatalog, useDeleteCatalog } from '@/hooks/useCatalogs';
-import { toast } from 'sonner';
+import type { CatalogRead } from '@/lib/schemas/catalog.schema';
 
 const catalogFormSchema = z.object({
   type: z.string().min(1, 'El tipo es requerido'),
@@ -59,7 +66,7 @@ export default function CatalogsPage() {
   const onSubmit = async (values: CatalogFormValues) => {
     try {
       if (editingId) {
-        const { type, ...payload } = values;
+        const { type: _type, ...payload } = values;
         await updateMutation.mutateAsync(payload);
         setEditingId(null);
       } else {
@@ -67,7 +74,7 @@ export default function CatalogsPage() {
       }
       form.reset();
       setOpen(false);
-    } catch (error) {
+    } catch (_error) {
       // Error ya es manejado por el hook
     }
   };
@@ -77,7 +84,7 @@ export default function CatalogsPage() {
     await deleteMutation.mutateAsync(catalogId);
   };
 
-  const handleEdit = (catalog: any) => {
+  const handleEdit = (catalog: CatalogRead) => {
     form.reset(catalog);
     setEditingId(catalog.id);
     setOpen(true);
@@ -172,7 +179,7 @@ export default function CatalogsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                catalogs.map((catalog: any) => (
+                catalogs.map((catalog: CatalogRead) => (
                   <TableRow key={catalog.id}>
                     <TableCell className="font-mono text-sm">{catalog.type}</TableCell>
                     <TableCell>{catalog.display_name}</TableCell>

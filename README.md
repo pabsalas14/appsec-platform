@@ -6,18 +6,20 @@
 
 **Última actualización**: 26 de abril de 2026
 
+**Avance global (orientativo)**: ~**88%** — suite backend amplia en verde (pytest + cobertura ~69%); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión.
+
 | Fase | Nombre | Estado | Fecha |
 |------|--------|--------|-------|
 | **0** | Setup Dependencias | ✅ 100% COMPLETA | 25 abr |
 | **1** | Query Builder Manual | ✅ 100% COMPLETA | 25 abr |
-| **2** | Dashboard Builder + 9 Dashboards | 🟨 90% (endpoints listos, frontend conectando) | 26 abr |
+| **2** | Dashboard Builder + 9 Dashboards | 🟨 92% (API alineada, paneles operativos; pulido continuo) | 26 abr |
 | **3** | Module View Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **4** | Custom Fields | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **5** | Formula Engine + Validation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **6** | Catalog Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **7** | Navigation Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **8** | AI Automation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
-| **9** | Testing + Optimization | 🟨 En progreso (CI/CD validando) | 26 abr |
+| **9** | Testing + Optimization | 🟨 En progreso (pytest ~620+ pasando, cobertura ~69%, CI completo) | 26 abr |
 
 ### 📊 Resumen de Implementación
 
@@ -43,9 +45,9 @@
 - ✅ E2E test skeletons
 
 **En CI/CD:**
-- Tests ejecutándose
-- Validación de imports
-- Coverage analysis
+- Backend: pytest con umbral de cobertura 68%+
+- Frontend: ESLint, tsc, knip, build Next.js; Vitest (`passWithNoTests` hasta ampliar unit tests)
+- Drift OpenAPI ↔ `frontend/src/types/api.ts` en job dedicado
 
 ### 🎯 Próximos Pasos
 
@@ -59,7 +61,7 @@
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![Tests](https://img.shields.io/badge/pytest-~440%2B-brightgreen)](#verificación)
+[![Tests](https://img.shields.io/badge/pytest-620%2B-brightgreen)](#verificación)
 [![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---

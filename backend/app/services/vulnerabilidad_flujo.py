@@ -81,8 +81,7 @@ def assert_transicion_permitida(
     allow = {str(x).strip() for x in permitidas if str(x).strip()}
     if hacia_id not in allow:
         raise ValueError(
-            f"Transición de estatus no permitida: '{desde_id}' → '{hacia_id}'. "
-            f"Destinos permitidos: {sorted(allow)}"
+            f"Transición de estatus no permitida: '{desde_id}' → '{hacia_id}'. Destinos permitidos: {sorted(allow)}"
         )
 
 

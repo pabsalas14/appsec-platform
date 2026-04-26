@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Calendar, User, TrendingUp } from 'lucide-react';
+import { AlertCircle, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Calendar, User, TrendingUp, Plus } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 
 interface Tema {
   id: string;
@@ -50,10 +52,16 @@ interface TemasDashboardData {
   themes: Tema[];
 }
 
+const EMPTY_ENTRY = { titulo: '', contenido: '', fuente: '' };
+
 export default function TemasDashboardPage() {
   const [expandedTheme, setExpandedTheme] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'fecha' | 'impacto' | 'estado'>('fecha');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEntry, setNewEntry] = useState(EMPTY_ENTRY);
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard-temas-summary'],
@@ -63,6 +71,29 @@ export default function TemasDashboardPage() {
       return response.data.data as TemasDashboardData;
     },
   });
+
+  const addEntryMutation = useMutation({
+    mutationFn: async (payload: { tema_id: string; titulo: string; contenido: string; fuente?: string }) => {
+      logger.info('dashboard.temas.add_entry', { tema_id: payload.tema_id });
+      const response = await apiClient.post('/api/v1/actualizacion-tema', payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-tema-detail', expandedTheme] });
+      setNewEntry(EMPTY_ENTRY);
+      setShowAddForm(false);
+    },
+  });
+
+  const handleAddEntry = () => {
+    if (!expandedTheme || !newEntry.titulo.trim() || !newEntry.contenido.trim()) return;
+    addEntryMutation.mutate({
+      tema_id: expandedTheme,
+      titulo: newEntry.titulo.trim(),
+      contenido: newEntry.contenido.trim(),
+      fuente: newEntry.fuente.trim() || undefined,
+    });
+  };
 
   const { data: selectedData, isLoading: selectedLoading } = useQuery({
     queryKey: ['dashboard-tema-detail', expandedTheme],
@@ -398,48 +429,104 @@ export default function TemasDashboardPage() {
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </div>
-            ) : selectedData.bitacora.length > 0 ? (
+            ) : (
               <div className="border-t pt-4">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4" />
-                  Bitácora ({selectedData.bitacora.length})
-                </h4>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {selectedData.bitacora.map((item, idx) => (
-                    <div key={item.id} className="relative">
-                      {/* Timeline line */}
-                      {idx !== selectedData.bitacora.length - 1 && (
-                        <div className="absolute left-4 top-8 w-0.5 h-8 bg-muted"></div>
-                      )}
-                      {/* Timeline dot */}
-                      <div className="flex gap-3">
-                        <div className="relative z-10">
-                          <div className="w-3 h-3 rounded-full bg-blue-500 mt-2"></div>
-                        </div>
-                        {/* Content */}
-                        <div className="pb-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="font-semibold text-sm">{item.titulo}</p>
-                              <p className="text-xs text-muted-foreground">Por: {item.autor}</p>
-                            </div>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {new Date(item.fecha).toLocaleDateString('es-ES')}
-                            </span>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Bitácora ({selectedData.bitacora.length})
+                  </h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setShowAddForm(!showAddForm); setNewEntry(EMPTY_ENTRY); }}
+                    data-testid="add-entry-btn"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Agregar actualización
+                  </Button>
+                </div>
+
+                {showAddForm && (
+                  <div className="mb-4 p-4 border rounded-lg bg-muted/30 space-y-3" data-testid="add-entry-form">
+                    <Input
+                      placeholder="Título de la actualización *"
+                      value={newEntry.titulo}
+                      onChange={(e) => setNewEntry((p) => ({ ...p, titulo: e.target.value }))}
+                      data-testid="entry-titulo-input"
+                    />
+                    <Textarea
+                      placeholder="Descripción del avance o comentario *"
+                      value={newEntry.contenido}
+                      onChange={(e) => setNewEntry((p) => ({ ...p, contenido: e.target.value }))}
+                      rows={3}
+                      data-testid="entry-contenido-input"
+                    />
+                    <Input
+                      placeholder="Fuente (opcional)"
+                      value={newEntry.fuente}
+                      onChange={(e) => setNewEntry((p) => ({ ...p, fuente: e.target.value }))}
+                      data-testid="entry-fuente-input"
+                    />
+                    {addEntryMutation.isError && (
+                      <p className="text-xs text-destructive">Error al guardar. Intenta de nuevo.</p>
+                    )}
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setShowAddForm(false); setNewEntry(EMPTY_ENTRY); }}
+                        disabled={addEntryMutation.isPending}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleAddEntry}
+                        disabled={!newEntry.titulo.trim() || !newEntry.contenido.trim() || addEntryMutation.isPending}
+                        data-testid="save-entry-btn"
+                      >
+                        {addEntryMutation.isPending ? 'Guardando...' : 'Guardar'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedData.bitacora.length > 0 ? (
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {selectedData.bitacora.map((item, idx) => (
+                      <div key={item.id} className="relative">
+                        {idx !== selectedData.bitacora.length - 1 && (
+                          <div className="absolute left-4 top-8 w-0.5 h-8 bg-muted"></div>
+                        )}
+                        <div className="flex gap-3">
+                          <div className="relative z-10">
+                            <div className="w-3 h-3 rounded-full bg-blue-500 mt-2"></div>
                           </div>
-                          <p className="text-sm mt-2 text-muted-foreground">{item.contenido}</p>
-                          {item.fuente && (
-                            <p className="text-xs mt-1 text-muted-foreground">Fuente: {item.fuente}</p>
-                          )}
+                          <div className="pb-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-semibold text-sm">{item.titulo}</p>
+                                <p className="text-xs text-muted-foreground">Por: {item.autor}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {new Date(item.fecha).toLocaleDateString('es-ES')}
+                              </span>
+                            </div>
+                            <p className="text-sm mt-2 text-muted-foreground">{item.contenido}</p>
+                            {item.fuente && (
+                              <p className="text-xs mt-1 text-muted-foreground">Fuente: {item.fuente}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="border-t pt-4 text-center text-muted-foreground text-sm">
-                <p>No hay actualizaciones en la bitácora</p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-sm text-muted-foreground py-4">
+                    No hay actualizaciones aún. Agrega la primera entrada.
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { useDashboard } from '@/hooks/useDashboard';
 import { DashboardBuilder } from '@/components/DashboardBuilder';
 import { ArrowLeft } from 'lucide-react';

@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { AlertCircle, ChevronDown, Plus, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AlertCircle, ChevronDown } from 'lucide-react';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import {
   useVulnGlobal,
   useVulnSubdireccion,
@@ -20,6 +21,8 @@ import { KPICard } from '@/components/dashboards/KPICard';
 import { SeverityDistribution } from '@/components/dashboards/SeverityDistribution';
 import { VulnerabilidadesTable } from '@/components/dashboards/VulnerabilidadesTable';
 import { DrilldownLevel, TabType } from '@/types/dashboard-vuln';
+import { SemaforoSla } from '@/components/charts';
+import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 
 /**
@@ -50,6 +53,17 @@ export default function VulnerabilitiesDashboardPage() {
   const isLevel3 = drilldownPath.length === 4;
   const repoId = isLevel3 ? currentLevel.id : null;
 
+  // SLA semáforo — solo nivel global
+  const slaQuery = useQuery({
+    queryKey: ['vuln-sla-semaforo'],
+    queryFn: async () => {
+      logger.info('dashboard.vuln.sla_semaforo.fetch');
+      const response = await apiClient.get('/api/v1/dashboard/sla-semaforo');
+      return response.data.data as { on_time: number; at_risk: number; overdue: number; percentages: { on_time: number; at_risk: number; overdue: number } };
+    },
+    enabled: drilldownPath.length === 1,
+  });
+
   // Queries para cada nivel
   const globalQuery = useVulnGlobal();
   const subdireccionQuery = useVulnSubdireccion(drilldownPath.length >= 2 ? drilldownPath[1].id : null);
@@ -67,7 +81,7 @@ export default function VulnerabilitiesDashboardPage() {
   const resumenQuery = useVulnResumen(repoId);
 
   // Mapa de queries por tab
-  const tabQueries: Record<TabType, any> = {
+  const tabQueries: Record<TabType, UseQueryResult<unknown, Error>> = {
     sast: sastQuery,
     dast: dastQuery,
     sca: scaQuery,
@@ -180,6 +194,25 @@ export default function VulnerabilitiesDashboardPage() {
           <KPICard title="Medias" value={totalBySeverity['MEDIA'] || 0} color="yellow" />
           <KPICard title="Bajas" value={totalBySeverity['BAJA'] || 0} color="green" />
         </div>
+
+        {/* SLA Semáforo */}
+        {slaQuery.data && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Estado SLA</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SemaforoSla
+                layout="horizontal"
+                items={[
+                  { status: 'ok', label: 'En Tiempo', count: slaQuery.data.on_time, percentage: slaQuery.data.percentages?.on_time },
+                  { status: 'warning', label: 'En Riesgo', count: slaQuery.data.at_risk, percentage: slaQuery.data.percentages?.at_risk },
+                  { status: 'critical', label: 'Vencidas', count: slaQuery.data.overdue, percentage: slaQuery.data.percentages?.overdue },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Distribuciones */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -398,8 +431,6 @@ export default function VulnerabilitiesDashboardPage() {
 
   // ========== NIVEL 3: REPOSITORIO CON 9 TABS ==========
   if (drilldownPath.length === 4) {
-    const currentQuery = tabQueries[activeTab];
-
     return (
       <div className="flex flex-col gap-6">
         {/* Breadcrumb */}

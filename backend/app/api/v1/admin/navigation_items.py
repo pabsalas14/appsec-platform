@@ -36,17 +36,15 @@ async def list_items(
 ):
     """List navigation items (paginated, ordered)."""
     query = select(NavigationItem).where(NavigationItem.deleted_at.is_(None))
-    
+
     if search:
         query = query.where(NavigationItem.label.ilike(f"%{search}%"))
-    
+
     query = query.order_by(NavigationItem.orden)
-    
+
     rows = await db.scalars(query.offset(skip).limit(limit))
-    total = await db.scalar(
-        select(func.count()).select_from(NavigationItem).where(NavigationItem.deleted_at.is_(None))
-    )
-    
+    total = await db.scalar(select(func.count()).select_from(NavigationItem).where(NavigationItem.deleted_at.is_(None)))
+
     logger.info("navigation_item.list", extra={"skip": skip, "limit": limit, "total": total})
     return paginated(
         [NavigationItemRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -80,7 +78,7 @@ async def update_item(
     item = await navigation_item_svc.get(db, item_id)
     if not item:
         raise NotFoundException("Navigation item not found")
-    
+
     item = await navigation_item_svc.update(db, item_id, payload)
     await audit_record(db, admin.id, "navigation_item", "update", item.id)
     logger.info("navigation_item.update", extra={"item_id": str(item.id)})
@@ -97,7 +95,7 @@ async def delete_item(
     item = await navigation_item_svc.get(db, item_id)
     if not item:
         raise NotFoundException("Navigation item not found")
-    
+
     await navigation_item_svc.delete(db, item_id, deleted_by=admin.id)
     await audit_record(db, admin.id, "navigation_item", "delete", item_id)
     logger.info("navigation_item.delete", extra={"item_id": str(item_id)})
@@ -112,23 +110,22 @@ async def batch_reorder_items(
 ):
     """
     Batch reorder navigation items.
-    
+
     Payload: {"items": [{"id": "uuid", "orden": 0}, ...]}
     """
     items_data = payload.get("items", [])
-    
+
     for item_data in items_data:
         item_id = uuid.UUID(item_data["id"]) if isinstance(item_data["id"], str) else item_data["id"]
         new_orden = item_data.get("orden", 0)
-        
+
         item = await navigation_item_svc.get(db, item_id)
         if not item:
             continue
-        
+
         update_payload = NavigationItemUpdate(orden=new_orden)
         item = await navigation_item_svc.update(db, item_id, update_payload)
         await audit_record(db, admin.id, "navigation_item", "reorder", item.id)
-    
+
     logger.info("navigation_item.batch_reorder", extra={"count": len(items_data)})
     return success({"reordered": len(items_data)})
-

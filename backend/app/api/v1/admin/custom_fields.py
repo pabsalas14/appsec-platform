@@ -37,33 +37,33 @@ async def list_fields(
 ):
     """List custom fields (paginated, optionally filtered by entity type and search)."""
     query = select(CustomField).where(CustomField.deleted_at.is_(None))
-    
+
     if entity_type:
         query = query.where(CustomField.entity_type == entity_type)
-    
+
     if search:
         query = query.where(CustomField.name.ilike(f"%{search}%"))
-    
+
     # Contar total antes de offset
-    total = await db.scalar(
-        select(func.count()).select_from(CustomField).where(CustomField.deleted_at.is_(None))
-    )
+    total = await db.scalar(select(func.count()).select_from(CustomField).where(CustomField.deleted_at.is_(None)))
     if entity_type:
         total = await db.scalar(
-            select(func.count()).select_from(CustomField)
+            select(func.count())
+            .select_from(CustomField)
             .where(CustomField.deleted_at.is_(None))
             .where(CustomField.entity_type == entity_type)
         )
     if search:
         total = await db.scalar(
-            select(func.count()).select_from(CustomField)
+            select(func.count())
+            .select_from(CustomField)
             .where(CustomField.deleted_at.is_(None))
             .where(CustomField.name.ilike(f"%{search}%"))
         )
-    
+
     skip = (page - 1) * page_size
     rows = await db.scalars(query.order_by(CustomField.order).offset(skip).limit(page_size))
-    
+
     logger.info(
         "custom_field.list",
         extra={"page": page, "page_size": page_size, "total": total, "entity_type": entity_type},
@@ -100,7 +100,7 @@ async def update_field(
     field = await custom_field_svc.get(db, field_id)
     if not field:
         raise NotFoundException("Custom field not found")
-    
+
     field = await custom_field_svc.update(db, field_id, payload)
     await audit_record(db, admin.id, "custom_field", "update", field.id)
     logger.info("custom_field.update", extra={"field_id": str(field.id)})
@@ -117,7 +117,7 @@ async def delete_field(
     field = await custom_field_svc.get(db, field_id)
     if not field:
         raise NotFoundException("Custom field not found")
-    
+
     await custom_field_svc.delete(db, field_id, deleted_by=admin.id)
     await audit_record(db, admin.id, "custom_field", "delete", field_id)
     logger.info("custom_field.delete", extra={"field_id": str(field_id)})
@@ -138,7 +138,7 @@ async def get_custom_field_values(
         CustomField.deleted_at.is_(None),
     )
     fields = await db.scalars(fields_query)
-    
+
     # Get values
     values_query = select(CustomFieldValue).where(
         CustomFieldValue.entity_type == entity_type,
@@ -147,17 +147,19 @@ async def get_custom_field_values(
     )
     values = await db.scalars(values_query)
     values_dict = {str(v.field_id): v.value for v in values}
-    
+
     logger.info(
         "custom_field.get_values",
         extra={"entity_type": entity_type, "entity_id": str(entity_id)},
     )
-    return success({
-        "entity_type": entity_type,
-        "entity_id": str(entity_id),
-        "fields": [CustomFieldRead.model_validate(f).model_dump(mode="json") for f in fields],
-        "values": values_dict,
-    })
+    return success(
+        {
+            "entity_type": entity_type,
+            "entity_id": str(entity_id),
+            "fields": [CustomFieldRead.model_validate(f).model_dump(mode="json") for f in fields],
+            "values": values_dict,
+        }
+    )
 
 
 @router.patch("/{entity_type}/{entity_id}/{field_id}", response_model=dict)
@@ -174,7 +176,7 @@ async def set_custom_field_value(
     field = await custom_field_svc.get(db, field_id)
     if not field or field.entity_type != entity_type:
         raise NotFoundException("Custom field not found")
-    
+
     # Find or create value record
     value_query = select(CustomFieldValue).where(
         CustomFieldValue.field_id == field_id,
@@ -183,7 +185,7 @@ async def set_custom_field_value(
         CustomFieldValue.deleted_at.is_(None),
     )
     value_record = await db.scalar(value_query)
-    
+
     if value_record:
         value_record.value = payload.get("value")
     else:
@@ -194,7 +196,7 @@ async def set_custom_field_value(
             value=payload.get("value"),
         )
         db.add(value_record)
-    
+
     await db.flush()
     await audit_record(db, admin.id, "custom_field_value", "update", field_id)
     logger.info(

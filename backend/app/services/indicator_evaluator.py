@@ -46,10 +46,16 @@ def _apply_filters(model_col: dict[str, InstrumentedAttribute], filters: list[di
             vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(~col.in_(vals))
             continue
-        if op == "eq" and isinstance(value, (list, tuple)) and value and field in (
-            "severidad",
-            "estado",
-            "fuente",
+        if (
+            op == "eq"
+            and isinstance(value, (list, tuple))
+            and value
+            and field
+            in (
+                "severidad",
+                "estado",
+                "fuente",
+            )
         ):
             vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(col.in_(vals))
@@ -78,9 +84,13 @@ async def _count_entity(
             "severidad": HallazgoSast.severidad,
             "estado": HallazgoSast.estado,
         }
-        stmt = select(func.count()).select_from(HallazgoSast).where(
-            HallazgoSast.user_id == user_id,
-            HallazgoSast.deleted_at.is_(None),
+        stmt = (
+            select(func.count())
+            .select_from(HallazgoSast)
+            .where(
+                HallazgoSast.user_id == user_id,
+                HallazgoSast.deleted_at.is_(None),
+            )
         )
         stmt = _apply_filters(model_col, filters or [], stmt)
         return float((await db.execute(stmt)).scalar_one())
@@ -92,9 +102,13 @@ async def _count_entity(
             "estado": Vulnerabilidad.estado,
             "fuente": Vulnerabilidad.fuente,
         }
-        stmt = select(func.count()).select_from(Vulnerabilidad).where(
-            Vulnerabilidad.user_id == user_id,
-            Vulnerabilidad.deleted_at.is_(None),
+        stmt = (
+            select(func.count())
+            .select_from(Vulnerabilidad)
+            .where(
+                Vulnerabilidad.user_id == user_id,
+                Vulnerabilidad.deleted_at.is_(None),
+            )
         )
         for f in filters or []:
             if f.get("field") == "sla" and str(f.get("value", "")).lower() == "vencido":
@@ -110,9 +124,13 @@ async def _count_entity(
 
     if entity in ("service_release", "liberacion", "release"):
         # BRD: releases (placeholder; join a severidad vía pipeline en fases futuras)
-        stmt = select(func.count()).select_from(ServiceRelease).where(
-            ServiceRelease.user_id == user_id,
-            ServiceRelease.deleted_at.is_(None),
+        stmt = (
+            select(func.count())
+            .select_from(ServiceRelease)
+            .where(
+                ServiceRelease.user_id == user_id,
+                ServiceRelease.deleted_at.is_(None),
+            )
         )
         return float((await db.execute(stmt)).scalar_one())
 
@@ -121,9 +139,13 @@ async def _count_entity(
             "tipo": ControlSeguridad.tipo,
             "obligatorio": ControlSeguridad.obligatorio,
         }
-        stmt = select(func.count()).select_from(ControlSeguridad).where(
-            ControlSeguridad.user_id == user_id,
-            ControlSeguridad.deleted_at.is_(None),
+        stmt = (
+            select(func.count())
+            .select_from(ControlSeguridad)
+            .where(
+                ControlSeguridad.user_id == user_id,
+                ControlSeguridad.deleted_at.is_(None),
+            )
         )
         stmt = _apply_filters(model_col, filters or [], stmt)
         return float((await db.execute(stmt)).scalar_one())

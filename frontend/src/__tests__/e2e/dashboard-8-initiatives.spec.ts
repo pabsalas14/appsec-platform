@@ -159,7 +159,7 @@ test.describe('Dashboard 8: Iniciativas', () => {
   test.describe('Empty State', () => {
     test('should show empty state when no initiatives', async ({ page }) => {
       // Apply filter that results in 0 initiatives
-      const emptyState = page.locator('[data-testid="empty-state"]');
+      void page.locator('[data-testid="empty-state"]');
       // May or may not show depending on data
       const list = page.locator('[data-testid="initiatives-list"]');
       if (await list.isVisible()) {

@@ -48,6 +48,16 @@ export {
 export { Popover, PopoverTrigger, PopoverContent } from './popover';
 export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandDialog } from './command';
 export { Label } from './label';
+export {
+  useFormField,
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormField,
+} from './form';
 export { Switch } from './switch';
 export { Progress } from './progress';
 export { Checkbox } from './checkbox';

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class FormulaBase(BaseModel):
     """Base schema for Formula."""
+
     nombre: str = Field(..., min_length=1, max_length=255, description="Formula name")
     description: str | None = Field(None, max_length=1000, description="Formula description")
     formula_text: str = Field(..., min_length=1, description="Formula expression")
@@ -18,11 +19,13 @@ class FormulaBase(BaseModel):
 
 class FormulaCreate(FormulaBase):
     """Schema for creating Formula."""
+
     pass
 
 
 class FormulaUpdate(BaseModel):
     """Schema for updating Formula."""
+
     nombre: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
     formula_text: str | None = Field(None, min_length=1)
@@ -31,6 +34,7 @@ class FormulaUpdate(BaseModel):
 
 class FormulaRead(FormulaBase):
     """Schema for reading Formula."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -40,6 +44,7 @@ class FormulaRead(FormulaBase):
 
 class FormulaList(BaseModel):
     """Paginated list response."""
+
     items: list[FormulaRead] = Field(default_factory=list)
     total: int
     skip: int
@@ -48,12 +53,14 @@ class FormulaList(BaseModel):
 
 class FormulaTest(BaseModel):
     """Test formula execution."""
+
     formula_text: str = Field(..., min_length=1, description="Formula to test")
     data: dict[str, Any] = Field(default_factory=dict, description="Test data context")
 
 
 class FormulaTestResult(BaseModel):
     """Result of formula test."""
+
     success: bool
     result: Any = None
     error: str | None = None
@@ -61,6 +68,7 @@ class FormulaTestResult(BaseModel):
 
 class FunctionInfo(BaseModel):
     """Info about a supported formula function."""
+
     name: str
     description: str
     syntax: str

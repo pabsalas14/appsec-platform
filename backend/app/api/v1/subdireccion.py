@@ -37,9 +37,7 @@ async def export_subdirecciones_csv(
     items = await subdireccion_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "nombre", "codigo", "descripcion", "director_nombre", "director_contacto"]
-    )
+    writer.writerow(["id", "nombre", "codigo", "descripcion", "director_nombre", "director_contacto"])
     for r in items:
         writer.writerow(
             [

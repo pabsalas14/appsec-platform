@@ -3,8 +3,6 @@
  * These types are derived from the backend schemas and used for frontend components.
  */
 
-import type { UUID } from 'crypto';
-
 export type TriggerType =
   | 'on_vulnerability_created'
   | 'on_vulnerability_status_changed'
@@ -34,7 +32,7 @@ export interface AIRuleBase {
   timeout_seconds: number;
 }
 
-export interface AIRuleCreate extends AIRuleBase {}
+export type AIRuleCreate = AIRuleBase;
 
 export interface AIRuleUpdate {
   name?: string;

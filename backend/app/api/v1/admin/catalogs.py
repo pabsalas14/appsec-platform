@@ -6,8 +6,6 @@ All routes require ``role=admin``. Mutations write audit entries via
 
 from __future__ import annotations
 
-import uuid
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,9 +36,7 @@ async def list_catalogs(
         filters.append(Catalog.is_active.is_(is_active))
     if q:
         like = f"%{q.lower()}%"
-        filters.append(
-            func.lower(Catalog.type).like(like) | func.lower(Catalog.display_name).like(like)
-        )
+        filters.append(func.lower(Catalog.type).like(like) | func.lower(Catalog.display_name).like(like))
 
     count_stmt = select(func.count()).select_from(Catalog)
     for f in filters:

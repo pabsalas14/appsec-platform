@@ -6,22 +6,16 @@ Tests for:
 - GET /api/v1/dashboard/tema/{id}/detail
 """
 
-import pytest
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
-from app.models.tema_emergente import TemaEmergente
-from app.models.actualizacion_tema import ActualizacionTema
-from app.models.celula import Celula
-from app.models.organizacion import Organizacion
-from app.models.gerencia import Gerencia
-from app.models.subdireccion import Subdireccion
 from app.core.security import hash_password
-
+from app.models.actualizacion_tema import ActualizacionTema
+from app.models.tema_emergente import TemaEmergente
+from app.models.user import User
 
 # ─── FIXTURES ────────────────────────────────────────────────────────────────
 
@@ -41,6 +35,7 @@ async def admin_user(session_factory) -> User:
         db.add(user)
         await db.flush()
         await db.refresh(user)
+        await db.commit()
         return user
 
 
@@ -59,6 +54,7 @@ async def standard_user(session_factory) -> User:
         db.add(user)
         await db.flush()
         await db.refresh(user)
+        await db.commit()
         return user
 
 
@@ -109,6 +105,7 @@ async def emerging_themes_with_updates(session_factory, admin_user):
         for tema in themes:
             await db.refresh(tema)
 
+        await db.commit()
         return themes
 
 
@@ -134,9 +131,7 @@ class TestDashboard9EmergingThemes:
         self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
     ):
         """Test emerging-themes-summary returns 200 with correct structure."""
-        response = await client.get(
-            "/api/v1/dashboard/emerging-themes-summary", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/emerging-themes-summary", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -150,9 +145,7 @@ class TestDashboard9EmergingThemes:
         self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
     ):
         """Test emerging-themes-summary returns correct KPI values."""
-        response = await client.get(
-            "/api/v1/dashboard/emerging-themes-summary", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/emerging-themes-summary", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["total_themes"] == 3
@@ -165,9 +158,7 @@ class TestDashboard9EmergingThemes:
         self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
     ):
         """Test emerging-themes-summary returns full themes list."""
-        response = await client.get(
-            "/api/v1/dashboard/emerging-themes-summary", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/emerging-themes-summary", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         themes = data["data"]["themes"]
@@ -189,25 +180,19 @@ class TestDashboard9EmergingThemes:
         self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
     ):
         """Test dias_abierto is calculated correctly."""
-        response = await client.get(
-            "/api/v1/dashboard/emerging-themes-summary", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/emerging-themes-summary", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        themes = sorted(data["data"]["themes"], key=lambda x: x["created_at"])
+        themes = sorted(data["data"]["themes"], key=lambda x: x["created_at"], reverse=True)
 
-        # First theme should be most recent (0 days old)
-        assert themes[0]["dias_abierto"] == 0 or themes[0]["dias_abierto"] == 1
+        # Tema más reciente: días abiertos cercanos a 0
+        assert themes[0]["dias_abierto"] in (0, 1)
 
     @pytest.mark.asyncio
-    async def test_tema_detail_200(
-        self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
-    ):
+    async def test_tema_detail_200(self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates):
         """Test tema detail returns 200 with correct structure."""
         tema_id = str(emerging_themes_with_updates[0].id)
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -221,9 +206,7 @@ class TestDashboard9EmergingThemes:
     ):
         """Test tema detail includes all required fields."""
         tema_id = str(emerging_themes_with_updates[0].id)
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         tema = data["data"]["tema"]
@@ -241,14 +224,10 @@ class TestDashboard9EmergingThemes:
         assert "creado_por" in tema
 
     @pytest.mark.asyncio
-    async def test_tema_detail_bitacora(
-        self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
-    ):
+    async def test_tema_detail_bitacora(self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates):
         """Test tema detail includes bitácora timeline."""
         tema_id = str(emerging_themes_with_updates[0].id)
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         bitacora = data["data"]["bitacora"]
@@ -262,14 +241,10 @@ class TestDashboard9EmergingThemes:
             assert "fecha" in item
 
     @pytest.mark.asyncio
-    async def test_tema_detail_metadata(
-        self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates
-    ):
+    async def test_tema_detail_metadata(self, client: AsyncClient, auth_headers: dict, emerging_themes_with_updates):
         """Test tema detail includes metadata."""
         tema_id = str(emerging_themes_with_updates[0].id)
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         metadata = data["data"]["metadata"]
@@ -279,14 +254,10 @@ class TestDashboard9EmergingThemes:
         assert metadata["total_updates"] == 2
 
     @pytest.mark.asyncio
-    async def test_tema_detail_not_found(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_tema_detail_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test tema detail returns 404 for non-existent tema."""
         fake_id = str(uuid4())
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{fake_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{fake_id}/detail", headers=auth_headers)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
@@ -302,13 +273,9 @@ class TestDashboard9EmergingThemes:
         assert response.status_code in [401, 403]
 
     @pytest.mark.asyncio
-    async def test_emerging_themes_summary_empty(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_emerging_themes_summary_empty(self, client: AsyncClient, auth_headers: dict):
         """Test emerging-themes-summary returns empty list when no themes."""
-        response = await client.get(
-            "/api/v1/dashboard/emerging-themes-summary", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/emerging-themes-summary", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["total_themes"] == 0
@@ -320,9 +287,7 @@ class TestDashboard9EmergingThemes:
     ):
         """Test tema detail shows correct creator."""
         tema_id = str(emerging_themes_with_updates[0].id)
-        response = await client.get(
-            f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers
-        )
+        response = await client.get(f"/api/v1/dashboard/tema/{tema_id}/detail", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["tema"]["creado_por"] == admin_user.email

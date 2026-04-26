@@ -3,11 +3,9 @@
 import {
   AlertCircle,
   Check,
-  Copy,
   Loader2,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -35,7 +32,19 @@ import {
   TabsTrigger,
 } from "@/components/ui";
 import { logger } from "@/lib/logger";
-import type { ValidationRuleRead } from "@/types/api";
+/** Alineado con `ValidationRuleRead` del backend hasta regenerar OpenAPI. */
+interface ValidationRuleRead {
+  id: string;
+  nombre: string;
+  entity_type: string;
+  rule_type: string;
+  condition: Record<string, unknown>;
+  error_message: string;
+  enabled: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // Tipos locales
 interface Formula {
@@ -714,6 +723,8 @@ export default function ValidationRulesPage() {
     formulas.fetchFormulas();
     rules.fetchRules();
     formulas.getSupportedFunctions().then(setSupportedFunctions);
+    // Carga inicial única; los hooks exponen mutadores estables.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreateFormula = async (data: FormulaFormData) => {

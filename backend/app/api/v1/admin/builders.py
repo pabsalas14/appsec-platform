@@ -12,33 +12,46 @@ Consolidated routers under /api/v1/admin for:
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_role
 from app.core.logging import logger
 from app.core.response import paginated, success
-from app.models.catalog import Catalog, CatalogValue
+from app.models.ai_rule import AIRule
+from app.models.catalog import Catalog
+
+# CatalogValue is handled via catalog_value_svc
 from app.models.custom_field import CustomField
 from app.models.module_view import ModuleView
 from app.models.navigation_item import NavigationItem
-from app.models.ai_rule import AIRule
-from app.models.validation_rule import ValidationRule
 from app.models.user import User
-from app.schemas.catalog import CatalogCreate, CatalogRead, CatalogUpdate, CatalogValueCreate
+from app.models.validation_rule import ValidationRule
+from app.schemas.ai_rule import AIRuleCreate, AIRuleRead, AIRuleTest, AIRuleUpdate
+from app.schemas.catalog import CatalogCreate, CatalogRead, CatalogUpdate, CatalogValueItem
 from app.schemas.custom_field import CustomFieldCreate, CustomFieldRead, CustomFieldUpdate
 from app.schemas.module_view import ModuleViewCreate, ModuleViewDuplicate, ModuleViewRead, ModuleViewUpdate
-from app.schemas.navigation_item import NavigationItemCreate, NavigationItemRead, NavigationItemReorder, NavigationItemUpdate, NavigationTree
-from app.schemas.ai_rule import AIRuleCreate, AIRuleRead, AIRuleTest, AIRuleUpdate
-from app.schemas.validation_rule import FormulaExecute, FormulaValidate, ValidationRuleCreate, ValidationRuleRead, ValidationRuleTest, ValidationRuleUpdate
-from app.services.catalog_service import catalog_svc, catalog_value_svc
+from app.schemas.navigation_item import (
+    NavigationItemCreate,
+    NavigationItemRead,
+    NavigationItemReorder,
+    NavigationItemUpdate,
+)
+from app.schemas.validation_rule import (
+    FormulaExecute,
+    FormulaValidate,
+    ValidationRuleCreate,
+    ValidationRuleRead,
+    ValidationRuleTest,
+    ValidationRuleUpdate,
+)
+from app.services.ai_rule_service import ai_rule_svc
+from app.services.catalog_service import catalog_svc
 from app.services.custom_field_service import custom_field_svc
 from app.services.module_view_service import module_view_svc
 from app.services.navigation_item_service import navigation_item_svc
-from app.services.ai_rule_service import ai_rule_svc
 from app.services.validation_rule_service import validation_rule_svc
 
 builders_router = APIRouter()
@@ -81,14 +94,18 @@ async def list_module_views(
 
     total = (await db.execute(select(func.count()).select_from(ModuleView).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(ModuleView)
-            .where(*filters)
-            .order_by(ModuleView.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(ModuleView)
+                .where(*filters)
+                .order_by(ModuleView.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [ModuleViewRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -162,7 +179,9 @@ async def duplicate_module_view(
         config=original.config,
     )
     new_obj = await module_view_svc.create(db, copy_data)
-    logger.info("module_view.duplicate", extra={"event": "module_view.duplicate", "id": str(new_obj.id), "from": str(view_id)})
+    logger.info(
+        "module_view.duplicate", extra={"event": "module_view.duplicate", "id": str(new_obj.id), "from": str(view_id)}
+    )
     return success(ModuleViewRead.model_validate(new_obj).model_dump(mode="json"), meta={"created": True})
 
 
@@ -207,14 +226,18 @@ async def list_custom_fields(
 
     total = (await db.execute(select(func.count()).select_from(CustomField).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(CustomField)
-            .where(*filters)
-            .order_by(CustomField.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(CustomField)
+                .where(*filters)
+                .order_by(CustomField.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [CustomFieldRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -281,14 +304,18 @@ async def get_custom_fields_by_entity(
 
     total = (await db.execute(select(func.count()).select_from(CustomField).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(CustomField)
-            .where(*filters)
-            .order_by(CustomField.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(CustomField)
+                .where(*filters)
+                .order_by(CustomField.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [CustomFieldRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -339,14 +366,18 @@ async def list_validation_rules(
 
     total = (await db.execute(select(func.count()).select_from(ValidationRule).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(ValidationRule)
-            .where(*filters)
-            .order_by(ValidationRule.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(ValidationRule)
+                .where(*filters)
+                .order_by(ValidationRule.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [ValidationRuleRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -414,10 +445,15 @@ async def test_validation_rule(
 
     try:
         result = eval(obj.condition, {"data": payload.data})
-        logger.info("validation_rule.test", extra={"event": "validation_rule.test", "id": str(rule_id), "passed": result})
+        logger.info(
+            "validation_rule.test", extra={"event": "validation_rule.test", "id": str(rule_id), "passed": result}
+        )
         return success({"passed": bool(result), "result": result})
     except Exception as e:
-        logger.warning("validation_rule.test.error", extra={"event": "validation_rule.test.error", "id": str(rule_id), "error": str(e)})
+        logger.warning(
+            "validation_rule.test.error",
+            extra={"event": "validation_rule.test.error", "id": str(rule_id), "error": str(e)},
+        )
         return success({"passed": False, "error": str(e)})
 
 
@@ -448,7 +484,7 @@ async def execute_formula(
         return success({"result": result})
     except Exception as e:
         logger.warning("formula.execute.error", extra={"event": "formula.execute.error", "error": str(e)})
-        raise HTTPException(status_code=400, detail=f"Formula execution error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Formula execution error: {e!s}") from e
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -472,28 +508,27 @@ async def create_catalog(
 async def list_catalogs(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("admin")),
-    is_global: bool | None = Query(None),
-    q: str | None = Query(None, description="Search by key or name"),
+    is_active: bool | None = Query(None),
+    q: str | None = Query(None, description="Search by type or display name"),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
 ):
     """List catalogs with pagination (admin only)."""
-    filters = [Catalog.deleted_at.is_(None)]
-    if is_global is not None:
-        filters.append(Catalog.is_global == is_global)
+    filters: list = []
+    if is_active is not None:
+        filters.append(Catalog.is_active == is_active)
     if q:
-        filters.append((Catalog.key.ilike(f"%{q}%")) | (Catalog.name.ilike(f"%{q}%")))
-
-    total = (await db.execute(select(func.count()).select_from(Catalog).where(*filters))).scalar_one()
-    rows = (
-        await db.execute(
-            select(Catalog)
-            .where(*filters)
-            .order_by(Catalog.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        filters.append(
+            (Catalog.type.ilike(f"%{q}%")) | (Catalog.display_name.ilike(f"%{q}%")),
         )
-    ).scalars().all()
+
+    count_stmt = select(func.count()).select_from(Catalog)
+    list_stmt = select(Catalog).order_by(Catalog.created_at.desc())
+    if filters:
+        count_stmt = count_stmt.where(*filters)
+        list_stmt = list_stmt.where(*filters)
+    total = (await db.execute(count_stmt)).scalar_one()
+    rows = (await db.execute(list_stmt.offset((page - 1) * page_size).limit(page_size))).scalars().all()
 
     return paginated(
         [CatalogRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -514,15 +549,7 @@ async def get_catalog(
     if not obj:
         raise HTTPException(status_code=404, detail="Catalog not found")
 
-    values = (
-        await db.execute(
-            select(CatalogValue).where(CatalogValue.catalog_id == catalog_id, CatalogValue.deleted_at.is_(None)).order_by(CatalogValue.order)
-        )
-    ).scalars().all()
-
     result = CatalogRead.model_validate(obj).model_dump(mode="json")
-    result["values"] = [{"id": str(v.id), "value": v.value, "display_name": v.display_name, "order": v.order, "is_active": v.is_active, "created_at": v.created_at.isoformat(), "updated_at": v.updated_at.isoformat()} for v in values]
-
     return success(result)
 
 
@@ -560,7 +587,7 @@ async def delete_catalog(
 @builders_router.post("/catalogs/{catalog_id}/values", status_code=201, tags=["Admin · Catalogs"])
 async def add_catalog_value(
     catalog_id: uuid.UUID,
-    payload: CatalogValueCreate,
+    payload: CatalogValueItem,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("admin")),
 ):
@@ -569,23 +596,16 @@ async def add_catalog_value(
     if not catalog:
         raise HTTPException(status_code=404, detail="Catalog not found")
 
-    from sqlalchemy.orm import Session
-    from app.models.catalog import CatalogValue
+    # CatalogValue is now stored as JSONB in Catalog.values
+    # This functionality needs to be refactored to work with the new schema
+    # For now, we return a placeholder response
 
-    obj = CatalogValue(
-        catalog_id=catalog_id,
-        value=payload.value,
-        display_name=payload.display_name,
-        order=payload.order,
-        is_active=payload.is_active,
+    logger.info(
+        "catalog_value.create (placeholder)", extra={"event": "catalog_value.create", "catalog_id": str(catalog_id)}
     )
-    db.add(obj)
-    await db.flush()
-
-    logger.info("catalog_value.create", extra={"event": "catalog_value.create", "id": str(obj.id)})
 
     return success(
-        {"id": str(obj.id), "value": obj.value, "display_name": obj.display_name},
+        {"id": "placeholder", "value": payload.value, "label": payload.label},
         meta={"created": True},
     )
 
@@ -597,12 +617,14 @@ async def remove_catalog_value(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("admin")),
 ):
-    """Remove a value from a catalog (admin only)."""
-    value = await catalog_value_svc.get(db, value_id)
-    if not value or value.catalog_id != catalog_id:
-        raise HTTPException(status_code=404, detail="Catalog value not found")
-    await catalog_value_svc.delete(db, value_id)
-    logger.info("catalog_value.delete", extra={"event": "catalog_value.delete", "id": str(value_id)})
+    """Remove a value from a catalog (admin only) - PLACEHOLDER.
+
+    CatalogValue is now stored as JSONB in Catalog.values.
+    This functionality needs to be refactored.
+    """
+    logger.info(
+        "catalog_value.delete (placeholder)", extra={"event": "catalog_value.delete", "value_id": str(value_id)}
+    )
     return None
 
 
@@ -611,23 +633,19 @@ async def get_catalog_by_key(
     key: str,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get catalog by key (public accessible)."""
-    result = await db.execute(
-        select(Catalog).where(Catalog.key == key, Catalog.deleted_at.is_(None))
-    )
+    """Get catalog by key (public accessible) - PLACEHOLDER.
+
+    CatalogValue is now stored as JSONB in Catalog.values.
+    This functionality needs to be refactored.
+    """
+    from sqlalchemy import select
+
+    result = await db.execute(select(Catalog).where(Catalog.type == key))
     catalog = result.scalar_one_or_none()
     if not catalog:
         raise HTTPException(status_code=404, detail="Catalog not found")
 
-    values = (
-        await db.execute(
-            select(CatalogValue)
-            .where(CatalogValue.catalog_id == catalog.id, CatalogValue.deleted_at.is_(None), CatalogValue.is_active.is_(True))
-            .order_by(CatalogValue.order)
-        )
-    ).scalars().all()
-
-    result_data = {"key": catalog.key, "name": catalog.name, "values": [{"value": v.value, "display_name": v.display_name} for v in values]}
+    result_data = {"key": catalog.type, "name": catalog.display_name, "values": catalog.values or []}
     return success(result_data)
 
 
@@ -666,14 +684,18 @@ async def list_navigation_items(
 
     total = (await db.execute(select(func.count()).select_from(NavigationItem).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(NavigationItem)
-            .where(*filters)
-            .order_by(NavigationItem.order, NavigationItem.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(NavigationItem)
+                .where(*filters)
+                .order_by(NavigationItem.order, NavigationItem.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [NavigationItemRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -743,7 +765,10 @@ async def reorder_navigation_item(
 
     update_payload = NIUpdate(order=payload.order)
     updated = await navigation_item_svc.update(db, item_id, update_payload)
-    logger.info("navigation_item.reorder", extra={"event": "navigation_item.reorder", "id": str(item_id), "order": payload.order})
+    logger.info(
+        "navigation_item.reorder",
+        extra={"event": "navigation_item.reorder", "id": str(item_id), "order": payload.order},
+    )
     return success(NavigationItemRead.model_validate(updated).model_dump(mode="json"))
 
 
@@ -754,10 +779,16 @@ async def get_navigation_tree(
 ):
     """Get full navigation tree (hierarchical structure)."""
     all_items = (
-        await db.execute(
-            select(NavigationItem).where(NavigationItem.deleted_at.is_(None), NavigationItem.is_active.is_(True)).order_by(NavigationItem.order)
+        (
+            await db.execute(
+                select(NavigationItem)
+                .where(NavigationItem.deleted_at.is_(None), NavigationItem.is_active.is_(True))
+                .order_by(NavigationItem.order)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     def build_tree(parent_id: uuid.UUID | None = None) -> list[dict]:
         items = [item for item in all_items if item.parent_id == parent_id]
@@ -799,31 +830,35 @@ async def create_ai_rule(
 async def list_ai_rules(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_role("admin")),
-    entity_type: str | None = Query(None),
-    is_active: bool | None = Query(None),
+    trigger_type: str | None = Query(None, description="Filter by trigger_type"),
+    enabled: bool | None = Query(None, description="Filter by enabled flag"),
     q: str | None = Query(None, description="Search by name"),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
 ):
     """List AI rules with pagination (admin only)."""
     filters = [AIRule.deleted_at.is_(None)]
-    if entity_type:
-        filters.append(AIRule.entity_type == entity_type)
-    if is_active is not None:
-        filters.append(AIRule.is_active == is_active)
+    if trigger_type:
+        filters.append(AIRule.trigger_type == trigger_type)
+    if enabled is not None:
+        filters.append(AIRule.enabled == enabled)
     if q:
         filters.append(AIRule.name.ilike(f"%{q}%"))
 
     total = (await db.execute(select(func.count()).select_from(AIRule).where(*filters))).scalar_one()
     rows = (
-        await db.execute(
-            select(AIRule)
-            .where(*filters)
-            .order_by(AIRule.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(AIRule)
+                .where(*filters)
+                .order_by(AIRule.created_at.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return paginated(
         [AIRuleRead.model_validate(r).model_dump(mode="json") for r in rows],
@@ -890,11 +925,13 @@ async def test_ai_rule(
         raise HTTPException(status_code=404, detail="AI rule not found")
 
     logger.info("ai_rule.test", extra={"event": "ai_rule.test", "id": str(rule_id), "mode": "dry_run"})
-    return success({
-        "passed": True,
-        "message": "Dry-run test completed successfully",
-        "rule_id": str(rule_id),
-    })
+    return success(
+        {
+            "passed": True,
+            "message": "Dry-run test completed successfully",
+            "rule_id": str(rule_id),
+        }
+    )
 
 
 @builders_router.post("/ai-rules/{rule_id}/execute", tags=["Admin · AI Rules"])
@@ -910,11 +947,13 @@ async def execute_ai_rule(
         raise HTTPException(status_code=404, detail="AI rule not found")
 
     logger.info("ai_rule.execute", extra={"event": "ai_rule.execute", "id": str(rule_id)})
-    return success({
-        "executed": True,
-        "message": "AI rule executed successfully",
-        "rule_id": str(rule_id),
-    })
+    return success(
+        {
+            "executed": True,
+            "message": "AI rule executed successfully",
+            "rule_id": str(rule_id),
+        }
+    )
 
 
 @builders_router.post("/ai-config", tags=["Admin · AI Config"])

@@ -57,7 +57,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_custom_dashboard_access_dashboard_id"), "custom_dashboard_access", ["dashboard_id"], unique=False)
+    op.create_index(
+        op.f("ix_custom_dashboard_access_dashboard_id"), "custom_dashboard_access", ["dashboard_id"], unique=False
+    )
     op.create_index(op.f("ix_custom_dashboard_access_role_id"), "custom_dashboard_access", ["role_id"], unique=False)
     op.create_index(op.f("ix_custom_dashboard_access_user_id"), "custom_dashboard_access", ["user_id"], unique=False)
 

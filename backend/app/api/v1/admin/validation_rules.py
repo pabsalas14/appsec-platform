@@ -12,22 +12,21 @@ from app.api.deps import get_db, require_backoffice
 from app.core.exceptions import BadRequestException, NotFoundException
 from app.core.logging import logger
 from app.core.response import paginated, success
-from app.models.validation_rule import ValidationRule
 from app.models.user import User
+from app.models.validation_rule import ValidationRule
 from app.schemas.validation_rule import (
     ValidationRuleCreate,
-    ValidationRuleList,
     ValidationRuleRead,
     ValidationRuleTest,
     ValidationRuleUpdate,
 )
 from app.services.audit_service import record as audit_record
-from app.services.validation_rule_service import validation_rule_svc, validate_rule
+from app.services.validation_rule_service import validate_rule, validation_rule_svc
 
 router = APIRouter()
 
 
-@router.get("", response_model=ValidationRuleList)
+@router.get("")
 async def list_rules(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_backoffice),
@@ -35,14 +34,23 @@ async def list_rules(
     limit: int = Query(20, ge=1, le=100),
 ):
     """List all validation rules (paginated)."""
-    rows = await validation_rule_svc.list(db, skip=skip, limit=limit)
-    total = await db.scalar(select(func.count()).select_from(ValidationRule))
-    logger.info("validation_rule.list", extra={"skip": skip, "limit": limit, "total": total})
+    stmt = (
+        select(ValidationRule)
+        .where(ValidationRule.deleted_at.is_(None))
+        .order_by(ValidationRule.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    total = await db.scalar(select(func.count()).select_from(ValidationRule).where(ValidationRule.deleted_at.is_(None)))
+    total_i = int(total or 0)
+    page = (skip // limit) + 1
+    logger.info("validation_rule.list", extra={"skip": skip, "limit": limit, "total": total_i})
     return paginated(
         [ValidationRuleRead.model_validate(r).model_dump(mode="json") for r in rows],
-        total=total,
-        skip=skip,
-        limit=limit,
+        page=page,
+        page_size=limit,
+        total=total_i,
     )
 
 
@@ -66,7 +74,7 @@ async def create_rule(
         },
     )
     logger.info("validation_rule.create", extra={"rule_id": str(rule.id), "entity_type": rule.entity_type})
-    return success(ValidationRuleRead.model_validate(rule).model_dump(mode="json"), status_code=201)
+    return success(ValidationRuleRead.model_validate(rule).model_dump(mode="json"))
 
 
 @router.get("/{rule_id}")
@@ -159,21 +167,24 @@ async def test_rule(
     try:
         is_valid = await validate_rule(rule, payload.data)
         logger.info("validation_rule.test", extra={"rule_id": str(rule_id), "valid": is_valid})
-        return success({
-            "rule_id": str(rule_id),
-            "valid": is_valid,
-            "rule_type": rule.rule_type,
-            "message": None if is_valid else rule.error_message,
-        })
+        return success(
+            {
+                "rule_id": str(rule_id),
+                "valid": is_valid,
+                "rule_type": rule.rule_type,
+                "message": None if is_valid else rule.error_message,
+            }
+        )
     except BadRequestException as e:
         logger.warning("validation_rule.test", extra={"rule_id": str(rule_id), "error": str(e)})
-        return success({
-            "rule_id": str(rule_id),
-            "valid": False,
-            "rule_type": rule.rule_type,
-            "message": str(e),
-        })
+        return success(
+            {
+                "rule_id": str(rule_id),
+                "valid": False,
+                "rule_type": rule.rule_type,
+                "message": str(e),
+            }
+        )
     except Exception as e:
         logger.error("validation_rule.test", extra={"rule_id": str(rule_id), "error": str(e)})
-        raise BadRequestException(f"Error testing rule: {str(e)}")
-
+        raise BadRequestException(f"Error testing rule: {e!s}") from e

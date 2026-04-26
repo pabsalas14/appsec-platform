@@ -21,10 +21,18 @@ _JSONB = postgresql.JSONB(astext_type=sa.Text())
 
 
 def upgrade() -> None:
-    op.add_column("vulnerabilidads", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")))
-    op.add_column("iniciativas", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")))
-    op.add_column("temas_emergentes", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")))
-    op.add_column("auditorias", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")))
+    op.add_column(
+        "vulnerabilidads", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb"))
+    )
+    op.add_column(
+        "iniciativas", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb"))
+    )
+    op.add_column(
+        "temas_emergentes", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb"))
+    )
+    op.add_column(
+        "auditorias", sa.Column("custom_fields", _JSONB, nullable=False, server_default=sa.text("'{}'::jsonb"))
+    )
 
 
 def downgrade() -> None:

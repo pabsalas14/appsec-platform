@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCreateDashboard } from '@/hooks/useDashboard';
 import { DashboardLayout } from '@/schemas/dashboard-schema';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 export default function DashboardBuilderPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function DashboardBuilderPage() {
 
       router.push(`/dashboards/${newDashboard.id}/edit`);
     } catch (error) {
-      console.error('Error creando dashboard:', error);
+      logger.error('dashboard.builder.create_failed', { error: String(error) });
     }
   };
 

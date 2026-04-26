@@ -17,17 +17,20 @@ const severityMap: Record<string, string> = {
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'severity' | 'success' | 'primary';
+  variant?: 'default' | 'severity' | 'success' | 'primary' | 'secondary' | 'outline' | 'destructive';
   severityName?: string;
   className?: string;
 }
 
 export function Badge({ children, variant = 'default', severityName, className }: BadgeProps) {
-  const variantStyles = {
+  const variantStyles: Record<NonNullable<BadgeProps['variant']>, string> = {
     default: 'bg-white/[0.06] text-foreground border-white/10',
     severity: '',
     success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
     primary: 'bg-primary-500/15 text-primary-400 border-primary-500/30',
+    secondary: 'bg-white/[0.03] text-muted-foreground border-white/[0.08]',
+    outline: 'bg-transparent text-foreground border-white/20',
+    destructive: 'bg-red-500/15 text-red-400 border-red-500/30',
   };
 
   const cls =

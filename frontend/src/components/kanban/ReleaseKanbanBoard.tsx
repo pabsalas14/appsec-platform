@@ -15,6 +15,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { AlertCircle, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { ReleaseKanbanColumn } from './ReleaseKanbanColumn';
 import { ReleaseKanbanCard } from './ReleaseKanbanCard';
 
@@ -133,7 +134,7 @@ export function ReleaseKanbanBoard() {
       await loadKanban();
       queryClient.invalidateQueries({ queryKey: ['releases-kanban'] });
     } catch (err) {
-      console.error('Error moving release:', err);
+      logger.error('kanban.release_move_failed', { err: String(err) });
       setError('Error moviendo el release');
     } finally {
       setIsMoving(false);

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
-from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -62,7 +62,7 @@ class AIAutomationRuleList(BaseModel):
 
 __all__ = [
     "AIAutomationRuleCreate",
+    "AIAutomationRuleList",
     "AIAutomationRuleRead",
     "AIAutomationRuleUpdate",
-    "AIAutomationRuleList",
 ]

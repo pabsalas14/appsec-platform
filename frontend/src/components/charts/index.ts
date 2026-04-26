@@ -1,3 +1,4 @@
+export { BarChartCard, DonutChartCard, LineChartCard } from './themed-chart-cards';
 export { GaugeChart } from './GaugeChart';
 export { SemaforoSla, type SemaforoItem } from './SemaforoSla';
 export { HistoricoMensualGrid } from './HistoricoMensualGrid';

@@ -4,7 +4,7 @@ import React from 'react';
 import { AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface SemaforoItem {
+export interface SemaforoItem {
   status: 'ok' | 'warning' | 'critical';
   label: string;
   count: number;

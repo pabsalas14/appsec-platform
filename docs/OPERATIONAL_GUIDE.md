@@ -670,5 +670,60 @@ docker-compose restart backend
 
 ---
 
+## Módulo Temas Emergentes
+
+### Propósito operativo
+
+El módulo gestiona cualquier situación no planificada (vulnerabilidades 0-day, alertas regulatorias, solicitudes urgentes) que requiere seguimiento estructurado hasta su cierre. Complementa los programas formales (SAST/DAST/etc.) cubriendo lo que no encaja en un programa regular.
+
+### Flujo de estados
+
+```
+Identificado ──► En Seguimiento ──► En Resolución ──► Cerrado
+     │                                                    ▲
+     └──── (si se descarta) ─────────────────────────────┘
+```
+
+Los estados son configurables en Admin → Flujos de Estatus → módulo `tema_emergente`.
+
+### Procedimiento de revisión semanal
+
+**Responsable:** Chief AppSec o Program Leader designado  
+**Frecuencia:** Cada lunes antes de las 10:00
+
+1. Abrir Dashboard → Temas Emergentes
+2. Revisar KPI "Sin Movimiento" — temas que no han cambiado en 7+ días
+3. Para cada tema sin movimiento:
+   - Verificar si el responsable tiene contexto actualizado
+   - Si hay avance: pedirle que registre una entrada de bitácora
+   - Si no hay avance en 14+ días: ver criterios de escalación abajo
+4. Revisar temas de Alto Impacto — asegurarse de que tienen al menos una entrada de bitácora en los últimos 3 días
+
+### Criterios de escalación por impacto
+
+| Impacto | Sin movimiento por | Acción |
+|---------|-------------------|--------|
+| **Alto** | 24 horas | Notificación directa al responsable; Chief AppSec en copia |
+| **Alto** | 48 horas sin respuesta | Escalar a Chief AppSec para revisión inmediata |
+| **Medio** | 72 horas | Solicitar actualización de bitácora |
+| **Medio** | 7 días | Escalar a Program Leader |
+| **Bajo** | 7 días | Agregar a agenda de reunión semanal |
+| **Bajo** | 14 días | Evaluar si el tema debe cerrarse o reclasificarse |
+
+### Proceso de cierre
+
+Un tema debe cerrarse formalmente cuando:
+- La situación fue resuelta o mitigada
+- Se determinó que no aplica o fue un falso positivo
+- Se integró a un programa formal de seguridad
+
+**Para cerrar:**
+1. Agregar entrada final de bitácora documentando la resolución
+2. Cambiar estado a "Cerrado"
+3. Registrar cierre con conclusión y recomendaciones vía `POST /api/v1/cierre-conclusion`
+4. El cierre queda en el audit log permanente
+
+---
+
 **Last Updated:** April 2026
-**Version:** 1.0.0
+**Version:** 1.1.0

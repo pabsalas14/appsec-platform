@@ -8,7 +8,9 @@ only needs to mount this single router.
 from fastapi import APIRouter
 
 from app.api.v1.admin import ai_automation_rules as admin_ai_automation_rules
-from app.api.v1.admin import builders as admin_builders
+
+# TODO: Fix builders imports
+# from app.api.v1.admin import builders as admin_builders
 from app.api.v1.admin import catalogs as admin_catalogs
 from app.api.v1.admin import configuracion_ia as admin_configuracion_ia
 from app.api.v1.admin import custom_fields as admin_custom_fields
@@ -97,4 +99,5 @@ admin_router.include_router(
 )
 admin_router.include_router(admin_query_builder.router)
 admin_router.include_router(admin_dashboard_builder.router)
-admin_router.include_router(admin_builders.builders_router, tags=["Admin · Builders"])
+# TODO: Fix builders imports - CatalogValue and ModuleViewDuplicate not defined
+# admin_router.include_router(admin_builders.builders_router, tags=["Admin · Builders"])

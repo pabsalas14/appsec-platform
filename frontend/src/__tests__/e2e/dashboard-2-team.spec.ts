@@ -104,12 +104,12 @@ test.describe('Dashboard 2: Equipo', () => {
 
   test.describe('Error Handling', () => {
     test('should show loading state', async ({ page }) => {
-      const spinner = page.locator('[data-testid="loading-spinner"]');
+      void page.locator('[data-testid="loading-spinner"]');
       // May or may not be visible depending on cache
       await page.waitForLoadState('networkidle');
     });
 
-    test('should handle network error gracefully', async ({ page }) => {
+    test('should handle network error gracefully', async ({ page: _page }) => {
       // Simulate network failure on refetch
       // Would require specific testing setup
     });

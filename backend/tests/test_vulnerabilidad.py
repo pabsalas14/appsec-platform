@@ -64,9 +64,7 @@ async def test_update_vulnerabilidad(client: AsyncClient, auth_headers: dict):
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     vid = resp.json()["data"]["id"]
 
-    patch = await client.patch(
-        f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "en_remediacion"}
-    )
+    patch = await client.patch(f"{BASE_URL}/{vid}", headers=auth_headers, json={"estado": "en_remediacion"})
     assert patch.status_code == 200
     assert patch.json()["data"]["estado"] == "en_remediacion"
 

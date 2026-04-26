@@ -116,10 +116,7 @@ async def test_import_csv_hallazgo_match_scan_y_rama(client: AsyncClient, auth_h
     assert detail.status_code == 200
     rama = detail.json()["data"]["rama"]
     scan = detail.json()["data"].get("scan_id") or "scan-e2e-pipeline"
-    body = (
-        "scan_id,branch,titulo,severidad,archivo,linea,regla,estado\n"
-        f"{scan},{rama},Inj,Alta,a.py,1,r1,Abierto\n"
-    )
+    body = f"scan_id,branch,titulo,severidad,archivo,linea,regla,estado\n{scan},{rama},Inj,Alta,a.py,1,r1,Abierto\n"
     import io
 
     r = await client.post(
@@ -142,10 +139,7 @@ async def test_import_csv_p14_second_pass_duplicate_rejected(client: AsyncClient
     assert detail.status_code == 200
     rama = detail.json()["data"]["rama"]
     scan = detail.json()["data"].get("scan_id") or "scan-e2e-pipeline"
-    body = (
-        "scan_id,branch,titulo,severidad,archivo,linea,regla,estado\n"
-        f"{scan},{rama},Dup,Alta,dup.py,9,r1,Abierto\n"
-    )
+    body = f"scan_id,branch,titulo,severidad,archivo,linea,regla,estado\n{scan},{rama},Dup,Alta,dup.py,9,r1,Abierto\n"
     import io
 
     files = {"file": ("h.csv", io.BytesIO(body.encode("utf-8")), "text/csv")}

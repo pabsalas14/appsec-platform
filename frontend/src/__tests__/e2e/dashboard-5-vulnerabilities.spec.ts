@@ -115,7 +115,7 @@ test.describe('Dashboard 5: Vulnerabilidades', () => {
     });
 
     test('filters should apply without full page reload', async ({ page }) => {
-      const before = await page.locator('[data-testid="total-vulns"]').textContent();
+      void (await page.locator('[data-testid="total-vulns"]').textContent());
       const select = page.locator('[data-testid="subdireccion-select"]');
       if (await select.isVisible()) {
         await select.click();

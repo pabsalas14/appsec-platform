@@ -24,8 +24,8 @@ from app.models.audit_log import AuditLog
 from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
-from app.schemas.service_release import ServiceReleaseUpdate
 from app.schemas.kanban_release import ReleaseKanbanMove
+from app.schemas.service_release import ServiceReleaseUpdate
 
 router = APIRouter()
 
@@ -638,11 +638,7 @@ async def dashboard_executive(
     # Emerging themes
     emerging_themes = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(TemaEmergente)
-                .where(TemaEmergente.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(TemaEmergente).where(TemaEmergente.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -650,11 +646,7 @@ async def dashboard_executive(
     # Audits
     audits_count = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(Auditoria)
-                .where(Auditoria.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(Auditoria).where(Auditoria.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -756,7 +748,7 @@ async def dashboard_executive(
         ).scalar_one()
         or 0
     )
-    security_posture = 100 - int((vuln_critica / total_vulns * 100)) if total_vulns > 0 else 100
+    security_posture = 100 - int(vuln_critica / total_vulns * 100) if total_vulns > 0 else 100
 
     # ─── 3. TOP 5 REPOS WITH CRITICAL VULNS ───────────────────────────────────
     top_repos = (
@@ -829,31 +821,32 @@ async def dashboard_executive(
             "status": "ok",
             "label": "A Tiempo",
             "count": on_time_count,
-            "percentage": int((on_time_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+            "percentage": int(on_time_count / total_for_sla * 100) if total_for_sla > 0 else 0,
         },
         {
             "status": "warning",
             "label": "En Riesgo",
             "count": at_risk_count,
-            "percentage": int((at_risk_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+            "percentage": int(at_risk_count / total_for_sla * 100) if total_for_sla > 0 else 0,
         },
         {
             "status": "critical",
             "label": "Vencido",
             "count": overdue_count,
-            "percentage": int((overdue_count / total_for_sla * 100)) if total_for_sla > 0 else 0,
+            "percentage": int(overdue_count / total_for_sla * 100) if total_for_sla > 0 else 0,
         },
     ]
 
     # ─── 5. ACTIVE AUDITS ──────────────────────────────────────────────────────
     audit_rows = (
-        await db.execute(
-            select(Auditoria)
-            .where(Auditoria.deleted_at.is_(None))
-            .order_by(Auditoria.created_at.desc())
-            .limit(5)
+        (
+            await db.execute(
+                select(Auditoria).where(Auditoria.deleted_at.is_(None)).order_by(Auditoria.created_at.desc()).limit(5)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     audits_result = []
     for audit in audit_rows:
@@ -896,6 +889,12 @@ async def dashboard_executive(
             "top_repos": top_repos_result,
             "sla_status": sla_status,
             "audits": audits_result,
+            "applied_filters": _hierarchy_filter_dict(
+                subdireccion_id=subdireccion_id,
+                gerencia_id=gerencia_id,
+                organizacion_id=organizacion_id,
+                celula_id=celula_id,
+            ),
         }
     )
 
@@ -1198,64 +1197,6 @@ async def dashboard_releases_table(
     )
 
 
-@router.get("/releases-kanban")
-async def dashboard_releases_kanban(
-    subdireccion_id: UUID | None = Query(default=None),
-    gerencia_id: UUID | None = Query(default=None),
-    organizacion_id: UUID | None = Query(default=None),
-    celula_id: UUID | None = Query(default=None),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
-):
-    """Dashboard 7: Releases kanban grouped by status."""
-    from app.models.service_release import ServiceRelease
-
-    hierarchy_filter = _release_hierarchy_filter(
-        subdireccion_id=subdireccion_id,
-        gerencia_id=gerencia_id,
-        organizacion_id=organizacion_id,
-        celula_id=celula_id,
-    )
-    rows = (
-        (
-            await db.execute(
-                select(ServiceRelease)
-                .where(
-                    ServiceRelease.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-                .order_by(ServiceRelease.created_at.desc())
-            )
-        )
-        .scalars()
-        .all()
-    )
-
-    board: dict[str, list[dict]] = {}
-    for row in rows:
-        status = row.estado_actual or "Sin Estado"
-        board.setdefault(status, []).append(
-            {
-                "id": str(row.id),
-                "nombre": row.nombre,
-                "version": row.version,
-            }
-        )
-
-    return success(
-        {
-            "columns": board,
-            "total_cards": len(rows),
-            "applied_filters": _hierarchy_filter_dict(
-                subdireccion_id=subdireccion_id,
-                gerencia_id=gerencia_id,
-                organizacion_id=organizacion_id,
-                celula_id=celula_id,
-            ),
-        }
-    )
-
-
 # ───────────────────────────────────────────────────────────────────────────────
 # DASHBOARD 1: EJECUTIVO — 4 NEW ENDPOINTS
 # ───────────────────────────────────────────────────────────────────────────────
@@ -1271,7 +1212,6 @@ async def dashboard_executive_kpis(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 1: Ejecutivo KPIs aggregation."""
-    from app.models.programa_sast import ProgramaSast
     from app.models.vulnerabilidad import Vulnerabilidad
 
     logger.info("dashboard.executive_kpis.view", extra={"event": "dashboard.executive_kpis.view"})
@@ -1341,11 +1281,7 @@ async def dashboard_executive_kpis(
 
     auditorias = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(Auditoria)
-                .where(Auditoria.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(Auditoria).where(Auditoria.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -1355,11 +1291,7 @@ async def dashboard_executive_kpis(
 
     temas = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(TemaEmergente)
-                .where(TemaEmergente.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(TemaEmergente).where(TemaEmergente.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -1510,7 +1442,7 @@ async def dashboard_top_repos_criticas(
     ).all()
 
     result = []
-    for repo_id, nombre, count, open_count in rows:
+    for _repo_id, nombre, count, open_count in rows:
         open_i = int(open_count or 0)
         count_i = int(count or 0)
         trend = "up" if open_i > count_i * 0.5 else "down"
@@ -1699,26 +1631,28 @@ async def dashboard_team_detail(
     )
 
     # Get user
-    user_obj = (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalars().first()
+    user_obj = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
 
     if not user_obj:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     # Get vulnerabilities for this user
     vuln_rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.user_id == user_id,
-                Vulnerabilidad.deleted_at.is_(None),
-                *([hierarchy_filter] if hierarchy_filter is not None else []),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.user_id == user_id,
+                    Vulnerabilidad.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .limit(100)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .limit(100)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     # Get historical stats (by month for last 6 months)
     historico = []
@@ -1834,7 +1768,7 @@ async def dashboard_team_resumen(
 
     # Teams in risk (with SLA exceeded vulns)
     sla_condition = await _where_sla_vencido_respet_d2(db)
-    
+
     risk_teams = (
         await db.execute(
             select(func.count(func.distinct(Vulnerabilidad.user_id)))
@@ -1964,7 +1898,7 @@ async def dashboard_team_tabla(
 
     # Enrich with user data and SLA status
     sla_condition = await _where_sla_vencido_respet_d2(db)
-    
+
     team_data = []
     for user_id, total, closed in rows:
         total_i = int(total or 0)
@@ -1989,9 +1923,7 @@ async def dashboard_team_tabla(
         )
 
         # Get user info
-        user_obj = (
-            await db.execute(select(User).where(User.id == user_id))
-        ).scalars().first()
+        user_obj = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
 
         team_data.append(
             {
@@ -2026,12 +1958,14 @@ async def dashboard_team_tabla(
         page=page,
         page_size=page_size,
         total=total,
-        meta={"applied_filters": _hierarchy_filter_dict(
-            subdireccion_id=subdireccion_id,
-            gerencia_id=gerencia_id,
-            organizacion_id=organizacion_id,
-            celula_id=celula_id,
-        )},
+        meta={
+            "applied_filters": _hierarchy_filter_dict(
+                subdireccion_id=subdireccion_id,
+                gerencia_id=gerencia_id,
+                organizacion_id=organizacion_id,
+                celula_id=celula_id,
+            )
+        },
     )
 
 
@@ -2227,9 +2161,7 @@ async def dashboard_vuln_global(
     total = int(
         (
             await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(Vulnerabilidad.deleted_at.is_(None))
+                select(func.count()).select_from(Vulnerabilidad).where(Vulnerabilidad.deleted_at.is_(None))
             )
         ).scalar_one()
         or 0
@@ -2287,7 +2219,9 @@ async def dashboard_vuln_subdireccion(
     """Dashboard 4: Vulnerabilities by subdireccion (level 1)."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_subdireccion.view", extra={"event": "dashboard.vuln_subdireccion.view", "subdir_id": str(id)})
+    logger.info(
+        "dashboard.vuln_subdireccion.view", extra={"event": "dashboard.vuln_subdireccion.view", "subdir_id": str(id)}
+    )
 
     hierarchy_filter = _vulnerability_hierarchy_filter(subdireccion_id=id)
 
@@ -2422,18 +2356,22 @@ async def dashboard_vuln_repo_sast(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente == "SAST",
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente == "SAST",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2485,18 +2423,22 @@ async def dashboard_vuln_repo_dast(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente == "DAST",
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente == "DAST",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2548,18 +2490,22 @@ async def dashboard_vuln_repo_sca(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente == "SCA",
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente == "SCA",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2592,7 +2538,9 @@ async def dashboard_vuln_repo_mast_mda(
     """Dashboard 4: MAST+MDA vulnerabilities for a repository (paginated)."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_repo_mast_mda.view", extra={"event": "dashboard.vuln_repo_mast_mda.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_mast_mda.view", extra={"event": "dashboard.vuln_repo_mast_mda.view", "repo_id": str(id)}
+    )
 
     total = int(
         (
@@ -2611,18 +2559,22 @@ async def dashboard_vuln_repo_mast_mda(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente.in_(["MAST", "MDA"]),
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente.in_(["MAST", "MDA"]),
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2655,7 +2607,9 @@ async def dashboard_vuln_repo_secrets(
     """Dashboard 4: Secrets vulnerabilities for a repository (paginated)."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_repo_secrets.view", extra={"event": "dashboard.vuln_repo_secrets.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_secrets.view", extra={"event": "dashboard.vuln_repo_secrets.view", "repo_id": str(id)}
+    )
 
     total = int(
         (
@@ -2674,18 +2628,22 @@ async def dashboard_vuln_repo_secrets(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente == "Secrets",
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente == "Secrets",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2737,18 +2695,22 @@ async def dashboard_vuln_repo_cds(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.fuente == "CDS",
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.fuente == "CDS",
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -2780,23 +2742,29 @@ async def dashboard_vuln_repo_historial(
     """Dashboard 4: Vulnerability timeline history for a repository."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_repo_historial.view", extra={"event": "dashboard.vuln_repo_historial.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_historial.view", extra={"event": "dashboard.vuln_repo_historial.view", "repo_id": str(id)}
+    )
 
     now = datetime.now(UTC)
     start_date = now - timedelta(days=days)
 
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(
-                Vulnerabilidad.repositorio_id == id,
-                Vulnerabilidad.created_at >= start_date,
-                Vulnerabilidad.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.repositorio_id == id,
+                    Vulnerabilidad.created_at >= start_date,
+                    Vulnerabilidad.deleted_at.is_(None),
+                )
+                .order_by(Vulnerabilidad.created_at.desc())
+                .limit(100)
             )
-            .order_by(Vulnerabilidad.created_at.desc())
-            .limit(100)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     timeline = [
         {
@@ -2828,16 +2796,22 @@ async def dashboard_vuln_repo_config(
     """Dashboard 4: Repository metadata and config."""
     from app.models.repositorio import Repositorio
 
-    logger.info("dashboard.vuln_repo_config.view", extra={"event": "dashboard.vuln_repo_config.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_config.view", extra={"event": "dashboard.vuln_repo_config.view", "repo_id": str(id)}
+    )
 
     repo = (
-        await db.execute(
-            select(Repositorio).where(
-                Repositorio.id == id,
-                Repositorio.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Repositorio).where(
+                    Repositorio.id == id,
+                    Repositorio.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not repo:
         raise HTTPException(status_code=404, detail="Repositorio no encontrado")
@@ -2866,7 +2840,9 @@ async def dashboard_vuln_repo_resumen(
     """Dashboard 4: Repository vulnerability summary."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_repo_resumen.view", extra={"event": "dashboard.vuln_repo_resumen.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_resumen.view", extra={"event": "dashboard.vuln_repo_resumen.view", "repo_id": str(id)}
+    )
 
     total = int(
         (
@@ -2935,16 +2911,22 @@ async def dashboard_vuln_repo_detail(
     from app.models.repositorio import Repositorio
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_repo_detail.view", extra={"event": "dashboard.vuln_repo_detail.view", "repo_id": str(id)})
+    logger.info(
+        "dashboard.vuln_repo_detail.view", extra={"event": "dashboard.vuln_repo_detail.view", "repo_id": str(id)}
+    )
 
     repo = (
-        await db.execute(
-            select(Repositorio).where(
-                Repositorio.id == id,
-                Repositorio.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Repositorio).where(
+                    Repositorio.id == id,
+                    Repositorio.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not repo:
         raise HTTPException(status_code=404, detail="Repositorio no encontrado")
@@ -3028,7 +3010,9 @@ async def dashboard_vuln_concentrated_by_motor(
     """Dashboard 5: Concentrated vulnerabilities by motor/source."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_concentrated_by_motor.view", extra={"event": "dashboard.vuln_concentrated_by_motor.view"})
+    logger.info(
+        "dashboard.vuln_concentrated_by_motor.view", extra={"event": "dashboard.vuln_concentrated_by_motor.view"}
+    )
 
     rows = (
         await db.execute(
@@ -3062,7 +3046,9 @@ async def dashboard_vuln_concentrated_by_severity(
     """Dashboard 5: Concentrated vulnerabilities by severity."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    logger.info("dashboard.vuln_concentrated_by_severity.view", extra={"event": "dashboard.vuln_concentrated_by_severity.view"})
+    logger.info(
+        "dashboard.vuln_concentrated_by_severity.view", extra={"event": "dashboard.vuln_concentrated_by_severity.view"}
+    )
 
     severidades = ["CRITICA", "ALTA", "MEDIA", "BAJA", "INFORMATIVA"]
     result = []
@@ -3115,27 +3101,22 @@ async def dashboard_vuln_concentrated_table(
     if severidad:
         filters.append(func.lower(Vulnerabilidad.severidad) == severidad.lower())
 
-    total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(*filters)
-            )
-        ).scalar_one()
-        or 0
-    )
+    total = int((await db.execute(select(func.count()).select_from(Vulnerabilidad).where(*filters))).scalar_one() or 0)
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(Vulnerabilidad)
-            .where(*filters)
-            .order_by(Vulnerabilidad.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(Vulnerabilidad)
+                .where(*filters)
+                .order_by(Vulnerabilidad.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -3177,9 +3158,7 @@ async def dashboard_release_terceros(
     total = int(
         (
             await db.execute(
-                select(func.count())
-                .select_from(RevisionTercero)
-                .where(RevisionTercero.deleted_at.is_(None))
+                select(func.count()).select_from(RevisionTercero).where(RevisionTercero.deleted_at.is_(None))
             )
         ).scalar_one()
         or 0
@@ -3187,14 +3166,18 @@ async def dashboard_release_terceros(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(RevisionTercero)
-            .where(RevisionTercero.deleted_at.is_(None))
-            .order_by(RevisionTercero.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(RevisionTercero)
+                .where(RevisionTercero.deleted_at.is_(None))
+                .order_by(RevisionTercero.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -3223,16 +3206,22 @@ async def dashboard_release_detail(
     """Dashboard 6: Release detail."""
     from app.models.service_release import ServiceRelease
 
-    logger.info("dashboard.release_detail.view", extra={"event": "dashboard.release_detail.view", "release_id": str(id)})
+    logger.info(
+        "dashboard.release_detail.view", extra={"event": "dashboard.release_detail.view", "release_id": str(id)}
+    )
 
     release = (
-        await db.execute(
-            select(ServiceRelease).where(
-                ServiceRelease.id == id,
-                ServiceRelease.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(ServiceRelease).where(
+                    ServiceRelease.id == id,
+                    ServiceRelease.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not release:
         raise HTTPException(status_code=404, detail="Release no encontrado")
@@ -3247,35 +3236,6 @@ async def dashboard_release_detail(
             "jira_referencia": release.jira_referencia,
             "created_at": release.created_at.isoformat() if release.created_at else None,
             "updated_at": release.updated_at.isoformat() if release.updated_at else None,
-        }
-    )
-
-
-# ───────────────────────────────────────────────────────────────────────────────
-# DASHBOARD 7: KANBAN — 1 NEW ENDPOINT (columns config)
-# ───────────────────────────────────────────────────────────────────────────────
-
-
-@router.get("/release-kanban-columns")
-async def dashboard_release_kanban_columns(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
-):
-    """Dashboard 7: Kanban columns configuration."""
-    logger.info("dashboard.release_kanban_columns.view", extra={"event": "dashboard.release_kanban_columns.view"})
-
-    columns = [
-        "Borrador",
-        "Pendiente Aprobación",
-        "Design Review",
-        "Security Validation",
-        "En Ejecución",
-        "Completado",
-    ]
-
-    return success(
-        {
-            "columns": [{"id": c.lower().replace(" ", "_"), "nombre": c} for c in columns],
         }
     )
 
@@ -3297,11 +3257,7 @@ async def dashboard_initiatives_summary(
 
     total = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(Iniciativa)
-                .where(Iniciativa.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(Iniciativa).where(Iniciativa.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -3349,13 +3305,17 @@ async def dashboard_initiatives_summary(
     )
 
     rows = (
-        await db.execute(
-            select(Iniciativa)
-            .where(Iniciativa.deleted_at.is_(None))
-            .order_by(Iniciativa.created_at.desc())
-            .limit(100)
+        (
+            await db.execute(
+                select(Iniciativa)
+                .where(Iniciativa.deleted_at.is_(None))
+                .order_by(Iniciativa.created_at.desc())
+                .limit(100)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     iniciativas = [
         {
@@ -3396,48 +3356,61 @@ async def dashboard_initiative_detail(
     from app.models.hito_iniciativa import HitoIniciativa
     from app.models.iniciativa import Iniciativa
 
-    logger.info("dashboard.initiative_detail.view", extra={"event": "dashboard.initiative_detail.view", "iniciativa_id": str(id)})
+    logger.info(
+        "dashboard.initiative_detail.view",
+        extra={"event": "dashboard.initiative_detail.view", "iniciativa_id": str(id)},
+    )
 
     iniciativa = (
-        await db.execute(
-            select(Iniciativa).where(
-                Iniciativa.id == id,
-                Iniciativa.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(Iniciativa).where(
+                    Iniciativa.id == id,
+                    Iniciativa.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not iniciativa:
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
 
     hitos = (
-        await db.execute(
-            select(HitoIniciativa)
-            .where(
-                HitoIniciativa.iniciativa_id == id,
-                HitoIniciativa.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(HitoIniciativa)
+                .where(
+                    HitoIniciativa.iniciativa_id == id,
+                    HitoIniciativa.deleted_at.is_(None),
+                )
+                .order_by(HitoIniciativa.fecha_estimada.desc())
             )
-            .order_by(HitoIniciativa.fecha_estimada.desc())
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     actualizaciones = (
-        await db.execute(
-            select(ActualizacionIniciativa)
-            .where(
-                ActualizacionIniciativa.iniciativa_id == id,
-                ActualizacionIniciativa.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(ActualizacionIniciativa)
+                .where(
+                    ActualizacionIniciativa.iniciativa_id == id,
+                    ActualizacionIniciativa.deleted_at.is_(None),
+                )
+                .order_by(ActualizacionIniciativa.created_at.desc())
+                .limit(20)
             )
-            .order_by(ActualizacionIniciativa.created_at.desc())
-            .limit(20)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     total_hitos = len(hitos)
     completed_hitos = sum(1 for h in hitos if h.estado == "Completado")
-    avg_completion = (
-        sum(h.porcentaje_completado or 0 for h in hitos) / total_hitos if total_hitos > 0 else 0
-    )
+    avg_completion = sum(h.porcentaje_completado or 0 for h in hitos) / total_hitos if total_hitos > 0 else 0
 
     return success(
         {
@@ -3447,7 +3420,9 @@ async def dashboard_initiative_detail(
                 "estado": iniciativa.estado,
                 "tipo": iniciativa.tipo,
                 "fecha_inicio": iniciativa.fecha_inicio.isoformat() if iniciativa.fecha_inicio else None,
-                "fecha_fin_estimada": iniciativa.fecha_fin_estimada.isoformat() if iniciativa.fecha_fin_estimada else None,
+                "fecha_fin_estimada": iniciativa.fecha_fin_estimada.isoformat()
+                if iniciativa.fecha_fin_estimada
+                else None,
                 "created_at": iniciativa.created_at.isoformat() if iniciativa.created_at else None,
                 "updated_at": iniciativa.updated_at.isoformat() if iniciativa.updated_at else None,
             },
@@ -3505,11 +3480,7 @@ async def dashboard_initiatives_resumen(
 
     total = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(Iniciativa)
-                .where(Iniciativa.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(Iniciativa).where(Iniciativa.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -3602,38 +3573,37 @@ async def dashboard_initiatives_tabla(
     logger.info("dashboard.initiatives_tabla.view", extra={"event": "dashboard.initiatives_tabla.view"})
 
     rows = (
-        await db.execute(
-            select(Iniciativa)
-            .where(Iniciativa.deleted_at.is_(None))
-            .order_by(Iniciativa.fecha_fin_estimada.asc(), Iniciativa.created_at.desc())
+        (
+            await db.execute(
+                select(Iniciativa)
+                .where(Iniciativa.deleted_at.is_(None))
+                .order_by(Iniciativa.fecha_fin_estimada.asc(), Iniciativa.created_at.desc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     iniciativas_tabla = []
     for ini in rows:
         hitos = (
-            await db.execute(
-                select(HitoIniciativa)
-                .where(
-                    HitoIniciativa.iniciativa_id == ini.id,
-                    HitoIniciativa.deleted_at.is_(None),
+            (
+                await db.execute(
+                    select(HitoIniciativa).where(
+                        HitoIniciativa.iniciativa_id == ini.id,
+                        HitoIniciativa.deleted_at.is_(None),
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         total_hitos = len(hitos)
         completed_hitos = sum(1 for h in hitos if h.estado == "Completado")
-        avg_completion = (
-            sum(h.porcentaje_completado or 0 for h in hitos) / total_hitos
-            if total_hitos > 0
-            else 0
-        )
+        avg_completion = sum(h.porcentaje_completado or 0 for h in hitos) / total_hitos if total_hitos > 0 else 0
 
-        propietario = (
-            await db.execute(
-                select(UserModel).where(UserModel.id == ini.user_id)
-            )
-        ).scalars().first()
+        propietario = (await db.execute(select(UserModel).where(UserModel.id == ini.user_id))).scalars().first()
 
         iniciativas_tabla.append(
             {
@@ -3670,24 +3640,24 @@ async def dashboard_initiatives_timeline(
     logger.info("dashboard.initiatives_timeline.view", extra={"event": "dashboard.initiatives_timeline.view"})
 
     hitos = (
-        await db.execute(
-            select(HitoIniciativa)
-            .join(Iniciativa, HitoIniciativa.iniciativa_id == Iniciativa.id)
-            .where(
-                HitoIniciativa.deleted_at.is_(None),
-                Iniciativa.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(HitoIniciativa)
+                .join(Iniciativa, HitoIniciativa.iniciativa_id == Iniciativa.id)
+                .where(
+                    HitoIniciativa.deleted_at.is_(None),
+                    Iniciativa.deleted_at.is_(None),
+                )
+                .order_by(HitoIniciativa.fecha_estimada.asc())
             )
-            .order_by(HitoIniciativa.fecha_estimada.asc())
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     timeline_events = []
     for hito in hitos:
-        iniciativa = (
-            await db.execute(
-                select(Iniciativa).where(Iniciativa.id == hito.iniciativa_id)
-            )
-        ).scalars().first()
+        iniciativa = (await db.execute(select(Iniciativa).where(Iniciativa.id == hito.iniciativa_id))).scalars().first()
 
         timeline_events.append(
             {
@@ -3703,11 +3673,13 @@ async def dashboard_initiatives_timeline(
         )
 
     proximos_hitos = [
-        h for h in timeline_events
+        h
+        for h in timeline_events
         if h["fecha_estimada"] and datetime.fromisoformat(h["fecha_estimada"]).date() >= datetime.now(UTC).date()
     ]
     hitos_proximos_30 = [
-        h for h in timeline_events
+        h
+        for h in timeline_events
         if h["fecha_estimada"]
         and datetime.now(UTC) <= datetime.fromisoformat(h["fecha_estimada"]) <= (datetime.now(UTC) + timedelta(days=30))
     ]
@@ -3740,11 +3712,7 @@ async def dashboard_emerging_themes_summary(
 
     total = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(TemaEmergente)
-                .where(TemaEmergente.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(TemaEmergente).where(TemaEmergente.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -3782,12 +3750,16 @@ async def dashboard_emerging_themes_summary(
 
     # Fetch all themes for the list
     temas_rows = (
-        await db.execute(
-            select(TemaEmergente)
-            .where(TemaEmergente.deleted_at.is_(None))
-            .order_by(TemaEmergente.updated_at.desc())
+        (
+            await db.execute(
+                select(TemaEmergente)
+                .where(TemaEmergente.deleted_at.is_(None))
+                .order_by(TemaEmergente.updated_at.desc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     temas_list = []
     for tema in temas_rows:
@@ -3831,20 +3803,24 @@ async def dashboard_tema_detail(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 9: Emerging theme detail with bitácora timeline."""
-    from app.models.tema_emergente import TemaEmergente
     from app.models.actualizacion_tema import ActualizacionTema
+    from app.models.tema_emergente import TemaEmergente
     from app.models.user import User as UserModel
 
     logger.info("dashboard.tema_detail.view", extra={"event": "dashboard.tema_detail.view", "tema_id": str(id)})
 
     tema = (
-        await db.execute(
-            select(TemaEmergente).where(
-                TemaEmergente.id == id,
-                TemaEmergente.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(TemaEmergente).where(
+                    TemaEmergente.id == id,
+                    TemaEmergente.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not tema:
         raise HTTPException(status_code=404, detail="Tema emergente no encontrado")
@@ -3854,32 +3830,28 @@ async def dashboard_tema_detail(
 
     # Fetch updates (bitácora)
     actualizaciones = (
-        await db.execute(
-            select(ActualizacionTema)
-            .where(
-                ActualizacionTema.tema_id == id,
-                ActualizacionTema.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(ActualizacionTema)
+                .where(
+                    ActualizacionTema.tema_id == id,
+                    ActualizacionTema.deleted_at.is_(None),
+                )
+                .order_by(ActualizacionTema.created_at.desc())
             )
-            .order_by(ActualizacionTema.created_at.desc())
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     # Fetch creator name
-    creator = (
-        await db.execute(
-            select(UserModel).where(UserModel.id == tema.user_id)
-        )
-    ).scalars().first()
+    creator = (await db.execute(select(UserModel).where(UserModel.id == tema.user_id))).scalars().first()
 
     bitacora_items = []
     for act in actualizaciones:
         # Get author name for this update
-        author = (
-            await db.execute(
-                select(UserModel).where(UserModel.id == act.user_id)
-            )
-        ).scalars().first()
-        
+        author = (await db.execute(select(UserModel).where(UserModel.id == act.user_id))).scalars().first()
+
         bitacora_items.append(
             {
                 "id": str(act.id),
@@ -3926,7 +3898,7 @@ async def dashboard3_programs_summary(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Program types summary.
-    
+
     Returns aggregated data for SAST, DAST, Threat Modeling, and Source Code programs,
     with completion percentages and activity metrics.
     """
@@ -3941,9 +3913,9 @@ async def dashboard3_programs_summary(
     sast_count = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaSast).where(
-                    ProgramaSast.user_id == current_user.id, ProgramaSast.deleted_at.is_(None)
-                )
+                select(func.count())
+                .select_from(ProgramaSast)
+                .where(ProgramaSast.user_id == current_user.id, ProgramaSast.deleted_at.is_(None))
             )
         ).scalar()
         or 0
@@ -3952,9 +3924,9 @@ async def dashboard3_programs_summary(
     dast_count = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaDast).where(
-                    ProgramaDast.user_id == current_user.id, ProgramaDast.deleted_at.is_(None)
-                )
+                select(func.count())
+                .select_from(ProgramaDast)
+                .where(ProgramaDast.user_id == current_user.id, ProgramaDast.deleted_at.is_(None))
             )
         ).scalar()
         or 0
@@ -3963,7 +3935,9 @@ async def dashboard3_programs_summary(
     threat_modeling_count = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaThreatModeling).where(
+                select(func.count())
+                .select_from(ProgramaThreatModeling)
+                .where(
                     ProgramaThreatModeling.user_id == current_user.id,
                     ProgramaThreatModeling.deleted_at.is_(None),
                 )
@@ -3975,9 +3949,9 @@ async def dashboard3_programs_summary(
     source_code_count = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaSourceCode).where(
-                    ProgramaSourceCode.user_id == current_user.id, ProgramaSourceCode.deleted_at.is_(None)
-                )
+                select(func.count())
+                .select_from(ProgramaSourceCode)
+                .where(ProgramaSourceCode.user_id == current_user.id, ProgramaSourceCode.deleted_at.is_(None))
             )
         ).scalar()
         or 0
@@ -3987,7 +3961,9 @@ async def dashboard3_programs_summary(
     sast_active = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaSast).where(
+                select(func.count())
+                .select_from(ProgramaSast)
+                .where(
                     ProgramaSast.user_id == current_user.id,
                     ProgramaSast.deleted_at.is_(None),
                     ProgramaSast.estado == "Activo",
@@ -4000,7 +3976,9 @@ async def dashboard3_programs_summary(
     dast_active = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaDast).where(
+                select(func.count())
+                .select_from(ProgramaDast)
+                .where(
                     ProgramaDast.user_id == current_user.id,
                     ProgramaDast.deleted_at.is_(None),
                     ProgramaDast.estado == "Activo",
@@ -4013,7 +3991,9 @@ async def dashboard3_programs_summary(
     threat_modeling_active = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaThreatModeling).where(
+                select(func.count())
+                .select_from(ProgramaThreatModeling)
+                .where(
                     ProgramaThreatModeling.user_id == current_user.id,
                     ProgramaThreatModeling.deleted_at.is_(None),
                     ProgramaThreatModeling.estado == "Activo",
@@ -4026,7 +4006,9 @@ async def dashboard3_programs_summary(
     source_code_active = int(
         (
             await db.execute(
-                select(func.count()).select_from(ProgramaSourceCode).where(
+                select(func.count())
+                .select_from(ProgramaSourceCode)
+                .where(
                     ProgramaSourceCode.user_id == current_user.id,
                     ProgramaSourceCode.deleted_at.is_(None),
                     ProgramaSourceCode.estado == "Activo",
@@ -4078,9 +4060,7 @@ async def dashboard3_programs_summary(
     ]
 
     total_programs = sum(p["total"] for p in programs)
-    avg_completion = int(
-        (sum(p["completion_percentage"] for p in programs) / len(programs)) if programs else 0
-    )
+    avg_completion = int((sum(p["completion_percentage"] for p in programs) / len(programs)) if programs else 0)
 
     return success(
         {
@@ -4101,7 +4081,7 @@ async def dashboard3_program_detail(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Program detail (by code: SAST, DAST, THREAT_MODELING, SOURCE_CODE).
-    
+
     Returns detailed data including monthly activities and trends for a specific program type.
     """
     from app.models.programa_dast import ProgramaDast
@@ -4202,18 +4182,58 @@ async def dashboard3_program_detail(
 
     # Calculate monthly trends (count by month for last 12 months)
     now = datetime.now(UTC)
-    last_year = now - timedelta(days=365)
 
     monthly_trends = []
     for i in range(12):
         month_date = now - timedelta(days=30 * i)
         month_key = month_date.strftime("%Y-%m")
         month_count = sum(
-            1
-            for p in programs
-            if p.created_at >= (month_date - timedelta(days=30)) and p.created_at < month_date
+            1 for p in programs if p.created_at >= (month_date - timedelta(days=30)) and p.created_at < month_date
         )
         monthly_trends.insert(0, {"month": month_key, "count": month_count})
+
+    # Fetch scoring history (actividades mensuales) for SAST — last 12 months
+    scoring_history: list[dict] = []
+    if code_upper == "SAST" and programs:
+        from app.models.actividad_mensual_sast import ActividadMensualSast as _ActMensualSast
+
+        program_ids = [p.id for p in programs]
+        current_year = now.year
+        act_rows = (
+            await db.execute(
+                select(
+                    _ActMensualSast.mes,
+                    _ActMensualSast.ano,
+                    func.avg(_ActMensualSast.score).label("avg_score"),
+                    func.sum(_ActMensualSast.total_hallazgos).label("total_hallazgos"),
+                )
+                .where(
+                    _ActMensualSast.programa_sast_id.in_(program_ids),
+                    _ActMensualSast.deleted_at.is_(None),
+                    _ActMensualSast.ano >= current_year - 1,
+                )
+                .group_by(_ActMensualSast.ano, _ActMensualSast.mes)
+                .order_by(_ActMensualSast.ano, _ActMensualSast.mes)
+            )
+        ).all()
+        scoring_history = [
+            {
+                "period": f"{r.ano}-{r.mes:02d}",
+                "mes": r.mes,
+                "ano": r.ano,
+                "avg_score": round(float(r.avg_score), 2) if r.avg_score is not None else None,
+                "total_hallazgos": int(r.total_hallazgos or 0),
+            }
+            for r in act_rows
+        ]
+
+    # Link to findings page per program type
+    hallazgos_link_map = {
+        "SAST": "/hallazgo_sasts",
+        "DAST": "/hallazgo_dasts",
+        "THREAT_MODELING": "/sesion_threat_modelings",
+        "SOURCE_CODE": "/revision_source_codes",
+    }
 
     total_active = sum(1 for p in programs if p.estado == "Activo")
     total_completed = sum(1 for p in programs if p.estado == "Completado")
@@ -4228,11 +4248,11 @@ async def dashboard3_program_detail(
                 "active": total_active,
                 "completed": total_completed,
                 "cancelled": total_cancelled,
-                "completion_percentage": int(
-                    (total_completed / len(programs) * 100) if len(programs) > 0 else 0
-                ),
+                "completion_percentage": int((total_completed / len(programs) * 100) if len(programs) > 0 else 0),
             },
             "monthly_trends": monthly_trends,
+            "scoring_history": scoring_history,
+            "hallazgos_link": hallazgos_link_map.get(code_upper, "/"),
         }
     )
 
@@ -4252,9 +4272,7 @@ async def dashboard_releases_terceros(
     total = int(
         (
             await db.execute(
-                select(func.count())
-                .select_from(RevisionTercero)
-                .where(RevisionTercero.deleted_at.is_(None))
+                select(func.count()).select_from(RevisionTercero).where(RevisionTercero.deleted_at.is_(None))
             )
         ).scalar_one()
         or 0
@@ -4262,14 +4280,18 @@ async def dashboard_releases_terceros(
 
     offset = (page - 1) * page_size
     rows = (
-        await db.execute(
-            select(RevisionTercero)
-            .where(RevisionTercero.deleted_at.is_(None))
-            .order_by(RevisionTercero.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
+        (
+            await db.execute(
+                select(RevisionTercero)
+                .where(RevisionTercero.deleted_at.is_(None))
+                .order_by(RevisionTercero.created_at.desc())
+                .offset(offset)
+                .limit(page_size)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {
@@ -4299,7 +4321,7 @@ async def dashboard_release_kanban_columns(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 7.1: Obtiene las columnas configuradas del kanban.
-    
+
     Retorna las 8 columnas en orden configurado.
     """
     from app.models.kanban_column import KanbanColumn
@@ -4312,33 +4334,39 @@ async def dashboard_release_kanban_columns(
 
     # Obtener columnas ordenadas
     columnas = (
-        await db.execute(
-            select(KanbanColumn)
-            .where(KanbanColumn.deleted_at.is_(None))
-            .order_by(KanbanColumn.orden.asc())
+        (
+            await db.execute(
+                select(KanbanColumn).where(KanbanColumn.deleted_at.is_(None)).order_by(KanbanColumn.orden.asc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     return success([KanbanColumnRead.model_validate(c).model_dump(mode="json") for c in columnas])
 
 
 @router.get("/releases-kanban")
 async def dashboard_releases_kanban(
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 7.2: Obtiene datos completos del kanban con releases agrupadas por columna.
-    
+
     Retorna todas las releases agrupadas por estado (columnas).
     """
+    from app.models.etapa_release import EtapaRelease
     from app.models.kanban_column import KanbanColumn
     from app.models.service_release import ServiceRelease
-    from app.models.etapa_release import EtapaRelease
     from app.models.servicio import Servicio
     from app.schemas.kanban_release import (
+        ReleaseKanbanBoard,
         ReleaseKanbanColumn,
         ReleaseKanbanData,
-        ReleaseKanbanBoard,
     )
 
     logger.info(
@@ -4346,20 +4374,32 @@ async def dashboard_releases_kanban(
         extra={"event": "dashboard.releases_kanban.view"},
     )
 
+    hierarchy_filter = _release_hierarchy_filter(
+        subdireccion_id=subdireccion_id,
+        gerencia_id=gerencia_id,
+        organizacion_id=organizacion_id,
+        celula_id=celula_id,
+    )
+
     # Obtener columnas del kanban
     columnas_db = (
-        await db.execute(
-            select(KanbanColumn)
-            .where(KanbanColumn.deleted_at.is_(None))
-            .order_by(KanbanColumn.orden.asc())
+        (
+            await db.execute(
+                select(KanbanColumn).where(KanbanColumn.deleted_at.is_(None)).order_by(KanbanColumn.orden.asc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     # Obtener releases agrupadas por estado
+    rel_filters = [ServiceRelease.deleted_at.is_(None), Servicio.deleted_at.is_(None)]
+    if hierarchy_filter is not None:
+        rel_filters.append(hierarchy_filter)
     releases_stmt = (
         select(ServiceRelease, Servicio)
         .join(Servicio, ServiceRelease.servicio_id == Servicio.id)
-        .where(ServiceRelease.deleted_at.is_(None), Servicio.deleted_at.is_(None))
+        .where(*rel_filters)
         .order_by(ServiceRelease.updated_at.desc())
     )
     releases_result = await db.execute(releases_stmt)
@@ -4370,17 +4410,21 @@ async def dashboard_releases_kanban(
     for sr, servicio in releases_data:
         if sr.estado_actual not in releases_por_estado:
             releases_por_estado[sr.estado_actual] = []
-        
+
         # Contar etapas completadas
         etapas = (
-            await db.execute(
-                select(EtapaRelease).where(
-                    EtapaRelease.service_release_id == sr.id,
-                    EtapaRelease.deleted_at.is_(None),
+            (
+                await db.execute(
+                    select(EtapaRelease).where(
+                        EtapaRelease.service_release_id == sr.id,
+                        EtapaRelease.deleted_at.is_(None),
+                    )
                 )
             )
-        ).scalars().all()
-        
+            .scalars()
+            .all()
+        )
+
         etapas_completadas = sum(1 for e in etapas if e.estado in ["Aprobada"])
 
         release_data = ReleaseKanbanData(
@@ -4424,7 +4468,24 @@ async def dashboard_releases_kanban(
         },
     )
 
-    return success(kanban_board.model_dump(mode="json"))
+    payload = kanban_board.model_dump(mode="json")
+    # Compat: clientes/tests que esperan mapa estado -> tarjetas y total_cards
+    columns_map: dict[str, list[dict]] = {}
+    for col in payload.get("columnas", []):
+        estado = col.get("estado_correspondiente") or col.get("nombre") or ""
+        columns_map[estado] = [
+            {"id": str(r["id"]), "nombre": r["nombre"], "version": r.get("version")}
+            for r in col.get("releases", [])
+        ]
+    payload["columns"] = columns_map
+    payload["total_cards"] = total_releases
+    payload["applied_filters"] = _hierarchy_filter_dict(
+        subdireccion_id=subdireccion_id,
+        gerencia_id=gerencia_id,
+        organizacion_id=organizacion_id,
+        celula_id=celula_id,
+    )
+    return success(payload)
 
 
 @router.patch("/service-releases/{id}/move")
@@ -4432,12 +4493,12 @@ async def move_service_release(
     id: UUID,
     move_data: ReleaseKanbanMove,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.RELEASES.UPDATE)),
+    current_user: User = Depends(require_permission(P.RELEASES.EDIT)),
 ):
     """Dashboard 7.3: Mueve un release a otra columna (drag-drop).
-    
+
     Aplica validación de SoD si aplica.
-    
+
     Request body:
     {
         "column_id": "<uuid>",
@@ -4446,9 +4507,8 @@ async def move_service_release(
     }
     """
     from app.models.kanban_column import KanbanColumn
-    from app.models.service_release import ServiceRelease
-    from app.services.service_release_service import service_release_svc
     from app.services.regla_so_d_service import validate_sod
+    from app.services.service_release_service import service_release_svc
 
     logger.info(
         "dashboard.service_release.move",
@@ -4469,13 +4529,17 @@ async def move_service_release(
         raise HTTPException(status_code=400, detail="column_id requerido")
 
     column = (
-        await db.execute(
-            select(KanbanColumn).where(
-                KanbanColumn.id == move_data.column_id,
-                KanbanColumn.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(KanbanColumn).where(
+                    KanbanColumn.id == move_data.column_id,
+                    KanbanColumn.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
     if not column:
         raise HTTPException(status_code=404, detail="Columna no encontrada")
@@ -4501,7 +4565,7 @@ async def move_service_release(
                 "error": str(e),
             },
         )
-        raise HTTPException(status_code=403, detail=f"Violación de SoD: {str(e)}")
+        raise HTTPException(status_code=403, detail=f"Violación de SoD: {e!s}") from e
 
     # Actualizar estado del release
     update_schema = ServiceReleaseUpdate(estado_actual=nuevo_estado)
@@ -4536,32 +4600,24 @@ async def dashboard_programs_resumen(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Programas resumen — KPIs for programs view."""
-    from app.models.programa_sast import ProgramaSast
     from app.models.programa_dast import ProgramaDast
-    from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.programa_sast import ProgramaSast
     from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
 
     logger.info("dashboard.programs.resumen", extra={"event": "dashboard.programs.resumen"})
 
     # Total programas across all types
     total_sast = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(ProgramaSast)
-                .where(ProgramaSast.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(ProgramaSast).where(ProgramaSast.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
 
     total_dast = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(ProgramaDast)
-                .where(ProgramaDast.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(ProgramaDast).where(ProgramaDast.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -4580,9 +4636,7 @@ async def dashboard_programs_resumen(
     total_source = int(
         (
             await db.execute(
-                select(func.count())
-                .select_from(ProgramaSourceCode)
-                .where(ProgramaSourceCode.deleted_at.is_(None))
+                select(func.count()).select_from(ProgramaSourceCode).where(ProgramaSourceCode.deleted_at.is_(None))
             )
         ).scalar_one()
         or 0
@@ -4632,9 +4686,7 @@ async def dashboard_programs_resumen(
             await db.execute(
                 select(func.count())
                 .select_from(ProgramaSourceCode)
-                .where(
-                    ProgramaSourceCode.deleted_at.is_(None), ProgramaSourceCode.estado == "Activo"
-                )
+                .where(ProgramaSourceCode.deleted_at.is_(None), ProgramaSourceCode.estado == "Activo")
             )
         ).scalar_one()
         or 0
@@ -4666,32 +4718,24 @@ async def dashboard_programs_distribucion(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Programas distribution by engine/type."""
-    from app.models.programa_sast import ProgramaSast
     from app.models.programa_dast import ProgramaDast
-    from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.programa_sast import ProgramaSast
     from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
 
     logger.info("dashboard.programs.distribucion", extra={"event": "dashboard.programs.distribucion"})
 
     # Count by type (motor)
     sast_count = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(ProgramaSast)
-                .where(ProgramaSast.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(ProgramaSast).where(ProgramaSast.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
 
     dast_count = int(
         (
-            await db.execute(
-                select(func.count())
-                .select_from(ProgramaDast)
-                .where(ProgramaDast.deleted_at.is_(None))
-            )
+            await db.execute(select(func.count()).select_from(ProgramaDast).where(ProgramaDast.deleted_at.is_(None)))
         ).scalar_one()
         or 0
     )
@@ -4710,9 +4754,7 @@ async def dashboard_programs_distribucion(
     source_count = int(
         (
             await db.execute(
-                select(func.count())
-                .select_from(ProgramaSourceCode)
-                .where(ProgramaSourceCode.deleted_at.is_(None))
+                select(func.count()).select_from(ProgramaSourceCode).where(ProgramaSourceCode.deleted_at.is_(None))
             )
         ).scalar_one()
         or 0
@@ -4746,10 +4788,10 @@ async def dashboard_programs_tabla(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Programas table — all programs paginated and sortable."""
-    from app.models.programa_sast import ProgramaSast
     from app.models.programa_dast import ProgramaDast
-    from app.models.programa_threat_modeling import ProgramaThreatModeling
+    from app.models.programa_sast import ProgramaSast
     from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
 
     logger.info(
         "dashboard.programs.tabla",
@@ -4899,3 +4941,73 @@ async def dashboard_programs_tabla(
         page_size=page_size,
         total=total,
     )
+
+
+@router.get("/programs/heatmap")
+async def dashboard_programs_heatmap(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 3: Heatmap mensual — actividad mensual por tipo de programa (últimos 12 meses).
+
+    Retorna para cada tipo de programa (SAST, DAST, Threat Modeling, Source Code) un array
+    de 12 entradas con el porcentaje de completitud mensual (hallazgos cerrados / total).
+    """
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    logger.info("dashboard.programs.heatmap", extra={"event": "dashboard.programs.heatmap"})
+
+    now = datetime.now(UTC)
+    program_types = ["SAST", "DAST", "Threat Modeling", "Source Code"]
+    heatmap: dict[str, list[dict]] = {}
+
+    for ptype in program_types:
+        monthly: list[dict] = []
+        for months_back in range(11, -1, -1):  # 11 meses atrás → mes actual
+            period_start = (now - timedelta(days=30 * (months_back + 1))).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            period_end = (now - timedelta(days=30 * months_back)).replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
+            month_num = period_start.month
+
+            total_count = int(
+                (
+                    await db.execute(
+                        select(func.count())
+                        .select_from(Vulnerabilidad)
+                        .where(
+                            Vulnerabilidad.deleted_at.is_(None),
+                            Vulnerabilidad.fuente == ptype,
+                            Vulnerabilidad.created_at >= period_start,
+                            Vulnerabilidad.created_at <= period_end,
+                        )
+                    )
+                ).scalar_one()
+                or 0
+            )
+
+            closed_count = int(
+                (
+                    await db.execute(
+                        select(func.count())
+                        .select_from(Vulnerabilidad)
+                        .where(
+                            Vulnerabilidad.deleted_at.is_(None),
+                            Vulnerabilidad.fuente == ptype,
+                            Vulnerabilidad.estado == "Cerrada",
+                            Vulnerabilidad.created_at >= period_start,
+                            Vulnerabilidad.created_at <= period_end,
+                        )
+                    )
+                ).scalar_one()
+                or 0
+            )
+
+            value = int((closed_count / total_count * 100) if total_count > 0 else 0)
+            monthly.append({"month": month_num, "value": value, "total": total_count, "closed": closed_count})
+
+        heatmap[ptype] = monthly
+
+    return success({"heatmap": heatmap})

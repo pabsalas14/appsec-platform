@@ -113,7 +113,7 @@ test.describe('Dashboard 7: Liberaciones - Vista Kanban', () => {
 
     test('multiple filters should work', async ({ page }) => {
       const filter1 = page.locator('[data-testid="subdireccion-select"]');
-      const filter2 = page.locator('[data-testid="celula-select"]');
+      void page.locator('[data-testid="celula-select"]');
       if (await filter1.isVisible()) {
         await filter1.click();
         await page.waitForTimeout(300);

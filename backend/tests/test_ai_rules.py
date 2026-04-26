@@ -1,29 +1,22 @@
 """Test AI Automation Rules (FASE 8) — endpoints, validations, and business logic."""
 
 import pytest
-from fastapi import status
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
-
-from app.models.ai_rule import AIRule
-from app.schemas.ai_rule import AIRuleCreate, AIRuleUpdate
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_list_empty(async_client, admin_user):
+async def test_ai_rules_list_empty(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test listing empty AI rules."""
-    response = await async_client.get(
-        "/api/v1/admin/ai-rules",
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
-    )
+    response = await client.get("/api/v1/admin/ai-rules", headers=admin_auth_headers)
     assert response.status_code == 200
-    data = response.json()
-    assert data["data"]["total"] == 0
-    assert data["data"]["items"] == []
+    body = response.json()
+    assert body["status"] == "success"
+    assert isinstance(body["data"], list)
+    assert body["meta"]["total"] == 0
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_create(async_client, admin_user, db: AsyncSession):
+async def test_ai_rules_create(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test creating an AI rule."""
     payload = {
         "name": "Critical Vuln Alert",
@@ -36,11 +29,11 @@ async def test_ai_rules_create(async_client, admin_user, db: AsyncSession):
         "max_retries": 3,
         "timeout_seconds": 30,
     }
-    
-    response = await async_client.post(
+
+    response = await client.post(
         "/api/v1/admin/ai-rules",
         json=payload,
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 201
     data = response.json()["data"]
@@ -51,26 +44,25 @@ async def test_ai_rules_create(async_client, admin_user, db: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_create_invalid_trigger_type(async_client, admin_user):
+async def test_ai_rules_create_invalid_trigger_type(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test creating a rule with invalid trigger type."""
     payload = {
         "name": "Invalid Rule",
         "trigger_type": "invalid_trigger",
         "action_type": "send_notification",
     }
-    
-    response = await async_client.post(
+
+    response = await client.post(
         "/api/v1/admin/ai-rules",
         json=payload,
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_test_endpoint(async_client, admin_user, db: AsyncSession):
+async def test_ai_rules_test_endpoint(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test the rule test/dry-run endpoint."""
-    # First create a rule
     payload = {
         "name": "Test Rule",
         "trigger_type": "on_vulnerability_created",
@@ -79,20 +71,20 @@ async def test_ai_rules_test_endpoint(async_client, admin_user, db: AsyncSession
         "action_config": {"message": "Test"},
         "enabled": True,
     }
-    
-    create_response = await async_client.post(
+
+    create_response = await client.post(
         "/api/v1/admin/ai-rules",
         json=payload,
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
+    assert create_response.status_code == 201
     rule_id = create_response.json()["data"]["id"]
-    
-    # Test the rule
+
     test_payload = {"data": {"test": "data"}}
-    response = await async_client.post(
+    response = await client.post(
         f"/api/v1/admin/ai-rules/{rule_id}/test",
         json=test_payload,
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 200
     data = response.json()["data"]
@@ -102,18 +94,17 @@ async def test_ai_rules_test_endpoint(async_client, admin_user, db: AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_get_trigger_types(async_client, admin_user):
+async def test_ai_rules_get_trigger_types(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test getting available trigger types."""
-    response = await async_client.get(
+    response = await client.get(
         "/api/v1/admin/ai-rules/metadata/triggers",
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 200
     data = response.json()["data"]
     assert "triggers" in data
     assert len(data["triggers"]) > 0
-    
-    # Check structure
+
     trigger = data["triggers"][0]
     assert "id" in trigger
     assert "label" in trigger
@@ -122,18 +113,17 @@ async def test_ai_rules_get_trigger_types(async_client, admin_user):
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_get_action_types(async_client, admin_user):
+async def test_ai_rules_get_action_types(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test getting available action types."""
-    response = await async_client.get(
+    response = await client.get(
         "/api/v1/admin/ai-rules/metadata/actions",
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 200
     data = response.json()["data"]
     assert "actions" in data
     assert len(data["actions"]) > 0
-    
-    # Check structure
+
     action = data["actions"][0]
     assert "id" in action
     assert "label" in action
@@ -142,9 +132,8 @@ async def test_ai_rules_get_action_types(async_client, admin_user):
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_filter_by_enabled(async_client, admin_user):
+async def test_ai_rules_filter_by_enabled(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """Test filtering rules by enabled status."""
-    # Create two rules with different enabled status
     for enabled in [True, False]:
         payload = {
             "name": f"Rule {'Enabled' if enabled else 'Disabled'}",
@@ -152,29 +141,25 @@ async def test_ai_rules_filter_by_enabled(async_client, admin_user):
             "action_type": "send_notification",
             "enabled": enabled,
         }
-        await async_client.post(
+        r = await client.post(
             "/api/v1/admin/ai-rules",
             json=payload,
-            headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+            headers=admin_auth_headers,
         )
-    
-    # Filter by enabled=True
-    response = await async_client.get(
+        assert r.status_code == 201, r.text
+
+    response = await client.get(
         "/api/v1/admin/ai-rules?enabled=true",
-        headers={"Authorization": f"Bearer {admin_user.get('access_token', '')}"},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 200
-    data = response.json()["data"]
-    assert len(data["items"]) == 1
-    assert data["items"][0]["enabled"] is True
+    body = response.json()
+    assert len(body["data"]) == 1
+    assert body["data"][0]["enabled"] is True
 
 
 @pytest.mark.asyncio
-async def test_ai_rules_authorization_non_admin(async_client, user_token):
+async def test_ai_rules_authorization_non_admin(client: AsyncClient, auth_headers: dict[str, str]):
     """Test that non-admin users cannot access AI rules endpoints."""
-    response = await async_client.get(
-        "/api/v1/admin/ai-rules",
-        headers={"Authorization": f"Bearer {user_token}"},
-    )
-    # Should be 403 Forbidden (no admin role)
-    assert response.status_code in [403, 401]
+    response = await client.get("/api/v1/admin/ai-rules", headers=auth_headers)
+    assert response.status_code in (403, 401)

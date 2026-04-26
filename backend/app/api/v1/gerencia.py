@@ -84,9 +84,7 @@ async def import_gerencias_csv(
             err_list.append({"row": line_no, "message": perr})
             continue
         assert parsed is not None
-        sub = await subdireccion_svc.get(
-            db, parsed.subdireccion_id, scope={"user_id": current_user.id}
-        )
+        sub = await subdireccion_svc.get(db, parsed.subdireccion_id, scope={"user_id": current_user.id})
         if not sub:
             err_list.append({"row": line_no, "message": "subdireccion_id inexistente o sin acceso"})
             continue

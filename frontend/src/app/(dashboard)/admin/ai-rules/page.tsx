@@ -3,14 +3,12 @@
 import {
   AlertCircle,
   Check,
-  ChevronDown,
-  Copy,
   Loader2,
   Plus,
   Trash2,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -257,7 +255,7 @@ function RuleCard({
       setIsDeleting(true);
       await onDelete(rule.id as unknown as string);
       toast.success("Regla eliminada");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error al eliminar regla");
     } finally {
       setIsDeleting(false);
@@ -269,7 +267,7 @@ function RuleCard({
       setIsTesting(true);
       await onTest(rule.id as unknown as string);
       toast.success("Test ejecutado");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error en test");
     } finally {
       setIsTesting(false);
@@ -360,11 +358,11 @@ export default function AdminAIRulesPage() {
 
   const handleCreate = async (formData: FormData) => {
     try {
-      const { id, ...data } = formData;
+      const { id: _id, ...data } = formData;
       await createMutation.mutateAsync(data as AIRuleCreate);
       toast.success("Regla creada exitosamente");
       setOpenDialog(false);
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error al crear regla");
     }
   };
@@ -372,12 +370,12 @@ export default function AdminAIRulesPage() {
   const handleUpdate = async (formData: FormData) => {
     if (!editingRule) return;
     try {
-      const { id, ...data } = formData;
+      const { id: _id, ...data } = formData;
       await updateMutation.mutateAsync(data as AIRuleUpdate);
       toast.success("Regla actualizada");
       setEditingRule(null);
       setOpenDialog(false);
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error al actualizar regla");
     }
   };
@@ -465,13 +463,15 @@ export default function AdminAIRulesPage() {
                     key={rule.id}
                     rule={rule}
                     onEdit={handleEdit}
-                    onDelete={(id) => deleteMutation.mutateAsync(id)}
-                    onTest={(id) =>
-                      testMutation.mutateAsync({
+                    onDelete={async (id) => {
+                      await deleteMutation.mutateAsync(id);
+                    }}
+                    onTest={async (id) => {
+                      await testMutation.mutateAsync({
                         ruleId: id,
                         payload: { data: {} },
-                      })
-                    }
+                      });
+                    }}
                   />
                 ))}
               </div>

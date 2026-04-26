@@ -54,7 +54,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
     });
 
     test('gauge color debe cambiar según valor (green > 60, yellow 40-60, red < 40)', async ({
-      page,
+      page: _page,
     }) => {
       // TODO: Verificar clase CSS de color basada en valor
       // const gauge = page.locator('[data-testid="gauge-chart"]');
@@ -156,7 +156,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
       expect(rows.length).toBeLessThanOrEqual(5);
 
       // Si hay más datos
-      const moreText = page.locator('text=/\+\d+ filas/');
+      void page.locator('text=/\+\d+ filas/');
       // Si existe, validar formato
     });
 
@@ -181,7 +181,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
     });
 
     test('cambiar mes debe recargar datos', async ({ page }) => {
-      const before = await page.locator('[data-testid="kpi-value"]').first().textContent();
+      void (await page.locator('[data-testid="kpi-value"]').first().textContent());
 
       const select = page.locator('[data-testid="month-select"]');
       await select.click();
@@ -199,7 +199,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
       await expect(exportBtn).toBeVisible();
     });
 
-    test('click Exportar debe descargar CSV', async ({ page }) => {
+    test('click Exportar debe descargar CSV', async ({ page: _page }) => {
       // TODO: Setup download listener
       // const downloadPromise = page.waitForEvent('download');
       // await page.locator('button:has-text("Exportar")').click();
@@ -241,7 +241,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
       // await page.locator('[data-testid="dark-mode-toggle"]').click();
 
       // Verificar que colores se apliquen
-      const cards = page.locator('[data-testid="kpi-card"]').first();
+      void page.locator('[data-testid="kpi-card"]').first();
       // TODO: Verificar clases dark mode
     });
   });
@@ -253,7 +253,7 @@ test.describe('Dashboard 1: Ejecutivo', () => {
       await expect(page.locator('[data-testid="kpi-card"]')).toBeTruthy();
     });
 
-    test('Analyst no debe poder ver si no tiene permiso', async ({ page }) => {
+    test('Analyst no debe poder ver si no tiene permiso', async ({ page: _page }) => {
       // TODO: Login como analyst sin permisos
       // await page.goto('http://localhost/dashboards/executive');
       // await expect(page.locator('text=No tienes permisos')).toBeVisible();

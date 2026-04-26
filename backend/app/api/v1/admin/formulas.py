@@ -17,12 +17,10 @@ from app.models.formula import Formula
 from app.models.user import User
 from app.schemas.formula import (
     FormulaCreate,
-    FormulaList,
     FormulaRead,
     FormulaTest,
     FormulaTestResult,
     FormulaUpdate,
-    FunctionInfo,
 )
 from app.services.audit_service import record as audit_record
 from app.services.formula_service import formula_svc
@@ -30,7 +28,7 @@ from app.services.formula_service import formula_svc
 router = APIRouter()
 
 
-@router.get("", response_model=FormulaList)
+@router.get("")
 async def list_formulas(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_backoffice),
@@ -38,14 +36,23 @@ async def list_formulas(
     limit: int = Query(20, ge=1, le=100),
 ):
     """List all formulas (paginated)."""
-    rows = await formula_svc.list(db, skip=skip, limit=limit)
-    total = await db.scalar(select(func.count()).select_from(Formula))
-    logger.info("formula.list", extra={"skip": skip, "limit": limit, "total": total})
+    stmt = (
+        select(Formula)
+        .where(Formula.deleted_at.is_(None))
+        .order_by(Formula.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    total = await db.scalar(select(func.count()).select_from(Formula).where(Formula.deleted_at.is_(None)))
+    total_i = int(total or 0)
+    page = (skip // limit) + 1
+    logger.info("formula.list", extra={"skip": skip, "limit": limit, "total": total_i})
     return paginated(
         [FormulaRead.model_validate(r).model_dump(mode="json") for r in rows],
-        total=total,
-        skip=skip,
-        limit=limit,
+        page=page,
+        page_size=limit,
+        total=total_i,
     )
 
 
@@ -75,7 +82,7 @@ async def create_formula(
         },
     )
     logger.info("formula.create", extra={"formula_id": str(formula.id), "nombre": formula.nombre})
-    return success(FormulaRead.model_validate(formula).model_dump(mode="json"), status_code=201)
+    return success(FormulaRead.model_validate(formula).model_dump(mode="json"))
 
 
 @router.get("/{formula_id}")
@@ -157,7 +164,7 @@ async def delete_formula(
     return None
 
 
-@router.post("/test", response_model=FormulaTestResult)
+@router.post("/test")
 async def test_formula(
     payload: FormulaTest,
     db: AsyncSession = Depends(get_db),
@@ -173,7 +180,9 @@ async def test_formula(
         return success(FormulaTestResult(success=False, error=str(e)).model_dump(mode="json"))
     except Exception as e:
         logger.error("formula.test", extra={"error": str(e)})
-        return success(FormulaTestResult(success=False, error="Unexpected error during execution").model_dump(mode="json"))
+        return success(
+            FormulaTestResult(success=False, error="Unexpected error during execution").model_dump(mode="json")
+        )
 
 
 @router.get("/functions/supported")

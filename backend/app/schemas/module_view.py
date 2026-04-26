@@ -11,7 +11,9 @@ class ModuleViewBase(BaseModel):
     """Base schema for module views."""
 
     nombre: str = Field(..., min_length=1, max_length=255, description="View name (e.g., 'Críticas SLA Vencido')")
-    module_name: str = Field(..., min_length=1, max_length=100, description="Module reference (e.g., 'vulnerabilities', 'releases')")
+    module_name: str = Field(
+        ..., min_length=1, max_length=100, description="Module reference (e.g., 'vulnerabilities', 'releases')"
+    )
     tipo: str = Field(..., max_length=50, description="View type: 'table', 'kanban', 'calendar', or 'cards'")
     columns_config: dict[str, Any] = Field(default_factory=dict, description="Columns configuration (JSON)")
     filters: dict[str, Any] = Field(default_factory=dict, description="Filters (JSON)")

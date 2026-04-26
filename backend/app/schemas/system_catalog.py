@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
-from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -55,7 +55,7 @@ class SystemCatalogList(BaseModel):
 
 __all__ = [
     "SystemCatalogCreate",
+    "SystemCatalogList",
     "SystemCatalogRead",
     "SystemCatalogUpdate",
-    "SystemCatalogList",
 ]

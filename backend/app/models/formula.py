@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -26,22 +26,22 @@ class Formula(SoftDeleteMixin, Base):
     __tablename__ = "formulas"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    
+
     # Formula name
     nombre: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    
+
     # Optional description
     description: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    
+
     # Formula expression (using safe formula_engine)
     formula_text: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Execution engine (default: formula_engine)
     motor: Mapped[str] = mapped_column(String(100), default="formula_engine", nullable=False)
-    
+
     # Enable/disable flag
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

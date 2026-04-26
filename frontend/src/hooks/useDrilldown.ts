@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { DashboardLayout, Widget } from '@/schemas/dashboard-schema';
 
 interface DrilldownLevel {
   level: number;

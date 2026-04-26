@@ -16,7 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/radix-select';
 import {
   Table,
   TableBody,
@@ -25,13 +25,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  KPICard,
-  PieChart,
-} from '@/components/charts';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
+import { KPICard, TrendChart, SeverityChip } from '@/components/charts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import {
   Users,
   AlertTriangle,
@@ -39,6 +37,7 @@ import {
   AlertCircle,
   ChevronUp,
   ChevronDown,
+  X,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
@@ -82,6 +81,12 @@ interface TeamTablaResponse {
   };
 }
 
+interface AnalystDetail {
+  user: { id: string; email: string; role: string };
+  vulns_asignadas: { id: string; titulo: string | null; severidad: string; estado: string; fuente: string; created_at: string | null }[];
+  historico: { period: string; count: number }[];
+}
+
 type SortField = 'total' | 'email' | 'riesgo';
 type SortOrder = 'asc' | 'desc';
 
@@ -92,6 +97,7 @@ export default function TeamDashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAnalyst, setSelectedAnalyst] = useState<TeamTableRow | null>(null);
 
   // Fetch summary data
   const { data: resumen, isLoading: resumenLoading } = useQuery({
@@ -140,6 +146,19 @@ export default function TeamDashboardPage() {
       );
       return response.data.data;
     },
+  });
+
+  // Fetch analyst detail on row click
+  const { data: analystDetail, isLoading: analystLoading } = useQuery({
+    queryKey: ['team-detail', selectedAnalyst?.user_id],
+    queryFn: async () => {
+      logger.info('dashboard.team.analyst_detail.fetch', { user_id: selectedAnalyst?.user_id });
+      const response = await apiClient.get<{ data: AnalystDetail }>(
+        `/api/v1/dashboard/team-detail/${selectedAnalyst!.user_id}`
+      );
+      return response.data.data;
+    },
+    enabled: !!selectedAnalyst,
   });
 
   // Filter team data based on search term
@@ -273,18 +292,16 @@ export default function TeamDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">
-              <PieChart
-                data={chartData}
-                valueKey="value"
-                nameKey="name"
-                colors={[
-                  '#ef4444',
-                  '#f97316',
-                  '#eab308',
-                  '#22c55e',
-                  '#3b82f6',
-                ]}
-              />
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                    {chartData.map((_, idx) => (
+                      <Cell key={idx} fill={['#ef4444','#f97316','#eab308','#22c55e','#3b82f6'][idx % 5]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -364,7 +381,12 @@ export default function TeamDashboardPage() {
               <TableBody>
                 {filteredTeamData.length > 0 ? (
                   filteredTeamData.map((team) => (
-                    <TableRow key={team.user_id}>
+                    <TableRow
+                      key={team.user_id}
+                      className={`cursor-pointer transition-colors ${selectedAnalyst?.user_id === team.user_id ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      onClick={() => setSelectedAnalyst(selectedAnalyst?.user_id === team.user_id ? null : team)}
+                      data-testid={`team-row-${team.user_id}`}
+                    >
                       <TableCell className="font-medium">{team.email}</TableCell>
                       <TableCell>{team.full_name}</TableCell>
                       <TableCell>{team.total_vulns}</TableCell>
@@ -482,6 +504,83 @@ export default function TeamDashboardPage() {
           )}
         </CardContent>
       </Card>
+      {/* Analyst Detail Panel */}
+      {selectedAnalyst && (
+        <Card className="border-l-4 border-l-blue-500" data-testid="analyst-detail-panel">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-lg">{selectedAnalyst.full_name || selectedAnalyst.email}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">{selectedAnalyst.email}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedAnalyst(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {analystLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ) : analystDetail ? (
+              <>
+                {/* Stats rápidas */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Total Asignadas</p>
+                    <p className="text-2xl font-bold">{selectedAnalyst.total_vulns}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-red-50">
+                    <p className="text-xs text-muted-foreground">Abiertas</p>
+                    <p className="text-2xl font-bold text-red-600">{selectedAnalyst.open_vulns}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-50">
+                    <p className="text-xs text-muted-foreground">Cerradas</p>
+                    <p className="text-2xl font-bold text-green-600">{selectedAnalyst.closed_vulns}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-blue-50">
+                    <p className="text-xs text-muted-foreground">Tasa Cierre</p>
+                    <p className="text-2xl font-bold text-blue-600">{selectedAnalyst.closure_rate}%</p>
+                  </div>
+                </div>
+
+                {/* Tendencia 6 meses */}
+                {analystDetail.historico.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3">Actividad — últimos 6 meses</h4>
+                    <TrendChart
+                      data={analystDetail.historico.map((h) => ({ name: h.period, vulns: h.count }))}
+                      series={[{ key: 'vulns', name: 'Vulnerabilidades', color: '#3b82f6' }]}
+                      height={150}
+                      showLegend={false}
+                    />
+                  </div>
+                )}
+
+                {/* Últimas vulnerabilidades */}
+                {analystDetail.vulns_asignadas.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3">
+                      Vulnerabilidades asignadas ({analystDetail.vulns_asignadas.length})
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {analystDetail.vulns_asignadas.slice(0, 15).map((v) => (
+                        <div key={v.id} className="flex items-center gap-3 p-2 rounded border bg-background text-sm">
+                          <SeverityChip severity={v.severidad} />
+                          <span className="flex-1 truncate">{v.titulo || v.fuente}</span>
+                          <Badge variant="outline" className="text-xs shrink-0">{v.estado}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

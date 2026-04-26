@@ -15,27 +15,24 @@ Test coverage:
 Total: 80+ tests
 """
 
-import pytest
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import pytest
 from httpx import AsyncClient
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
+from app.models.celula import Celula
+from app.models.gerencia import Gerencia
+from app.models.iniciativa import Iniciativa
+from app.models.organizacion import Organizacion
+from app.models.repositorio import Repositorio
+from app.models.service_release import ServiceRelease
+from app.models.servicio import Servicio
+from app.models.subdireccion import Subdireccion
+from app.models.tema_emergente import TemaEmergente
 from app.models.user import User
 from app.models.vulnerabilidad import Vulnerabilidad
-from app.models.iniciativa import Iniciativa
-from app.models.tema_emergente import TemaEmergente
-from app.models.service_release import ServiceRelease
-from app.models.repositorio import Repositorio
-from app.models.servicio import Servicio
-from app.models.celula import Celula
-from app.models.organizacion import Organizacion
-from app.models.gerencia import Gerencia
-from app.models.subdireccion import Subdireccion
-from app.core.security import hash_password
-
 
 # ─── FIXTURES ────────────────────────────────────────────────────────────────
 
@@ -55,6 +52,7 @@ async def admin_user(session_factory) -> User:
         db.add(user)
         await db.flush()
         await db.refresh(user)
+        await db.commit()
         return user
 
 
@@ -73,6 +71,7 @@ async def standard_user(session_factory) -> User:
         db.add(user)
         await db.flush()
         await db.refresh(user)
+        await db.commit()
         return user
 
 
@@ -91,6 +90,7 @@ async def ciso_user(session_factory) -> User:
         db.add(user)
         await db.flush()
         await db.refresh(user)
+        await db.commit()
         return user
 
 
@@ -161,6 +161,7 @@ async def hierarchy_data(session_factory, admin_user):
         await db.refresh(org)
         await db.refresh(celula)
         await db.refresh(repo)
+        await db.commit()
 
         return {
             "subdireccion": subdir,
@@ -183,9 +184,7 @@ async def vulnerabilities_data(session_factory, admin_user, hierarchy_data):
         estados = ["Abierta", "En Progreso", "Cerrada"]
         motores = ["SAST", "DAST", "SCA", "MAST"]
 
-        for idx, (sev, estado, motor) in enumerate(
-            zip(severities * 3, estados * 4, motores * 3)
-        ):
+        for idx, (sev, estado, motor) in enumerate(zip(severities * 3, estados * 4, motores * 3)):
             now = datetime.now(UTC)
             sla_dias = {"Critica": 7, "Alta": 30, "Media": 60, "Baja": 90}
             dias = sla_dias.get(sev, 30)
@@ -211,6 +210,7 @@ async def vulnerabilities_data(session_factory, admin_user, hierarchy_data):
         await db.flush()
         for vuln in vulns:
             await db.refresh(vuln)
+        await db.commit()
 
         return vulns
 
@@ -226,8 +226,9 @@ async def initiatives_data(session_factory, admin_user, hierarchy_data):
             init = Iniciativa(
                 id=uuid4(),
                 user_id=admin_user.id,
-                nombre=f"Initiative-{idx}",
+                titulo=f"Initiative-{idx}",
                 descripcion=f"Test initiative {idx}",
+                tipo="Seguridad",
                 estado="En Progreso" if idx % 2 == 0 else "Completada",
                 celula_id=celula.id,
             )
@@ -237,6 +238,7 @@ async def initiatives_data(session_factory, admin_user, hierarchy_data):
         await db.flush()
         for init in inits:
             await db.refresh(init)
+        await db.commit()
 
         return inits
 
@@ -255,6 +257,10 @@ async def themes_data(session_factory, admin_user, hierarchy_data):
                 user_id=admin_user.id,
                 titulo=f"Theme-{idx}",
                 descripcion=f"Test theme {idx}",
+                tipo="Seguridad",
+                impacto="Medio",
+                estado="Abierto",
+                fuente="Test",
                 celula_id=celula.id,
                 updated_at=now - timedelta(days=idx * 3),
             )
@@ -264,6 +270,7 @@ async def themes_data(session_factory, admin_user, hierarchy_data):
         await db.flush()
         for theme in themes:
             await db.refresh(theme)
+        await db.commit()
 
         return themes
 
@@ -279,7 +286,7 @@ async def releases_data(session_factory, admin_user, hierarchy_data):
                 id=uuid4(),
                 user_id=admin_user.id,
                 nombre="Test Service",
-                url="https://service.test",
+                descripcion="https://service.test",
                 criticidad="Alta",
                 celula_id=celula.id,
             )
@@ -310,6 +317,7 @@ async def releases_data(session_factory, admin_user, hierarchy_data):
         await db.flush()
         for release in releases:
             await db.refresh(release)
+        await db.commit()
 
         return releases
 
@@ -321,61 +329,57 @@ class TestDashboardExecutive:
     """Tests for Dashboard 1: Executive/General KPIs."""
 
     @pytest.mark.asyncio
-    async def test_executive_200_with_kpis(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_executive_200_with_kpis(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Executive dashboard returns 200 with correct KPI structure."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
         assert "kpis" in data["data"]
-        assert "total_vulnerabilities" in data["data"]["kpis"]
-        assert "critical_count" in data["data"]["kpis"]
-        assert "sla_compliance" in data["data"]["kpis"]
+        k = data["data"]["kpis"]
+        assert "programs_advancement" in k
+        assert "critical_vulns" in k
+        assert "active_releases" in k
+        assert "emerging_themes" in k
+        assert "audits" in k
 
     @pytest.mark.asyncio
-    async def test_executive_by_severity_breakdown(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
-        """Test Executive dashboard includes severity breakdown."""
+    async def test_executive_by_severity_breakdown(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
+        """Test Executive dashboard includes severity trend buckets."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert "by_severity" in data["data"]
-        for key in ["Critica", "Alta", "Media", "Baja"]:
-            assert key in data["data"]["by_severity"]
+        assert "trend_data" in data["data"]
+        assert len(data["data"]["trend_data"]) >= 1
+        row = data["data"]["trend_data"][0]
+        for key in ("criticas", "altas", "medias", "bajas"):
+            assert key in row
 
     @pytest.mark.asyncio
-    async def test_executive_trend_data(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
-        """Test Executive dashboard includes trend (7-day data)."""
+    async def test_executive_trend_data(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
+        """Test Executive dashboard includes multi-month trend series."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert "trend" in data["data"]
-        assert "new_vulnerabilities_7d" in data["data"]["trend"]
+        assert "trend_data" in data["data"]
+        assert isinstance(data["data"]["trend_data"], list)
+        assert len(data["data"]["trend_data"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_executive_risk_level(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
-        """Test Executive dashboard includes risk_level assessment."""
+    async def test_executive_risk_level(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
+        """Test Executive dashboard includes security posture score."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert "risk_level" in data["data"]
-        assert data["data"]["risk_level"] in ["LOW", "MEDIUM", "HIGH"]
+        assert "security_posture" in data["data"]
+        assert 0 <= int(data["data"]["security_posture"]) <= 100
 
 
 class TestDashboardTeam:
     """Tests for Dashboard 2: Team/Analyst workload view."""
 
     @pytest.mark.asyncio
-    async def test_team_dashboard_200(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_team_dashboard_200(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Team dashboard returns 200 with analysts data."""
         response = await client.get("/api/v1/dashboard/team", headers=auth_headers)
         assert response.status_code == 200
@@ -384,9 +388,7 @@ class TestDashboardTeam:
         assert "analysts" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_team_analysts_structure(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_team_analysts_structure(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Team dashboard analyst items have required fields."""
         response = await client.get("/api/v1/dashboard/team", headers=auth_headers)
         data = response.json()
@@ -402,9 +404,7 @@ class TestDashboardPrograms:
     """Tests for Dashboard 3: Programs consolidation."""
 
     @pytest.mark.asyncio
-    async def test_programs_200(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_programs_200(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Programs dashboard returns 200."""
         response = await client.get("/api/v1/dashboard/programs", headers=auth_headers)
         assert response.status_code == 200
@@ -413,9 +413,7 @@ class TestDashboardPrograms:
         assert "avg_completion" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_programs_breakdown(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_programs_breakdown(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Programs dashboard includes breakdown by program."""
         response = await client.get("/api/v1/dashboard/programs", headers=auth_headers)
         data = response.json()
@@ -426,26 +424,18 @@ class TestDashboardProgramDetail:
     """Tests for Dashboard 4: Program detail/zoom view."""
 
     @pytest.mark.asyncio
-    async def test_program_detail_sast_200(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_program_detail_sast_200(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Program detail dashboard for SAST returns 200."""
-        response = await client.get(
-            "/api/v1/dashboard/program-detail?program=sast", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/program-detail?program=sast", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["program"] == "sast"
         assert data["data"]["source"] == "SAST"
 
     @pytest.mark.asyncio
-    async def test_program_detail_dast_200(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_program_detail_dast_200(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Program detail dashboard for DAST returns 200."""
-        response = await client.get(
-            "/api/v1/dashboard/program-detail?program=dast", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/program-detail?program=dast", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["data"]["program"] == "dast"
@@ -455,9 +445,7 @@ class TestDashboardVulnerabilities:
     """Tests for Dashboard 5: Vulnerabilities multidimensional."""
 
     @pytest.mark.asyncio
-    async def test_vulnerabilities_200(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_vulnerabilities_200(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Vulnerabilities dashboard returns 200."""
         response = await client.get("/api/v1/dashboard/vulnerabilities", headers=auth_headers)
         assert response.status_code == 200
@@ -477,9 +465,7 @@ class TestDashboardVulnerabilities:
             assert sev in data["data"]["by_severity"]
 
     @pytest.mark.asyncio
-    async def test_vulnerabilities_sla_status(
-        self, client: AsyncClient, auth_headers: dict, vulnerabilities_data
-    ):
+    async def test_vulnerabilities_sla_status(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
         """Test Vulnerabilities dashboard includes SLA status."""
         response = await client.get("/api/v1/dashboard/vulnerabilities", headers=auth_headers)
         data = response.json()
@@ -491,9 +477,7 @@ class TestDashboardReleases:
     """Tests for Dashboards 6-7: Releases (table and kanban)."""
 
     @pytest.mark.asyncio
-    async def test_releases_status_distribution(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_status_distribution(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test Releases dashboard status distribution."""
         response = await client.get("/api/v1/dashboard/releases", headers=auth_headers)
         assert response.status_code == 200
@@ -504,9 +488,7 @@ class TestDashboardReleases:
         assert "completed" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_releases_table_200(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_table_200(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test Releases table view returns 200."""
         response = await client.get("/api/v1/dashboard/releases-table", headers=auth_headers)
         assert response.status_code == 200
@@ -515,21 +497,15 @@ class TestDashboardReleases:
         assert "count" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_releases_table_limit_parameter(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_table_limit_parameter(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test Releases table respects limit parameter."""
-        response = await client.get(
-            "/api/v1/dashboard/releases-table?limit=2", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/releases-table?limit=2", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data["data"]["items"]) <= 2
 
     @pytest.mark.asyncio
-    async def test_releases_kanban_200(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_kanban_200(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test Releases kanban view returns 200."""
         response = await client.get("/api/v1/dashboard/releases-kanban", headers=auth_headers)
         assert response.status_code == 200
@@ -542,9 +518,7 @@ class TestDashboardInitiatives:
     """Tests for Dashboard 8: Initiatives."""
 
     @pytest.mark.asyncio
-    async def test_initiatives_200(
-        self, client: AsyncClient, auth_headers: dict, initiatives_data
-    ):
+    async def test_initiatives_200(self, client: AsyncClient, auth_headers: dict, initiatives_data):
         """Test Initiatives dashboard returns 200."""
         response = await client.get("/api/v1/dashboard/initiatives", headers=auth_headers)
         assert response.status_code == 200
@@ -554,9 +528,7 @@ class TestDashboardInitiatives:
         assert "completed" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_initiatives_completion_percentage(
-        self, client: AsyncClient, auth_headers: dict, initiatives_data
-    ):
+    async def test_initiatives_completion_percentage(self, client: AsyncClient, auth_headers: dict, initiatives_data):
         """Test Initiatives dashboard includes completion percentage."""
         response = await client.get("/api/v1/dashboard/initiatives", headers=auth_headers)
         data = response.json()
@@ -567,9 +539,7 @@ class TestDashboardEmergingThemes:
     """Tests for Dashboard 9: Emerging Themes."""
 
     @pytest.mark.asyncio
-    async def test_themes_200(
-        self, client: AsyncClient, auth_headers: dict, themes_data
-    ):
+    async def test_themes_200(self, client: AsyncClient, auth_headers: dict, themes_data):
         """Test Emerging Themes dashboard returns 200."""
         response = await client.get("/api/v1/dashboard/emerging-themes", headers=auth_headers)
         assert response.status_code == 200
@@ -579,9 +549,7 @@ class TestDashboardEmergingThemes:
         assert "active" in data["data"]
 
     @pytest.mark.asyncio
-    async def test_themes_unmoved_calculation(
-        self, client: AsyncClient, auth_headers: dict, themes_data
-    ):
+    async def test_themes_unmoved_calculation(self, client: AsyncClient, auth_headers: dict, themes_data):
         """Test Themes correctly counts unmoved items (7+ days)."""
         response = await client.get("/api/v1/dashboard/emerging-themes", headers=auth_headers)
         data = response.json()
@@ -612,9 +580,7 @@ class TestAuthenticationDashboards:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_admin_can_access_all_dashboards(
-        self, client: AsyncClient, admin_user, auth_headers
-    ):
+    async def test_admin_can_access_all_dashboards(self, client: AsyncClient, admin_user, auth_headers):
         """Test admin user can access all dashboard endpoints."""
         endpoints = [
             "/api/v1/dashboard/executive",
@@ -637,17 +603,13 @@ class TestRBACDashboards:
     """Tests for role-based access control on dashboards."""
 
     @pytest.mark.asyncio
-    async def test_ciso_access_to_executive(
-        self, client: AsyncClient, ciso_user, session_factory
-    ):
+    async def test_ciso_access_to_executive(self, client: AsyncClient, ciso_user, session_factory):
         """Test CISO role can access executive dashboard."""
         # Would require auth flow setup - simplified for now
         pass
 
     @pytest.mark.asyncio
-    async def test_user_role_dashboard_access(
-        self, client: AsyncClient, standard_user, session_factory
-    ):
+    async def test_user_role_dashboard_access(self, client: AsyncClient, standard_user, session_factory):
         """Test standard user role dashboard access."""
         pass
 
@@ -659,9 +621,7 @@ class TestHierarchyFiltering:
     """Tests for organizational hierarchy filtering."""
 
     @pytest.mark.asyncio
-    async def test_filter_by_subdireccion(
-        self, client: AsyncClient, auth_headers: dict, hierarchy_data
-    ):
+    async def test_filter_by_subdireccion(self, client: AsyncClient, auth_headers: dict, hierarchy_data):
         """Test filtering by subdireccion_id."""
         subdir_id = str(hierarchy_data["subdireccion"].id)
         response = await client.get(
@@ -671,9 +631,7 @@ class TestHierarchyFiltering:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_filter_by_celula(
-        self, client: AsyncClient, auth_headers: dict, hierarchy_data
-    ):
+    async def test_filter_by_celula(self, client: AsyncClient, auth_headers: dict, hierarchy_data):
         """Test filtering by celula_id."""
         celula_id = str(hierarchy_data["celula"].id)
         response = await client.get(
@@ -683,9 +641,7 @@ class TestHierarchyFiltering:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_filter_multiple_hierarchies(
-        self, client: AsyncClient, auth_headers: dict, hierarchy_data
-    ):
+    async def test_filter_multiple_hierarchies(self, client: AsyncClient, auth_headers: dict, hierarchy_data):
         """Test filtering by multiple hierarchy levels."""
         subdir_id = str(hierarchy_data["subdireccion"].id)
         celula_id = str(hierarchy_data["celula"].id)
@@ -712,9 +668,7 @@ class TestInputValidation:
         assert response.status_code in [400, 422]
 
     @pytest.mark.asyncio
-    async def test_sql_injection_attempt_in_filter(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_sql_injection_attempt_in_filter(self, client: AsyncClient, auth_headers: dict):
         """Test SQL injection attempt in filter parameters."""
         response = await client.get(
             "/api/v1/dashboard/program-detail?program=sast' OR '1'='1",
@@ -724,9 +678,7 @@ class TestInputValidation:
         # Query should be parameterized, so should not cause SQL injection
 
     @pytest.mark.asyncio
-    async def test_limit_parameter_validation(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_limit_parameter_validation(self, client: AsyncClient, auth_headers: dict):
         """Test limit parameter is validated."""
         response = await client.get(
             "/api/v1/dashboard/releases-table?limit=1000",
@@ -784,9 +736,7 @@ class TestErrorHandling:
     """Tests for error handling."""
 
     @pytest.mark.asyncio
-    async def test_invalid_program_parameter(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_invalid_program_parameter(self, client: AsyncClient, auth_headers: dict):
         """Test invalid program parameter in program-detail."""
         response = await client.get(
             "/api/v1/dashboard/program-detail?program=invalid_program",
@@ -796,14 +746,12 @@ class TestErrorHandling:
         # Should return with source mapped or default
 
     @pytest.mark.asyncio
-    async def test_zero_vulnerabilities_returns_valid_response(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_zero_vulnerabilities_returns_valid_response(self, client: AsyncClient, auth_headers: dict):
         """Test dashboard with no vulnerabilities returns valid response."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
-        assert data["data"]["kpis"]["total_vulnerabilities"] >= 0
+        assert data["data"]["kpis"]["critical_vulns"] >= 0
 
     @pytest.mark.asyncio
     async def test_programs_empty_breakdown(self, client: AsyncClient, auth_headers: dict):
@@ -821,9 +769,7 @@ class TestEnvelopeResponses:
     """Tests for response envelope format."""
 
     @pytest.mark.asyncio
-    async def test_dashboard_success_envelope(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_dashboard_success_envelope(self, client: AsyncClient, auth_headers: dict):
         """Test dashboard responses use success() envelope."""
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
         data = response.json()
@@ -869,6 +815,7 @@ class TestSoftDelete:
             # Soft delete it
             vuln.deleted_at = datetime.now(UTC)
             await db.flush()
+            await db.commit()
 
         # Now query dashboard - should not count deleted vulnerability
         response = await client.get("/api/v1/dashboard/executive", headers=auth_headers)
@@ -882,9 +829,7 @@ class TestPagination:
     """Tests for pagination in dashboard endpoints."""
 
     @pytest.mark.asyncio
-    async def test_releases_table_default_limit(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_table_default_limit(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test releases table uses default limit of 50."""
         response = await client.get("/api/v1/dashboard/releases-table", headers=auth_headers)
         assert response.status_code == 200
@@ -892,25 +837,17 @@ class TestPagination:
         assert len(data["data"]["items"]) <= 50
 
     @pytest.mark.asyncio
-    async def test_releases_table_custom_limit(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_table_custom_limit(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test releases table respects custom limit."""
-        response = await client.get(
-            "/api/v1/dashboard/releases-table?limit=10", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/releases-table?limit=10", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data["data"]["items"]) <= 10
 
     @pytest.mark.asyncio
-    async def test_releases_table_max_limit_enforced(
-        self, client: AsyncClient, auth_headers: dict, releases_data
-    ):
+    async def test_releases_table_max_limit_enforced(self, client: AsyncClient, auth_headers: dict, releases_data):
         """Test releases table enforces max limit of 200."""
-        response = await client.get(
-            "/api/v1/dashboard/releases-table?limit=500", headers=auth_headers
-        )
+        response = await client.get("/api/v1/dashboard/releases-table?limit=500", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         # Should be capped at 200

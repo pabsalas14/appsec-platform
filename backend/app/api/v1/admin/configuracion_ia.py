@@ -75,7 +75,7 @@ async def create_config(
         },
     )
     logger.info("configuracion_ia.create", extra={"config_id": str(config.id), "provider": config.provider})
-    return success(ConfiguracionIARead.model_validate(config).model_dump(mode="json"), status_code=201)
+    return success(ConfiguracionIARead.model_validate(config).model_dump(mode="json"))
 
 
 @router.get("/{config_id}")

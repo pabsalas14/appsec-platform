@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -14,9 +15,11 @@ import {
   Clock,
   AlertTriangle,
   Zap,
+  ChevronRight,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import { HistoricoMensualGrid } from '@/components/charts';
 import {
   Table,
   TableBody,
@@ -83,9 +86,21 @@ const estadoColors: Record<string, string> = {
   'En Progreso': 'bg-yellow-50 text-yellow-700',
 };
 
+interface HeatmapEntry {
+  month: number;
+  value: number;
+  total: number;
+  closed: number;
+}
+
+interface HeatmapData {
+  heatmap: Record<string, HeatmapEntry[]>;
+}
+
 export default function ProgramsDashboardPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const router = useRouter();
 
   const { data: resumen, isLoading: resumenLoading, error: resumenError } = useQuery({
     queryKey: ['dashboard-programs-resumen'],
@@ -102,6 +117,15 @@ export default function ProgramsDashboardPage() {
       logger.info('dashboard.programs.distribucion.fetch');
       const response = await apiClient.get('/api/v1/dashboard/programs/distribucion');
       return response.data.data as DistribucionData;
+    },
+  });
+
+  const { data: heatmapData, isLoading: heatmapLoading } = useQuery({
+    queryKey: ['dashboard-programs-heatmap'],
+    queryFn: async () => {
+      logger.info('dashboard.programs.heatmap.fetch');
+      const response = await apiClient.get('/api/v1/dashboard/programs/heatmap');
+      return response.data.data as HeatmapData;
     },
   });
 
@@ -228,6 +252,35 @@ export default function ProgramsDashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Heatmap Mensual */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Actividad Mensual por Programa</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {heatmapLoading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : heatmapData?.heatmap ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.entries(heatmapData.heatmap).map(([tipo, months]) => (
+                <div key={tipo} className={`p-4 rounded-lg ${tipoColors[tipo] || 'bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    {tipoIcons[tipo] || <Shield className="h-4 w-4" />}
+                    <span className="font-semibold text-sm">{tipo}</span>
+                  </div>
+                  <HistoricoMensualGrid
+                    months={months.map((m) => ({ month: m.month, value: m.value }))}
+                    year={new Date().getFullYear()}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Sin datos de actividad mensual</p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Programs Table */}
       <Card>
         <CardHeader>
@@ -253,8 +306,18 @@ export default function ProgramsDashboardPage() {
                   <TableBody>
                     {tabla?.data && tabla.data.length > 0 ? (
                       tabla.data.map((program) => (
-                        <TableRow key={program.id}>
-                          <TableCell className="font-medium">{program.nombre}</TableCell>
+                        <TableRow
+                          key={program.id}
+                          className="cursor-pointer hover:bg-muted/70 transition-colors"
+                          onClick={() => router.push(`/dashboards/program-detail?code=${encodeURIComponent(program.tipo)}`)}
+                          data-testid={`program-row-${program.id}`}
+                        >
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {program.nombre}
+                              <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <div
                               className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${

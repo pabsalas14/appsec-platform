@@ -56,8 +56,8 @@ services:
       - uploads:/app/uploads
     command: >
       sh -c "
-        echo '⏳ Running migrations...' &&
-        alembic upgrade bb1c68fed56b &&
+        echo '📦 Running migrations...' &&
+        alembic upgrade head &&
         if [ \"$$RUN_SEED\" = 'true' ]; then
           echo '🌱 Running seed...' &&
           python -m app.seed;

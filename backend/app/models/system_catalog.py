@@ -35,6 +35,4 @@ class SystemCatalog(Base):
         index=True,
     )
 
-    __table_args__ = (
-        UniqueConstraint("tipo", "key", name="uq_system_catalog_tipo_key"),
-    )
+    __table_args__ = (UniqueConstraint("tipo", "key", name="uq_system_catalog_tipo_key"),)

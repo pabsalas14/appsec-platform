@@ -185,7 +185,20 @@ class QueryValidator:
             return True  # Already validated in select fields
 
         valid_columns = {col.name for col in mapper.columns}
-        valid_operators = ["=", "!=", "<", "<=", ">", ">=", "IN", "NOT IN", "LIKE", "NOT LIKE", "IS NULL", "IS NOT NULL"]
+        valid_operators = [
+            "=",
+            "!=",
+            "<",
+            "<=",
+            ">",
+            ">=",
+            "IN",
+            "NOT IN",
+            "LIKE",
+            "NOT LIKE",
+            "IS NULL",
+            "IS NOT NULL",
+        ]
 
         for filter_item in filters:
             field = filter_item.get("field")

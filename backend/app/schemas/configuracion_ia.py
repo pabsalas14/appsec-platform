@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -57,7 +57,7 @@ class ConfiguracionIAList(BaseModel):
 
 __all__ = [
     "ConfiguracionIACreate",
+    "ConfiguracionIAList",
     "ConfiguracionIARead",
     "ConfiguracionIAUpdate",
-    "ConfiguracionIAList",
 ]

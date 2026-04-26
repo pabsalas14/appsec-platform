@@ -65,7 +65,7 @@ async def create_view(
         },
     )
     logger.info("module_view.create", extra={"view_id": str(view.id), "module": view.module_name})
-    return success(ModuleViewRead.model_validate(view).model_dump(mode="json"), status_code=201)
+    return success(ModuleViewRead.model_validate(view).model_dump(mode="json"))
 
 
 @router.get("/{view_id}")

@@ -3,9 +3,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import type { CatalogRead, CatalogCreate, CatalogUpdate } from '@/lib/schemas/catalog.schema';
+import type { CatalogCreate, CatalogUpdate } from '@/lib/schemas/catalog.schema';
 
 const CATALOGS_KEY = ['catalogs'] as const;
+
+function apiErrorDetail(error: unknown): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const r = error as { response?: { data?: { detail?: string } } };
+    if (typeof r.response?.data?.detail === 'string') return r.response.data.detail;
+  }
+  if (error instanceof Error) return error.message;
+  return '';
+}
 
 export function useCatalogs(page = 1, pageSize = 50, isActive?: boolean, q?: string) {
   return useQuery({
@@ -57,8 +66,8 @@ export function useCreateCatalog() {
       queryClient.invalidateQueries({ queryKey: CATALOGS_KEY });
       toast.success('Catálogo creado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Error al crear catálogo');
+    onError: (error: unknown) => {
+      toast.error(apiErrorDetail(error) || 'Error al crear catálogo');
     },
   });
 }
@@ -75,8 +84,8 @@ export function useUpdateCatalog(catalogId: string) {
       queryClient.invalidateQueries({ queryKey: CATALOGS_KEY });
       toast.success('Catálogo actualizado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Error al actualizar catálogo');
+    onError: (error: unknown) => {
+      toast.error(apiErrorDetail(error) || 'Error al actualizar catálogo');
     },
   });
 }
@@ -93,8 +102,8 @@ export function useDeleteCatalog() {
       queryClient.invalidateQueries({ queryKey: CATALOGS_KEY });
       toast.success('Catálogo eliminado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Error al eliminar catálogo');
+    onError: (error: unknown) => {
+      toast.error(apiErrorDetail(error) || 'Error al eliminar catálogo');
     },
   });
 }

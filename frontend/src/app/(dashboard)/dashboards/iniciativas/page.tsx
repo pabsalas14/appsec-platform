@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   ChevronRight,
   Calendar,
-  FileText,
   CheckSquare,
   MessageCircle,
   Clock,
@@ -21,6 +20,14 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface Initiative {
   id: string;
@@ -436,19 +443,19 @@ export default function InitiativesDashboardPage() {
 
   const sortedInitiatives = data?.iniciativas
     ? [...data.iniciativas].sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
+        let aVal: string | number | undefined = a[sortField];
+        let bVal: string | number | undefined = b[sortField];
 
         if (aVal == null) aVal = '';
         if (bVal == null) bVal = '';
 
-        if (typeof aVal === 'string') {
-          return sortOrder === 'asc'
-            ? aVal.localeCompare(bVal as string)
-            : (bVal as string).localeCompare(aVal);
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
         }
 
-        return sortOrder === 'asc' ? (aVal as any) - (bVal as any) : (bVal as any) - (aVal as any);
+        const na = typeof aVal === 'number' ? aVal : 0;
+        const nb = typeof bVal === 'number' ? bVal : 0;
+        return sortOrder === 'asc' ? na - nb : nb - na;
       })
     : [];
 
@@ -465,3 +472,258 @@ export default function InitiativesDashboardPage() {
     if (sortField !== field) return <span className="text-gray-300 ml-2">⬍</span>;
     return <span className="ml-2">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
+
+  const loadingAny = isLoading || resumenLoading || tablaLoading || timelineLoading;
+
+  return (
+    <div className="flex flex-col gap-6 relative pb-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard de Iniciativas</h1>
+        <p className="text-muted-foreground mt-1">Seguimiento, hitos y avance de iniciativas</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="flex flex-wrap gap-1">
+          <TabsTrigger value="resumen">Resumen</TabsTrigger>
+          <TabsTrigger value="tabla">Tabla</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="lista">Lista</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="resumen" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Total
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {resumenLoading ? (
+                  <Skeleton className="h-9 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold">{resumenData?.resumen.total ?? 0}</div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  Completadas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {resumenLoading ? (
+                  <Skeleton className="h-9 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-green-600">
+                    {resumenData?.resumen.completadas ?? 0}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  En progreso
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {resumenLoading ? (
+                  <Skeleton className="h-9 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-blue-600">
+                    {resumenData?.resumen.en_progreso ?? 0}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  Retrasadas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {resumenLoading ? (
+                  <Skeleton className="h-9 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-amber-600">
+                    {resumenData?.resumen.retrasadas ?? 0}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          {resumenData?.estadisticas && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Estadísticas</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground space-y-1">
+                <p>Tasa de finalización: {resumenData.estadisticas.tasa_finalizacion}</p>
+                <p>Iniciativas atrasadas: {resumenData.estadisticas.iniciativas_atrasadas}</p>
+                <p>
+                  En riesgo (%): {resumenData.estadisticas.iniciativas_en_riesgo_porcentaje}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tabla" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tabla de iniciativas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {tablaLoading ? (
+                <Skeleton className="h-48 w-full" />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Progreso</TableHead>
+                      <TableHead>Hitos</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(tablaData?.tabla ?? []).map(row => (
+                      <TableRow key={row.id}>
+                        <TableCell className="font-medium">{row.titulo}</TableCell>
+                        <TableCell>{row.estado}</TableCell>
+                        <TableCell>{row.porcentaje_progreso}%</TableCell>
+                        <TableCell>
+                          {row.hitos_completados}/{row.total_hitos}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-6 space-y-4">
+          {timelineLoading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Próximos hitos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(timelineData?.proximos_hitos ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin eventos próximos</p>
+                  ) : (
+                    timelineData!.proximos_hitos.map(ev => (
+                      <div key={ev.id} className="border rounded-lg p-3 text-sm">
+                        <p className="font-medium">{ev.iniciativa_titulo}</p>
+                        <p className="text-muted-foreground">{ev.hito_titulo}</p>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" />
+                    Línea de tiempo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(timelineData?.timeline ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin eventos</p>
+                  ) : (
+                    timelineData!.timeline.map(ev => (
+                      <div key={ev.id} className="border rounded-lg p-3 text-sm">
+                        <p className="font-medium">{ev.iniciativa_titulo}</p>
+                        <p className="text-muted-foreground">{ev.descripcion ?? ev.estado}</p>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="lista" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Listado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingAny && !data ? (
+                <Skeleton className="h-64 w-full" />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('titulo')}>
+                        Título <SortIcon field="titulo" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('estado')}>
+                        Estado <SortIcon field="estado" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('fecha_inicio')}>
+                        Inicio <SortIcon field="fecha_inicio" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('created_at')}>
+                        Alta <SortIcon field="created_at" />
+                      </TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedInitiatives.map(init => (
+                      <TableRow key={init.id}>
+                        <TableCell className="font-medium">{init.titulo}</TableCell>
+                        <TableCell>{init.estado}</TableCell>
+                        <TableCell>
+                          {init.fecha_inicio
+                            ? new Date(init.fecha_inicio).toLocaleDateString('es-ES')
+                            : '—'}
+                        </TableCell>
+                        <TableCell>
+                          {init.created_at
+                            ? new Date(init.created_at).toLocaleDateString('es-ES')
+                            : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            type="button"
+                            className="text-primary inline-flex items-center gap-1 text-sm"
+                            onClick={() => setSelectedInitiative(init)}
+                          >
+                            Ver <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {selectedInitiative ? (
+        <DetailPanel initiative={selectedInitiative} onClose={() => setSelectedInitiative(null)} />
+      ) : null}
+    </div>
+  );
+}

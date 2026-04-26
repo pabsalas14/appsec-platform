@@ -114,16 +114,24 @@ async def _compute_madurez_payload(
 
     c_closed = 0.0
     if cerrados:
-        q_c = select(func.count()).select_from(Vulnerabilidad).where(
-            *base,
-            Vulnerabilidad.estado.in_(list(cerrados)),
+        q_c = (
+            select(func.count())
+            .select_from(Vulnerabilidad)
+            .where(
+                *base,
+                Vulnerabilidad.estado.in_(list(cerrados)),
+            )
         )
         c_closed = float((await db.execute(q_c)).scalar_one())
     c_active = 0.0
     if activa:
-        q_a = select(func.count()).select_from(Vulnerabilidad).where(
-            *base,
-            Vulnerabilidad.estado.in_(list(activa)),
+        q_a = (
+            select(func.count())
+            .select_from(Vulnerabilidad)
+            .where(
+                *base,
+                Vulnerabilidad.estado.in_(list(activa)),
+            )
         )
         c_active = float((await db.execute(q_a)).scalar_one())
 

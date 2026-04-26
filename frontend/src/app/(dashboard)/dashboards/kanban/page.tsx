@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,7 +14,6 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -51,10 +50,11 @@ export default function KanbanDashboardPage() {
       const response = await apiClient.get('/api/v1/dashboard/releases-kanban');
       return response.data.data as { columns: KanbanColumn; total_cards: number };
     },
-    onSuccess: (data) => {
-      setColumns(data.columns);
-    },
   });
+
+  useEffect(() => {
+    if (data?.columns) setColumns(data.columns);
+  }, [data]);
 
   const moveMutation = useMutation({
     mutationFn: async (vars: { cardId: string; newStatus: string }) => {

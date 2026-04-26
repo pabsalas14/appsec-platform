@@ -74,7 +74,8 @@ async def test_actividad_mensual_sast_idor_protected(
 
 @pytest.mark.asyncio
 async def test_sincronizar_hallazgos_recalcula_conteo(
-    client: AsyncClient, auth_headers: dict,
+    client: AsyncClient,
+    auth_headers: dict,
 ):
     ps_id = await create_programa_sast_id(client, auth_headers)
     r0 = await client.post(

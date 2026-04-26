@@ -6,7 +6,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # Trigger types enum
 TRIGGER_TYPES = [
     "on_vulnerability_created",
@@ -68,7 +67,7 @@ class AIRuleRead(AIRuleBase):
 
 class AIRuleList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     items: list[AIRuleRead]
     total: int
     page: int
@@ -77,16 +76,19 @@ class AIRuleList(BaseModel):
 
 class AIRuleTest(BaseModel):
     """Payload for testing a rule (dry-run)."""
+
     data: dict[str, Any] = Field(..., description="Sample data for dry-run")
 
 
 class AIRuleExecute(BaseModel):
     """Payload for executing a rule."""
+
     data: dict[str, Any] = Field(..., description="Data to execute rule against")
 
 
 class AIRuleTestResult(BaseModel):
     """Result of a rule test/dry-run."""
+
     rule_id: UUID
     status: str = Field(..., description="success, error")
     message: str

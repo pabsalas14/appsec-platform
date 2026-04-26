@@ -135,6 +135,23 @@ async def _session_factory(
     return async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
+@pytest_asyncio.fixture(scope="session")
+async def session_factory(
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> async_sessionmaker[AsyncSession]:
+    """Alias for ``_session_factory`` (compat con tests que piden ``session_factory``)."""
+    return _session_factory
+
+
+@pytest_asyncio.fixture
+async def async_db(
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncSession, None]:
+    """Sesión de lectura/escritura para tests que no pasan por el cliente HTTP."""
+    async with _session_factory() as session:
+        yield session
+
+
 # ─── DB dependency override + per-test data cleanup ──────────────────────────
 
 
@@ -182,6 +199,11 @@ class _DrainingAsyncClient(AsyncClient):
         if "text/event-stream" in ct:
             return r
         await r.aread()
+        # ASGITransport puede entregar el cuerpo antes de que FastAPI ejecute el
+        # teardown de Depends (commit tras ``yield`` en get_db). Sin ceder el
+        # loop, register→login en el mismo cliente ve 401 intermitente.
+        for _ in range(8):
+            await asyncio.sleep(0)
         return r
 
 
@@ -211,6 +233,7 @@ async def _register_and_login(client: AsyncClient, username: str | None = None) 
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, f"Register failed: {resp.text}"
+    await asyncio.sleep(0.05)
 
     resp = await client.post(
         "/api/v1/auth/login",
@@ -266,6 +289,7 @@ async def admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -273,6 +297,8 @@ async def admin_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",
@@ -300,6 +326,7 @@ async def super_admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -307,6 +334,8 @@ async def super_admin_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",
@@ -334,6 +363,7 @@ async def readonly_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -341,6 +371,8 @@ async def readonly_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",

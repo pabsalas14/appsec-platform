@@ -168,6 +168,7 @@ async def delete_service_release(
 
 class ServiceReleaseMoveRequest(BaseModel):
     """Request schema for moving a release to a new column (Kanban)."""
+
     column: str
 
 
@@ -180,8 +181,11 @@ async def move_service_release(
     entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
 ):
     """Move a service release to a new kanban column (state transition)."""
-    logger.info("service_release.move", extra={"event": "service_release.move", "release_id": str(id), "target_column": move_req.column})
-    
+    logger.info(
+        "service_release.move",
+        extra={"event": "service_release.move", "release_id": str(id), "target_column": move_req.column},
+    )
+
     # Validate column exists
     valid_columns = [
         "Borrador",
@@ -191,22 +195,19 @@ async def move_service_release(
         "En Ejecución",
         "Completado",
     ]
-    
+
     if move_req.column not in valid_columns:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail=f"Invalid column: {move_req.column}")
-    
+
     # Update the release state
     update_data = ServiceReleaseUpdate(estado_actual=move_req.column)
     updated = await service_release_svc.update(
-        db, 
-        id, 
-        update_data, 
-        scope={"user_id": current_user.id},
-        actor_id=current_user.id
+        db, id, update_data, scope={"user_id": current_user.id}, actor_id=current_user.id
     )
-    
+
     return success(
         ServiceReleaseRead.model_validate(updated).model_dump(mode="json"),
-        meta={"message": f"Release moved to {move_req.column}"}
+        meta={"message": f"Release moved to {move_req.column}"},
     )

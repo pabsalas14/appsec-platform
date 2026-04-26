@@ -1,99 +1,122 @@
-"""Phase 8: Complete AI Automation Rules table with trigger/action config
+"""Phase 8: ai_rules trigger/action columns (idempotent).
 
 Revision ID: h3j4k5l6m7n8
-Revises: g1h2i3j4k5l6
+Revises: mergeg1p6f8_001, c3d4e5f6a7b8
 Create Date: 2026-04-25
 
-Transforms ai_rules table to support trigger/action configuration patterns:
-- Replace entity_type, trigger_condition, action, model_id with structured configs
-- Add trigger_config and action_config JSONB columns
-- Add created_by and audit fields for ownership tracking
-- Add timeout and retry configuration
+Requires: merge of kanban/catalogs branches + builders (custom_fields / ai_rules table).
 """
 
 from __future__ import annotations
 
-import sqlalchemy as sa
+from typing import Sequence, Union
+
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision = "h3j4k5l6m7n8"
-down_revision = "g1h2i3j4k5l6"
+down_revision: Union[str, Sequence[str]] = ("mergeg1p6f8_001", "c3d4e5f6a7b8")
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # Check if table exists before creating
-    try:
-        # Drop old columns if they exist
-        op.drop_column("ai_rules", "entity_type", if_exists=True)
-        op.drop_column("ai_rules", "trigger_condition", if_exists=True)
-        op.drop_column("ai_rules", "action", if_exists=True)
-        op.drop_column("ai_rules", "model_id", if_exists=True)
-    except Exception:
-        pass
+    op.execute(
+        """
+        DO $body$
+        BEGIN
+          IF to_regclass('public.ai_rules') IS NULL THEN
+            RETURN;
+          END IF;
 
-    # Add new columns to ai_rules
-    op.add_column("ai_rules", sa.Column("trigger_type", sa.String(length=128), nullable=False, server_default="on_vulnerability_created"))
-    op.add_column("ai_rules", sa.Column("trigger_config", postgresql.JSONB(), nullable=False, server_default="'{}'::jsonb"))
-    op.add_column("ai_rules", sa.Column("action_type", sa.String(length=128), nullable=False, server_default="send_notification"))
-    op.add_column("ai_rules", sa.Column("action_config", postgresql.JSONB(), nullable=False, server_default="'{}'::jsonb"))
-    op.add_column("ai_rules", sa.Column("created_by", postgresql.UUID(as_uuid=True), nullable=True))
-    op.add_column("ai_rules", sa.Column("timeout_seconds", sa.Integer(), nullable=False, server_default="30"))
-    
-    # Rename is_active to enabled if it exists
-    try:
-        op.alter_column("ai_rules", "is_active", new_column_name="enabled")
-    except Exception:
-        # Column might not exist, add it
-        op.add_column("ai_rules", sa.Column("enabled", sa.Boolean(), nullable=False, server_default="true"))
+          ALTER TABLE ai_rules DROP COLUMN IF EXISTS entity_type;
+          ALTER TABLE ai_rules DROP COLUMN IF EXISTS trigger_condition;
+          ALTER TABLE ai_rules DROP COLUMN IF EXISTS action;
+          ALTER TABLE ai_rules DROP COLUMN IF EXISTS model_id;
 
-    # Add foreign key for created_by
-    op.create_foreign_key(
-        "fk_ai_rules_created_by",
-        "ai_rules",
-        "users",
-        ["created_by"],
-        ["id"],
-        ondelete="SET NULL",
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'trigger_type'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN trigger_type VARCHAR(128)
+              DEFAULT 'on_vulnerability_created' NOT NULL;
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'trigger_config'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN trigger_config JSONB DEFAULT '{}'::jsonb NOT NULL;
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'action_type'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN action_type VARCHAR(128)
+              DEFAULT 'send_notification' NOT NULL;
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'action_config'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN action_config JSONB DEFAULT '{}'::jsonb NOT NULL;
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'created_by'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN created_by UUID NULL;
+          END IF;
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'timeout_seconds'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN timeout_seconds INTEGER DEFAULT 30 NOT NULL;
+          END IF;
+
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'is_active'
+          ) AND NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'enabled'
+          ) THEN
+            ALTER TABLE ai_rules RENAME COLUMN is_active TO enabled;
+          ELSIF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'ai_rules' AND column_name = 'enabled'
+          ) THEN
+            ALTER TABLE ai_rules ADD COLUMN enabled BOOLEAN DEFAULT true NOT NULL;
+          END IF;
+        END $body$;
+        """
     )
 
-    # Create indexes
-    op.create_index("ix_ai_rules_trigger_type", "ai_rules", ["trigger_type"], unique=False)
-    op.create_index("ix_ai_rules_action_type", "ai_rules", ["action_type"], unique=False)
-    op.create_index("ix_ai_rules_enabled", "ai_rules", ["enabled"], unique=False)
-    op.create_index("ix_ai_rules_created_by", "ai_rules", ["created_by"], unique=False)
-    
-    # Create composite indexes
-    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rule_trigger_enabled ON ai_rules(trigger_type, enabled) WHERE deleted_at IS NULL")
-    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rule_action_enabled ON ai_rules(action_type, enabled) WHERE deleted_at IS NULL")
+    op.execute(
+        """
+        DO $fk$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'fk_ai_rules_created_by'
+          ) AND to_regclass('public.ai_rules') IS NOT NULL THEN
+            ALTER TABLE ai_rules
+              ADD CONSTRAINT fk_ai_rules_created_by
+              FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+          END IF;
+        END $fk$;
+        """
+    )
+
+    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rules_trigger_type ON ai_rules (trigger_type)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rules_action_type ON ai_rules (action_type)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rules_enabled ON ai_rules (enabled)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_ai_rules_created_by ON ai_rules (created_by)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_ai_rule_trigger_enabled ON ai_rules (trigger_type, enabled) WHERE deleted_at IS NULL"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_ai_rule_action_enabled ON ai_rules (action_type, enabled) WHERE deleted_at IS NULL"
+    )
 
 
 def downgrade() -> None:
-    # Drop indexes
-    op.execute("DROP INDEX IF EXISTS ix_ai_rule_action_enabled")
-    op.execute("DROP INDEX IF EXISTS ix_ai_rule_trigger_enabled")
-    op.drop_index("ix_ai_rules_created_by", table_name="ai_rules")
-    op.drop_index("ix_ai_rules_enabled", table_name="ai_rules")
-    op.drop_index("ix_ai_rules_action_type", table_name="ai_rules")
-    op.drop_index("ix_ai_rules_trigger_type", table_name="ai_rules")
-
-    # Drop foreign key
-    op.drop_constraint("fk_ai_rules_created_by", "ai_rules", type_="foreignkey")
-
-    # Drop columns
-    op.drop_column("ai_rules", "timeout_seconds")
-    op.drop_column("ai_rules", "enabled")
-    op.drop_column("ai_rules", "created_by")
-    op.drop_column("ai_rules", "action_config")
-    op.drop_column("ai_rules", "action_type")
-    op.drop_column("ai_rules", "trigger_config")
-    op.drop_column("ai_rules", "trigger_type")
-
-    # Restore old columns
-    op.add_column("ai_rules", sa.Column("entity_type", sa.String(length=100), nullable=False))
-    op.add_column("ai_rules", sa.Column("trigger_condition", sa.Text(), nullable=False))
-    op.add_column("ai_rules", sa.Column("action", sa.Text(), nullable=False))
-    op.add_column("ai_rules", sa.Column("model_id", sa.String(length=100), nullable=True))
-    op.add_column("ai_rules", sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"))
+    """Irreversible data migration — keep no-op to avoid partial destructive DDL."""
+    pass

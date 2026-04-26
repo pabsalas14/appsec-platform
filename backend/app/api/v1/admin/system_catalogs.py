@@ -53,9 +53,7 @@ async def create_catalog(
 ):
     """Create a new system catalog entry."""
     existing = await db.scalar(
-        select(SystemCatalog).where(
-            (SystemCatalog.tipo == payload.tipo) & (SystemCatalog.key == payload.key)
-        )
+        select(SystemCatalog).where((SystemCatalog.tipo == payload.tipo) & (SystemCatalog.key == payload.key))
     )
     if existing:
         raise ConflictException("Catalog entry with this tipo/key already exists")
@@ -72,7 +70,7 @@ async def create_catalog(
         },
     )
     logger.info("system_catalog.create", extra={"catalog_id": str(catalog.id), "tipo": catalog.tipo})
-    return success(SystemCatalogRead.model_validate(catalog).model_dump(mode="json"), status_code=201)
+    return success(SystemCatalogRead.model_validate(catalog).model_dump(mode="json"))
 
 
 @router.get("/{catalog_id}")
