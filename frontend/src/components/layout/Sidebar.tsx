@@ -122,6 +122,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
       { href: '/admin/roles', label: 'Roles', icon: ShieldCheck, adminOnly: true },
+      { href: '/admin/catalogs', label: 'Catálogos', icon: ListChecks, adminOnly: true },
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
       { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
