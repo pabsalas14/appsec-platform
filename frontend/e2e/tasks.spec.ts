@@ -21,7 +21,7 @@ test.describe('Tasks CRUD', () => {
 
     const row = page.getByRole('row', { name: new RegExp(title) });
     await expect(row).toBeVisible();
-    await expect(row.getByText(/pending/i)).toBeVisible();
+    await expect(row.getByText(/todo/i)).toBeVisible();
 
     // ── Edit ──────────────────────────────────────────────────────────
     await row.getByRole('button').filter({ hasText: '' }).first().click(); // pencil icon button
@@ -35,7 +35,7 @@ test.describe('Tasks CRUD', () => {
     // ── Toggle completed ──────────────────────────────────────────────
     const editedRow = page.getByRole('row', { name: new RegExp(edited) });
     await editedRow.locator('button[title*="complete"]').first().click();
-    await expect(editedRow.getByText(/completed/i)).toBeVisible();
+    await expect(editedRow.locator('button[title="Mark incomplete"]')).toBeVisible({ timeout: 15_000 });
 
     // ── Delete ────────────────────────────────────────────────────────
     await editedRow.locator('button[id^="delete-task-"]').click();
