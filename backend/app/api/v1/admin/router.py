@@ -10,6 +10,7 @@ from fastapi import APIRouter
 from app.api.v1.admin import ai_automation_rules as admin_ai_automation_rules
 from app.api.v1.admin import builders as admin_builders
 from app.api.v1.admin import configuracion_ia as admin_configuracion_ia
+from app.api.v1.admin import custom_fields as admin_custom_fields
 from app.api.v1.admin import dashboard_builder as admin_dashboard_builder
 from app.api.v1.admin import herramienta_externas as admin_herramienta_externas
 from app.api.v1.admin import ia_config as admin_ia_config
@@ -67,19 +68,24 @@ admin_router.include_router(
     tags=["Admin · Module Views"],
 )
 admin_router.include_router(
+    admin_custom_fields.router,
+    prefix="/custom-fields",
+    tags=["Admin · Custom Fields"],
+)
+admin_router.include_router(
     admin_validation_rules.router,
     prefix="/validation-rules",
     tags=["Admin · Validation Rules"],
 )
 admin_router.include_router(
     admin_ai_automation_rules.router,
-    prefix="/ai-automation-rules",
-    tags=["Admin · IA Automation Rules"],
+    prefix="/ai-rules",
+    tags=["Admin · AI Automation Rules"],
 )
 admin_router.include_router(
     admin_navigation_items.router,
-    prefix="/navigation-items",
-    tags=["Admin · Navigation Items"],
+    prefix="/navigation",
+    tags=["Admin · Navigation"],
 )
 admin_router.include_router(admin_query_builder.router)
 admin_router.include_router(admin_dashboard_builder.router)
