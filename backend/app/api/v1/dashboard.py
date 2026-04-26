@@ -500,8 +500,13 @@ async def dashboard_vulnerabilities(
                 .outerjoin(Organizacion, Gerencia.id == Organizacion.gerencia_id)
                 .outerjoin(Celula, Organizacion.id == Celula.organizacion_id)
                 .outerjoin(Repositorio, Celula.id == Repositorio.celula_id)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Vulnerabilidad.deleted_at.is_(None))
+                .outerjoin(
+                    Vulnerabilidad,
+                    and_(
+                        Repositorio.id == Vulnerabilidad.repositorio_id,
+                        Vulnerabilidad.deleted_at.is_(None),
+                    ),
+                )
                 .group_by(Subdireccion.id)
                 .order_by(func.count(Vulnerabilidad.id).desc())
             )
@@ -520,8 +525,14 @@ async def dashboard_vulnerabilities(
                 .outerjoin(Organizacion, Gerencia.id == Organizacion.gerencia_id)
                 .outerjoin(Celula, Organizacion.id == Celula.organizacion_id)
                 .outerjoin(Repositorio, Celula.id == Repositorio.celula_id)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Gerencia.subdireccion_id == subdireccion_id, Vulnerabilidad.deleted_at.is_(None))
+                .outerjoin(
+                    Vulnerabilidad,
+                    and_(
+                        Repositorio.id == Vulnerabilidad.repositorio_id,
+                        Vulnerabilidad.deleted_at.is_(None),
+                    ),
+                )
+                .where(Gerencia.subdireccion_id == subdireccion_id)
                 .group_by(Gerencia.id)
                 .order_by(func.count(Vulnerabilidad.id).desc())
             )
@@ -539,8 +550,14 @@ async def dashboard_vulnerabilities(
                 .select_from(Organizacion)
                 .outerjoin(Celula, Organizacion.id == Celula.organizacion_id)
                 .outerjoin(Repositorio, Celula.id == Repositorio.celula_id)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Organizacion.gerencia_id == gerencia_id, Vulnerabilidad.deleted_at.is_(None))
+                .outerjoin(
+                    Vulnerabilidad,
+                    and_(
+                        Repositorio.id == Vulnerabilidad.repositorio_id,
+                        Vulnerabilidad.deleted_at.is_(None),
+                    ),
+                )
+                .where(Organizacion.gerencia_id == gerencia_id)
                 .group_by(Organizacion.id)
                 .order_by(func.count(Vulnerabilidad.id).desc())
             )
@@ -557,8 +574,14 @@ async def dashboard_vulnerabilities(
                 )
                 .select_from(Celula)
                 .outerjoin(Repositorio, Celula.id == Repositorio.celula_id)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Celula.organizacion_id == organizacion_id, Vulnerabilidad.deleted_at.is_(None))
+                .outerjoin(
+                    Vulnerabilidad,
+                    and_(
+                        Repositorio.id == Vulnerabilidad.repositorio_id,
+                        Vulnerabilidad.deleted_at.is_(None),
+                    ),
+                )
+                .where(Celula.organizacion_id == organizacion_id)
                 .group_by(Celula.id)
                 .order_by(func.count(Vulnerabilidad.id).desc())
             )
@@ -574,8 +597,14 @@ async def dashboard_vulnerabilities(
                     func.count(Vulnerabilidad.id).label("count"),
                 )
                 .select_from(Repositorio)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Repositorio.celula_id == celula_id, Vulnerabilidad.deleted_at.is_(None))
+                .outerjoin(
+                    Vulnerabilidad,
+                    and_(
+                        Repositorio.id == Vulnerabilidad.repositorio_id,
+                        Vulnerabilidad.deleted_at.is_(None),
+                    ),
+                )
+                .where(Repositorio.celula_id == celula_id)
                 .group_by(Repositorio.id)
                 .order_by(func.count(Vulnerabilidad.id).desc())
             )
