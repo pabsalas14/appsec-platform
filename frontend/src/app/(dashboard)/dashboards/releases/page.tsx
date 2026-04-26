@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, Layers, Loader2, PlayCircle } from 'lucide
 import Link from 'next/link';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Card,
   CardContent,
@@ -115,7 +115,7 @@ export default function ReleasesDashboardPage() {
         </div>
       )}
 
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
         title="Filtros organizacionales"
         filters={filters}
         onChange={updateFilter}
@@ -176,7 +176,7 @@ export default function ReleasesDashboardPage() {
                       {items.map((item) => (
                         <Link
                           key={item.id}
-                          href={`/service_releases?highlight=${item.id}`}
+                          href={`/service_releases/registros?highlight=${item.id}`}
                           className="block rounded bg-muted/40 px-2 py-1 text-xs transition-colors hover:bg-muted/70 hover:underline"
                         >
                           {item.nombre} · v{item.version}

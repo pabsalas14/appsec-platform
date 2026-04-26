@@ -1,6 +1,8 @@
 # Dashboards Frontend
 
-Este directorio contiene los 9 dashboards del sistema conectados con datos reales del backend.
+Catálogo **10 tableros BRD** (rutas reales: `/dashboards/executive`, `/dashboards/team`, …) — el mapa vive en `hub/page.tsx`. Las peticiones al API deben usar rutas **relativas al `baseURL` de `@/lib/api`** (`/api/v1` ya está incluido), por ejemplo `apiClient.get('/dashboard/executive')` y no `...get('/api/v1/dashboard/executive')` (dobla el prefijo y devuelve 404).
+
+Los dashboards bajo `dashboards/*` conectan con datos reales del backend.
 
 ## Dashboards Implementados
 
@@ -86,7 +88,7 @@ Este directorio contiene los 9 dashboards del sistema conectados con datos reale
   - Información de plazos
 
 ### 9. Dashboard de Temas Emergentes (`temas/page.tsx`)
-- **Endpoint**: `/api/v1/dashboard/emerging-themes`
+- **Endpoint**: `GET /api/v1/dashboard/emerging-themes-summary`, `GET /api/v1/dashboard/tema/{id}/detail` (vía `apiClient` sin duplicar `/api/v1`)
 - **Componentes**:
   - KPI Summary (total temas, alto impacto, recientes)
   - Cards expandibles con bitácora de comentarios
@@ -95,6 +97,14 @@ Este directorio contiene los 9 dashboards del sistema conectados con datos reale
   - Expandible para ver bitácora
   - Comentarios timestamped
   - Filtro visual por impacto (Alto/Medio/Bajo)
+  - Bitácora: `POST /api/v1/actualizacion_temas/`
+
+### 10. Dashboard Releases — tabla y filtros org (`releases/page.tsx`)
+- **Endpoints** (mismo criterio de ruta relativa al cliente HTTP): `GET /api/v1/dashboard/releases-table` y KPIs vinculados
+- Filtro jerárquico dirección → repositorio; tabla y métricas alineadas al BRD
+
+### Hub de los 10 tableros (`hub/page.tsx`)
+- Solo navegación: enlaces a los 10 anteriores con mismos `HierarchyFilters` en querystring
 
 ## Patrones Comunes
 

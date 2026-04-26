@@ -23,7 +23,7 @@ test.describe("Initiatives, Audits & Themes (M5-M7)", () => {
 
     test("should list initiatives with pagination", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/iniciativas`);
+      await page.goto(`${baseURL}/iniciativas/registros`);
 
       try {
         await page.waitForSelector("table, [role='grid']", { timeout: 3000 });
@@ -450,7 +450,7 @@ test.describe("Initiatives, Audits & Themes (M5-M7)", () => {
 
     test("should export initiatives report", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/iniciativas`);
+      await page.goto(`${baseURL}/iniciativas/registros`);
 
       try {
         const exportBtn = await page.$('[data-testid="export"], button:has-text("Exportar")');
@@ -464,7 +464,7 @@ test.describe("Initiatives, Audits & Themes (M5-M7)", () => {
 
     test("should export audits report", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/auditorias`);
+      await page.goto(`${baseURL}/auditorias/registros`);
 
       try {
         const exportBtn = await page.$('[data-testid="export"], button:has-text("Exportar")');
@@ -478,7 +478,7 @@ test.describe("Initiatives, Audits & Themes (M5-M7)", () => {
 
     test("should export themes report", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/temas-emergentes`);
+      await page.goto(`${baseURL}/temas_emergentes/registros`);
 
       try {
         const exportBtn = await page.$('[data-testid="export"], button:has-text("Exportar")');

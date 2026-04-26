@@ -12,6 +12,7 @@ interface KPICardProps {
   color?: 'default' | 'red' | 'orange' | 'yellow' | 'green' | 'blue';
   icon?: React.ReactNode;
   loading?: boolean;
+  border?: string;
 }
 
 export function KPICard({
@@ -22,6 +23,7 @@ export function KPICard({
   color = 'default',
   icon,
   loading,
+  border,
 }: KPICardProps) {
   const colorClasses = {
     default: 'text-foreground',
@@ -33,7 +35,7 @@ export function KPICard({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn("overflow-hidden", border)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>

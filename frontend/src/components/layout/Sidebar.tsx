@@ -6,44 +6,35 @@ import {
   Bug,
   Briefcase,
   ChevronLeft,
-  Globe2,
   ChevronRight,
   ClipboardList,
-  FileSearch,
-  Flag,
   FolderKanban,
   GitBranch,
   LayoutDashboard,
-  Layers,
-  Link2,
-  ListChecks,
-  ListTodo,
+  LayoutTemplate,
   LineChart,
   FunctionSquare,
-  LayoutTemplate,
-  MessageSquare,
+  Link2,
+  ListChecks,
   Package,
-  Server,
-  Target,
-  Workflow,
-  Network,
   ScrollText,
+  Server,
   Settings,
-  ShieldCheck,
-  Smartphone,
-  SquareChartGantt,
+  Target,
+  TrendingUp,
   Upload,
   UserCircle,
   Users,
-  AlertTriangle,
+  Workflow,
+  Network,
   CheckSquare,
-  Bookmark,
-  TrendingUp,
+  Globe2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { LucideIcon } from 'lucide-react';
 
+import { CollapsibleNavSection } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSidebarState } from '@/hooks/useSidebarState';
@@ -57,140 +48,153 @@ type NavItem = {
   adminOnly?: boolean;
 };
 
-type NavSection = {
+type NavSectionDef = {
+  id: string;
   title: string;
+  emoji: string;
+  /** Rutas que marcan esta sección como “activa” para dejarla expandida por defecto */
+  pathPrefixes: string[];
   items: NavItem[];
   adminOnly?: boolean;
 };
 
-const SECTIONS: NavSection[] = [
+/**
+ * Navegación relacional BRD — 7 secciones colapsables.
+ * Las entidades hijas (p. ej. hallazgos por motor) no tienen ítem propio: se abren desde el padre o la paleta (Ctrl+K).
+ */
+const NAV_SECTIONS: NavSectionDef[] = [
   {
-    title: 'Principal',
+    id: 'dashboards',
+    title: 'Dashboards',
+    emoji: '📊',
+    pathPrefixes: ['/dashboards/executive', '/dashboards/team', '/madurez'],
     items: [
-      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/tasks', label: 'Tasks', icon: ListTodo },
-      { href: '/projects', label: 'Projects', icon: FolderKanban },
-      { href: '/kanban', label: 'Kanban', icon: Layers },
-      { href: '/uploads', label: 'Uploads', icon: Upload },
-      { href: '/vulnerabilidads', label: 'Vulnerabilidades', icon: Bug },
-      { href: '/madurez', label: 'Score de Madurez', icon: TrendingUp },
-      { href: '/filtros_guardados', label: 'Filtros guardados', icon: Bookmark },
-      { href: '/dashboards', label: 'Dashboards', icon: LayoutDashboard },
-      { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart },
       { href: '/dashboards/executive', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
-      { href: '/dashboards/vulnerabilities', label: 'Dashboard Vulnerabilidades', icon: ShieldCheck },
-      { href: '/dashboards/team', label: 'Dashboard Team', icon: Users },
-      { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
+      { href: '/dashboards/team', label: 'Dashboard de Equipo', icon: Users },
+      { href: '/madurez', label: 'Score de Madurez', icon: TrendingUp },
     ],
   },
   {
-    title: 'Organización (BRD)',
+    id: 'org',
+    title: 'Organización e inventario',
+    emoji: '🏢',
+    pathPrefixes: ['/subdireccions', '/repositorios', '/activo_webs'],
     items: [
-      { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
-      { href: '/direccions', label: 'Direcciones', icon: Building2 },
-      { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
-      { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
-      { href: '/celulas', label: 'Células', icon: Users },
-    ],
-  },
-  {
-    title: 'Inventario (BRD)',
-    items: [
+      { href: '/subdireccions', label: 'Estructura organizacional', icon: Building2 },
       { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
       { href: '/activo_webs', label: 'Activos web', icon: Link2 },
     ],
   },
   {
-    title: 'Entrega y plan (BRD)',
-    items: [
-      { href: '/servicios', label: 'Servicios', icon: Server },
-      { href: '/service_releases', label: 'Liberaciones de servicio', icon: Package },
-      { href: '/etapa_releases', label: 'Etapas de liberación', icon: ListChecks },
-      { href: '/pipeline_releases', label: 'Pipelines', icon: Workflow },
-      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
-      { href: '/hito_iniciativas', label: 'Hitos de iniciativa', icon: Flag },
-      { href: '/actualizacion_iniciativas', label: 'Actualizaciones iniciativa', icon: MessageSquare },
+    id: 'vulns',
+    title: 'Gestión de vulnerabilidades',
+    emoji: '🛡️',
+    pathPrefixes: [
+      '/dashboards/concentrado',
+      '/dashboards/vulnerabilities',
+      '/plan_remediacions',
+      '/programa_threat_modelings',
+      '/vulnerabilidads',
     ],
-  },
-  {
-    title: 'Hallazgos (BRD)',
     items: [
-      { href: '/hallazgo_sasts', label: 'Hallazgos SAST', icon: Bug },
-      { href: '/hallazgo_dasts', label: 'Hallazgos DAST', icon: Globe2 },
-      { href: '/hallazgo_masts', label: 'Hallazgos MAST', icon: Smartphone },
-      { href: '/hallazgo_pipelines', label: 'Hallazgos pipeline', icon: Workflow },
-      { href: '/hallazgo_terceros', label: 'Hallazgos tercero', icon: Building2 },
-    ],
-  },
-  {
-    title: 'Programas anuales',
-    items: [
-      { href: '/programa_sasts', label: 'Programas SAST', icon: Bug },
-      { href: '/actividad_mensual_sasts', label: 'Actividad SAST', icon: LineChart },
-      { href: '/programa_dasts', label: 'Programas DAST', icon: Globe2 },
-      { href: '/actividad_mensual_dasts', label: 'Actividad DAST', icon: LineChart },
-      { href: '/programa_source_codes', label: 'Programas SC', icon: GitBranch },
-      { href: '/actividad_mensual_source_codes', label: 'Actividad SC', icon: LineChart },
-      { href: '/servicio_regulado_registros', label: 'Servicios regulados', icon: Layers },
-      { href: '/actividad_mensual_servicios_regulados', label: 'Actividad SR', icon: LineChart },
-    ],
-  },
-  {
-    title: 'Auditorías (BRD)',
-    items: [
-      { href: '/auditorias', label: 'Auditorías', icon: ClipboardList },
-      { href: '/hallazgo_auditorias', label: 'Hallazgos auditoría', icon: FileSearch },
-      { href: '/evidencia_auditorias', label: 'Evidencias auditoría', icon: FileSearch },
+      { href: '/dashboards/concentrado', label: 'Concentrado de hallazgos', icon: Bug },
+      { href: '/dashboards/vulnerabilities', label: 'Dashboard de Vulnerabilidades (Drilldown)', icon: LineChart },
+      { href: '/vulnerabilidads/registros', label: 'Catálogo de vulnerabilidades', icon: ListChecks },
       { href: '/plan_remediacions', label: 'Planes de remediación', icon: CheckSquare },
+      { href: '/programa_threat_modelings', label: 'Threat modeling (programas)', icon: Network },
     ],
   },
   {
-    title: 'Temas Emergentes (BRD)',
+    id: 'ops',
+    title: 'Operación y liberaciones',
+    emoji: '⚙️',
+    pathPrefixes: [
+      '/dashboards/kanban',
+      '/dashboards/operacion',
+      '/servicios',
+      '/service_releases',
+      '/temas_emergentes',
+      '/iniciativas',
+    ],
     items: [
-      { href: '/temas_emergentes', label: 'Temas emergentes', icon: AlertTriangle },
-      { href: '/actualizacion_temas', label: 'Actualizaciones de tema', icon: MessageSquare },
-      { href: '/cierre_conclusiones', label: 'Cierres y conclusiones', icon: CheckSquare },
+      { href: '/dashboards/kanban', label: 'Kanban de liberaciones', icon: FolderKanban },
+      { href: '/dashboards/operacion', label: 'Liberaciones (tablero)', icon: Package },
+      { href: '/servicios', label: 'Servicios', icon: Server },
+      { href: '/service_releases/registros', label: 'Liberaciones de servicio', icon: Package },
+      { href: '/temas_emergentes', label: 'Temas emergentes', icon: Briefcase },
+      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
     ],
   },
   {
-    title: 'Threat modeling',
+    id: 'programs_audit',
+    title: 'Programas y auditorías',
+    emoji: '📅',
+    pathPrefixes: [
+      '/dashboards/programs',
+      '/dashboards/program-detail',
+      '/auditorias',
+      '/programa_sasts',
+      '/servicio_regulado_registros',
+    ],
     items: [
-      { href: '/programa_threat_modelings', label: 'Programas TM', icon: Network },
-      { href: '/sesion_threat_modelings', label: 'Sesiones TM', icon: ClipboardList },
+      { href: '/dashboards/programs', label: 'Programas anuales (consolidado)', icon: LineChart },
+      { href: '/auditorias/registros', label: 'Auditorías', icon: ClipboardList },
+      { href: '/servicio_regulado_registros', label: 'Servicios regulados', icon: Globe2 },
     ],
   },
   {
-    title: 'OKR / MBO',
+    id: 'okr',
+    title: 'Desempeño (OKR / MBO)',
+    emoji: '🎯',
+    pathPrefixes: ['/mis_compromisos', '/okr_equipo'],
     items: [
-      { href: '/mis_compromisos', label: 'Mis Compromisos', icon: Target },
-      { href: '/okr_equipo', label: 'Mi Equipo', icon: Users },
-      { href: '/okr_dashboard', label: 'Dashboard Ejecutivo OKR', icon: SquareChartGantt },
+      { href: '/mis_compromisos', label: 'Mis compromisos', icon: Target },
+      { href: '/okr_equipo', label: 'Mi equipo', icon: Users },
     ],
   },
   {
+    id: 'admin',
     title: 'Administración',
-    adminOnly: true,
+    emoji: '🛠️',
+    pathPrefixes: [
+      '/admin',
+      '/indicadores',
+      '/indicadores_formulas',
+      '/flujos_estatus',
+      '/query-builder',
+    ],
     items: [
-      { href: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
-      { href: '/admin/roles', label: 'Roles', icon: ShieldCheck, adminOnly: true },
+      { href: '/admin/users', label: 'Usuarios y roles', icon: Users, adminOnly: true },
       { href: '/admin/catalogs', label: 'Catálogos', icon: ListChecks, adminOnly: true },
-      { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
-      { href: '/admin/module-views', label: 'Module Views', icon: LayoutTemplate, adminOnly: true },
-      { href: '/admin/formulas', label: 'Formula Engine', icon: FunctionSquare, adminOnly: true },
+      { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart, adminOnly: true },
       { href: '/indicadores_formulas', label: 'Fórmulas de indicadores', icon: FunctionSquare, adminOnly: true },
       { href: '/flujos_estatus', label: 'Flujos de estatus', icon: Workflow, adminOnly: true },
-      { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
+      { href: '/admin/module-views', label: 'Module views y builder', icon: LayoutTemplate, adminOnly: true },
+      { href: '/query-builder', label: 'Query builder (datos)', icon: FunctionSquare, adminOnly: true },
+      { href: '/admin/audit-logs', label: 'Audit logs', icon: ScrollText, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
     ],
+    adminOnly: true,
   },
   {
-    title: 'Developer',
+    id: 'dev',
+    title: 'Cuenta y laboratorio',
+    emoji: '🔧',
+    pathPrefixes: ['/profile', '/kitchen-sink', '/uploads', '/tasks'],
     items: [
-      { href: '/kitchen-sink', label: 'Kitchen Sink', icon: AppWindow },
-      { href: '/profile', label: 'Profile', icon: UserCircle },
+      { href: '/profile', label: 'Perfil', icon: UserCircle },
+      { href: '/uploads', label: 'Archivos (uploads)', icon: Upload },
+      { href: '/tasks', label: 'Tareas (legado)', icon: ListChecks },
+      { href: '/kitchen-sink', label: 'Kitchen sink', icon: AppWindow, adminOnly: true },
     ],
   },
 ];
+
+function sectionShouldOpen(pathname: string, section: NavSectionDef): boolean {
+  return section.pathPrefixes.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
 
 function SidebarLink({
   item,
@@ -243,7 +247,6 @@ export function Sidebar() {
       )}
       aria-label="Main navigation"
     >
-      {/* Brand */}
       <div
         className={cn(
           'flex h-14 items-center gap-2 border-b border-border px-4',
@@ -251,47 +254,45 @@ export function Sidebar() {
         )}
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <span className="text-sm font-bold">F</span>
+          <span className="text-sm font-bold">A</span>
         </div>
         {!collapsed && (
-          <span className="truncate text-sm font-semibold text-foreground">Framework</span>
+          <span className="truncate text-sm font-semibold text-foreground">AppSec</span>
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 space-y-6 overflow-y-auto px-2 py-4">
-        {SECTIONS.map((section) => {
+      <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3">
+        {NAV_SECTIONS.map((section) => {
           if (section.adminOnly && !isAdmin) return null;
           const visibleItems = section.items.filter((i) => !i.adminOnly || isAdmin);
           if (visibleItems.length === 0) return null;
 
+          const defaultOpen = sectionShouldOpen(pathname, section) || section.id === 'dashboards';
+
           return (
-            <div key={section.title}>
-              {!collapsed && (
-                <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground/80">
-                  {section.title}
-                </div>
-              )}
-              <div className="space-y-0.5">
-                {visibleItems.map((item) => (
-                  <SidebarLink
-                    key={item.href}
-                    item={item}
-                    collapsed={collapsed}
-                    active={
-                      item.href === '/'
-                        ? pathname === '/'
-                        : pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    }
-                  />
-                ))}
-              </div>
-            </div>
+            <CollapsibleNavSection
+              key={section.id}
+              title={section.title}
+              emoji={section.emoji}
+              defaultOpen={defaultOpen}
+            >
+              {visibleItems.map((item) => (
+                <SidebarLink
+                  key={item.href}
+                  item={item}
+                  collapsed={collapsed}
+                  active={
+                    item.href === '/'
+                      ? pathname === '/'
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  }
+                />
+              ))}
+            </CollapsibleNavSection>
           );
         })}
       </nav>
 
-      {/* Collapse handle */}
       <button
         type="button"
         onClick={toggle}

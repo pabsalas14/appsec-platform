@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import FiltrosGuardadosPage from './page';
 import * as hooks from '@/hooks/useFiltrosGuardados';
@@ -8,9 +8,11 @@ vi.mock('@/hooks/useFiltrosGuardados');
 
 const createWrapper = () => {
   const queryClient = new QueryClient();
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  function QueryClientTestWrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  }
+  QueryClientTestWrapper.displayName = 'QueryClientTestWrapper';
+  return QueryClientTestWrapper;
 };
 
 describe('FiltrosGuardadosPage', () => {

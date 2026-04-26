@@ -17,6 +17,8 @@ interface SemaforoSlaProps {
   layout?: 'vertical' | 'horizontal';
   showPercentage?: boolean;
   className?: string;
+  /** Panel oscuro (p. ej. dashboard ejecutivo) */
+  appearance?: 'default' | 'slate';
 }
 
 const statusConfig = {
@@ -37,23 +39,43 @@ const statusConfig = {
   },
 };
 
+const statusConfigSlate: typeof statusConfig = {
+  ok: {
+    color: 'border border-emerald-500/30 bg-emerald-950/40',
+    text: 'text-emerald-300',
+    icon: CheckCircle,
+  },
+  warning: {
+    color: 'border border-amber-500/30 bg-amber-950/40',
+    text: 'text-amber-200',
+    icon: AlertTriangle,
+  },
+  critical: {
+    color: 'border border-red-500/40 bg-red-950/40',
+    text: 'text-red-200',
+    icon: AlertCircle,
+  },
+};
+
 export const SemaforoSla: React.FC<SemaforoSlaProps> = ({
   items,
   title,
   layout = 'vertical',
   showPercentage = true,
   className,
+  appearance = 'default',
 }) => {
+  const theme = appearance === 'slate' ? statusConfigSlate : statusConfig;
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
-      
+
       <div className={cn('flex gap-4', {
         'flex-col': layout === 'vertical',
         'flex-row': layout === 'horizontal',
       })}>
         {items.map((item) => {
-          const config = statusConfig[item.status];
+          const config = theme[item.status];
           const Icon = config.icon;
 
           return (

@@ -101,7 +101,7 @@ export default function VulnerabilidadDetailPage() {
           type="button"
           variant="outline"
           className="ml-6"
-          onClick={() => router.push('/vulnerabilidads')}
+          onClick={() => router.push('/vulnerabilidads/registros')}
         >
           Volver al listado
         </Button>

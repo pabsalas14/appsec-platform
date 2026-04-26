@@ -2,7 +2,7 @@
 
 import { AlertCircle, Circle } from 'lucide-react';
 
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardEmergingThemes } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
@@ -22,7 +22,8 @@ export default function EmergingThemesDashboardPage() {
         title="Dashboard · Temas Emergentes"
         description="Visibilidad de temas activos y estancados."
       />
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
+        title="Filtro organizacional"
         filters={filters}
         onChange={updateFilter}
         onClear={clearFilters}

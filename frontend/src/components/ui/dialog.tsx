@@ -31,8 +31,10 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     size?: 'sm' | 'md' | 'lg' | 'xl';
+    /** `right` = panel lateral (drawer) para filtros compactos. */
+    position?: 'center' | 'right';
   }
->(({ className, children, size = 'md', ...props }, ref) => {
+>(({ className, children, size = 'md', position = 'center', ...props }, ref) => {
   const sizeClasses = {
     sm: 'max-w-sm',
     md: 'max-w-lg',
@@ -40,21 +42,34 @@ const DialogContent = React.forwardRef<
     xl: 'max-w-4xl',
   };
 
+  const positionClasses =
+    position === 'right'
+      ? cn(
+          'fixed right-0 top-0 z-50 h-full max-h-[100dvh] w-full max-w-md translate-x-0 translate-y-0',
+          'overflow-y-auto rounded-l-2xl rounded-r-none border-l border-white/[0.08]',
+          'data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right',
+        )
+      : cn(
+          'fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]',
+          'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
+          'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+          sizeClasses[size],
+        );
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          'fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%]',
+          'z-50 grid w-full',
           'bg-background/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/40',
-          'rounded-2xl p-6 duration-300',
+          'p-6 duration-300',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-          'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
-          'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
-          sizeClasses[size],
+          position === 'center' && 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          position === 'center' && 'rounded-2xl',
+          positionClasses,
           className
         )}
         {...props}

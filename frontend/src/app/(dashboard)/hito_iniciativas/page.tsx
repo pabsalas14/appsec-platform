@@ -33,7 +33,7 @@ export default function HitoIniciativasPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<HitoIniciativa | null>(null);
 
-  const iniciativaOpts = iniciativas.map((i) => ({ value: i.id, label: i.nombre ?? i.id }));
+  const iniciativaOpts = iniciativas.map((i) => ({ value: i.id, label: i.titulo ?? i.id }));
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

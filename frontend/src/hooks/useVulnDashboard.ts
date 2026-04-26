@@ -20,7 +20,7 @@ export function useVulnGlobal() {
     queryFn: async () => {
       logger.info('vuln.global.fetch');
       const response = await apiClient.get<{ data: VulnGlobalData }>(
-        '/api/v1/dashboard/vuln-global'
+        '/dashboard/vuln-global'
       );
       return response.data.data;
     },
@@ -37,7 +37,7 @@ export function useVulnSubdireccion(id: string | null) {
       if (!id) throw new Error('Subdirección ID requerida');
       logger.info('vuln.subdireccion.fetch', { subdir_id: id });
       const response = await apiClient.get<{ data: VulnSubdireccionData }>(
-        `/api/v1/dashboard/vuln-subdireccion/${id}`
+        `/dashboard/vuln-subdireccion/${id}`
       );
       return response.data.data;
     },
@@ -55,7 +55,7 @@ export function useVulnCelula(id: string | null) {
       if (!id) throw new Error('Célula ID requerida');
       logger.info('vuln.celula.fetch', { celula_id: id });
       const response = await apiClient.get<{ data: VulnCelulaData }>(
-        `/api/v1/dashboard/vuln-celula/${id}`
+        `/dashboard/vuln-celula/${id}`
       );
       return response.data.data;
     },
@@ -78,7 +78,7 @@ export function useVulnRepositorioTab(
       if (!repoId) throw new Error('Repositorio ID requerida');
       logger.info('vuln.repo.tab.fetch', { repo_id: repoId, motor, page });
       const response = await apiClient.get<{ data: VulnRepositorioTab }>(
-        `/api/v1/dashboard/vuln-repositorio/${repoId}/${motor}`,
+        `/dashboard/vuln-repositorio/${repoId}/${motor}`,
         {
           params: { page, page_size: pageSize },
         }
@@ -99,7 +99,7 @@ export function useVulnHistorial(repoId: string | null) {
       if (!repoId) throw new Error('Repositorio ID requerida');
       logger.info('vuln.historial.fetch', { repo_id: repoId });
       const response = await apiClient.get<{ data: VulnHistorial }>(
-        `/api/v1/dashboard/vuln-repositorio/${repoId}/historial`
+        `/dashboard/vuln-repositorio/${repoId}/historial`
       );
       return response.data.data;
     },
@@ -117,7 +117,7 @@ export function useVulnConfig(repoId: string | null) {
       if (!repoId) throw new Error('Repositorio ID requerida');
       logger.info('vuln.config.fetch', { repo_id: repoId });
       const response = await apiClient.get<{ data: VulnConfig }>(
-        `/api/v1/dashboard/vuln-repositorio/${repoId}/config`
+        `/dashboard/vuln-repositorio/${repoId}/config`
       );
       return response.data.data;
     },
@@ -135,7 +135,7 @@ export function useVulnResumen(repoId: string | null) {
       if (!repoId) throw new Error('Repositorio ID requerida');
       logger.info('vuln.resumen.fetch', { repo_id: repoId });
       const response = await apiClient.get<{ data: VulnResumen }>(
-        `/api/v1/dashboard/vuln-repositorio/${repoId}/resumen`
+        `/dashboard/vuln-repositorio/${repoId}/resumen`
       );
       return response.data.data;
     },

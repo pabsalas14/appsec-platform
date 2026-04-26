@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import ActualizacionTemaPage from './page';
+import ActualizacionTemaPage from '../actualizacion_temas/page';
 import * as hooks from '@/hooks/useActualizacionTemas';
 
 vi.mock('@/hooks/useActualizacionTemas');

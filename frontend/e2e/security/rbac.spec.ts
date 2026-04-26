@@ -258,7 +258,7 @@ test.describe("Role-Based Access Control (M12)", () => {
 
     test("should NOT modify any data", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/vulnerabilidads`);
+      await page.goto(`${baseURL}/vulnerabilidads/registros`);
 
       try {
         const editBtn = await page.$('[data-testid="edit"]');
@@ -287,7 +287,7 @@ test.describe("Role-Based Access Control (M12)", () => {
 
     test("should NOT access detailed tables", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/vulnerabilidads`);
+      await page.goto(`${baseURL}/vulnerabilidads/registros`);
 
       try {
         const url = page.url();

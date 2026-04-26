@@ -55,7 +55,8 @@ async def list_dashboards(
         dashboards = await custom_dashboard_svc.list(db=db, skip=skip, limit=limit)
         total = await custom_dashboard_svc.count(db=db)
         items = [CustomDashboardRead.model_validate(d) for d in dashboards]
-        return paginated(items, total, skip, limit)
+        page = (skip // limit) + 1 if limit else 1
+        return paginated(items, page=page, page_size=limit, total=total)
     except Exception as e:
         logger.exception(f"List dashboards error: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e

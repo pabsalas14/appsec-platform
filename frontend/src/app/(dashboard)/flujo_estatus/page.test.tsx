@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import FlujoEstatusPage from './page';
+import FlujoEstatusPage from '../flujos_estatus/page';
 import * as hooks from '@/hooks/useFlujoEstatus';
 
 vi.mock('@/hooks/useFlujoEstatus');

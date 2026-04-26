@@ -70,7 +70,7 @@ export default function FormulaAdminPage() {
     queryKey: ['admin-formulas'],
     queryFn: async () => {
       logger.info('admin.formulas.list');
-      const res = await apiClient.get('/api/v1/admin/formulas?limit=100');
+      const res = await apiClient.get('/admin/formulas?limit=100');
       return res.data.data as { items: Formula[]; total: number };
     },
   });
@@ -79,7 +79,7 @@ export default function FormulaAdminPage() {
   const { data: functions } = useQuery({
     queryKey: ['admin-formulas-functions'],
     queryFn: async () => {
-      const res = await apiClient.get('/api/v1/admin/formulas/functions/supported');
+      const res = await apiClient.get('/admin/formulas/functions/supported');
       return res.data.data as SupportedFunction[];
     },
     enabled: showFunctions,
@@ -88,7 +88,7 @@ export default function FormulaAdminPage() {
   // Create
   const createMutation = useMutation({
     mutationFn: async (payload: typeof EMPTY_FORM) => {
-      const res = await apiClient.post('/api/v1/admin/formulas', payload);
+      const res = await apiClient.post('/admin/formulas', payload);
       return res.data;
     },
     onSuccess: () => {
@@ -106,7 +106,7 @@ export default function FormulaAdminPage() {
   // Update
   const updateMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: Partial<typeof EMPTY_FORM> }) => {
-      const res = await apiClient.patch(`/api/v1/admin/formulas/${id}`, payload);
+      const res = await apiClient.patch(`/admin/formulas/${id}`, payload);
       return res.data;
     },
     onSuccess: () => {
@@ -124,7 +124,7 @@ export default function FormulaAdminPage() {
   // Delete
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/api/v1/admin/formulas/${id}`);
+      await apiClient.delete(`/admin/formulas/${id}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-formulas'] }),
   });
@@ -132,7 +132,7 @@ export default function FormulaAdminPage() {
   // Test formula
   const testMutation = useMutation({
     mutationFn: async ({ formula_text, data }: { formula_text: string; data: Record<string, unknown> }) => {
-      const res = await apiClient.post('/api/v1/admin/formulas/test', { formula_text, data });
+      const res = await apiClient.post('/admin/formulas/test', { formula_text, data });
       return res.data.data as FormulaTestResult;
     },
     onSuccess: (result) => setTestResult(result),

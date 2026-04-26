@@ -4,7 +4,7 @@ import { Download, ShieldCheck, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Card, CardContent, CardHeader, CardTitle, EmptyState, PageHeader, PageWrapper,
 } from '@/components/ui';
@@ -72,7 +72,7 @@ export default function MadurezPage() {
         }
       />
 
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
         title="Filtro jerárquico"
         filters={filters}
         onChange={updateFilter}

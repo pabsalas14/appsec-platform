@@ -35,7 +35,7 @@ export default function OperacionDashboardPage() {
     queryKey: ['dashboard-operacion-releases'],
     queryFn: async () => {
       logger.info('dashboard.operacion.releases.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/releases-table');
+      const response = await apiClient.get('/dashboard/releases-table');
       return response.data.data as OperacionData;
     },
   });
@@ -44,7 +44,7 @@ export default function OperacionDashboardPage() {
     queryKey: ['dashboard-operacion-terceros'],
     queryFn: async () => {
       logger.info('dashboard.operacion.terceros.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/releases-terceros');
+      const response = await apiClient.get('/dashboard/releases-terceros');
       return response.data;
     },
   });
@@ -54,7 +54,7 @@ export default function OperacionDashboardPage() {
     queryFn: async () => {
       if (!selectedRelease?.id) return null;
       logger.info('dashboard.release.detail.fetch', { release_id: selectedRelease.id });
-      const response = await apiClient.get(`/api/v1/dashboard/release/${selectedRelease.id}/detail`);
+      const response = await apiClient.get(`/dashboard/release/${selectedRelease.id}/detail`);
       return response.data.data;
     },
     enabled: !!selectedRelease?.id,

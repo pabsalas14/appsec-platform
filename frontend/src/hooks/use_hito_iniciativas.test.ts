@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { useHitoIniciativas, useCreateHitoIniciativa, useDeleteHitoIniciativa } from './useHitoIniciativas';
 import api from '@/lib/api';
 
@@ -11,9 +11,11 @@ const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  function QueryClientTestWrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children);
+  }
+  QueryClientTestWrapper.displayName = 'QueryClientTestWrapper';
+  return QueryClientTestWrapper;
 };
 
 describe('useHitoIniciativas', () => {
@@ -34,7 +36,11 @@ describe('useHitoIniciativas', () => {
 
 describe('useCreateHitoIniciativa', () => {
   it('creates a milestone', async () => {
-    const newHito = { nombre: 'Milestone 1', fecha_objetivo: '2024-06-30', estado: 'pendiente' };
+    const newHito = {
+      nombre: 'Milestone 1',
+      fecha_objetivo: '2024-06-30T00:00:00.000Z',
+      iniciativa_id: '00000000-0000-0000-0000-000000000001',
+    };
     const mockResponse = { id: '1', ...newHito };
     vi.mocked(api.post).mockResolvedValueOnce({ data: { status: 'success', data: mockResponse } });
 

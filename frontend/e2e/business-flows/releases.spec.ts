@@ -286,7 +286,7 @@ test.describe("Service Releases (M8)", () => {
   test.describe("Release Filtering & Export", () => {
     test("should list releases in table view with SLA columns", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/service_releases`);
+      await page.goto(`${baseURL}/service_releases/registros`);
 
       try {
         // Verify table has SLA column
@@ -319,7 +319,7 @@ test.describe("Service Releases (M8)", () => {
 
     test("should export release schedule as CSV", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/service_releases`);
+      await page.goto(`${baseURL}/service_releases/registros`);
 
       try {
         const exportBtn = await page.$('[data-testid="export"], button:has-text("Exportar")');
@@ -353,7 +353,7 @@ test.describe("Service Releases (M8)", () => {
 
     test("should show semaphore color for SLA status", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/service_releases`);
+      await page.goto(`${baseURL}/service_releases/registros`);
 
       try {
         const statusCells = await page.$$('[data-testid="sla-status"], [class*="red"], [class*="yellow"], [class*="green"]');

@@ -106,7 +106,7 @@ export default function ProgramsDashboardPage() {
     queryKey: ['dashboard-programs-resumen'],
     queryFn: async () => {
       logger.info('dashboard.programs.resumen.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/programs/resumen');
+      const response = await apiClient.get('/dashboard/programs/resumen');
       return response.data.data as ResumenData;
     },
   });
@@ -115,7 +115,7 @@ export default function ProgramsDashboardPage() {
     queryKey: ['dashboard-programs-distribucion'],
     queryFn: async () => {
       logger.info('dashboard.programs.distribucion.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/programs/distribucion');
+      const response = await apiClient.get('/dashboard/programs/distribucion');
       return response.data.data as DistribucionData;
     },
   });
@@ -124,7 +124,7 @@ export default function ProgramsDashboardPage() {
     queryKey: ['dashboard-programs-heatmap'],
     queryFn: async () => {
       logger.info('dashboard.programs.heatmap.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/programs/heatmap');
+      const response = await apiClient.get('/dashboard/programs/heatmap');
       return response.data.data as HeatmapData;
     },
   });
@@ -133,7 +133,7 @@ export default function ProgramsDashboardPage() {
     queryKey: ['dashboard-programs-tabla', page],
     queryFn: async () => {
       logger.info('dashboard.programs.tabla.fetch', { page });
-      const response = await apiClient.get('/api/v1/dashboard/programs/tabla', {
+      const response = await apiClient.get('/dashboard/programs/tabla', {
         params: {
           page,
           page_size: pageSize,

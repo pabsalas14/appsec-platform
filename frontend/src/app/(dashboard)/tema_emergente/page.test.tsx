@@ -1,16 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import TemaEmergentePage from './page';
+import TemaEmergentePage from '../temas_emergentes/registros/page';
 import * as hooks from '@/hooks/useTemaEmergentes';
 
 vi.mock('@/hooks/useTemaEmergentes');
 
 const createWrapper = () => {
   const queryClient = new QueryClient();
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  function QueryClientTestWrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  }
+  QueryClientTestWrapper.displayName = 'QueryClientTestWrapper';
+  return QueryClientTestWrapper;
 };
 
 describe('TemaEmergentePage', () => {

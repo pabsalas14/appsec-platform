@@ -47,7 +47,7 @@ export default function KanbanDashboardPage() {
     queryKey: ['dashboard-kanban'],
     queryFn: async () => {
       logger.info('dashboard.kanban.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/releases-kanban');
+      const response = await apiClient.get('/dashboard/releases-kanban');
       return response.data.data as { columns: KanbanColumn; total_cards: number };
     },
   });
@@ -59,7 +59,7 @@ export default function KanbanDashboardPage() {
   const moveMutation = useMutation({
     mutationFn: async (vars: { cardId: string; newStatus: string }) => {
       logger.info('release.move', { cardId: vars.cardId, newStatus: vars.newStatus });
-      await apiClient.patch(`/api/v1/service-releases/${vars.cardId}/move`, {
+      await apiClient.patch(`/service_releases/${vars.cardId}/move`, {
         estado_actual: vars.newStatus,
       });
     },

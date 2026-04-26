@@ -21,7 +21,7 @@ export const useQueryValidation = (config: object) => {
     mutationFn: async (queryConfig: object) => {
       try {
         const response = await apiClient.post(
-          "/api/v1/admin/query-builder/validate",
+          "/admin/query-builder/validate",
           queryConfig as Record<string, unknown>
         );
         return response.data as ValidationResult;

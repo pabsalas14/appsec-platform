@@ -84,7 +84,7 @@ export default function ProgramDetailPage() {
     queryKey: ['dashboard3-program-detail', code],
     queryFn: async () => {
       logger.info('dashboard3.program_detail.fetch', { code });
-      const response = await apiClient.get(`/api/v1/dashboard3/program/${code}/detail`);
+      const response = await apiClient.get(`/dashboard3/program/${code}/detail`);
       return response.data.data as ProgramDetailData;
     },
   });

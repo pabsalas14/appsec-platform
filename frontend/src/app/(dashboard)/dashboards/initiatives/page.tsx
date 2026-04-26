@@ -3,7 +3,7 @@
 import { CheckSquare, Circle } from 'lucide-react';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import { PageHeader, PageWrapper, StatCard } from '@/components/ui';
 import { useDashboardInitiatives } from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
@@ -30,7 +30,8 @@ export default function InitiativesDashboardPage() {
           />
         }
       />
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
+        title="Filtro organizacional"
         filters={filters}
         onChange={updateFilter}
         onClear={clearFilters}

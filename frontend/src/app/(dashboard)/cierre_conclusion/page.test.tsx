@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import CierreConclusionPage from './page';
+import CierreConclusionPage from '../cierre_conclusiones/page';
 import * as hooks from '@/hooks/useCierreConclusiones';
 
 vi.mock('@/hooks/useCierreConclusiones');

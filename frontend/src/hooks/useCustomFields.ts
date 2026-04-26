@@ -27,7 +27,7 @@ export function useCustomFields(
     queryKey: ['custom-fields', page, pageSize, search, entityType],
     queryFn: async () => {
       const { data } = await api.get<PaginatedResponse<CustomField>>(
-        '/api/v1/admin/custom-fields',
+        '/admin/custom-fields',
         {
           params: {
             page,
@@ -50,7 +50,7 @@ export function useCreateCustomField() {
 
   return useMutation({
     mutationFn: async (field: Omit<CustomField, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => {
-      const { data } = await api.post('/api/v1/admin/custom-fields', field);
+      const { data } = await api.post('/admin/custom-fields', field);
       return data;
     },
     onSuccess: () => {
@@ -67,7 +67,7 @@ export function useUpdateCustomField(fieldId: string) {
 
   return useMutation({
     mutationFn: async (field: Partial<CustomField>) => {
-      const { data } = await api.patch(`/api/v1/admin/custom-fields/${fieldId}`, field);
+      const { data } = await api.patch(`/admin/custom-fields/${fieldId}`, field);
       return data;
     },
     onSuccess: () => {
@@ -87,7 +87,7 @@ export function useReorderCustomFields() {
       // Update each field with its new order
       await Promise.all(
         updates.map((update) =>
-          api.patch(`/api/v1/admin/custom-fields/${update.id}`, {
+          api.patch(`/admin/custom-fields/${update.id}`, {
             order: update.order,
           }),
         ),
@@ -107,7 +107,7 @@ export function useDeleteCustomField() {
 
   return useMutation({
     mutationFn: async (fieldId: string) => {
-      await api.delete(`/api/v1/admin/custom-fields/${fieldId}`);
+      await api.delete(`/admin/custom-fields/${fieldId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-fields'] });
@@ -122,7 +122,7 @@ export function useCustomFieldValues(entityType: string, entityId: string) {
   return useQuery({
     queryKey: ['custom-field-values', entityType, entityId],
     queryFn: async () => {
-      const { data } = await api.get(`/api/v1/admin/${entityType}/${entityId}`, {});
+      const { data } = await api.get(`/admin/custom-fields/${entityType}/${entityId}`, {});
       return data;
     },
     enabled: !!entityType && !!entityId,
@@ -138,7 +138,7 @@ export function useSetCustomFieldValue(entityType: string, entityId: string, fie
   return useMutation({
     mutationFn: async (value: string | null) => {
       const { data } = await api.patch(
-        `/api/v1/admin/${entityType}/${entityId}/${fieldId}`,
+        `/admin/custom-fields/${entityType}/${entityId}/${fieldId}`,
         { value },
       );
       return data;

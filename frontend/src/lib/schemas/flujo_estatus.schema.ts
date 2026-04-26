@@ -17,9 +17,9 @@ export const FlujoEstatusCreateSchema = z.object({
   entity_type: z.string().min(1).max(100),
   from_status: z.string().min(1).max(100),
   to_status: z.string().min(1).max(100),
-  allowed: z.boolean().default(true),
-  requires_justification: z.boolean().default(false),
-  requires_approval: z.boolean().default(false),
+  allowed: z.boolean(),
+  requires_justification: z.boolean(),
+  requires_approval: z.boolean(),
 });
 
 export const FlujoEstatusUpdateSchema = z.object({

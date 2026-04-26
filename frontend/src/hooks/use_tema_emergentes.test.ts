@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { useTemaEmergentes, useCreateTemaEmergente, useDeleteTemaEmergente } from './useTemaEmergentes';
 import api from '@/lib/api';
 
@@ -14,9 +14,11 @@ const createWrapper = () => {
       mutations: { retry: false },
     },
   });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  function QueryClientTestWrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children);
+  }
+  QueryClientTestWrapper.displayName = 'QueryClientTestWrapper';
+  return QueryClientTestWrapper;
 };
 
 describe('useTemaEmergentes', () => {
@@ -52,7 +54,14 @@ describe('useTemaEmergentes', () => {
 
 describe('useCreateTemaEmergente', () => {
   it('creates a new emerging topic', async () => {
-    const newTema = { titulo: 'New CVE', descripcion: 'New vulnerability', tipo: 'tecnologico', impacto: 'alto' };
+    const newTema = {
+      titulo: 'New CVE',
+      descripcion: 'New vulnerability',
+      tipo: 'tecnologico',
+      impacto: 'alto',
+      estado: 'nuevo',
+      fuente: 'nvd',
+    };
     const mockResponse = { id: '1', ...newTema };
     vi.mocked(api.post).mockResolvedValueOnce({ data: { status: 'success', data: mockResponse } });
 

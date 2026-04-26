@@ -12,7 +12,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 import { BarChartCard, DonutChartCard, LineChartCard } from '@/components/charts';
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Badge,
   Card,
@@ -62,7 +62,8 @@ export default function DashboardHomePage() {
         }
       />
 
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
+        title="Filtros de contexto (organización / inventario)"
         filters={filters}
         onChange={updateFilter}
         onClear={clearFilters}
@@ -74,7 +75,7 @@ export default function DashboardHomePage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Total tasks"
-          value={stats?.totals.tasks ?? (isLoading ? '…' : 0)}
+          value={stats?.totals?.tasks ?? (isLoading ? '…' : 0)}
           icon={ListTodo}
           iconColor="text-primary"
           iconBg="bg-primary/10"
@@ -82,7 +83,7 @@ export default function DashboardHomePage() {
         />
         <StatCard
           label="Completed"
-          value={stats?.totals.completed_tasks ?? (isLoading ? '…' : 0)}
+          value={stats?.totals?.completed_tasks ?? (isLoading ? '…' : 0)}
           icon={CheckCircle2}
           iconColor="text-emerald-400"
           iconBg="bg-emerald-500/10"
@@ -90,7 +91,7 @@ export default function DashboardHomePage() {
         />
         <StatCard
           label="Pending"
-          value={stats?.totals.pending_tasks ?? (isLoading ? '…' : 0)}
+          value={stats?.totals?.pending_tasks ?? (isLoading ? '…' : 0)}
           icon={Circle}
           iconColor="text-amber-400"
           iconBg="bg-amber-500/10"
@@ -99,7 +100,7 @@ export default function DashboardHomePage() {
         <StatCard
           label={isAdmin ? 'Active users' : 'Your status'}
           value={
-            isAdmin ? (stats?.totals.active_users ?? (isLoading ? '…' : 0)) : 'Active'
+            isAdmin ? (stats?.totals?.active_users ?? (isLoading ? '…' : 0)) : 'Active'
           }
           icon={isAdmin ? UserCheck : ShieldCheck}
           iconColor="text-sky-400"
@@ -119,17 +120,17 @@ export default function DashboardHomePage() {
             icon={ShieldCheck}
             iconColor="text-rose-400"
             iconBg="bg-rose-500/10"
-            href={appendHierarchyQuery('/vulnerabilidads', filters)}
+            href={appendHierarchyQuery('/vulnerabilidads/registros', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.critical_count') && (
           <StatCard
             label="Críticas (KPI)"
-            value={exec?.kpis.critical_count ?? (execLoading ? '…' : 0)}
+            value={exec?.kpis?.critical_vulns ?? (execLoading ? '…' : 0)}
             icon={ShieldCheck}
             iconColor="text-orange-400"
             iconBg="bg-orange-500/10"
-            href={appendHierarchyQuery('/vulnerabilidads?severidad=Critica', filters)}
+            href={appendHierarchyQuery('/vulnerabilidads/registros?severidad=Critica', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.overdue_sla') && (
@@ -139,7 +140,7 @@ export default function DashboardHomePage() {
             icon={Circle}
             iconColor="text-amber-400"
             iconBg="bg-amber-500/10"
-            href={appendHierarchyQuery('/vulnerabilidads?sla=vencida', filters)}
+            href={appendHierarchyQuery('/vulnerabilidads/registros?sla=vencida', filters)}
           />
         )}
         {isWidgetVisible('dashboard.home.card.appsec.risk_level') && (
@@ -169,7 +170,7 @@ export default function DashboardHomePage() {
           icon={ListTodo}
           iconColor="text-blue-400"
           iconBg="bg-blue-500/10"
-          href={appendHierarchyQuery('/service_releases', filters)}
+          href={appendHierarchyQuery('/service_releases/registros', filters)}
         />
         <StatCard
           label="Releases en progreso"
@@ -177,7 +178,7 @@ export default function DashboardHomePage() {
           icon={Activity}
           iconColor="text-indigo-400"
           iconBg="bg-indigo-500/10"
-          href={appendHierarchyQuery('/service_releases', filters)}
+          href={appendHierarchyQuery('/service_releases/registros', filters)}
         />
         <StatCard
           label="Pendientes aprobación"
@@ -185,7 +186,7 @@ export default function DashboardHomePage() {
           icon={Circle}
           iconColor="text-fuchsia-400"
           iconBg="bg-fuchsia-500/10"
-          href={appendHierarchyQuery('/service_releases', filters)}
+          href={appendHierarchyQuery('/service_releases/registros', filters)}
         />
       </div>
 

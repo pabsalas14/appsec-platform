@@ -51,6 +51,7 @@ import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
 import { useClientPagedList } from '@/hooks/useClientPagedList';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { logger } from '@/lib/logger';
 import {
   RepositorioCreateSchema,
@@ -70,21 +71,44 @@ const emptyCreate: RepositorioCreate = {
   plataforma: 'GitHub',
   rama_default: 'main',
   activo: true,
+  organizacion_id: '',
   celula_id: '',
+  subdireccion_responsable_id: '',
+  responsable_nombre: '',
+  responsable_contacto: '',
 };
 
 function RepositorioForm({
   initial,
   onSuccess,
-  celulaOptions,
+  subdireccions,
+  gerencias,
+  organizacions,
+  celulas,
+  defaultResponsableNombre,
 }: {
   initial?: Repositorio | null;
   onSuccess: () => void;
-  celulaOptions: { value: string; label: string }[];
+  subdireccions: Array<{ id: string; nombre: string }>;
+  gerencias: Array<{ id: string; nombre: string; subdireccion_id: string }>;
+  organizacions: Array<{ id: string; nombre: string; gerencia_id: string }>;
+  celulas: Array<{ id: string; nombre: string; organizacion_id: string }>;
+  defaultResponsableNombre?: string;
 }) {
   const createMut = useCreateRepositorio();
   const updateMut = useUpdateRepositorio();
   const isEdit = Boolean(initial);
+  const initialOrg = initial?.organizacion_id ?? '';
+  const initialGer = useMemo(() => {
+    if (!initialOrg) return '';
+    const o = organizacions.find((x) => x.id === initialOrg);
+    return o?.gerencia_id ?? '';
+  }, [initialOrg, organizacions]);
+  const initialSub = useMemo(() => {
+    if (!initialGer) return '';
+    const g = gerencias.find((x) => x.id === initialGer);
+    return g?.subdireccion_id ?? '';
+  }, [initialGer, gerencias]);
   const form = useForm<RepositorioCreate>({
     resolver: zodResolver(RepositorioCreateSchema),
     defaultValues: initial
@@ -94,13 +118,52 @@ function RepositorioForm({
           plataforma: initial.plataforma,
           rama_default: initial.rama_default,
           activo: initial.activo,
-          celula_id: initial.celula_id,
+          organizacion_id: initial.organizacion_id,
+          celula_id: initial.celula_id ?? '',
+          subdireccion_responsable_id: initial.subdireccion_responsable_id ?? '',
+          responsable_nombre: initial.responsable_nombre ?? '',
+          responsable_contacto: initial.responsable_contacto ?? '',
         }
       : {
           ...emptyCreate,
-          celula_id: celulaOptions[0]?.value ?? '',
+          organizacion_id: '',
+          celula_id: '',
+          subdireccion_responsable_id: '',
+          responsable_nombre: defaultResponsableNombre ?? '',
+          responsable_contacto: '',
         },
   });
+  const subWatch = form.watch('subdireccion_responsable_id');
+  const orgWatch = form.watch('organizacion_id');
+  const gerWatch = useMemo(() => {
+    const o = organizacions.find((x) => x.id === orgWatch);
+    return o?.gerencia_id ?? '';
+  }, [organizacions, orgWatch]);
+  const gerenciaOptions = useMemo(
+    () =>
+      gerencias
+        .filter((g) => (subWatch ? g.subdireccion_id === subWatch : true))
+        .map((g) => ({ value: g.id, label: g.nombre })),
+    [gerencias, subWatch],
+  );
+
+  const orgOptions = useMemo(
+    () =>
+      organizacions
+        .filter((o) =>
+          gerWatch ? o.gerencia_id === gerWatch : subWatch ? gerencias.some((g) => g.id === o.gerencia_id && g.subdireccion_id === subWatch) : true,
+        )
+        .map((o) => ({ value: o.id, label: o.nombre })),
+    [organizacions, gerencias, gerWatch, subWatch],
+  );
+
+  const celulaOptions = useMemo(
+    () =>
+      celulas
+        .filter((c) => (orgWatch ? c.organizacion_id === orgWatch : true))
+        .map((c) => ({ value: c.id, label: c.nombre })),
+    [celulas, orgWatch],
+  );
 
   const pending = createMut.isPending || updateMut.isPending;
 
@@ -111,7 +174,11 @@ function RepositorioForm({
       plataforma: data.plataforma,
       rama_default: data.rama_default.trim(),
       activo: data.activo,
-      celula_id: data.celula_id,
+      organizacion_id: data.organizacion_id,
+      celula_id: data.celula_id || undefined,
+      subdireccion_responsable_id: data.subdireccion_responsable_id || undefined,
+      responsable_nombre: data.responsable_nombre?.trim() || undefined,
+      responsable_contacto: data.responsable_contacto?.trim() || undefined,
     };
     if (isEdit && initial) {
       const patch: RepositorioUpdate = {};
@@ -120,7 +187,21 @@ function RepositorioForm({
       if (payload.plataforma !== initial.plataforma) patch.plataforma = payload.plataforma;
       if (payload.rama_default !== initial.rama_default) patch.rama_default = payload.rama_default;
       if (payload.activo !== initial.activo) patch.activo = payload.activo;
-      if (payload.celula_id !== initial.celula_id) patch.celula_id = payload.celula_id;
+      if (payload.organizacion_id !== initial.organizacion_id) patch.organizacion_id = payload.organizacion_id;
+      const nextCelula = data.celula_id ? data.celula_id : null;
+      if ((nextCelula ?? null) !== (initial.celula_id ?? null)) patch.celula_id = nextCelula;
+      const nextSubdirResp = data.subdireccion_responsable_id ? data.subdireccion_responsable_id : null;
+      if ((nextSubdirResp ?? null) !== (initial.subdireccion_responsable_id ?? null)) {
+        patch.subdireccion_responsable_id = nextSubdirResp;
+      }
+      const nextRespNombre = data.responsable_nombre?.trim() || null;
+      if ((nextRespNombre ?? null) !== (initial.responsable_nombre ?? null)) {
+        patch.responsable_nombre = nextRespNombre;
+      }
+      const nextRespContacto = data.responsable_contacto?.trim() || null;
+      if ((nextRespContacto ?? null) !== (initial.responsable_contacto ?? null)) {
+        patch.responsable_contacto = nextRespContacto;
+      }
       if (Object.keys(patch).length === 0) {
         onSuccess();
         return;
@@ -158,17 +239,57 @@ function RepositorioForm({
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <div>
-        <label className="text-sm font-medium">Célula</label>
+        <label className="text-sm font-medium">Subdirección responsable (repo)</label>
         <Select
           className="mt-1"
-          value={form.watch('celula_id')}
+          value={form.watch('subdireccion_responsable_id') || initialSub}
+          onChange={(e) => form.setValue('subdireccion_responsable_id', e.target.value, { shouldValidate: true })}
+          options={subdireccions.map((s) => ({ value: s.id, label: s.nombre }))}
+          placeholder="Selecciona subdirección"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Gerencia (informativo por mapeo)</label>
+        <Select
+          className="mt-1"
+          value={gerWatch || initialGer}
+          onChange={() => {}}
+          options={gerenciaOptions}
+          placeholder="Se calcula por organización"
+          disabled
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Organización</label>
+        <Select
+          className="mt-1"
+          value={form.watch('organizacion_id')}
+          onChange={(e) => {
+            const oid = e.target.value;
+            form.setValue('organizacion_id', oid, { shouldValidate: true });
+            const o = organizacions.find((x) => x.id === oid);
+            const g = o ? gerencias.find((x) => x.id === o.gerencia_id) : undefined;
+            if (g?.subdireccion_id) {
+              form.setValue('subdireccion_responsable_id', g.subdireccion_id);
+            }
+            form.setValue('celula_id', '');
+          }}
+          options={orgOptions}
+          placeholder="Selecciona organización"
+        />
+        {form.formState.errors.organizacion_id && (
+          <p className="mt-1 text-xs text-destructive">{form.formState.errors.organizacion_id.message}</p>
+        )}
+      </div>
+      <div>
+        <label className="text-sm font-medium">Célula (opcional)</label>
+        <Select
+          className="mt-1"
+          value={form.watch('celula_id') ?? ''}
           onChange={(e) => form.setValue('celula_id', e.target.value, { shouldValidate: true })}
-          options={celulaOptions}
+          options={[{ value: '', label: 'Sin célula' }, ...celulaOptions]}
           placeholder="Selecciona célula"
         />
-        {form.formState.errors.celula_id && (
-          <p className="mt-1 text-xs text-destructive">{form.formState.errors.celula_id.message}</p>
-        )}
       </div>
       <div>
         <label className="text-sm font-medium">Nombre</label>
@@ -203,6 +324,14 @@ function RepositorioForm({
           <p className="mt-1 text-xs text-destructive">{form.formState.errors.rama_default.message}</p>
         )}
       </div>
+      <div>
+        <label className="text-sm font-medium">Responsable (nombre)</label>
+        <Input className="mt-1" maxLength={255} {...form.register('responsable_nombre')} />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Responsable (contacto)</label>
+        <Input className="mt-1" maxLength={255} {...form.register('responsable_contacto')} />
+      </div>
       <div className="flex items-center justify-between gap-2 rounded-md border border-white/10 p-3">
         <div>
           <p className="text-sm font-medium">Activo en inventario</p>
@@ -230,6 +359,7 @@ function RepositorioForm({
 
 export default function RepositoriosPage() {
   const { data: rows, isLoading, isError } = useRepositorios();
+  const { data: currentUser } = useCurrentUser();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: orgs } = useOrganizacions();
@@ -285,34 +415,14 @@ export default function RepositoriosPage() {
     return (celulas || []).filter((c) => c.organizacion_id === orgF);
   }, [celulas, orgF, gerenciaF, orgName]);
 
-  const celulaFormOptions = useMemo(() => {
-    const fromFilter = (filteredCelulas ?? []).map((c) => {
-      const o = orgName.get(c.organizacion_id);
-      return {
-        value: c.id,
-        label: o ? `${o.nombre} / ${c.nombre}` : c.nombre,
-      };
-    });
-    if (edit) {
-      const c = celulas?.find((x) => x.id === edit.celula_id);
-      if (c && !fromFilter.some((o) => o.value === c.id)) {
-        const o = orgName.get(c.organizacion_id);
-        return [
-          { value: c.id, label: o ? `${o.nombre} / ${c.nombre}` : c.nombre },
-          ...fromFilter,
-        ];
-      }
-    }
-    return fromFilter;
-  }, [filteredCelulas, orgName, edit, celulas]);
-
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (rows || [])
-      .filter((r) => (celulaF === ALL ? true : r.celula_id === celulaF))
+      .filter((r) => (orgF === ALL ? true : r.organizacion_id === orgF))
+      .filter((r) => (celulaF === ALL ? true : (r.celula_id ?? '') === celulaF))
       .filter((r) => {
         if (!s) return true;
-        const cname = (celulaShort.get(r.celula_id) || '').toLowerCase();
+        const cname = (r.celula_id ? celulaShort.get(r.celula_id) : '')?.toLowerCase() || '';
         return (
           r.nombre.toLowerCase().includes(s) ||
           cname.includes(s) ||
@@ -321,7 +431,7 @@ export default function RepositoriosPage() {
           r.url.toLowerCase().includes(s)
         );
       });
-  }, [rows, q, celulaF, celulaShort]);
+  }, [rows, q, orgF, celulaF, celulaShort]);
 
   const sorted = useMemo(() => {
     const list = [...filtered];
@@ -338,7 +448,7 @@ export default function RepositoriosPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Repositorios (BRD §3.2)"
-        description="Código bajo célula; vinculado a riesgo y a ejecuciones (CI/CD) en fases posteriores."
+        description="Mapeo por organización, con célula opcional y responsable por repositorio."
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
           <CatalogCsvToolbar
@@ -360,7 +470,11 @@ export default function RepositoriosPage() {
               </DialogHeader>
               <RepositorioForm
                 onSuccess={() => setCreateOpen(false)}
-                celulaOptions={celulaFormOptions}
+                subdireccions={subdirs || []}
+                gerencias={gerencias || []}
+                organizacions={orgs || []}
+                celulas={celulas || []}
+                defaultResponsableNombre={currentUser?.full_name || currentUser?.username || ''}
               />
             </DialogContent>
           </Dialog>
@@ -371,8 +485,7 @@ export default function RepositoriosPage() {
         <CardContent className="p-4 space-y-4">
           <p className="text-sm text-muted-foreground">
             <GitBranch className="inline h-4 w-4 mr-1 align-text-bottom" />
-            {rows?.length ?? 0} repositorio(s) · Filtro por jerarquía: Subdirección → Gerencia → Organización →
-            Célula
+            {rows?.length ?? 0} repositorio(s) · Jerarquía: Subdirección → Gerencia → Organización (célula opcional)
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
             <div>
@@ -459,15 +572,16 @@ export default function RepositoriosPage() {
                   <DataTableTh>Rama</DataTableTh>
                   <DataTableTh>Activo</DataTableTh>
                   <DataTableTh>URL</DataTableTh>
-                  <DataTableTh>Célula / jerarquía</DataTableTh>
+                  <DataTableTh>Organización / jerarquía</DataTableTh>
+                  <DataTableTh>Responsable repo</DataTableTh>
                   <DataTableTh>Actualizado</DataTableTh>
                   <DataTableTh className="w-[100px]">Acciones</DataTableTh>
                 </tr>
               </DataTableHead>
               <DataTableBody>
                 {paged.paged.map((r) => {
-                  const c = celulas?.find((x) => x.id === r.celula_id);
-                  const o = c ? orgName.get(c.organizacion_id) : undefined;
+                  const c = r.celula_id ? celulas?.find((x) => x.id === r.celula_id) : undefined;
+                  const o = orgName.get(r.organizacion_id);
                   const g = o ? gerName.get(o.gerencia_id) : undefined;
                   const s = g ? subdirName.get(g.subdireccion_id) : undefined;
                   return (
@@ -493,16 +607,20 @@ export default function RepositoriosPage() {
                         </a>
                       </DataTableCell>
                       <DataTableCell>
-                        {c && o && g ? (
+                        {o && g ? (
                           <div className="text-sm">
-                            <div className="font-medium">{c.nombre}</div>
+                            <div className="font-medium">{o.nombre}</div>
                             <div className="text-xs text-muted-foreground">
-                              {o.nombre} · {g.nombre} · {s || '—'}
+                              {g.nombre} · {s || '—'} {c ? `· Célula ${c.nombre}` : '· Sin célula'}
                             </div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
+                      </DataTableCell>
+                      <DataTableCell className="text-sm">
+                        <div className="font-medium">{r.responsable_nombre || '—'}</div>
+                        <div className="text-xs text-muted-foreground">{r.responsable_contacto || '—'}</div>
                       </DataTableCell>
                       <DataTableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {formatDate(r.updated_at)}
@@ -575,7 +693,11 @@ export default function RepositoriosPage() {
               key={edit.id}
               initial={edit}
               onSuccess={() => setEdit(null)}
-              celulaOptions={celulaFormOptions}
+              subdireccions={subdirs || []}
+              gerencias={gerencias || []}
+              organizacions={orgs || []}
+              celulas={celulas || []}
+              defaultResponsableNombre={currentUser?.full_name || currentUser?.username || ''}
             />
           )}
         </DialogContent>

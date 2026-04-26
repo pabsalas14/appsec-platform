@@ -67,7 +67,7 @@ export default function TemasDashboardPage() {
     queryKey: ['dashboard-temas-summary'],
     queryFn: async () => {
       logger.info('dashboard.temas_summary.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/emerging-themes-summary');
+      const response = await apiClient.get('/dashboard/emerging-themes-summary');
       return response.data.data as TemasDashboardData;
     },
   });
@@ -75,7 +75,7 @@ export default function TemasDashboardPage() {
   const addEntryMutation = useMutation({
     mutationFn: async (payload: { tema_id: string; titulo: string; contenido: string; fuente?: string }) => {
       logger.info('dashboard.temas.add_entry', { tema_id: payload.tema_id });
-      const response = await apiClient.post('/api/v1/actualizacion-tema', payload);
+      const response = await apiClient.post('/actualizacion_temas/', payload);
       return response.data;
     },
     onSuccess: () => {
@@ -100,7 +100,7 @@ export default function TemasDashboardPage() {
     queryFn: async () => {
       if (!expandedTheme) return null;
       logger.info('dashboard.tema_detail.fetch', { tema_id: expandedTheme });
-      const response = await apiClient.get(`/api/v1/dashboard/tema/${expandedTheme}/detail`);
+      const response = await apiClient.get(`/dashboard/tema/${expandedTheme}/detail`);
       return response.data.data as TemaDetail;
     },
     enabled: !!expandedTheme,

@@ -33,7 +33,7 @@ export default function ActualizacionIniciativasPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ActualizacionIniciativa | null>(null);
 
-  const iniciativaOpts = iniciativas.map((i) => ({ value: i.id, label: i.nombre ?? i.id }));
+  const iniciativaOpts = iniciativas.map((i) => ({ value: i.id, label: i.titulo ?? i.id }));
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

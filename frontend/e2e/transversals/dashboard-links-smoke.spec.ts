@@ -14,7 +14,7 @@ test.describe("Dashboards — smoke (F1/F4)", () => {
     await expect(authedPage.getByRole("heading", { name: /Dashboard Ejecutivo/i })).toBeVisible({
       timeout: 20_000,
     });
-    await expect(authedPage.getByText(/Vulnerabilidades Críticas/)).toBeVisible({ timeout: 15_000 });
+    await expect(authedPage.getByText(/Vulnerabilidades críticas/)).toBeVisible({ timeout: 15_000 });
   });
 
   test("vulnerabilities dashboard is reachable (link integrity)", async ({ authedPage }) => {

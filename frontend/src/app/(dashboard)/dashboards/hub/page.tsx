@@ -1,31 +1,50 @@
 "use client";
 
-import { ArrowRight, FolderKanban, GitBranch, Shield } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  FolderKanban,
+  GitBranch,
+  LayoutGrid,
+  Shield,
+  Table,
+  Target,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 
-import { HierarchyFiltersBar } from "@/components/dashboard/HierarchyFiltersBar";
+import { HierarchyFiltersBarCard } from "@/components/dashboard/HierarchyFiltersBar";
 import { Card, CardContent, PageHeader, PageWrapper } from "@/components/ui";
 import { useDashboardHierarchyFilters } from "@/hooks/useDashboardHierarchyFilters";
 import { DASHBOARD_FILTER_MODULO } from "@/lib/dashboardHierarchyPresets";
 import { appendHierarchyQuery } from "@/lib/dashboardLinks";
 
-const LINKS: { href: string; label: string; desc: string; icon: typeof Shield }[] = [
-  { href: "/vulnerabilidads", label: "Vulnerabilidades", desc: "Listado con filtros y SLA", icon: Shield },
-  { href: "/service_releases", label: "Liberaciones", desc: "Flujo y kanban de operación", icon: FolderKanban },
-  { href: "/revision_terceros", label: "Revisiones tercero", desc: "Pentest y checklist §10.3", icon: GitBranch },
+/** Los 10 tableros BRD acordados (rutas Next bajo /dashboards/*). */
+const BRD_DASHBOARDS: { href: string; label: string; desc: string; icon: LucideIcon }[] = [
+  { href: "/dashboards/executive", label: "Ejecutivo", desc: "KPI, postura, tendencias, top repos, SLA y auditorías", icon: BarChart3 },
+  { href: "/dashboards/team", label: "Equipo", desc: "Resumen, distribución y tabla por analista", icon: Users },
+  { href: "/dashboards/programs", label: "Programas", desc: "Resumen, heatmap, distribución y riesgo", icon: GitBranch },
+  { href: "/dashboards/vulnerabilities", label: "Vulnerabilidades multi-dim", desc: "Drill global → subdirección → célula → repositorio", icon: Shield },
+  { href: "/dashboards/concentrado", label: "Concentrado", desc: "Vista agregada por motor, severidad y tabla", icon: BarChart3 },
+  { href: "/dashboards/releases", label: "Releases (tabla org)", desc: "Filtros jerárquicos, KPIs, tabla y estados", icon: Table },
+  { href: "/dashboards/operacion", label: "Operación", desc: "Liberaciones, terceros y detalle de release", icon: FolderKanban },
+  { href: "/dashboards/kanban", label: "Releases (Kanban)", desc: "Columnas por estado y arrastre (move)", icon: LayoutGrid },
+  { href: "/dashboards/iniciativas", label: "Iniciativas", desc: "Resumen, hitos, timeline e iniciativas en riesgo", icon: Target },
+  { href: "/dashboards/temas", label: "Temas emergentes", desc: "Impacto, bitácora y detalle de tema", icon: AlertCircle },
 ];
 
-/** Noveno tablero BRD §13.3: hub operativo y enlaces con jerarquía. */
 export default function DashboardsHubPage() {
   const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
 
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
-        title="Dashboard · Hub operativo"
-        description="Atajos a módulos clave con los mismos filtros jerárquicos de la URL (drill-down desde el índice o el home)."
+        title="Dashboard · Hub (10 tableros BRD)"
+        description="Mapa a los diez tableros analíticos con el mismo criterio de filtros jerárquicos (URL). Módulos CRUD siguen en el menú lateral (Vulnerabilidades, Service releases, etc.)."
       />
-      <HierarchyFiltersBar
+      <HierarchyFiltersBarCard
         title="Filtros jerárquicos"
         filters={filters}
         onChange={updateFilter}
@@ -33,9 +52,9 @@ export default function DashboardsHubPage() {
         savedModulo={DASHBOARD_FILTER_MODULO.home}
         onApplyFilters={applyFilters}
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {LINKS.map(({ href, label, desc, icon: Icon }) => (
-          <Link key={href} href={appendHierarchyQuery(href, filters)}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
+        {BRD_DASHBOARDS.map(({ href, label, desc, icon: Icon }) => (
+          <Link key={href} href={appendHierarchyQuery(href, filters)} className="block">
             <Card className="h-full transition hover:border-primary/40">
               <CardContent className="flex items-start gap-3 p-5">
                 <div className="rounded-lg bg-primary/10 p-2 text-primary">
@@ -52,13 +71,6 @@ export default function DashboardsHubPage() {
             </Card>
           </Link>
         ))}
-        <a href={appendHierarchyQuery("/dashboards/executive", filters)} className="block">
-          <Card className="h-full transition hover:border-primary/40">
-            <CardContent className="p-5 text-sm text-muted-foreground">
-              Ver tablero ejecutivo con métricas agregadas →
-            </CardContent>
-          </Card>
-        </a>
       </div>
     </PageWrapper>
   );

@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import HitoIniciativaPage from './page';
+import HitoIniciativaPage from '../hito_iniciativas/page';
 import * as hooks from '@/hooks/useHitoIniciativas';
 
 vi.mock('@/hooks/useHitoIniciativas');
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
-);
+function HitoIniciativaTestWrapper({ children }: { children: React.ReactNode }) {
+  return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
+}
+
+const wrapper = HitoIniciativaTestWrapper;
 
 describe('HitoIniciativaPage', () => {
   beforeEach(() => vi.clearAllMocks());

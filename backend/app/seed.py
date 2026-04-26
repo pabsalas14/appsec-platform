@@ -773,6 +773,9 @@ async def run_seed(db: AsyncSession) -> None:
 
     Usar desde tests con el engine de pytest; ``seed()`` delega aquí con ``async_session``.
     """
+    from app.seeds.demo_business_seed import seed_demo_business_data
+    from app.seeds.navigation_seed import seed_navigation
+
     admin = await _seed_admin(db)
     await _seed_roles(db)  # SEMANA 0: Crear 4 nuevos roles
     await _seed_settings(db)
@@ -783,6 +786,8 @@ async def run_seed(db: AsyncSession) -> None:
     await _seed_indicadores_formulas(db, admin.id)
     await _seed_kanban_columns(db)  # Dashboard 7: Kanban columns
     await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
+    await seed_demo_business_data(db, admin)
+    await seed_navigation(db)
 
 
 async def seed() -> None:

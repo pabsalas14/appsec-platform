@@ -111,7 +111,7 @@ export interface VulnResumen {
 export interface DrilldownLevel {
   id: string;
   name: string;
-  type: 'global' | 'subdireccion' | 'celula' | 'repositorio';
+  type: 'global' | 'direccion' | 'subdireccion' | 'gerencia' | 'organizacion' | 'celula' | 'repositorio';
 }
 
 /**

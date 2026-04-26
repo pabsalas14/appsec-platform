@@ -98,7 +98,7 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ initiative, onClose }) => {
   const { data: detailData, isLoading } = useQuery({
     queryKey: ['initiative-detail', initiative.id],
     queryFn: async () => {
-      const response = await apiClient.get(`/api/v1/dashboard/initiative/${initiative.id}/detail`);
+      const response = await apiClient.get(`/dashboard/initiative/${initiative.id}/detail`);
       return response.data.data as InitiativeDetail;
     },
   });
@@ -400,7 +400,7 @@ export default function InitiativesDashboardPage() {
     queryKey: ['dashboard-initiatives'],
     queryFn: async () => {
       logger.info('dashboard.initiatives.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/initiatives-summary');
+      const response = await apiClient.get('/dashboard/initiatives-summary');
       return response.data.data as InitiativesDashboardData;
     },
   });
@@ -409,7 +409,7 @@ export default function InitiativesDashboardPage() {
     queryKey: ['dashboard-initiatives-resumen'],
     queryFn: async () => {
       logger.info('dashboard.initiatives.resumen.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/initiatives/resumen');
+      const response = await apiClient.get('/dashboard/initiatives/resumen');
       return response.data.data as ResumenData;
     },
   });
@@ -418,7 +418,7 @@ export default function InitiativesDashboardPage() {
     queryKey: ['dashboard-initiatives-tabla'],
     queryFn: async () => {
       logger.info('dashboard.initiatives.tabla.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/initiatives/tabla');
+      const response = await apiClient.get('/dashboard/initiatives/tabla');
       return response.data.data as TablaData;
     },
   });
@@ -427,7 +427,7 @@ export default function InitiativesDashboardPage() {
     queryKey: ['dashboard-initiatives-timeline'],
     queryFn: async () => {
       logger.info('dashboard.initiatives.timeline.fetch');
-      const response = await apiClient.get('/api/v1/dashboard/initiatives/timeline');
+      const response = await apiClient.get('/dashboard/initiatives/timeline');
       return response.data.data as TimelineData;
     },
   });

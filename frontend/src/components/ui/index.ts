@@ -32,6 +32,7 @@ export {
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip';
 export { Avatar, AvatarImage, AvatarFallback } from './avatar';
 export { Separator } from './separator';
+export { CollapsibleNavSection, Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';
 export { Skeleton } from './skeleton';
 export { ScrollArea, ScrollBar } from './scroll-area';
 export {
@@ -61,6 +62,16 @@ export {
 export { Switch } from './switch';
 export { Progress } from './progress';
 export { Checkbox } from './checkbox';
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from './table';
 export {
   Breadcrumb,
   BreadcrumbList,

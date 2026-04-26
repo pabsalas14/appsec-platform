@@ -14,7 +14,11 @@ class RepositorioBase(BaseModel):
     plataforma: str
     rama_default: str
     activo: bool = True
-    celula_id: UUID
+    organizacion_id: UUID
+    celula_id: UUID | None = None
+    subdireccion_responsable_id: UUID | None = None
+    responsable_nombre: str | None = None
+    responsable_contacto: str | None = None
 
 
 class RepositorioCreate(RepositorioBase):
@@ -32,6 +36,10 @@ class RepositorioUpdate(BaseModel):
     rama_default: str | None = None
     activo: bool | None = None
     celula_id: UUID | None = None
+    organizacion_id: UUID | None = None
+    subdireccion_responsable_id: UUID | None = None
+    responsable_nombre: str | None = None
+    responsable_contacto: str | None = None
 
 
 class RepositorioRead(RepositorioBase):

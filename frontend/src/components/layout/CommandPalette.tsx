@@ -24,7 +24,7 @@ import {
   Plus,
   ScrollText,
   Settings,
-  SquareChartGantt,
+  GanttChartSquare,
   Smartphone,
   Sun,
   Upload,
@@ -120,9 +120,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
               <Users className="mr-2 h-4 w-4" /> Mi Equipo OKR
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/okr_dashboard'))}>
-              <SquareChartGantt className="mr-2 h-4 w-4" /> Dashboard Ejecutivo OKR
+              <GanttChartSquare className="mr-2 h-4 w-4" /> Dashboard Ejecutivo OKR
             </CommandItem>
-            <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads'))}>
+            <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads/registros'))}>
               <Bug className="mr-2 h-4 w-4" /> Vulnerabilidades
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/subdireccions'))}>
@@ -146,7 +146,7 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/servicios'))}>
               <Server className="mr-2 h-4 w-4" /> Servicios
             </CommandItem>
-            <CommandItem onSelect={() => run(() => router.push('/service_releases'))}>
+            <CommandItem onSelect={() => run(() => router.push('/service_releases/registros'))}>
               <Package className="mr-2 h-4 w-4" /> Liberaciones de servicio
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/etapa_releases'))}>

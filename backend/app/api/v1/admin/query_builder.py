@@ -191,7 +191,8 @@ async def list_widgets(
         total = await saved_widget_svc.count(db=db, user_id=current_user.id)
 
         items = [SavedWidgetRead.model_validate(w) for w in widgets]
-        return paginated(items, total, skip, limit)
+        page = (skip // limit) + 1 if limit else 1
+        return paginated(items, page=page, page_size=limit, total=total)
 
     except Exception as e:
         logger.exception(f"List widgets error: {e}")
