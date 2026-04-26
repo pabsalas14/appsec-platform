@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const SubdireccionSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
+  direccion_id: z.string().uuid().nullable().optional(),
   nombre: z.string(),
   codigo: z.string(),
   descripcion: z.string().nullable().optional(),
@@ -13,6 +14,7 @@ export const SubdireccionSchema = z.object({
 });
 
 export const SubdireccionCreateSchema = z.object({
+  direccion_id: z.string().uuid().nullable().optional(),
   nombre: z.string(),
   codigo: z.string(),
   descripcion: z.string().nullable().optional(),

@@ -52,6 +52,16 @@ async def _create_subdireccion(client: AsyncClient, headers: dict[str, str]) -> 
     return resp.json()["data"]["id"]
 
 
+async def _create_direccion(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/direccions",
+        headers=headers,
+        json={"nombre": "OwnedDir", "codigo": "OWNDIR", "descripcion": "x"},
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
 async def _make_celula_for_ownership(client: AsyncClient, headers: dict[str, str]) -> str:
     """Return celula ID under a fresh org hierarchy."""
     return await create_celula_id(client, headers)
@@ -161,6 +171,7 @@ async def _create_notificacion(client: AsyncClient, headers: dict[str, str]) -> 
 OWNED_ENTITIES = [
     pytest.param("tasks", _create_task, "/api/v1/tasks/{id}", {"title": "pwn"}, id="tasks"),
     pytest.param("projects", _create_project, "/api/v1/projects/{id}", {"name": "pwn"}, id="projects"),
+    pytest.param("direccions", _create_direccion, "/api/v1/direccions/{id}", {"nombre": "PwnD"}, id="direccions"),
     pytest.param(
         "subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", {"nombre": "PwnN"}, id="subdireccions"
     ),

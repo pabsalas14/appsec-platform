@@ -45,6 +45,7 @@ import {
   useSubdireccions,
   useUpdateSubdireccion,
 } from '@/hooks/useSubdireccions';
+import { useDireccions } from '@/hooks/useDireccions';
 import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { SubdireccionCreateSchema, type Subdireccion, type SubdireccionCreate } from '@/lib/schemas/subdireccion.schema';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
@@ -59,6 +60,7 @@ function SubdireccionForm({
   initial?: Subdireccion | null;
   onSuccess: () => void;
 }) {
+  const { data: direccions } = useDireccions();
   const createMut = useCreateSubdireccion();
   const updateMut = useUpdateSubdireccion();
   const isEdit = Boolean(initial);
@@ -68,6 +70,7 @@ function SubdireccionForm({
       ? {
           nombre: initial.nombre,
           codigo: initial.codigo,
+          direccion_id: initial.direccion_id ?? null,
           descripcion: initial.descripcion ?? null,
           director_nombre: initial.director_nombre ?? null,
           director_contacto: initial.director_contacto ?? null,
@@ -75,6 +78,7 @@ function SubdireccionForm({
       : {
           nombre: '',
           codigo: '',
+          direccion_id: null,
           descripcion: null,
           director_nombre: null,
           director_contacto: null,
@@ -87,6 +91,7 @@ function SubdireccionForm({
     const payload: SubdireccionCreate = {
       nombre: data.nombre,
       codigo: data.codigo,
+      direccion_id: data.direccion_id || null,
       descripcion: data.descripcion?.trim() || null,
       director_nombre: data.director_nombre?.trim() || null,
       director_contacto: data.director_contacto?.trim() || null,
@@ -128,6 +133,17 @@ function SubdireccionForm({
         {form.formState.errors.codigo && (
           <p className="mt-1 text-xs text-destructive">{form.formState.errors.codigo.message}</p>
         )}
+      </div>
+      <div>
+        <label className="text-sm font-medium">Dirección</label>
+        <select className="mt-1 w-full rounded-md border bg-background p-2" {...form.register('direccion_id')}>
+          <option value="">Sin dirección</option>
+          {(direccions ?? []).map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nombre}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="text-sm font-medium">Descripción</label>

@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class SubdireccionBase(BaseModel):
+    direccion_id: UUID | None = None
     nombre: str
     codigo: str
     descripcion: str | None = None

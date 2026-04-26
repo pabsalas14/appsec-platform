@@ -3,8 +3,10 @@
 import { DashboardSavedHierarchyPresets } from '@/components/dashboard/DashboardSavedHierarchyPresets';
 import { Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/components/ui';
 import { useCelulas } from '@/hooks/useCelulas';
+import { useDireccions } from '@/hooks/useDireccions';
 import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
+import { useRepositorios } from '@/hooks/useRepositorios';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
 import type { HierarchyFilters } from '@/hooks/useAppDashboardPanels';
 
@@ -27,9 +29,15 @@ export function HierarchyFiltersBar({
   onApplyFilters,
 }: Props) {
   const { data: subdireccions } = useSubdireccions();
+  const { data: direccions } = useDireccions();
   const { data: gerencias } = useGerencias();
   const { data: organizacions } = useOrganizacions();
   const { data: celulas } = useCelulas();
+  const { data: repositorios } = useRepositorios();
+
+  const subdireccionsFiltered = (subdireccions ?? []).filter(
+    (x) => !filters.direccion_id || x.direccion_id === filters.direccion_id
+  );
 
   const gerenciasFiltered = (gerencias ?? []).filter(
     (x) => !filters.subdireccion_id || x.subdireccion_id === filters.subdireccion_id
@@ -39,6 +47,9 @@ export function HierarchyFiltersBar({
   );
   const celulasFiltered = (celulas ?? []).filter(
     (x) => !filters.organizacion_id || x.organizacion_id === filters.organizacion_id
+  );
+  const reposFiltered = (repositorios ?? []).filter(
+    (x) => !filters.celula_id || x.celula_id === filters.celula_id
   );
 
   return (
@@ -54,12 +65,19 @@ export function HierarchyFiltersBar({
             onApply={onApplyFilters}
           />
         )}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <Select
+            label="Dirección"
+            value={filters.direccion_id ?? ''}
+            onChange={(e) => onChange('direccion_id', e.target.value)}
+            options={(direccions ?? []).map((d) => ({ value: d.id, label: d.nombre }))}
+            placeholder="Todas"
+          />
           <Select
             label="Subdirección"
             value={filters.subdireccion_id ?? ''}
             onChange={(e) => onChange('subdireccion_id', e.target.value)}
-            options={(subdireccions ?? []).map((s) => ({ value: s.id, label: s.nombre }))}
+            options={subdireccionsFiltered.map((s) => ({ value: s.id, label: s.nombre }))}
             placeholder="Todas"
           />
           <Select
@@ -82,6 +100,13 @@ export function HierarchyFiltersBar({
             onChange={(e) => onChange('celula_id', e.target.value)}
             options={celulasFiltered.map((c) => ({ value: c.id, label: c.nombre }))}
             placeholder="Todas"
+          />
+          <Select
+            label="Repositorio"
+            value={filters.repositorio_id ?? ''}
+            onChange={(e) => onChange('repositorio_id', e.target.value)}
+            options={reposFiltered.map((r) => ({ value: r.id, label: r.nombre }))}
+            placeholder="Todos"
           />
         </div>
         <div className="flex justify-end">

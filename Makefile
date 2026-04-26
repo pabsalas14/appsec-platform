@@ -19,7 +19,7 @@
 
 .PHONY: up up-prod down restart build logs logs-back logs-front \
         status stats shell-back shell-db test test-cov clean seed help \
-        new-entity types lint
+        new-entity types lint test-e2e
 
 # Colors
 GREEN  := \033[0;32m
@@ -102,6 +102,13 @@ test-cov: ## Run backend tests con cobertura mínima 70% (misma carga de BD que 
 	@printf "$(RED)⚠  Tests TRUNCATE users/tasks/… in the target DB.$(NC)\n"
 	docker compose exec -e PYTEST_ALLOW_ANY_DB=1 backend \
 		python -m pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=68 tests/
+
+test-e2e: ## Run Playwright E2E tests in a glibc runner (requires stack up). Usage: make test-e2e ARGS="...".
+	@if [ -n "$(ARGS)" ]; then \
+		docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm --no-deps -e PLAYWRIGHT_ARGS="$(ARGS)" e2e; \
+	else \
+		docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm --no-deps e2e; \
+	fi
 
 # ──────────────────── Scaffolding ────────────────────
 

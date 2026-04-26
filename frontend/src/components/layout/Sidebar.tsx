@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ClipboardList,
   FileSearch,
+  Flag,
   FolderKanban,
   GitBranch,
   LayoutDashboard,
@@ -20,6 +21,7 @@ import {
   LineChart,
   FunctionSquare,
   LayoutTemplate,
+  MessageSquare,
   Package,
   Server,
   Target,
@@ -29,9 +31,14 @@ import {
   Settings,
   ShieldCheck,
   Smartphone,
+  SquareChartGantt,
   Upload,
   UserCircle,
   Users,
+  AlertTriangle,
+  CheckSquare,
+  Bookmark,
+  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -66,6 +73,8 @@ const SECTIONS: NavSection[] = [
       { href: '/kanban', label: 'Kanban', icon: Layers },
       { href: '/uploads', label: 'Uploads', icon: Upload },
       { href: '/vulnerabilidads', label: 'Vulnerabilidades', icon: Bug },
+      { href: '/madurez', label: 'Score de Madurez', icon: TrendingUp },
+      { href: '/filtros_guardados', label: 'Filtros guardados', icon: Bookmark },
       { href: '/dashboards', label: 'Dashboards', icon: LayoutDashboard },
       { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart },
       { href: '/dashboards/executive', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
@@ -78,6 +87,7 @@ const SECTIONS: NavSection[] = [
     title: 'Organización (BRD)',
     items: [
       { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
+      { href: '/direccions', label: 'Direcciones', icon: Building2 },
       { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
       { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
       { href: '/celulas', label: 'Células', icon: Users },
@@ -98,6 +108,8 @@ const SECTIONS: NavSection[] = [
       { href: '/etapa_releases', label: 'Etapas de liberación', icon: ListChecks },
       { href: '/pipeline_releases', label: 'Pipelines', icon: Workflow },
       { href: '/iniciativas', label: 'Iniciativas', icon: Target },
+      { href: '/hito_iniciativas', label: 'Hitos de iniciativa', icon: Flag },
+      { href: '/actualizacion_iniciativas', label: 'Actualizaciones iniciativa', icon: MessageSquare },
     ],
   },
   {
@@ -108,7 +120,6 @@ const SECTIONS: NavSection[] = [
       { href: '/hallazgo_masts', label: 'Hallazgos MAST', icon: Smartphone },
       { href: '/hallazgo_pipelines', label: 'Hallazgos pipeline', icon: Workflow },
       { href: '/hallazgo_terceros', label: 'Hallazgos tercero', icon: Building2 },
-      { href: '/hallazgo_auditorias', label: 'Hallazgos auditoría', icon: FileSearch },
     ],
   },
   {
@@ -125,10 +136,35 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: 'Auditorías (BRD)',
+    items: [
+      { href: '/auditorias', label: 'Auditorías', icon: ClipboardList },
+      { href: '/hallazgo_auditorias', label: 'Hallazgos auditoría', icon: FileSearch },
+      { href: '/evidencia_auditorias', label: 'Evidencias auditoría', icon: FileSearch },
+      { href: '/plan_remediacions', label: 'Planes de remediación', icon: CheckSquare },
+    ],
+  },
+  {
+    title: 'Temas Emergentes (BRD)',
+    items: [
+      { href: '/temas_emergentes', label: 'Temas emergentes', icon: AlertTriangle },
+      { href: '/actualizacion_temas', label: 'Actualizaciones de tema', icon: MessageSquare },
+      { href: '/cierre_conclusiones', label: 'Cierres y conclusiones', icon: CheckSquare },
+    ],
+  },
+  {
     title: 'Threat modeling',
     items: [
       { href: '/programa_threat_modelings', label: 'Programas TM', icon: Network },
       { href: '/sesion_threat_modelings', label: 'Sesiones TM', icon: ClipboardList },
+    ],
+  },
+  {
+    title: 'OKR / MBO',
+    items: [
+      { href: '/mis_compromisos', label: 'Mis Compromisos', icon: Target },
+      { href: '/okr_equipo', label: 'Mi Equipo', icon: Users },
+      { href: '/okr_dashboard', label: 'Dashboard Ejecutivo OKR', icon: SquareChartGantt },
     ],
   },
   {
@@ -141,6 +177,8 @@ const SECTIONS: NavSection[] = [
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
       { href: '/admin/module-views', label: 'Module Views', icon: LayoutTemplate, adminOnly: true },
       { href: '/admin/formulas', label: 'Formula Engine', icon: FunctionSquare, adminOnly: true },
+      { href: '/indicadores_formulas', label: 'Fórmulas de indicadores', icon: FunctionSquare, adminOnly: true },
+      { href: '/flujos_estatus', label: 'Flujos de estatus', icon: Workflow, adminOnly: true },
       { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
     ],

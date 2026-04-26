@@ -4,10 +4,12 @@ import api from '@/lib/api';
 import type { ApiResponse } from '@/types';
 
 export type HierarchyFilters = {
+  direccion_id?: string;
   subdireccion_id?: string;
   gerencia_id?: string;
   organizacion_id?: string;
   celula_id?: string;
+  repositorio_id?: string;
 };
 
 export type DashboardExecutiveData = {
@@ -122,6 +124,8 @@ function withHierarchy(path: string, filters?: HierarchyFilters): string {
   if (filters.gerencia_id) params.set('gerencia_id', filters.gerencia_id);
   if (filters.organizacion_id) params.set('organizacion_id', filters.organizacion_id);
   if (filters.celula_id) params.set('celula_id', filters.celula_id);
+  if (filters.direccion_id) params.set('direccion_id', filters.direccion_id);
+  if (filters.repositorio_id) params.set('repositorio_id', filters.repositorio_id);
   const query = params.toString();
   return query ? `${path}${path.includes('?') ? '&' : '?'}${query}` : path;
 }

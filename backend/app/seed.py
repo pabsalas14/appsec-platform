@@ -44,6 +44,15 @@ async def _seed_admin(db) -> User:
     existing = result.scalar_one_or_none()
 
     if existing:
+        if settings.SEED_FORCE_ADMIN_PASSWORD:
+            validate_password_strength(settings.ADMIN_PASSWORD, username="admin")
+            existing.hashed_password = hash_password(settings.ADMIN_PASSWORD)
+            await db.flush()
+            await db.refresh(existing)
+            logger.warning(
+                "seed.admin_password_reset",
+                extra={"event": "seed.admin_password_reset", "user_id": str(existing.id)},
+            )
         logger.info(
             "seed.admin_exists",
             extra={"event": "seed.admin_exists", "user_id": str(existing.id)},

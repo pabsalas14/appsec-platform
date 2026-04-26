@@ -6,6 +6,12 @@
 
 **Última actualización**: 26 de abril de 2026
 
+### Estado de validación local (26 abr 2026)
+
+- `make test`: **700 passed, 62 failed, 1 skipped, 1 error** (runtime ~16m55s).
+- Fallas concentradas en suites de módulos nuevos: `actualizacion_*`, `cierre_conclusion`, `evidencia_auditoria`, `hito_iniciativa`, `indicador_formula`, `madurez`, `plan_remediacion`, `okr_*`, y `test_bloque_b_filtro_guardado`.
+- `cd frontend && npm run lint`: no ejecuta en este entorno por dependencia faltante (`next: command not found`).
+
 **Avance global (orientativo)**: ~**88%** — suite backend amplia en verde (pytest + cobertura ~69%); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión.
 
 | Fase | Nombre | Estado | Fecha |

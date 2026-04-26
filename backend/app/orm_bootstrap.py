@@ -28,6 +28,7 @@ def import_all_orm() -> None:
     import app.models.control_seguridad
     import app.models.control_source_code
     import app.models.dashboard_config
+    import app.models.direccion
     import app.models.ejecucion_dast
     import app.models.ejecucion_mast
     import app.models.estado_cumplimiento
@@ -53,6 +54,13 @@ def import_all_orm() -> None:
     import app.models.kanban_column
     import app.models.notificacion
     import app.models.organizacion
+    import app.models.okr_categoria
+    import app.models.okr_cierre_q
+    import app.models.okr_compromiso
+    import app.models.okr_evidencia
+    import app.models.okr_plan_anual
+    import app.models.okr_revision_q
+    import app.models.okr_subcompromiso
     import app.models.pipeline_release
     import app.models.plan_remediacion
     import app.models.programa_dast

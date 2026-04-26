@@ -77,12 +77,16 @@ async def _where_sla_vencido_respet_d2(db: AsyncSession):
 
 def _hierarchy_filter_dict(
     *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
+    direccion_id: UUID | None = None,
+    subdireccion_id: UUID | None = None,
+    gerencia_id: UUID | None = None,
+    organizacion_id: UUID | None = None,
+    celula_id: UUID | None = None,
+    repositorio_id: UUID | None = None,
 ) -> dict[str, str]:
     filters: dict[str, str] = {}
+    if direccion_id:
+        filters["direccion_id"] = str(direccion_id)
     if subdireccion_id:
         filters["subdireccion_id"] = str(subdireccion_id)
     if gerencia_id:
@@ -91,17 +95,21 @@ def _hierarchy_filter_dict(
         filters["organizacion_id"] = str(organizacion_id)
     if celula_id:
         filters["celula_id"] = str(celula_id)
+    if repositorio_id:
+        filters["repositorio_id"] = str(repositorio_id)
     return filters
 
 
 def _celula_scope_query(
     *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
+    direccion_id: UUID | None = None,
+    subdireccion_id: UUID | None = None,
+    gerencia_id: UUID | None = None,
+    organizacion_id: UUID | None = None,
+    celula_id: UUID | None = None,
 ):
     from app.models.celula import Celula
+    from app.models.direccion import Direccion
     from app.models.gerencia import Gerencia
     from app.models.organizacion import Organizacion
     from app.models.subdireccion import Subdireccion
@@ -111,6 +119,7 @@ def _celula_scope_query(
         .join(Organizacion, Celula.organizacion_id == Organizacion.id)
         .join(Gerencia, Organizacion.gerencia_id == Gerencia.id)
         .join(Subdireccion, Gerencia.subdireccion_id == Subdireccion.id)
+        .join(Direccion, Subdireccion.direccion_id == Direccion.id, isouter=True)
         .where(
             Celula.deleted_at.is_(None),
             Organizacion.deleted_at.is_(None),
@@ -118,6 +127,8 @@ def _celula_scope_query(
             Subdireccion.deleted_at.is_(None),
         )
     )
+    if direccion_id:
+        stmt = stmt.where(Direccion.id == direccion_id)
     if subdireccion_id:
         stmt = stmt.where(Subdireccion.id == subdireccion_id)
     if gerencia_id:
@@ -131,10 +142,12 @@ def _celula_scope_query(
 
 def _vulnerability_hierarchy_filter(
     *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
+    direccion_id: UUID | None = None,
+    subdireccion_id: UUID | None = None,
+    gerencia_id: UUID | None = None,
+    organizacion_id: UUID | None = None,
+    celula_id: UUID | None = None,
+    repositorio_id: UUID | None = None,
 ):
     from app.models.activo_web import ActivoWeb
     from app.models.aplicacion_movil import AplicacionMovil
@@ -142,18 +155,22 @@ def _vulnerability_hierarchy_filter(
     from app.models.servicio import Servicio
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    if not any([subdireccion_id, gerencia_id, organizacion_id, celula_id]):
+    if not any([direccion_id, subdireccion_id, gerencia_id, organizacion_id, celula_id, repositorio_id]):
         return None
 
     celula_scope = _celula_scope_query(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
     )
+    repositorio_scope = select(Repositorio.id).where(Repositorio.celula_id.in_(celula_scope))
+    if repositorio_id:
+        repositorio_scope = repositorio_scope.where(Repositorio.id == repositorio_id)
     return or_(
         Vulnerabilidad.servicio_id.in_(select(Servicio.id).where(Servicio.celula_id.in_(celula_scope))),
-        Vulnerabilidad.repositorio_id.in_(select(Repositorio.id).where(Repositorio.celula_id.in_(celula_scope))),
+        Vulnerabilidad.repositorio_id.in_(repositorio_scope),
         Vulnerabilidad.activo_web_id.in_(select(ActivoWeb.id).where(ActivoWeb.celula_id.in_(celula_scope))),
         Vulnerabilidad.aplicacion_movil_id.in_(
             select(AplicacionMovil.id).where(AplicacionMovil.celula_id.in_(celula_scope))
@@ -163,17 +180,20 @@ def _vulnerability_hierarchy_filter(
 
 def _release_hierarchy_filter(
     *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
+    direccion_id: UUID | None = None,
+    subdireccion_id: UUID | None = None,
+    gerencia_id: UUID | None = None,
+    organizacion_id: UUID | None = None,
+    celula_id: UUID | None = None,
+    repositorio_id: UUID | None = None,
 ):
     from app.models.service_release import ServiceRelease
     from app.models.servicio import Servicio
 
-    if not any([subdireccion_id, gerencia_id, organizacion_id, celula_id]):
+    if not any([direccion_id, subdireccion_id, gerencia_id, organizacion_id, celula_id]):
         return None
     celula_scope = _celula_scope_query(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
@@ -254,10 +274,12 @@ async def dashboard_stats(
 
 @router.get("/vulnerabilities")
 async def dashboard_vulnerabilities(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -265,10 +287,12 @@ async def dashboard_vulnerabilities(
     from app.models.vulnerabilidad import Vulnerabilidad
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     # Count vulnerabilities by severity
     severities = ["CRITICA", "ALTA", "MEDIA", "BAJA"]
@@ -328,10 +352,12 @@ async def dashboard_vulnerabilities(
                 "red": 0,
             },
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -339,10 +365,12 @@ async def dashboard_vulnerabilities(
 
 @router.get("/releases")
 async def dashboard_releases(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -350,10 +378,12 @@ async def dashboard_releases(
     from app.models.service_release import ServiceRelease
 
     hierarchy_filter = _release_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     # Count releases by status
     total = int(
@@ -417,10 +447,12 @@ async def dashboard_releases(
                 "completed": completed,
             },
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -428,10 +460,12 @@ async def dashboard_releases(
 
 @router.get("/initiatives")
 async def dashboard_initiatives(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -485,10 +519,12 @@ async def dashboard_initiatives(
             "completed": completed,
             "completion_percentage": int((completed / total * 100) if total > 0 else 0),
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -496,10 +532,12 @@ async def dashboard_initiatives(
 
 @router.get("/emerging-themes")
 async def dashboard_emerging_themes(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -542,10 +580,12 @@ async def dashboard_emerging_themes(
             "unmoved_7_days": unmoved,
             "active": total - unmoved,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -553,10 +593,12 @@ async def dashboard_emerging_themes(
 
 @router.get("/executive")
 async def dashboard_executive(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -571,10 +613,12 @@ async def dashboard_executive(
     logger.info("dashboard.executive.view", extra={"event": "dashboard.executive.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # ─── 1. KPIS ────────────────────────────────────────────────────────────
@@ -613,10 +657,12 @@ async def dashboard_executive(
 
     # Active releases
     release_filter = _release_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     active_releases = int(
         (
@@ -890,10 +936,12 @@ async def dashboard_executive(
             "sla_status": sla_status,
             "audits": audits_result,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -901,10 +949,12 @@ async def dashboard_executive(
 
 @router.get("/programs")
 async def dashboard_programs(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -912,10 +962,12 @@ async def dashboard_programs(
     from app.models.vulnerabilidad import Vulnerabilidad
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     rows = (
         await db.execute(
@@ -975,10 +1027,12 @@ async def dashboard_programs(
             "programs_at_risk": at_risk,
             "program_breakdown": breakdown,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -986,10 +1040,12 @@ async def dashboard_programs(
 
 @router.get("/team")
 async def dashboard_team(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -997,10 +1053,12 @@ async def dashboard_team(
     from app.models.vulnerabilidad import Vulnerabilidad
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     res = await db.execute(
         select(
@@ -1034,10 +1092,12 @@ async def dashboard_team(
             "team_size": len(team_items),
             "analysts": team_items,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -1046,18 +1106,22 @@ async def dashboard_team(
 @router.get("/program-detail")
 async def dashboard_program_detail(
     program: str = "sast",
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     """Dashboard 4: Program detail (zoom) by source/motor."""
     from app.models.vulnerabilidad import Vulnerabilidad
@@ -1129,10 +1193,12 @@ async def dashboard_program_detail(
             "overdue_findings": overdue,
             "completion_percentage": int((closed / total * 100) if total else 0),
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -1141,10 +1207,12 @@ async def dashboard_program_detail(
 @router.get("/releases-table")
 async def dashboard_releases_table(
     limit: int = 50,
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1152,10 +1220,12 @@ async def dashboard_releases_table(
     from app.models.service_release import ServiceRelease
 
     hierarchy_filter = _release_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     rows = (
         (
@@ -1188,10 +1258,12 @@ async def dashboard_releases_table(
             ],
             "count": len(rows),
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -1204,10 +1276,12 @@ async def dashboard_releases_table(
 
 @router.get("/executive-kpis")
 async def dashboard_executive_kpis(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1217,10 +1291,12 @@ async def dashboard_executive_kpis(
     logger.info("dashboard.executive_kpis.view", extra={"event": "dashboard.executive_kpis.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Críticas
@@ -1257,10 +1333,12 @@ async def dashboard_executive_kpis(
     from app.models.service_release import ServiceRelease
 
     release_filter = _release_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     liberaciones = int(
         (
@@ -1309,10 +1387,12 @@ async def dashboard_executive_kpis(
 
 @router.get("/security-posture")
 async def dashboard_security_posture(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1322,10 +1402,12 @@ async def dashboard_security_posture(
     logger.info("dashboard.security_posture.view", extra={"event": "dashboard.security_posture.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Current percentage (critica/total)
@@ -1395,10 +1477,12 @@ async def dashboard_security_posture(
 @router.get("/top-repos-criticas")
 async def dashboard_top_repos_criticas(
     limit: int = Query(5, ge=1, le=100),
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1409,10 +1493,12 @@ async def dashboard_top_repos_criticas(
     logger.info("dashboard.top_repos_criticas.view", extra={"event": "dashboard.top_repos_criticas.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     rows = (
@@ -1459,10 +1545,12 @@ async def dashboard_top_repos_criticas(
 
 @router.get("/sla-semaforo")
 async def dashboard_sla_semaforo(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1472,10 +1560,12 @@ async def dashboard_sla_semaforo(
     logger.info("dashboard.sla_semaforo.view", extra={"event": "dashboard.sla_semaforo.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     now = datetime.now(UTC)
@@ -1547,10 +1637,12 @@ async def dashboard_sla_semaforo(
 
 @router.get("/team-summary")
 async def dashboard_team_summary(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1560,10 +1652,12 @@ async def dashboard_team_summary(
     logger.info("dashboard.team_summary.view", extra={"event": "dashboard.team_summary.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Distinct analysts
@@ -1611,10 +1705,12 @@ async def dashboard_team_summary(
 @router.get("/team-detail/{user_id}")
 async def dashboard_team_detail(
     user_id: UUID,
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1624,10 +1720,12 @@ async def dashboard_team_detail(
     logger.info("dashboard.team_detail.view", extra={"event": "dashboard.team_detail.view", "user_id": str(user_id)})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Get user
@@ -1712,10 +1810,12 @@ async def dashboard_team_detail(
 
 @router.get("/team/resumen")
 async def dashboard_team_resumen(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1725,10 +1825,12 @@ async def dashboard_team_resumen(
     logger.info("dashboard.team.resumen", extra={"event": "dashboard.team.resumen"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Total teams (distinct analysts)
@@ -1788,10 +1890,12 @@ async def dashboard_team_resumen(
             "promedio_vulns_por_equipo": float(round(promedio_vulns, 2)),
             "equipos_en_riesgo": int(risk_teams),
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -1799,10 +1903,12 @@ async def dashboard_team_resumen(
 
 @router.get("/team/distribucion")
 async def dashboard_team_distribucion(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1812,10 +1918,12 @@ async def dashboard_team_distribucion(
     logger.info("dashboard.team.distribucion", extra={"event": "dashboard.team.distribucion"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     rows = (
@@ -1845,10 +1953,12 @@ async def dashboard_team_distribucion(
             "distribucion": distribucion,
             "total": total_all,
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             ),
         }
     )
@@ -1860,10 +1970,12 @@ async def dashboard_team_tabla(
     page_size: int = Query(10, ge=1, le=100),
     sort_by: str = Query("total", regex="^(total|email|riesgo)$"),
     sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1873,10 +1985,12 @@ async def dashboard_team_tabla(
     logger.info("dashboard.team.tabla", extra={"event": "dashboard.team.tabla", "page": page, "page_size": page_size})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Get all team stats (analysts with vulns)
@@ -1960,10 +2074,12 @@ async def dashboard_team_tabla(
         total=total,
         meta={
             "applied_filters": _hierarchy_filter_dict(
+                direccion_id=direccion_id,
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
                 organizacion_id=organizacion_id,
                 celula_id=celula_id,
+                repositorio_id=repositorio_id,
             )
         },
     )
@@ -1976,10 +2092,12 @@ async def dashboard_team_tabla(
 
 @router.get("/programs-summary")
 async def dashboard_programs_summary(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -1989,10 +2107,12 @@ async def dashboard_programs_summary(
     logger.info("dashboard.programs_summary.view", extra={"event": "dashboard.programs_summary.view"})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     rows = (
@@ -2046,10 +2166,12 @@ async def dashboard_programs_summary(
 @router.get("/program/{code}/detail")
 async def dashboard_program_detail_new(
     code: str,
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -2059,10 +2181,12 @@ async def dashboard_program_detail_new(
     logger.info("dashboard.program_detail.view", extra={"event": "dashboard.program_detail.view", "code": code})
 
     hierarchy_filter = _vulnerability_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Get program metadata
@@ -4348,10 +4472,12 @@ async def dashboard_release_kanban_columns(
 
 @router.get("/releases-kanban")
 async def dashboard_releases_kanban(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -4375,10 +4501,12 @@ async def dashboard_releases_kanban(
     )
 
     hierarchy_filter = _release_hierarchy_filter(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
 
     # Obtener columnas del kanban
@@ -4479,10 +4607,12 @@ async def dashboard_releases_kanban(
     payload["columns"] = columns_map
     payload["total_cards"] = total_releases
     payload["applied_filters"] = _hierarchy_filter_dict(
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
     )
     return success(payload)
 

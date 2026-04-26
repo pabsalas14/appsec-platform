@@ -24,6 +24,7 @@ import {
   Plus,
   ScrollText,
   Settings,
+  SquareChartGantt,
   Smartphone,
   Sun,
   Upload,
@@ -111,6 +112,15 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/uploads'))}>
               <Upload className="mr-2 h-4 w-4" /> Uploads
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/mis_compromisos'))}>
+              <Target className="mr-2 h-4 w-4" /> Mis Compromisos
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/okr_equipo'))}>
+              <Users className="mr-2 h-4 w-4" /> Mi Equipo OKR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/okr_dashboard'))}>
+              <SquareChartGantt className="mr-2 h-4 w-4" /> Dashboard Ejecutivo OKR
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads'))}>
               <Bug className="mr-2 h-4 w-4" /> Vulnerabilidades

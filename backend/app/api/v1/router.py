@@ -27,6 +27,7 @@ from app.api.v1 import (
     control_source_code,
     dashboard,
     dashboard_config,
+    direccion,
     ejecucion_dast,
     # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
     ejecucion_mast,
@@ -55,6 +56,13 @@ from app.api.v1 import (
     madurez,
     navigation,
     notificacion,
+    okr_categoria,
+    okr_cierre_q,
+    okr_compromiso,
+    okr_evidencia,
+    okr_plan_anual,
+    okr_revision_q,
+    okr_subcompromiso,
     # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
     organizacion,
     pipeline_release,
@@ -108,6 +116,7 @@ async def root():
 
 # ─── Catálogos Centrales (Módulo 1) ──────────────────────────────────────────
 api_router.include_router(subdireccion.router, prefix="/subdireccions", tags=["Subdireccion"])
+api_router.include_router(direccion.router, prefix="/direccions", tags=["Direccion"])
 api_router.include_router(celula.router, prefix="/celulas", tags=["Celula"])
 api_router.include_router(repositorio.router, prefix="/repositorios", tags=["Repositorio"])
 api_router.include_router(activo_web.router, prefix="/activo_webs", tags=["ActivoWeb"])
@@ -216,3 +225,10 @@ api_router.include_router(filtro_guardado.router, prefix="/filtros_guardados", t
 api_router.include_router(dashboard_config.router, prefix="/dashboard_configs", tags=["Dashboard_config"])
 api_router.include_router(changelog_entrada.router, prefix="/changelog_entradas", tags=["Changelog_entrada"])
 api_router.include_router(notificacion.router, prefix="/notificacions", tags=["Notificacion"])
+api_router.include_router(okr_categoria.router, prefix="/okr_categorias", tags=["Okr_categoria"])
+api_router.include_router(okr_plan_anual.router, prefix="/okr_plan_anuals", tags=["Okr_plan_anual"])
+api_router.include_router(okr_compromiso.router, prefix="/okr_compromisos", tags=["Okr_compromiso"])
+api_router.include_router(okr_subcompromiso.router, prefix="/okr_subcompromisos", tags=["Okr_subcompromiso"])
+api_router.include_router(okr_revision_q.router, prefix="/okr_revision_qs", tags=["Okr_revision_q"])
+api_router.include_router(okr_evidencia.router, prefix="/okr_evidencias", tags=["Okr_evidencia"])
+api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["Okr_cierre_q"])

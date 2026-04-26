@@ -31,8 +31,17 @@ def _bool_cell(s: str) -> bool:
 def subdireccion_template_body() -> str:
     buf = StringIO()
     w = csv.writer(buf)
-    w.writerow(["nombre", "codigo", "descripcion", "director_nombre", "director_contacto"])
-    w.writerow(["Plataformas", "PLAT-01", "Subdirección de plataformas", "Ana Pérez", "ana@org.local"])
+    w.writerow(["nombre", "codigo", "descripcion", "director_nombre", "director_contacto", "direccion_id"])
+    w.writerow(
+        [
+            "Plataformas",
+            "PLAT-01",
+            "Subdirección de plataformas",
+            "Ana Pérez",
+            "ana@org.local",
+            "00000000-0000-0000-0000-000000000000",
+        ]
+    )
     return buf.getvalue()
 
 
@@ -45,6 +54,9 @@ def subdireccion_row(d: dict[str, str], *, row: int) -> tuple[SubdireccionCreate
                 descripcion=(d.get("descripcion") or "").strip() or None,
                 director_nombre=(d.get("director_nombre") or "").strip() or None,
                 director_contacto=(d.get("director_contacto") or "").strip() or None,
+                direccion_id=(
+                    UUID((d.get("direccion_id") or "").strip()) if (d.get("direccion_id") or "").strip() else None
+                ),
             ),
             None,
         )

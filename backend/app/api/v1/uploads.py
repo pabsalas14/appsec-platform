@@ -45,6 +45,57 @@ ALLOWED_CONTENT_TYPES = {
     "application/zip",
 }
 
+_MAGIC = {
+    "application/pdf": [b"%PDF-"],
+    "image/png": [b"\x89PNG\r\n\x1a\n"],
+    "image/jpeg": [b"\xff\xd8\xff"],
+    "image/gif": [b"GIF87a", b"GIF89a"],
+    # ZIP local file header + empty archive + spanning signature
+    "application/zip": [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],
+}
+
+
+def _is_probably_text(data: bytes) -> bool:
+    # Reject NUL bytes and non-UTF8 payloads. This is intentionally strict to
+    # avoid allowing arbitrary binary blobs under text/* types.
+    if b"\x00" in data:
+        return False
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
+
+
+def _validate_magic_numbers(*, declared: str, data: bytes) -> None:
+    # Enforce "real" type for high-risk formats (PDF/images/zip) using file signatures.
+    declared = declared or "application/octet-stream"
+    prefixes = _MAGIC.get(declared)
+    if prefixes:
+        if not any(data.startswith(pfx) for pfx in prefixes):
+            raise ValidationException(
+                f"File content does not match declared content type: {declared} (magic number mismatch)"
+            )
+        return
+
+    # For text-like declared types, require UTF-8-ish content.
+    if declared in {"text/plain", "text/csv", "text/markdown", "application/json", "image/svg+xml"}:
+        if not _is_probably_text(data):
+            raise ValidationException(
+                f"File content does not match declared content type: {declared} (expected text payload)"
+            )
+        if declared == "application/json":
+            stripped = data.lstrip()
+            if stripped and stripped[:1] not in (b"{", b"["):
+                raise ValidationException("File content does not match declared content type: application/json")
+        if declared == "image/svg+xml":
+            stripped = data.lstrip().lower()
+            if not (stripped.startswith(b"<svg") or stripped.startswith(b"<?xml")):
+                raise ValidationException("File content does not match declared content type: image/svg+xml")
+        return
+
+    # Otherwise: rely on allowlist only.
+
 
 def _user_dir(user_id: uuid.UUID) -> Path:
     d = UPLOAD_DIR / str(user_id)
@@ -99,6 +150,8 @@ async def create_upload(
     contents = await file.read()
     if len(contents) > max_bytes:
         raise ValidationException(f"File exceeds max upload size of {settings.MAX_UPLOAD_SIZE_MB} MB")
+
+    _validate_magic_numbers(declared=content_type, data=contents)
 
     sha256 = hashlib.sha256(contents).hexdigest()
 
