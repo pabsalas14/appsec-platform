@@ -12,6 +12,25 @@
 - Fallas concentradas en suites de módulos nuevos: `actualizacion_*`, `cierre_conclusion`, `evidencia_auditoria`, `hito_iniciativa`, `indicador_formula`, `madurez`, `plan_remediacion`, `okr_*`, y `test_bloque_b_filtro_guardado`.
 - `cd frontend && npm run lint`: no ejecuta en este entorno por dependencia faltante (`next: command not found`).
 
+### Dashboards AppSec (V2)
+
+Especificación de 10 tableros analíticos: motores soportados **SAST, DAST, SCA, CDS, MDA**. Implementación de referencia:
+
+| # | Nombre | Ruta UI principal | API (prefijo `/api/v1/dashboard/`) |
+|---|--------|-------------------|-------------------------------------|
+| 1 | Ejecutivo global | `/dashboards/executive` | `GET /executive` (KPIs, tendencia 6m, top repos, SLA, auditorías) |
+| 2 | Equipo | `/dashboards/team` | `GET /team`, `GET /team/premium` |
+| 3 | Programas + heatmap | `/dashboards/programs` | `GET /programs`, `GET /programs/heatmap` |
+| 4 | Vulns. organizacional (7 niveles) | `/dashboards/vulnerabilities` | `GET /vulnerabilities` (jerarquía Dirección → … → Repo + detalle) |
+| 5 | Vulns. por motor (concentrado) | `/dashboards/concentrado` | `GET /concentrado` |
+| 6 | Liberaciones (tabla) | `/dashboards/releases` | `GET /releases`, `GET /releases-table` |
+| 7 | Liberaciones (Kanban) | `/dashboards/kanban` | `GET /releases-kanban` |
+| 8 | Temas emergentes y auditorías | `/dashboards/temas` + hub | `GET /temas-auditorias`, `GET /emerging-themes` |
+| 9 | OKR | `/okr_dashboard` | entidades `okr_*` (sin prefijo `dashboard/`) |
+| 10 | Release de plataforma | *nueva vista* `/dashboards/plataforma` (opcional) | `GET /platform-release` (changelog) |
+
+Filtro organizacional: join real de vulnerabilidades a célula vía activos (servicio, repositorio, activo web, app móvil) — `app/services/vulnerability_scope.py`. Tras cambios de backend, reconstruir imagen Docker y regenerar OpenAPI: `make types`.
+
 **Docker / imagen backend:** el servicio `backend` del Compose **no monta** el código por volumen; tras cambios en `backend/` hay que **`docker compose build backend`** (o `make up` que reconstruye) para que el contenedor use el código nuevo.
 
 **QA / UAT (dataset masivo desechable):** decisiones en [`docs/qa/DECISIONES_UAT.md`](docs/qa/DECISIONES_UAT.md); checklist en [`docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md`](docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md). Carga única de **5.000** vulnerabilidades de prueba: `make seed` y luego `make seed-uat-volumen` (solo con base PostgreSQL desechable; ver `Makefile`).

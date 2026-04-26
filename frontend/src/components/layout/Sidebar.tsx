@@ -74,6 +74,8 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
       { href: '/dashboards/initiatives', label: 'Dashboard Iniciativas', icon: Briefcase },
       { href: '/dashboards/emerging-themes', label: 'Dashboard Tendencias', icon: LineChart },
+      { href: '/dashboards/temas-auditorias', label: 'Temas + Auditorías (V2)', icon: FileSearch },
+      { href: '/dashboards/plataforma', label: 'Release plataforma (V2)', icon: Server },
     ],
   },
   {

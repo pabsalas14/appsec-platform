@@ -4,9 +4,9 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart3,
-  FolderKanban,
   GitBranch,
   LayoutGrid,
+  Package,
   Shield,
   Table,
   Target,
@@ -21,18 +21,18 @@ import { useDashboardHierarchyFilters } from "@/hooks/useDashboardHierarchyFilte
 import { DASHBOARD_FILTER_MODULO } from "@/lib/dashboardHierarchyPresets";
 import { appendHierarchyQuery } from "@/lib/dashboardLinks";
 
-/** Los 10 tableros BRD acordados (rutas Next bajo /dashboards/*). */
+/** Diez tableros AppSec V2 (rutas bajo /dashboards/*; OKR en /okr_dashboard). */
 const BRD_DASHBOARDS: { href: string; label: string; desc: string; icon: LucideIcon }[] = [
-  { href: "/dashboards/executive", label: "Ejecutivo", desc: "KPI, postura, tendencias, top repos, SLA y auditorías", icon: BarChart3 },
-  { href: "/dashboards/team", label: "Equipo", desc: "Resumen, distribución y tabla por analista", icon: Users },
-  { href: "/dashboards/programs", label: "Programas", desc: "Resumen, heatmap, distribución y riesgo", icon: GitBranch },
-  { href: "/dashboards/vulnerabilities", label: "Vulnerabilidades multi-dim", desc: "Drill global → subdirección → célula → repositorio", icon: Shield },
-  { href: "/dashboards/concentrado", label: "Concentrado", desc: "Vista agregada por motor, severidad y tabla", icon: BarChart3 },
-  { href: "/dashboards/releases", label: "Releases (tabla org)", desc: "Filtros jerárquicos, KPIs, tabla y estados", icon: Table },
-  { href: "/dashboards/operacion", label: "Operación", desc: "Liberaciones, terceros y detalle de release", icon: FolderKanban },
-  { href: "/dashboards/kanban", label: "Releases (Kanban)", desc: "Columnas por estado y arrastre (move)", icon: LayoutGrid },
-  { href: "/dashboards/iniciativas", label: "Iniciativas", desc: "Resumen, hitos, timeline e iniciativas en riesgo", icon: Target },
-  { href: "/dashboards/temas", label: "Temas emergentes", desc: "Impacto, bitácora y detalle de tema", icon: AlertCircle },
+  { href: "/dashboards/executive", label: "1 · Ejecutivo", desc: "KPI, postura, tendencia 6m (4 severidades), top repos, SLA", icon: BarChart3 },
+  { href: "/dashboards/team", label: "2 · Equipo", desc: "Carga, KPIs, tabla, distribución, premium", icon: Users },
+  { href: "/dashboards/programs", label: "3 · Programas", desc: "Heatmap, avance y programas", icon: GitBranch },
+  { href: "/dashboards/vulnerabilities", label: "4 · Vulns. organizacional", desc: "7 niveles: Dirección → … → Repositorio", icon: Shield },
+  { href: "/dashboards/concentrado", label: "5 · Vulns. por motor", desc: "SAST…MDA, apilado severidad, pipeline", icon: BarChart3 },
+  { href: "/dashboards/releases", label: "6 · Liberaciones (tabla)", desc: "KPIs y tabla de control", icon: Table },
+  { href: "/dashboards/kanban", label: "7 · Kanban releases", desc: "Tablero por estado, drag & drop", icon: LayoutGrid },
+  { href: "/dashboards/temas-auditorias", label: "8 · Temas + auditorías", desc: "Vista unificada V2", icon: AlertCircle },
+  { href: "/okr_dashboard", label: "9 · OKR", desc: "Compromisos y cascada (módulo OKR)", icon: Target },
+  { href: "/dashboards/plataforma", label: "10 · Release plataforma", desc: "Versión, changelog, timeline", icon: Package },
 ];
 
 export default function DashboardsHubPage() {
@@ -41,8 +41,8 @@ export default function DashboardsHubPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
-        title="Dashboard · Hub (10 tableros BRD)"
-        description="Mapa a los diez tableros analíticos con el mismo criterio de filtros jerárquicos (URL). Módulos CRUD siguen en el menú lateral (Vulnerabilidades, Service releases, etc.)."
+        title="Dashboard · Hub (V2 — 10 tableros)"
+        description="Mapa a los 10 tableros AppSec V2. Filtros jerárquicos vía query en URLs compatibles. OKR (9) vive en /okr_dashboard."
       />
       <HierarchyFiltersBarCard
         title="Filtros jerárquicos"
