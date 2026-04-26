@@ -2,7 +2,59 @@
 
 > Plataforma centralizada de **Application Security**: visibilidad de vulnerabilidades, programas, hallazgos (SAST / DAST / MAST / pipeline / tercero / auditoría), releases, gobierno por jerarquía organizacional y trazabilidad **auditable**, sustituyendo hojas de cálculo y silos aislados.
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+## 🚀 Estado de Desarrollo (Fases 0-9)
+
+**Última actualización**: 26 de abril de 2026
+
+| Fase | Nombre | Estado | Fecha |
+|------|--------|--------|-------|
+| **0** | Setup Dependencias | ✅ 100% COMPLETA | 25 abr |
+| **1** | Query Builder Manual | ✅ 100% COMPLETA | 25 abr |
+| **2** | Dashboard Builder + 9 Dashboards | 🟨 90% (endpoints listos, frontend conectando) | 26 abr |
+| **3** | Module View Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **4** | Custom Fields | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **5** | Formula Engine + Validation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **6** | Catalog Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **7** | Navigation Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **8** | AI Automation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **9** | Testing + Optimization | 🟨 En progreso (CI/CD validando) | 26 abr |
+
+### 📊 Resumen de Implementación
+
+**Backend:**
+- ✅ 35+ endpoints para 9 dashboards
+- ✅ 6 nuevos modelos (ModuleView, CustomField, ValidationRule, Catalog, NavigationItem, AIRule)
+- ✅ 6 servicios base con CRUD completo
+- ✅ Migraciones Alembic aplicadas
+- ✅ Schemas Pydantic validados
+- ✅ Admin routers para builders (fases 3-8)
+
+**Frontend:**
+- ✅ 9 páginas de dashboards (executive, team, programs, vulnerabilities, concentrado, operacion, kanban, iniciativas, temas)
+- ✅ 16 componentes UI reutilizables
+- ✅ Hooks para data fetching (useDashboard, useWidgetData, useDrilldown)
+- ✅ Esqueleto de admin pages para builders
+- 🟨 Conexión final a endpoints en progreso
+
+**Documentación:**
+- ✅ Especificación de 35 endpoints
+- ✅ Plan consolidado (fases 0-9)
+- ✅ Checklist de cumplimiento
+- ✅ E2E test skeletons
+
+**En CI/CD:**
+- Tests ejecutándose
+- Validación de imports
+- Coverage analysis
+
+### 🎯 Próximos Pasos
+
+1. ✅ Completar tests backend
+2. ⏳ Conectar frontend a endpoints reales
+3. ⏳ Ejecutar tests E2E (Playwright)
+4. ⏳ Validación final y deployment
+
+---
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
