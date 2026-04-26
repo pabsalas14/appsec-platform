@@ -53,8 +53,10 @@ def import_all_orm() -> None:
     import app.models.pipeline_release
     import app.models.plan_remediacion
     import app.models.programa_dast
+    import app.models.actividad_mensual_dast
     import app.models.programa_sast
     import app.models.programa_source_code
+    import app.models.actividad_mensual_source_code
     import app.models.programa_threat_modeling
     import app.models.project
     import app.models.refresh_token
@@ -67,6 +69,7 @@ def import_all_orm() -> None:
     import app.models.service_release
     import app.models.servicio
     import app.models.servicio_regulado_registro
+    import app.models.actividad_mensual_servicios_regulados
     import app.models.sesion_threat_modeling
     import app.models.subdireccion
     import app.models.system_setting

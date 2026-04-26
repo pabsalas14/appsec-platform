@@ -19,7 +19,7 @@
 | **6** | Catalog Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **7** | Navigation Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **8** | AI Automation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
-| **9** | Testing + Optimization | 🟨 En progreso (pytest ~620+ pasando, cobertura ~69%, CI completo) | 26 abr |
+| **9** | Testing + Optimization | 🟨 En progreso (pytest ~622 pasando, cobertura ~69%, CI completo) | 26 abr |
 
 ### 📊 Resumen de Implementación
 
@@ -61,7 +61,7 @@
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![Tests](https://img.shields.io/badge/pytest-620%2B-brightgreen)](#verificación)
+[![Tests](https://img.shields.io/badge/pytest-622-brightgreen)](#verificación)
 [![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---
