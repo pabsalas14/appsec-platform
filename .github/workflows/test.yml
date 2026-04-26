@@ -294,7 +294,7 @@ jobs:
       RUN_SEED: "true"
       NEXT_PUBLIC_API_URL: ""
       E2E_BASE_URL: "http://127.0.0.1:3000"
-      E2E_USERNAME: admin@example.com
+      E2E_USERNAME: admin
       E2E_PASSWORD: Changeme123!
     steps:
       - uses: actions/checkout@v4

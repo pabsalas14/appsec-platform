@@ -3,10 +3,12 @@
  * Provides test data setup, authentication, and cleanup
  */
 
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 import { TestDataAPI } from "./helpers/api-helpers";
 
 interface TestFixtures {
+  /** Page after cookie login (E2E_USERNAME / E2E_PASSWORD); navigated to /tasks. */
+  authedPage: Page;
   testData: {
     api: TestDataAPI;
     organizacionId: string;
@@ -24,6 +26,24 @@ interface TestFixtures {
 }
 
 export const test = base.extend<TestFixtures>({
+  authedPage: async ({ page }, use) => {
+    const rawUser = process.env.E2E_USERNAME ?? "admin";
+    // Seed admin username is `admin`; CI historically passed admin email — accept both.
+    const username = rawUser.includes("@") ? "admin" : rawUser;
+    const password = process.env.E2E_PASSWORD ?? "Changeme123!";
+
+    await page.goto("/login");
+    await page.locator("#username").fill(username);
+    await page.locator("#password").fill(password);
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
+
+    await page.goto("/tasks");
+    await page.waitForURL(/\/tasks/, { timeout: 15_000 });
+
+    await use(page);
+  },
+
   testData: async ({ request }, use) => {
     const baseURL = process.env.TEST_BASE_URL || "http://localhost:8000";
     const api = new TestDataAPI(request, baseURL);
