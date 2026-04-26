@@ -65,12 +65,19 @@ type NavSectionDef = {
 const NAV_SECTIONS: NavSectionDef[] = [
   {
     id: 'dashboards',
-    title: 'Dashboards',
+    title: 'Dashboards principales',
     emoji: '📊',
-    pathPrefixes: ['/dashboards/executive', '/dashboards/team', '/madurez'],
+    pathPrefixes: ['/dashboards/executive', '/dashboards/team', '/dashboards/programs', '/dashboards/concentrado', '/dashboards/vulnerabilities', '/dashboards/operacion', '/dashboards/kanban', '/dashboards/initiatives', '/dashboards/emerging-themes', '/madurez'],
     items: [
       { href: '/dashboards/executive', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
       { href: '/dashboards/team', label: 'Dashboard de Equipo', icon: Users },
+      { href: '/dashboards/programs', label: 'Programas Anuales', icon: LineChart },
+      { href: '/dashboards/concentrado', label: 'Concentrado de Hallazgos', icon: Bug },
+      { href: '/dashboards/vulnerabilities', label: 'Vulnerabilidades (Drilldown)', icon: LineChart },
+      { href: '/dashboards/operacion', label: 'Liberaciones', icon: Package },
+      { href: '/dashboards/kanban', label: 'Kanban', icon: FolderKanban },
+      { href: '/dashboards/initiatives', label: 'Iniciativas', icon: Target },
+      { href: '/dashboards/emerging-themes', label: 'Temas Emergentes', icon: Briefcase },
       { href: '/madurez', label: 'Score de Madurez', icon: TrendingUp },
     ],
   },
@@ -90,15 +97,11 @@ const NAV_SECTIONS: NavSectionDef[] = [
     title: 'Gestión de vulnerabilidades',
     emoji: '🛡️',
     pathPrefixes: [
-      '/dashboards/concentrado',
-      '/dashboards/vulnerabilities',
       '/plan_remediacions',
       '/programa_threat_modelings',
       '/vulnerabilidads',
     ],
     items: [
-      { href: '/dashboards/concentrado', label: 'Concentrado de hallazgos', icon: Bug },
-      { href: '/dashboards/vulnerabilities', label: 'Dashboard de Vulnerabilidades (Drilldown)', icon: LineChart },
       { href: '/vulnerabilidads/registros', label: 'Catálogo de vulnerabilidades', icon: ListChecks },
       { href: '/plan_remediacions', label: 'Planes de remediación', icon: CheckSquare },
       { href: '/programa_threat_modelings', label: 'Threat modeling (programas)', icon: Network },
@@ -109,20 +112,12 @@ const NAV_SECTIONS: NavSectionDef[] = [
     title: 'Operación y liberaciones',
     emoji: '⚙️',
     pathPrefixes: [
-      '/dashboards/kanban',
-      '/dashboards/operacion',
       '/servicios',
       '/service_releases',
-      '/temas_emergentes',
-      '/iniciativas',
     ],
     items: [
-      { href: '/dashboards/kanban', label: 'Kanban de liberaciones', icon: FolderKanban },
-      { href: '/dashboards/operacion', label: 'Liberaciones (tablero)', icon: Package },
       { href: '/servicios', label: 'Servicios', icon: Server },
       { href: '/service_releases/registros', label: 'Liberaciones de servicio', icon: Package },
-      { href: '/temas_emergentes', label: 'Temas emergentes', icon: Briefcase },
-      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
     ],
   },
   {
@@ -130,14 +125,12 @@ const NAV_SECTIONS: NavSectionDef[] = [
     title: 'Programas y auditorías',
     emoji: '📅',
     pathPrefixes: [
-      '/dashboards/programs',
       '/dashboards/program-detail',
       '/auditorias',
       '/programa_sasts',
       '/servicio_regulado_registros',
     ],
     items: [
-      { href: '/dashboards/programs', label: 'Programas anuales (consolidado)', icon: LineChart },
       { href: '/auditorias/registros', label: 'Auditorías', icon: ClipboardList },
       { href: '/servicio_regulado_registros', label: 'Servicios regulados', icon: Globe2 },
     ],

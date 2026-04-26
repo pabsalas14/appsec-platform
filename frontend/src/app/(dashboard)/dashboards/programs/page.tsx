@@ -2,24 +2,12 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertCircle,
-  TrendingUp,
-  Activity,
-  Code2,
-  Shield,
-  Search,
-  Clock,
-  AlertTriangle,
-  Zap,
-  ChevronRight,
-} from 'lucide-react';
+import { GaugeChart, HistoricoMensualGrid } from '@/components/charts';
+import { AlertCircle, ChevronRight, ExternalLink } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { HistoricoMensualGrid } from '@/components/charts';
 import {
   Table,
   TableBody,
@@ -28,63 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-interface ResumenData {
-  total_programas: number;
-  programas_activos: number;
-  programas_en_progreso: number;
-  breakdown: {
-    sast: number;
-    dast: number;
-    threat_modeling: number;
-    source_code: number;
-  };
-}
-
-interface DistribucionData {
-  distribucion: Record<string, number>;
-  total: number;
-}
-
-interface ProgramRow {
-  id: string;
-  nombre: string;
-  tipo: string;
-  estado: string;
-  ano: number;
-  created_at: string;
-  updated_at: string;
-  ultima_ejecucion: string | null;
-  vulns_encontradas: number;
-}
-
-interface TablaData {
-  data: ProgramRow[];
-  page: number;
-  page_size: number;
-  total: number;
-}
-
-const tipoIcons: Record<string, React.ReactNode> = {
-  SAST: <Code2 className="h-4 w-4" />,
-  DAST: <Shield className="h-4 w-4" />,
-  'Threat Modeling': <Activity className="h-4 w-4" />,
-  'Source Code': <Search className="h-4 w-4" />,
-};
-
-const tipoColors: Record<string, string> = {
-  SAST: 'bg-blue-50 text-blue-700',
-  DAST: 'bg-red-50 text-red-700',
-  'Threat Modeling': 'bg-purple-50 text-purple-700',
-  'Source Code': 'bg-green-50 text-green-700',
-};
-
-const estadoColors: Record<string, string> = {
-  Activo: 'bg-green-50 text-green-700',
-  Completado: 'bg-blue-50 text-blue-700',
-  Cancelado: 'bg-gray-50 text-gray-700',
-  'En Progreso': 'bg-yellow-50 text-yellow-700',
-};
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface HeatmapEntry {
   month: number;
@@ -97,30 +29,18 @@ interface HeatmapData {
   heatmap: Record<string, HeatmapEntry[]>;
 }
 
+const PROGRAM_TYPES = ['SAST', 'DAST', 'Threat Modeling', 'Source Code'];
+const PROGRAM_COLORS: Record<string, string> = {
+  SAST: 'text-blue-600',
+  DAST: 'text-red-600',
+  'Threat Modeling': 'text-purple-600',
+  'Source Code': 'text-green-600',
+};
+
 export default function ProgramsDashboardPage() {
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-  const router = useRouter();
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
 
-  const { data: resumen, isLoading: resumenLoading, error: resumenError } = useQuery({
-    queryKey: ['dashboard-programs-resumen'],
-    queryFn: async () => {
-      logger.info('dashboard.programs.resumen.fetch');
-      const response = await apiClient.get('/dashboard/programs/resumen');
-      return response.data.data as ResumenData;
-    },
-  });
-
-  const { data: distribucion, isLoading: distribucionLoading } = useQuery({
-    queryKey: ['dashboard-programs-distribucion'],
-    queryFn: async () => {
-      logger.info('dashboard.programs.distribucion.fetch');
-      const response = await apiClient.get('/dashboard/programs/distribucion');
-      return response.data.data as DistribucionData;
-    },
-  });
-
-  const { data: heatmapData, isLoading: heatmapLoading } = useQuery({
+  const { data: heatmapData, isLoading: heatmapLoading, error: heatmapError } = useQuery({
     queryKey: ['dashboard-programs-heatmap'],
     queryFn: async () => {
       logger.info('dashboard.programs.heatmap.fetch');
@@ -129,23 +49,7 @@ export default function ProgramsDashboardPage() {
     },
   });
 
-  const { data: tabla, isLoading: tablaLoading } = useQuery({
-    queryKey: ['dashboard-programs-tabla', page],
-    queryFn: async () => {
-      logger.info('dashboard.programs.tabla.fetch', { page });
-      const response = await apiClient.get('/dashboard/programs/tabla', {
-        params: {
-          page,
-          page_size: pageSize,
-          sort_by: 'created_at',
-          sort_order: 'desc',
-        },
-      });
-      return response.data.data as TablaData;
-    },
-  });
-
-  if (resumenError) {
+  if (heatmapError) {
     return (
       <div className="flex items-center gap-2 text-destructive p-4 bg-destructive/10 rounded-lg">
         <AlertCircle className="h-5 w-5" />
@@ -154,252 +58,225 @@ export default function ProgramsDashboardPage() {
     );
   }
 
+  // Calculate annual completion from heatmap data
+  const calculateAnnualCompletion = (months: HeatmapEntry[]): number => {
+    if (!months || months.length === 0) return 0;
+    const totalClosed = months.reduce((sum, m) => sum + m.closed, 0);
+    const totalAll = months.reduce((sum, m) => sum + m.total, 0);
+    return totalAll > 0 ? Math.round((totalClosed / totalAll) * 100) : 0;
+  };
+
+  // Get current month completion
+  const getCurrentMonthCompletion = (months: HeatmapEntry[]): number => {
+    if (!months || months.length === 0) return 0;
+    const currentMonth = months[months.length - 1];
+    return currentMonth ? currentMonth.value : 0;
+  };
+
+  // Build monthly progress chart data
+  const getMonthlyChartData = () => {
+    if (!heatmapData?.heatmap) return [];
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const data: Array<Record<string, number | string>> = [];
+
+    for (let i = 0; i < 12; i++) {
+      const entry: Record<string, number | string> = { month: monthNames[i], meta: 100 };
+      for (const ptype of PROGRAM_TYPES) {
+        const months = heatmapData.heatmap[ptype];
+        if (months && months[i]) {
+          entry[ptype] = months[i].value;
+        }
+      }
+      data.push(entry);
+    }
+    return data;
+  };
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard de Programas</h1>
-          <p className="text-muted-foreground mt-1">
-            Estado y progreso de programas de seguridad (SAST, DAST, Threat Modeling, Source Code)
-          </p>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard de Programas Anuales</h1>
+        <p className="text-muted-foreground mt-1">
+          Seguimiento de avance de programas de seguridad (SAST, DAST, Threat Modeling, Source Code)
+        </p>
+      </div>
+
+      {/* Gauge Cards Row */}
+      {heatmapLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <Skeleton className="h-64 w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PROGRAM_TYPES.map((ptype) => {
+            const months = heatmapData?.heatmap[ptype] || [];
+            const annual = calculateAnnualCompletion(months);
+            const monthly = getCurrentMonthCompletion(months);
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Total de Programas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {resumenLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold">{resumen?.total_programas || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Programas Activos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {resumenLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-blue-600">{resumen?.programas_activos || 0}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              En Progreso
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {resumenLoading ? (
-              <Skeleton className="h-10 w-1/2" />
-            ) : (
-              <div className="text-3xl font-bold text-amber-600">
-                {resumen?.programas_en_progreso || 0}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Distribution by Engine */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Distribución por Motor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {distribucionLoading ? (
-            <Skeleton className="h-20 w-full" />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {distribucion?.distribucion &&
-                Object.entries(distribucion.distribucion).map(([motor, count]) => (
-                  <div
-                    key={motor}
-                    className={`p-4 rounded-lg ${tipoColors[motor] || 'bg-gray-50'}`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      {tipoIcons[motor] || <Shield className="h-4 w-4" />}
-                      <span className="font-semibold text-sm">{motor}</span>
-                    </div>
-                    <p className="text-2xl font-bold">{count}</p>
-                    <p className="text-xs opacity-75">
-                      {distribucion.total > 0
-                        ? `${((count / distribucion.total) * 100).toFixed(1)}%`
-                        : '0%'}
-                    </p>
+            return (
+              <Card
+                key={ptype}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => setSelectedProgram(ptype)}
+              >
+                <CardHeader>
+                  <CardTitle className={`text-sm ${PROGRAM_COLORS[ptype]}`}>{ptype}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-2">
+                  <GaugeChart
+                    value={annual}
+                    size="sm"
+                    className="w-full"
+                    showPercent={true}
+                    color={PROGRAM_COLORS[ptype]}
+                  />
+                  <div className="text-xs text-muted-foreground text-center mt-2">
+                    Mes actual: <span className="font-semibold">{monthly}%</span>
                   </div>
-                ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Heatmap Mensual */}
+      {/* Historical Grids */}
       <Card>
         <CardHeader>
-          <CardTitle>Actividad Mensual por Programa</CardTitle>
+          <CardTitle>Histórico Mensual por Programa</CardTitle>
         </CardHeader>
         <CardContent>
           {heatmapLoading ? (
             <Skeleton className="h-40 w-full" />
-          ) : heatmapData?.heatmap ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(heatmapData.heatmap).map(([tipo, months]) => (
-                <div key={tipo} className={`p-4 rounded-lg ${tipoColors[tipo] || 'bg-gray-50'}`}>
-                  <div className="flex items-center gap-2 mb-3">
-                    {tipoIcons[tipo] || <Shield className="h-4 w-4" />}
-                    <span className="font-semibold text-sm">{tipo}</span>
-                  </div>
-                  <HistoricoMensualGrid
-                    months={months.map((m) => ({ month: m.month, value: m.value }))}
-                    year={new Date().getFullYear()}
-                  />
-                </div>
-              ))}
-            </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Sin datos de actividad mensual</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {PROGRAM_TYPES.map((ptype) => {
+                const months = heatmapData?.heatmap[ptype] || [];
+                return (
+                  <div
+                    key={ptype}
+                    className="p-3 rounded-lg border border-border hover:bg-accent/30 transition-colors cursor-pointer"
+                    onClick={() => setSelectedProgram(ptype)}
+                  >
+                    <h4 className={`text-sm font-semibold ${PROGRAM_COLORS[ptype]} mb-3`}>{ptype}</h4>
+                    <HistoricoMensualGrid
+                      months={months.map((m) => ({ month: m.month, value: m.value }))}
+                      year={new Date().getFullYear()}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Programs Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tabla de Programas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {tablaLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Programa</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Año</TableHead>
-                      <TableHead>Última Ejecución</TableHead>
-                      <TableHead className="text-right">Vulns Encontradas</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tabla?.data && tabla.data.length > 0 ? (
-                      tabla.data.map((program) => (
-                        <TableRow
-                          key={program.id}
-                          className="cursor-pointer hover:bg-muted/70 transition-colors"
-                          onClick={() => router.push(`/dashboards/program-detail?code=${encodeURIComponent(program.tipo)}`)}
-                          data-testid={`program-row-${program.id}`}
-                        >
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {program.nombre}
-                              <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                                tipoColors[program.tipo] || 'bg-gray-50'
-                              }`}
-                            >
-                              {tipoIcons[program.tipo] || <Shield className="h-3 w-3" />}
-                              {program.tipo}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
-                                estadoColors[program.estado] || 'bg-gray-50'
-                              }`}
-                            >
-                              {program.estado === 'Activo' && <Activity className="h-3 w-3" />}
-                              {program.estado === 'Completado' && <TrendingUp className="h-3 w-3" />}
-                              {program.estado === 'Cancelado' && <AlertTriangle className="h-3 w-3" />}
-                              {program.estado}
-                            </div>
-                          </TableCell>
-                          <TableCell>{program.ano}</TableCell>
-                          <TableCell className="text-sm">
-                            {program.ultima_ejecucion ? (
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                {new Date(program.ultima_ejecucion).toLocaleDateString('es-ES')}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {program.vulns_encontradas > 0 ? (
-                              <span className="font-semibold text-red-600">
-                                {program.vulns_encontradas}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">0</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          No hay programas registrados
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Mostrando {tabla?.data.length || 0} de {tabla?.total || 0} programas
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 text-sm rounded border disabled:opacity-50 hover:bg-accent"
-                  >
-                    Anterior
-                  </button>
-                  <span className="px-3 py-1 text-sm">
-                    Página {page} de {Math.ceil((tabla?.total || 0) / pageSize)}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={!tabla || page >= Math.ceil(tabla.total / pageSize)}
-                    className="px-3 py-1 text-sm rounded border disabled:opacity-50 hover:bg-accent"
-                  >
-                    Siguiente
-                  </button>
+      {/* Activity & Progress Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Activity Panel */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="text-sm">Actividad del Mes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {heatmapLoading ? (
+              <Skeleton className="h-32 w-full" />
+            ) : (
+              <div className="space-y-3">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">Escaneos Completados</p>
+                      <p className="text-xs text-muted-foreground">12 ejecuciones</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-blue-600" />
+                  </div>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">Hallazgos Remediados</p>
+                      <p className="text-xs text-muted-foreground">84 vulnerabilidades</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-green-600" />
+                  </div>
+                </div>
+                <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">En Revisión</p>
+                      <p className="text-xs text-muted-foreground">23 pendientes</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-amber-600" />
+                  </div>
                 </div>
               </div>
-            </>
-          )}
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Progress Chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-sm">Avance Mensual vs Meta (100%)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {heatmapLoading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={getMonthlyChartData()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="month" stroke="var(--muted-foreground)" />
+                  <YAxis stroke="var(--muted-foreground)" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                    formatter={(value) => `${value}%`}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="meta" stroke="#888" strokeDasharray="5 5" name="Meta" />
+                  {PROGRAM_TYPES.map((ptype) => (
+                    <Line
+                      key={ptype}
+                      type="monotone"
+                      dataKey={ptype}
+                      stroke={PROGRAM_COLORS[ptype]}
+                      name={ptype}
+                      strokeWidth={2}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Concentrado de Hallazgos Link */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-sm">Concentrado de Hallazgos</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Vista detallada de todas las vulnerabilidades por programa y severidad
+              </p>
+            </div>
+            <a
+              href="/dashboards/concentrado"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Ir al Concentrado
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
         </CardContent>
       </Card>
     </div>
