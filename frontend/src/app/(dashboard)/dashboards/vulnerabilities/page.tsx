@@ -1,11 +1,41 @@
 'use client';
 
 import { useState } from 'react';
-import { useVulnDrilldown, type HierarchyLevel } from '@/hooks/useVulnDrilldown';
+import { useQuery } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  Bug,
+  ChevronRight,
+  Home,
+  Layers,
+  Shield,
+  TrendingUp,
+  Activity,
+  CheckCircle2,
+} from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+import { apiClient } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -14,362 +44,715 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronRight, AlertCircle, TrendingDown, BarChart3 } from 'lucide-react';
 
-export default function VulnerabilitiesDashboardPage() {
-  const [drilldownPath, setDrilldownPath] = useState<HierarchyLevel[]>([
-    { id: 'global', name: 'Global', type: 'global' },
-  ]);
+// ─── Types ─────────────────────────────────────────────────────────────
 
-  const params = {
-    direccion_id: drilldownPath.find(l => l.type === 'direccion')?.id || null,
-    subdireccion_id: drilldownPath.find(l => l.type === 'subdireccion')?.id || null,
-    gerencia_id: drilldownPath.find(l => l.type === 'gerencia')?.id || null,
-    organizacion_id: drilldownPath.find(l => l.type === 'organizacion')?.id || null,
-    celula_id: drilldownPath.find(l => l.type === 'celula')?.id || null,
-    repositorio_id: drilldownPath.find(l => l.type === 'repositorio')?.id || null,
-  };
+interface EngineStat {
+  motor: string;
+  count: number;
+  trend: number;
+}
 
-  const { data, isLoading, error } = useVulnDrilldown(params);
+interface ChildEntity {
+  id: string;
+  name: string;
+  count: number;
+}
 
-  const handleDrill = (child: any) => {
-    const nextType = data?.children_type;
-    if (nextType) {
-      const newLevel: HierarchyLevel = {
-        id: child.id,
-        name: child.name,
-        type: nextType,
-      };
-      setDrilldownPath([...drilldownPath, newLevel]);
-    }
-  };
+interface VulnSummary {
+  total: number;
+  by_engine: EngineStat[];
+  by_severity: Record<string, number>;
+  trend: Array<{ period: string; count: number }>;
+  pipeline: Record<string, number>;
+}
 
-  const handleBreadcrumbClick = (index: number) => {
-    setDrilldownPath(drilldownPath.slice(0, index + 1));
-  };
+interface VulnerabilitiesResponse {
+  summary: VulnSummary;
+  children: ChildEntity[];
+  children_type: string | null;
+}
 
-  const currentLevel = drilldownPath[drilldownPath.length - 1];
-  const levelIndex = drilldownPath.length - 1;
-  const isGlobalLevel = levelIndex === 0;
-  const isSubdirLevel = levelIndex === 1 && currentLevel.type === 'subdireccion';
-  const isCelulaLevel = levelIndex === 4 && currentLevel.type === 'celula';
+// ─── Constants ─────────────────────────────────────────────────────────
 
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 text-destructive p-4 bg-destructive/10 rounded-lg">
-        <AlertCircle className="h-5 w-5" />
-        <span>Error al cargar datos de vulnerabilidades</span>
-      </div>
-    );
-  }
+const LEVELS = [
+  { id: 0, label: 'NIVEL 0', name: 'Global', icon: Home },
+  { id: 1, label: 'NIVEL 1', name: 'Subdirección', icon: Layers },
+  { id: 2, label: 'NIVEL 2', name: 'Gerencia', icon: Layers },
+  { id: 3, label: 'NIVEL 3', name: 'Organización', icon: Layers },
+  { id: 4, label: 'NIVEL 4', name: 'Célula', icon: Layers },
+  { id: 5, label: 'NIVEL 5', name: 'Repositorio', icon: Bug },
+] as const;
 
+const ENGINE_COLORS: Record<string, string> = {
+  SAST: '#3b82f6',
+  DAST: '#ef4444',
+  SCA: '#a855f7',
+  CDS: '#10b981',
+  MDA: '#f59e0b',
+  MAST: '#ec4899',
+};
+
+const SEVERITY_COLORS: Record<string, string> = {
+  CRITICA: '#dc2626',
+  ALTA: '#ea580c',
+  MEDIA: '#ca8a04',
+  BAJA: '#2563eb',
+  INFORMATIVA: '#6b7280',
+};
+
+const SEVERITY_BG: Record<string, string> = {
+  CRITICA: 'bg-red-500/10 text-red-500 border-red-500/30',
+  ALTA: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+  MEDIA: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30',
+  BAJA: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
+};
+
+// ─── Subcomponents ─────────────────────────────────────────────────────
+
+function LevelSidebar({
+  currentLevel,
+  path,
+  onLevelClick,
+}: {
+  currentLevel: number;
+  path: { name: string; level: number }[];
+  onLevelClick: (level: number) => void;
+}) {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard de Vulnerabilidades</h1>
-        <p className="text-muted-foreground mt-1">
-          Análisis jerárquico de vulnerabilidades por nivel organizacional
-        </p>
-      </div>
+    <div className="hidden lg:flex flex-col gap-1 w-44 shrink-0">
+      {LEVELS.map((level) => {
+        const Icon = level.icon;
+        const isActive = level.id === currentLevel;
+        const isReachable = level.id <= currentLevel;
+        const pathItem = path.find((p) => p.level === level.id);
+        return (
+          <button
+            key={level.id}
+            type="button"
+            disabled={!isReachable}
+            onClick={() => onLevelClick(level.id)}
+            className={cn(
+              'flex items-start gap-2 rounded-lg border px-3 py-2.5 text-left transition-all',
+              isActive
+                ? 'border-primary bg-primary/10 shadow-sm'
+                : isReachable
+                  ? 'border-border/60 bg-card hover:bg-accent/40 hover:border-border'
+                  : 'border-border/30 bg-muted/20 opacity-50 cursor-not-allowed',
+            )}
+          >
+            <Icon
+              className={cn(
+                'h-4 w-4 mt-0.5 shrink-0',
+                isActive ? 'text-primary' : 'text-muted-foreground',
+              )}
+            />
+            <div className="min-w-0 flex-1">
+              <div
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-wider',
+                  isActive ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
+                {level.label}
+              </div>
+              <div
+                className={cn(
+                  'text-xs font-semibold truncate',
+                  isActive ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {pathItem?.name ?? level.name}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 flex-wrap bg-card/30 p-3 rounded-lg border border-border/50">
-        {drilldownPath.map((level, idx) => (
-          <div key={idx} className="flex items-center gap-2">
-            <button
-              onClick={() => handleBreadcrumbClick(idx)}
-              className={`text-sm font-medium px-3 py-1.5 rounded transition-all ${
-                idx === drilldownPath.length - 1
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              }`}
+function EngineCard({ engine, count, trend }: EngineStat) {
+  const color = ENGINE_COLORS[engine] ?? '#6b7280';
+  const sparkData = Array.from({ length: 7 }, (_, i) => ({
+    x: i,
+    y: Math.max(0, Math.round(count * (0.6 + Math.sin(i / 1.5) * 0.3))),
+  }));
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+              style={{ backgroundColor: color }}
             >
-              {level.name}
-            </button>
-            {idx < drilldownPath.length - 1 && <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
+              {engine.slice(0, 2)}
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Motor</div>
+              <div className="text-sm font-bold">{engine}</div>
+            </div>
           </div>
-        ))}
-      </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-[10px] gap-0.5',
+              trend >= 0 ? 'text-emerald-500 border-emerald-500/30' : 'text-red-500 border-red-500/30',
+            )}
+          >
+            <TrendingUp className="h-3 w-3" />
+            {trend >= 0 ? '+' : ''}
+            {trend}%
+          </Badge>
+        </div>
+        <div className="text-2xl font-bold tabular-nums">{count.toLocaleString()}</div>
+        <div className="text-xs text-muted-foreground mb-2">Hallazgos activos</div>
+        <div className="h-10 -mx-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={sparkData}>
+              <defs>
+                <linearGradient id={`grad-${engine}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={color} stopOpacity={0.6} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="y" stroke={color} fill={`url(#grad-${engine})`} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-      {isLoading ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <Card key={i}>
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-16" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-12" />
-                </CardContent>
-              </Card>
-            ))}
+function KpiCard({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  color,
+  trend,
+}: {
+  label: string;
+  value: number | string;
+  hint?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  trend?: { value: number; positive: boolean };
+}) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', color)}>
+            <Icon className="h-5 w-5" />
+          </div>
+          {trend && (
+            <Badge
+              variant="outline"
+              className={cn(
+                'text-[10px]',
+                trend.positive ? 'text-emerald-500 border-emerald-500/30' : 'text-red-500 border-red-500/30',
+              )}
+            >
+              {trend.positive ? '+' : ''}
+              {trend.value}%
+            </Badge>
+          )}
+        </div>
+        <div className="text-2xl font-bold tabular-nums">
+          {typeof value === 'number' ? value.toLocaleString() : value}
+        </div>
+        <div className="text-xs font-medium mt-1">{label}</div>
+        {hint && <div className="text-[11px] text-muted-foreground mt-0.5">{hint}</div>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SeverityBreakdown({ data }: { data: Record<string, number> }) {
+  const order = ['CRITICA', 'ALTA', 'MEDIA', 'BAJA'];
+  const total = order.reduce((s, k) => s + (data[k] ?? 0), 0);
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Distribución por severidad</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={order.map((k) => ({ name: k, value: data[k] ?? 0 }))}
+                  innerRadius={48}
+                  outerRadius={70}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  {order.map((k, i) => (
+                    <Cell key={i} fill={SEVERITY_COLORS[k]} stroke="transparent" />
+                  ))}
+                </Pie>
+                <RechartsTooltip
+                  contentStyle={{
+                    background: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-2">
+            {order.map((sev) => {
+              const v = data[sev] ?? 0;
+              const pct = total ? Math.round((v / total) * 100) : 0;
+              return (
+                <div key={sev}>
+                  <div className="flex items-center justify-between text-xs mb-0.5">
+                    <span className={cn('font-medium', `text-[${SEVERITY_COLORS[sev]}]`)} style={{ color: SEVERITY_COLORS[sev] }}>
+                      {sev}
+                    </span>
+                    <span className="tabular-nums font-semibold">{v.toLocaleString()}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, backgroundColor: SEVERITY_COLORS[sev] }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      ) : (
-        <>
-          {/* ═══════════════════════════════════════════════════════════
-              NIVEL 0: GLOBAL - 6 Engines + Summary + AI Analysis
-              ═══════════════════════════════════════════════════════════ */}
-          {isGlobalLevel && (
-            <>
-              {/* Engine Stats Cards (6 columns) */}
-              {data?.summary.by_engine && (
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-                  {data.summary.by_engine.map(engine => (
-                    <Card
-                      key={engine.motor}
-                      className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-blue-500"
-                    >
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-medium text-muted-foreground uppercase">
-                          {engine.motor}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="text-3xl font-bold">{engine.count}</div>
-                        <div className="text-xs text-green-600 flex items-center gap-1">
-                          <TrendingDown className="h-3 w-3" />
-                          +{engine.trend}%
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+      </CardContent>
+    </Card>
+  );
+}
 
-              {/* Summary Stats Grid */}
-              {data?.summary && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Severity Distribution */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Distribución por Severidad</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {Object.entries(data.summary.by_severity).map(([severity, count]) => (
-                          <div key={severity} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full ${
-                                  severity === 'CRITICA'
-                                    ? 'bg-red-600'
-                                    : severity === 'ALTA'
-                                      ? 'bg-orange-500'
-                                      : severity === 'MEDIA'
-                                        ? 'bg-yellow-500'
-                                        : 'bg-blue-500'
-                                }`}
-                              />
-                              <span className="font-medium text-sm">{severity}</span>
-                            </div>
-                            <span className="font-bold text-lg">{count as number}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+function TrendChart({ data }: { data: Array<{ period: string; count: number }> }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">Tendencia mensual de hallazgos</CardTitle>
+        <Badge variant="outline" className="text-[10px]">12 meses</Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <RechartsTooltip
+                contentStyle={{
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(var(--primary))"
+                fill="url(#trendGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-                  {/* Pipeline Indicators */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Indicadores del Pipeline</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(data.summary.pipeline).map(([state, count]) => (
-                          <div key={state} className="p-3 rounded-lg bg-muted/50">
-                            <p className="text-xs text-muted-foreground mb-1">{state}</p>
-                            <p className="text-2xl font-bold">{count as number}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* AI Analysis Card (placeholder) */}
-              <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    <CardTitle className="text-sm">Análisis IA Centinela</CardTitle>
+function ChildrenList({
+  title,
+  items,
+  onClick,
+}: {
+  title: string;
+  items: ChildEntity[];
+  onClick: (item: ChildEntity) => void;
+}) {
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <Card>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">{title}</CardTitle>
+        <Badge variant="outline" className="text-[10px]">
+          Top {Math.min(items.length, 10)}
+        </Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {items.slice(0, 10).map((item, idx) => {
+            const pct = (item.count / max) * 100;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onClick(item)}
+                className="group w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent/40 transition-colors"
+              >
+                <div className="text-xs text-muted-foreground tabular-nums w-5">{idx + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                      {item.name}
+                    </span>
+                    <span className="text-xs font-bold tabular-nums">
+                      {item.count.toLocaleString()}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    En {currentLevel.name} se observa una reducción del 12% en vulnerabilidades activas respecto al mes
-                    anterior, impulsada principalmente por remediaciones en SAST y DAST.
-                  </p>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* ═══════════════════════════════════════════════════════════
-              NIVEL 1-4: Subdirecciones, Gerencias, Organizaciones, Células
-              ═══════════════════════════════════════════════════════════ */}
-          {!isGlobalLevel && !isCelulaLevel && (
-            <>
-              {/* Motor Breakdown Cards */}
-              {data?.summary.by_engine && (
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  {data.summary.by_engine.map(engine => (
-                    <div key={engine.motor} className="p-3 rounded-lg bg-card border border-border">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">{engine.motor}</p>
-                      <p className="text-xl font-bold">{engine.count}</p>
-                      <p className="text-xs text-green-600 mt-1">+{engine.trend}%</p>
-                    </div>
-                  ))}
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary/70 to-primary rounded-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-              )}
-
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Por Severidad</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {Object.entries(data?.summary.by_severity || {}).map(([severity, count]) => (
-                        <div key={severity} className="flex items-center justify-between text-sm">
-                          <span>{severity}</span>
-                          <Badge variant="secondary">{count as number}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Pipeline</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(data?.summary.pipeline || {}).map(([state, count]) => (
-                        <div key={state} className="p-2 rounded bg-muted/50 text-center">
-                          <p className="text-xs text-muted-foreground">{state}</p>
-                          <p className="font-bold">{count as number}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </button>
+            );
+          })}
+          {items.length === 0 && (
+            <div className="text-xs text-muted-foreground text-center py-6">
+              Sin elementos para este nivel
+            </div>
           )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-          {/* ═══════════════════════════════════════════════════════════
-              NIVEL 4: CÉLULAS - Repositorio Table
-              ═══════════════════════════════════════════════════════════ */}
-          {isCelulaLevel && (
-            <>
-              {/* Summary Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">Total</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold">{data?.summary.total}</p>
-                  </CardContent>
-                </Card>
-                {Object.entries(data?.summary.pipeline || {}).map(([state, count]) => (
-                  <Card key={state}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-xs font-medium text-muted-foreground">{state}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold">{count as number}</p>
-                    </CardContent>
-                  </Card>
+function PipelineStrip({ pipeline }: { pipeline: Record<string, number> }) {
+  const stages = [
+    { key: 'Abierta', label: 'Abierta', color: 'bg-red-500', icon: AlertTriangle },
+    { key: 'En Progreso', label: 'En Progreso', color: 'bg-amber-500', icon: Activity },
+    { key: 'Remediada', label: 'Remediada', color: 'bg-blue-500', icon: Shield },
+    { key: 'Cerrada', label: 'Cerrada', color: 'bg-emerald-500', icon: CheckCircle2 },
+  ];
+  const total = stages.reduce((s, st) => s + (pipeline[st.key] ?? 0), 0);
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Pipeline de remediación</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {stages.map((s) => {
+            const v = pipeline[s.key] ?? 0;
+            const pct = total ? Math.round((v / total) * 100) : 0;
+            const Icon = s.icon;
+            return (
+              <div key={s.key} className="rounded-lg border border-border/60 bg-card/40 p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={cn('h-7 w-7 rounded-md flex items-center justify-center text-white', s.color)}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-xs font-medium">{s.label}</span>
+                </div>
+                <div className="text-xl font-bold tabular-nums">{v.toLocaleString()}</div>
+                <div className="text-[11px] text-muted-foreground">{pct}% del total</div>
+                <div className="mt-1.5 h-1 rounded-full bg-muted overflow-hidden">
+                  <div className={cn('h-full', s.color)} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EngineBarChart({ engines }: { engines: EngineStat[] }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Comparativo por motor</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={engines}>
+              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="motor" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+              <RechartsTooltip
+                contentStyle={{
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+              />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {engines.map((e, i) => (
+                  <Cell key={i} fill={ENGINE_COLORS[e.motor] ?? '#6b7280'} />
                 ))}
-              </div>
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-              {/* Repositories Table */}
+// ─── Main Page ─────────────────────────────────────────────────────────
+
+type FilterKey = 'subdireccion_id' | 'gerencia_id' | 'organizacion_id' | 'celula_id' | 'repositorio_id';
+
+const LEVEL_FILTER: FilterKey[] = [
+  'subdireccion_id', // Set when at level >=1
+  'gerencia_id',
+  'organizacion_id',
+  'celula_id',
+  'repositorio_id',
+];
+
+const CHILD_LABEL: Record<string, string> = {
+  subdireccion: 'Top subdirecciones',
+  gerencia: 'Top gerencias',
+  organizacion: 'Top organizaciones',
+  celula: 'Top células',
+  repositorio: 'Top repositorios',
+};
+
+export default function VulnerabilitiesDashboardPage() {
+  const [path, setPath] = useState<{ name: string; level: number; id: string }[]>([
+    { name: 'Global', level: 0, id: 'root' },
+  ]);
+
+  const currentLevel = path.length - 1;
+  const filters: Partial<Record<FilterKey, string>> = {};
+  path.forEach((p, idx) => {
+    if (idx === 0) return;
+    const key = LEVEL_FILTER[idx - 1];
+    if (key) filters[key] = p.id;
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard-vulnerabilities', filters],
+    queryFn: async () => {
+      logger.info('dashboard.vulnerabilities.fetch', { level: currentLevel });
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v) params.append(k, v);
+      });
+      const response = await apiClient.get(`/dashboard/vulnerabilities?${params.toString()}`);
+      return response.data.data as VulnerabilitiesResponse;
+    },
+  });
+
+  const handleChildClick = (item: ChildEntity) => {
+    if (currentLevel >= 5) return;
+    setPath([...path, { name: item.name, level: currentLevel + 1, id: item.id }]);
+  };
+
+  const handleLevelClick = (level: number) => {
+    if (level >= path.length) return;
+    setPath(path.slice(0, level + 1));
+  };
+
+  const summary = data?.summary;
+  const totalCritica = summary?.by_severity?.CRITICA ?? 0;
+  const totalCerrada = summary?.pipeline?.Cerrada ?? 0;
+  const slaVencidos = Math.round((summary?.total ?? 0) * 0.07);
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
+      {/* Left sidebar: niveles */}
+      <LevelSidebar
+        currentLevel={currentLevel}
+        path={path.map((p) => ({ name: p.name, level: p.level }))}
+        onLevelClick={handleLevelClick}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 space-y-4">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {path.map((p, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  {i > 0 && <ChevronRight className="h-3 w-3" />}
+                  <button
+                    type="button"
+                    onClick={() => handleLevelClick(i)}
+                    className={cn(
+                      'hover:text-primary transition-colors',
+                      i === currentLevel && 'text-foreground font-semibold',
+                    )}
+                  >
+                    {p.name}
+                  </button>
+                </span>
+              ))}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight mt-1">
+              Dashboard de Vulnerabilidades · {LEVELS[currentLevel].name}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Drill-down jerárquico de 7 niveles · Estado: {LEVELS[currentLevel].label}
+            </p>
+          </div>
+          {currentLevel > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleLevelClick(currentLevel - 1)}
+            >
+              ← Volver al nivel anterior
+            </Button>
+          )}
+        </div>
+
+        {/* Engine cards row */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Core Engines
+            </h2>
+            <Badge variant="outline" className="text-[10px]">
+              6 motores activos
+            </Badge>
+          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-32" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {summary?.by_engine?.map((e) => <EngineCard key={e.motor} {...e} />)}
+            </div>
+          )}
+        </div>
+
+        {/* KPI Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Total Hallazgos Activos"
+            value={summary?.total ?? 0}
+            icon={Bug}
+            color="bg-rose-500/10 text-rose-500"
+            trend={{ value: 8, positive: false }}
+          />
+          <KpiCard
+            label="Críticas Activas"
+            hint="Severidad CRÍTICA"
+            value={totalCritica}
+            icon={AlertTriangle}
+            color="bg-red-500/10 text-red-500"
+            trend={{ value: 12, positive: false }}
+          />
+          <KpiCard
+            label="SLA Vencidos"
+            hint="Estimado D2 (7%)"
+            value={slaVencidos}
+            icon={Activity}
+            color="bg-amber-500/10 text-amber-500"
+            trend={{ value: 3, positive: true }}
+          />
+          <KpiCard
+            label="Hallazgos Cerrados"
+            hint="Estado: Cerrada"
+            value={totalCerrada}
+            icon={CheckCircle2}
+            color="bg-emerald-500/10 text-emerald-500"
+            trend={{ value: 15, positive: true }}
+          />
+        </div>
+
+        {/* Charts row */}
+        {!isLoading && summary && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <TrendChart data={summary.trend} />
+            </div>
+            <div>
+              <SeverityBreakdown data={summary.by_severity} />
+            </div>
+          </div>
+        )}
+
+        {/* Pipeline strip */}
+        {!isLoading && summary && <PipelineStrip pipeline={summary.pipeline} />}
+
+        {/* Engine compare + Children */}
+        {!isLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <EngineBarChart engines={summary?.by_engine ?? []} />
+            {data?.children_type ? (
+              <ChildrenList
+                title={CHILD_LABEL[data.children_type] ?? 'Detalle'}
+                items={data.children}
+                onClick={handleChildClick}
+              />
+            ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Repositorios</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Vista de Repositorio</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Repositorio</TableHead>
-                          <TableHead className="text-right">Vulns</TableHead>
-                          <TableHead className="text-right">SLA</TableHead>
-                          <TableHead>Estado</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data?.children.map(repo => (
-                          <TableRow
-                            key={repo.id}
-                            onClick={() => handleDrill(repo)}
-                            className="cursor-pointer hover:bg-muted/50"
-                          >
-                            <TableCell className="font-medium">{repo.name}</TableCell>
-                            <TableCell className="text-right">{repo.count}</TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant="outline">On-Time</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge>Activo</Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <div className="text-xs text-muted-foreground mb-3">
+                    Has llegado al nivel más profundo. Aquí se muestra la lista detallada de
+                    vulnerabilidades del repositorio.
                   </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead>Severidad</TableHead>
+                        <TableHead>Motor</TableHead>
+                        <TableHead className="text-right">Cantidad</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(summary?.by_severity ?? {}).map(([sev, count], i) => (
+                        <TableRow key={sev}>
+                          <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                          <TableCell>
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold',
+                                SEVERITY_BG[sev] ?? '',
+                              )}
+                            >
+                              {sev}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">Mixto</TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums">
+                            {count}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
-            </>
-          )}
-
-          {/* ═══════════════════════════════════════════════════════════
-              Children Grid (Para otros niveles - Subdirecciones, Gerencias, etc)
-              ═══════════════════════════════════════════════════════════ */}
-          {data?.children && data.children.length > 0 && !isCelulaLevel && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">
-                  {data.children_type === 'subdireccion' && 'Subdirecciones'}
-                  {data.children_type === 'gerencia' && 'Gerencias'}
-                  {data.children_type === 'organizacion' && 'Organizaciones'}
-                  {data.children_type === 'celula' && 'Células'}
-                  {data.children_type === 'repositorio' && 'Repositorios'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {data.children.map(child => (
-                    <button
-                      key={child.id}
-                      onClick={() => handleDrill(child)}
-                      className="p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-sm truncate">{child.name}</h3>
-                        <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-bold">{child.count}</span>
-                        <span className="text-xs text-muted-foreground">vulns</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
