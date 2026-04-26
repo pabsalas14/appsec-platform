@@ -4474,8 +4474,7 @@ async def dashboard_releases_kanban(
     for col in payload.get("columnas", []):
         estado = col.get("estado_correspondiente") or col.get("nombre") or ""
         columns_map[estado] = [
-            {"id": str(r["id"]), "nombre": r["nombre"], "version": r.get("version")}
-            for r in col.get("releases", [])
+            {"id": str(r["id"]), "nombre": r["nombre"], "version": r.get("version")} for r in col.get("releases", [])
         ]
     payload["columns"] = columns_map
     payload["total_cards"] = total_releases
