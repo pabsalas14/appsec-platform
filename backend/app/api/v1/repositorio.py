@@ -20,7 +20,9 @@ from app.core.inventory_csv import (
 from app.core.permissions import P
 from app.core.response import success
 from app.models.celula import Celula
+from app.models.organizacion import Organizacion
 from app.models.repositorio import Repositorio
+from app.models.subdireccion import Subdireccion
 from app.models.user import User
 from app.schemas.repositorio import RepositorioCreate, RepositorioRead, RepositorioUpdate
 from app.services.audit_service import record as audit_record
@@ -38,7 +40,21 @@ async def export_repositorios_csv(
     items = await repositorio_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["id", "nombre", "url", "plataforma", "rama_default", "activo", "celula_id"])
+    writer.writerow(
+        [
+            "id",
+            "nombre",
+            "url",
+            "plataforma",
+            "rama_default",
+            "activo",
+            "organizacion_id",
+            "celula_id",
+            "subdireccion_responsable_id",
+            "responsable_nombre",
+            "responsable_contacto",
+        ]
+    )
     for r in items:
         writer.writerow(
             [
@@ -48,7 +64,11 @@ async def export_repositorios_csv(
                 r.plataforma,
                 r.rama_default,
                 r.activo,
-                str(r.celula_id),
+                str(r.organizacion_id),
+                str(r.celula_id) if r.celula_id else "",
+                str(r.subdireccion_responsable_id) if r.subdireccion_responsable_id else "",
+                r.responsable_nombre or "",
+                r.responsable_contacto or "",
             ]
         )
     body = buf.getvalue()
@@ -116,7 +136,16 @@ async def import_repositorios_csv(
             err_list.append({"row": line_no, "message": "url ya existe en tu inventario"})
             continue
         try:
-            await validate_fk_exists(db, Celula, parsed.celula_id, "Célula")
+            await validate_fk_exists(db, Organizacion, parsed.organizacion_id, "Organización")
+            if parsed.celula_id is not None:
+                await validate_fk_exists(db, Celula, parsed.celula_id, "Célula")
+            if parsed.subdireccion_responsable_id is not None:
+                await validate_fk_exists(
+                    db,
+                    Subdireccion,
+                    parsed.subdireccion_responsable_id,
+                    "Subdirección responsable",
+                )
         except HTTPException as exc:
             if exc.status_code == 422:
                 d = exc.detail
@@ -179,6 +208,16 @@ async def create_repositorio(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new repositorio for the current user."""
+    await validate_fk_exists(db, Organizacion, entity_in.organizacion_id, "Organización")
+    if entity_in.celula_id is not None:
+        await validate_fk_exists(db, Celula, entity_in.celula_id, "Célula")
+    if entity_in.subdireccion_responsable_id is not None:
+        await validate_fk_exists(
+            db,
+            Subdireccion,
+            entity_in.subdireccion_responsable_id,
+            "Subdirección responsable",
+        )
     entity = await repositorio_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(RepositorioRead.model_validate(entity).model_dump(mode="json"))
 
@@ -191,6 +230,17 @@ async def update_repositorio(
     entity: Repositorio = Depends(require_ownership(repositorio_svc)),
 ):
     """Partially update an owned repositorio (404 if not owned)."""
+    if entity_in.organizacion_id is not None:
+        await validate_fk_exists(db, Organizacion, entity_in.organizacion_id, "Organización")
+    if entity_in.celula_id is not None:
+        await validate_fk_exists(db, Celula, entity_in.celula_id, "Célula")
+    if entity_in.subdireccion_responsable_id is not None:
+        await validate_fk_exists(
+            db,
+            Subdireccion,
+            entity_in.subdireccion_responsable_id,
+            "Subdirección responsable",
+        )
     updated = await repositorio_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(RepositorioRead.model_validate(updated).model_dump(mode="json"))
 

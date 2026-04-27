@@ -12,12 +12,19 @@ def _u() -> str:
 
 
 async def create_org_hierarchy(client: AsyncClient, headers: dict[str, str]) -> dict[str, str]:
-    """subdireccion → gerencia → organizacion (plataforma). Returns string UUIDs from API."""
+    """direccion → subdireccion → gerencia → organizacion (plataforma)."""
     x = _u()
+    direccion = await client.post(
+        "/api/v1/direccions",
+        headers=headers,
+        json={"nombre": f"Dir {x}", "codigo": f"DIR-{x}", "descripcion": "t"},
+    )
+    assert direccion.status_code == 201, direccion.text
+    direccion_id = direccion.json()["data"]["id"]
     sub = await client.post(
         "/api/v1/subdireccions",
         headers=headers,
-        json={"nombre": f"Sub {x}", "codigo": f"SUB-{x}", "descripcion": "t"},
+        json={"nombre": f"Sub {x}", "codigo": f"SUB-{x}", "descripcion": "t", "direccion_id": direccion_id},
     )
     assert sub.status_code == 201, sub.text
     sub_id = sub.json()["data"]["id"]
@@ -41,7 +48,12 @@ async def create_org_hierarchy(client: AsyncClient, headers: dict[str, str]) -> 
     )
     assert org.status_code == 201, org.text
     org_id = org.json()["data"]["id"]
-    return {"organizacion_id": org_id, "subdireccion_id": sub_id, "gerencia_id": ger_id}
+    return {
+        "direccion_id": direccion_id,
+        "organizacion_id": org_id,
+        "subdireccion_id": sub_id,
+        "gerencia_id": ger_id,
+    }
 
 
 async def create_celula_id(client: AsyncClient, headers: dict[str, str]) -> str:
@@ -75,6 +87,9 @@ async def create_servicio_id(client: AsyncClient, headers: dict[str, str]) -> st
 
 async def create_repositorio_id(client: AsyncClient, headers: dict[str, str]) -> str:
     cel_id = await create_celula_id(client, headers)
+    cel = await client.get(f"/api/v1/celulas/{cel_id}", headers=headers)
+    assert cel.status_code == 200, cel.text
+    organizacion_id = cel.json()["data"]["organizacion_id"]
     x = _u()
     repo = await client.post(
         "/api/v1/repositorios",
@@ -84,6 +99,7 @@ async def create_repositorio_id(client: AsyncClient, headers: dict[str, str]) ->
             "url": f"https://github.com/example/{x}",
             "plataforma": "GitHub",
             "rama_default": "main",
+            "organizacion_id": organizacion_id,
             "celula_id": cel_id,
         },
     )

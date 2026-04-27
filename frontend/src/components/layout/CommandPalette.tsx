@@ -24,6 +24,7 @@ import {
   Plus,
   ScrollText,
   Settings,
+  GanttChartSquare,
   Smartphone,
   Sun,
   Upload,
@@ -112,7 +113,16 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/uploads'))}>
               <Upload className="mr-2 h-4 w-4" /> Uploads
             </CommandItem>
-            <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads'))}>
+            <CommandItem onSelect={() => run(() => router.push('/mis_compromisos'))}>
+              <Target className="mr-2 h-4 w-4" /> Mis Compromisos
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/okr_equipo'))}>
+              <Users className="mr-2 h-4 w-4" /> Mi Equipo OKR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/okr_dashboard'))}>
+              <GanttChartSquare className="mr-2 h-4 w-4" /> Dashboard Ejecutivo OKR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads/registros'))}>
               <Bug className="mr-2 h-4 w-4" /> Vulnerabilidades
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/subdireccions'))}>
@@ -136,7 +146,7 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/servicios'))}>
               <Server className="mr-2 h-4 w-4" /> Servicios
             </CommandItem>
-            <CommandItem onSelect={() => run(() => router.push('/service_releases'))}>
+            <CommandItem onSelect={() => run(() => router.push('/service_releases/registros'))}>
               <Package className="mr-2 h-4 w-4" /> Liberaciones de servicio
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/etapa_releases'))}>
@@ -214,6 +224,30 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
               </CommandItem>
               <CommandItem onSelect={() => run(() => router.push('/admin/roles'))}>
                 <Users className="mr-2 h-4 w-4" /> Roles
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/module-views'))}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Module Views
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/custom-fields'))}>
+                <ClipboardList className="mr-2 h-4 w-4" /> Custom Fields
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/validation-rules'))}>
+                <ListChecks className="mr-2 h-4 w-4" /> Validation Rules
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/formulas'))}>
+                <FileSearch className="mr-2 h-4 w-4" /> Formulas
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/catalogs'))}>
+                <ScrollText className="mr-2 h-4 w-4" /> Catalogs
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/ai-rules'))}>
+                <AlertTriangle className="mr-2 h-4 w-4" /> AI Builder
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/ia-config'))}>
+                <Settings className="mr-2 h-4 w-4" /> IA Config
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/dashboards/builder'))}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Builder
               </CommandItem>
               <CommandItem onSelect={() => run(() => router.push('/admin/audit-logs'))}>
                 <ScrollText className="mr-2 h-4 w-4" /> Audit Logs

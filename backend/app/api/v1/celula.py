@@ -84,9 +84,7 @@ async def import_celulas_csv(
             err_list.append({"row": line_no, "message": perr})
             continue
         assert parsed is not None
-        org = await organizacion_svc.get(
-            db, parsed.organizacion_id, scope={"user_id": current_user.id}
-        )
+        org = await organizacion_svc.get(db, parsed.organizacion_id, scope={"user_id": current_user.id})
         if not org:
             err_list.append({"row": line_no, "message": "organizacion_id inexistente o sin acceso"})
             continue

@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: `${API_URL}/api/v1`,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // send HttpOnly cookies with every request
@@ -93,5 +93,8 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/** Alias usado por hooks y páginas (`import { apiClient } from '@/lib/api'`). */
+export const apiClient = api;
 
 export default api;

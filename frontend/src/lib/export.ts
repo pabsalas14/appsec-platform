@@ -50,7 +50,7 @@ export async function exportXLSX<T>(
   sheetName = 'Data',
 ) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Framework';
+  wb.creator = 'Plataforma AppSec';
   wb.created = new Date();
   const ws = wb.addWorksheet(sheetName);
 
@@ -92,4 +92,43 @@ export async function exportXLSX<T>(
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
   saveAs(blob, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`);
+}
+
+type PrintColumn<T> = { header: string; value: (row: T) => string | number | boolean | null | undefined };
+
+/**
+ * Imprime en una ventana emergente respetando columnas actuales (WYSIWYG respecto a la exportación de tabla).
+ */
+export function printTableHtml<T>(title: string, columns: PrintColumn<T>[], rows: T[]) {
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const thead = `<tr>${columns.map((c) => `<th>${esc(c.header)}</th>`).join('')}</tr>`;
+  const tbody = rows
+    .map((row) => {
+      const cells = columns
+        .map((c) => {
+          const v = c.value(row);
+          return `<td>${esc(v == null ? '' : String(v))}</td>`;
+        })
+        .join('');
+      return `<tr>${cells}</tr>`;
+    })
+    .join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+<style>
+body{font-family:system-ui,sans-serif;padding:1rem}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left}
+th{background:#0f172a;color:#fff}
+h1{font-size:1.1rem;margin-bottom:0.75rem}
+</style></head><body>
+<h1>${esc(title)}</h1>
+<table>${thead}${tbody}</table>
+<script>addEventListener("load",()=>{setTimeout(()=>{print();},200);})</script>
+</body></html>`;
+  const w = typeof window !== 'undefined' ? window.open('', '_blank', 'noopener,noreferrer') : null;
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+  }
 }

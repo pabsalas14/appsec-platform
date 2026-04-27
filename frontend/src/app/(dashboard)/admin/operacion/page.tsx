@@ -16,6 +16,9 @@ const KEYS = {
   transiciones: 'flujo.transiciones_liberacion',
   kanban: 'kanban.liberacion',
   estatusVuln: 'catalogo.estatus_vulnerabilidad',
+  freeze: 'periodo.freeze',
+  cicloProgramas: 'programas.ciclo_vida',
+  cicloKpis: 'kpis.ciclo_vida',
 } as const;
 
 function findSetting(settings: SystemSetting[] | undefined, key: string): SystemSetting | undefined {
@@ -37,10 +40,16 @@ export default function AdminOperacionPage() {
   const [transicionesText, setTransicionesText] = useState('');
   const [kanbanText, setKanbanText] = useState('');
   const [estatusVulnText, setEstatusVulnText] = useState('');
+  const [freezeText, setFreezeText] = useState('');
+  const [cicloProgramasText, setCicloProgramasText] = useState('');
+  const [cicloKpisText, setCicloKpisText] = useState('');
 
   const trS = findSetting(settings, KEYS.transiciones);
   const knS = findSetting(settings, KEYS.kanban);
   const estS = findSetting(settings, KEYS.estatusVuln);
+  const frS = findSetting(settings, KEYS.freeze);
+  const prS = findSetting(settings, KEYS.cicloProgramas);
+  const kpS = findSetting(settings, KEYS.cicloKpis);
 
   useEffect(() => {
     if (!trS && !opRead) return;
@@ -60,6 +69,18 @@ export default function AdminOperacionPage() {
       setEstatusVulnText(JSON.stringify(flujoVuln.estatus, null, 2));
     }
   }, [estS, flujoVuln]);
+
+  useEffect(() => {
+    if (frS) setFreezeText(stringify(frS.value));
+  }, [frS]);
+
+  useEffect(() => {
+    if (prS) setCicloProgramasText(stringify(prS.value));
+  }, [prS]);
+
+  useEffect(() => {
+    if (kpS) setCicloKpisText(stringify(kpS.value));
+  }, [kpS]);
 
   const saveTransiciones = () => {
     let parsed: unknown;
@@ -148,6 +169,30 @@ export default function AdminOperacionPage() {
         },
         onError: (e) => {
           logger.error('admin.operacion.save_kanban', { error: e });
+          toast.error(extractErrorMessage(e, 'Error al guardar'));
+        },
+      },
+    );
+  };
+
+  const saveJsonSetting = (key: string, text: string, description?: string, okMsg?: string) => {
+    let parsed: unknown;
+    try {
+      parsed = text.trim() ? JSON.parse(text) : {};
+    } catch {
+      toast.error(`JSON inválido (${key})`);
+      return;
+    }
+    if (parsed === null || typeof parsed !== 'object') {
+      toast.error(`Debe ser un objeto JSON (${key})`);
+      return;
+    }
+    upsert.mutate(
+      { key, value: parsed, description },
+      {
+        onSuccess: () => toast.success(okMsg ?? `${key} guardado`),
+        onError: (e) => {
+          logger.error('admin.operacion.save_json_setting', { key, error: e });
           toast.error(extractErrorMessage(e, 'Error al guardar'));
         },
       },
@@ -244,6 +289,94 @@ export default function AdminOperacionPage() {
               {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Save className="mr-2 h-4 w-4" />
               Guardar catálogo D1
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Freeze mensual (sección 35)</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Configura el cierre de periodo y módulos bloqueados tras el cierre.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            className="min-h-[180px] font-mono text-xs"
+            value={freezeText}
+            onChange={(e) => setFreezeText(e.target.value)}
+            spellCheck={false}
+            placeholder='{ "enabled": true, "dia_cierre_mensual": 5, "modulos_bloqueados": ["programas","indicadores","okr"] }'
+          />
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={() => saveJsonSetting(KEYS.freeze, freezeText, frS?.description, 'Freeze mensual guardado')}
+              disabled={upsert.isPending}
+            >
+              {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Save className="mr-2 h-4 w-4" />
+              Guardar freeze
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ciclo de vida de programas (sección 27)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            className="min-h-[160px] font-mono text-xs"
+            value={cicloProgramasText}
+            onChange={(e) => setCicloProgramasText(e.target.value)}
+            spellCheck={false}
+            placeholder='{ "permitir_clonacion": true, "congelar_historico": true }'
+          />
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={() =>
+                saveJsonSetting(
+                  KEYS.cicloProgramas,
+                  cicloProgramasText,
+                  prS?.description,
+                  'Ciclo de vida de programas guardado',
+                )
+              }
+              disabled={upsert.isPending}
+            >
+              {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Save className="mr-2 h-4 w-4" />
+              Guardar ciclo programas
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ciclo de vida de KPIs (sección 28)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea
+            className="min-h-[160px] font-mono text-xs"
+            value={cicloKpisText}
+            onChange={(e) => setCicloKpisText(e.target.value)}
+            spellCheck={false}
+            placeholder='{ "congelar_historico_por_defecto": true, "permitir_recalculo_retroactivo": true }'
+          />
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={() => saveJsonSetting(KEYS.cicloKpis, cicloKpisText, kpS?.description, 'Ciclo de KPIs guardado')}
+              disabled={upsert.isPending}
+            >
+              {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Save className="mr-2 h-4 w-4" />
+              Guardar ciclo KPIs
             </Button>
           </div>
         </CardContent>

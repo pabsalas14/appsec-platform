@@ -3,7 +3,6 @@ Phase 22-24: IA Integration Endpoints
 Threat Modeling (STRIDE/DREAD) and FP Triage
 """
 
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 

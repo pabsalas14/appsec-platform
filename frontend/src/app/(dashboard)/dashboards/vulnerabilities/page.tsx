@@ -20,7 +20,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -33,8 +32,8 @@ import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import {
   Table,
@@ -67,21 +66,38 @@ interface VulnSummary {
   pipeline: Record<string, number>;
 }
 
+interface VulnRowDetail {
+  id: string;
+  motor: string;
+  severidad: string;
+  titulo: string;
+  descripcion?: string;
+  fecha_deteccion: string | null;
+  sla: string | null;
+  estado: string;
+}
+
 interface VulnerabilitiesResponse {
   summary: VulnSummary;
   children: ChildEntity[];
   children_type: string | null;
+  vulnerabilities?: VulnRowDetail[];
+  total_vulnerabilities?: number;
+  by_severity?: Record<string, number>;
+  sla_status?: Record<string, number>;
+  overdue_count?: number;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────
 
 const LEVELS = [
-  { id: 0, label: 'NIVEL 0', name: 'Global', icon: Home },
-  { id: 1, label: 'NIVEL 1', name: 'Subdirección', icon: Layers },
-  { id: 2, label: 'NIVEL 2', name: 'Gerencia', icon: Layers },
-  { id: 3, label: 'NIVEL 3', name: 'Organización', icon: Layers },
-  { id: 4, label: 'NIVEL 4', name: 'Célula', icon: Layers },
-  { id: 5, label: 'NIVEL 5', name: 'Repositorio', icon: Bug },
+  { id: 0, label: 'NIVEL 1', name: 'Global', icon: Home },
+  { id: 1, label: 'NIVEL 2', name: 'Dirección', icon: Layers },
+  { id: 2, label: 'NIVEL 3', name: 'Subdirección', icon: Layers },
+  { id: 3, label: 'NIVEL 4', name: 'Gerencia', icon: Layers },
+  { id: 4, label: 'NIVEL 5', name: 'Organización', icon: Layers },
+  { id: 5, label: 'NIVEL 6', name: 'Célula', icon: Layers },
+  { id: 6, label: 'NIVEL 7', name: 'Repositorio', icon: Bug },
 ] as const;
 
 const ENGINE_COLORS: Record<string, string> = {
@@ -99,13 +115,6 @@ const SEVERITY_COLORS: Record<string, string> = {
   MEDIA: '#ca8a04',
   BAJA: '#2563eb',
   INFORMATIVA: '#6b7280',
-};
-
-const SEVERITY_BG: Record<string, string> = {
-  CRITICA: 'bg-red-500/10 text-red-500 border-red-500/30',
-  ALTA: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
-  MEDIA: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30',
-  BAJA: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
 };
 
 // ─── Subcomponents ─────────────────────────────────────────────────────
@@ -172,7 +181,7 @@ function LevelSidebar({
   );
 }
 
-function EngineCard({ engine, count, trend }: EngineStat) {
+function EngineCard({ motor: engine, count, trend }: EngineStat) {
   const color = ENGINE_COLORS[engine] ?? '#6b7280';
   const sparkData = Array.from({ length: 7 }, (_, i) => ({
     x: i,
@@ -515,10 +524,17 @@ function EngineBarChart({ engines }: { engines: EngineStat[] }) {
 
 // ─── Main Page ─────────────────────────────────────────────────────────
 
-type FilterKey = 'subdireccion_id' | 'gerencia_id' | 'organizacion_id' | 'celula_id' | 'repositorio_id';
+type FilterKey =
+  | 'direccion_id'
+  | 'subdireccion_id'
+  | 'gerencia_id'
+  | 'organizacion_id'
+  | 'celula_id'
+  | 'repositorio_id';
 
 const LEVEL_FILTER: FilterKey[] = [
-  'subdireccion_id', // Set when at level >=1
+  'direccion_id',
+  'subdireccion_id',
   'gerencia_id',
   'organizacion_id',
   'celula_id',
@@ -526,11 +542,13 @@ const LEVEL_FILTER: FilterKey[] = [
 ];
 
 const CHILD_LABEL: Record<string, string> = {
-  subdireccion: 'Top subdirecciones',
-  gerencia: 'Top gerencias',
-  organizacion: 'Top organizaciones',
-  celula: 'Top células',
-  repositorio: 'Top repositorios',
+  direccion: 'Direcciones',
+  subdireccion: 'Subdirecciones',
+  gerencia: 'Gerencias',
+  organizacion: 'Organizaciones',
+  celula: 'Células',
+  repositorio: 'Repositorios',
+  vulnerabilidad: 'Vulnerabilidades en repositorio',
 };
 
 export default function VulnerabilitiesDashboardPage() {
@@ -560,7 +578,7 @@ export default function VulnerabilitiesDashboardPage() {
   });
 
   const handleChildClick = (item: ChildEntity) => {
-    if (currentLevel >= 5) return;
+    if (currentLevel >= 6) return;
     setPath([...path, { name: item.name, level: currentLevel + 1, id: item.id }]);
   };
 
@@ -572,7 +590,8 @@ export default function VulnerabilitiesDashboardPage() {
   const summary = data?.summary;
   const totalCritica = summary?.by_severity?.CRITICA ?? 0;
   const totalCerrada = summary?.pipeline?.Cerrada ?? 0;
-  const slaVencidos = Math.round((summary?.total ?? 0) * 0.07);
+  const slaVencidos = data?.overdue_count ?? 0;
+  const levelIdx = Math.min(currentLevel, 6);
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
@@ -606,10 +625,10 @@ export default function VulnerabilitiesDashboardPage() {
               ))}
             </div>
             <h1 className="text-2xl font-bold tracking-tight mt-1">
-              Dashboard de Vulnerabilidades · {LEVELS[currentLevel].name}
+              Dashboard de Vulnerabilidades · {LEVELS[levelIdx].name}
             </h1>
             <p className="text-xs text-muted-foreground">
-              Drill-down jerárquico de 7 niveles · Estado: {LEVELS[currentLevel].label}
+              Drill-down jerárquico de 7 niveles · {LEVELS[levelIdx].label}
             </p>
           </div>
           {currentLevel > 0 && (
@@ -630,18 +649,20 @@ export default function VulnerabilitiesDashboardPage() {
               Core Engines
             </h2>
             <Badge variant="outline" className="text-[10px]">
-              6 motores activos
+              5 motores (V2) + MAST
             </Badge>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-32" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {summary?.by_engine?.map((e) => <EngineCard key={e.motor} {...e} />)}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {summary?.by_engine
+                ?.filter((e) => ['SAST', 'DAST', 'SCA', 'CDS', 'MDA', 'MAST'].includes(e.motor))
+                .map((e) => <EngineCard key={e.motor} {...e} />)}
             </div>
           )}
         </div>
@@ -700,56 +721,55 @@ export default function VulnerabilitiesDashboardPage() {
         {!isLoading && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <EngineBarChart engines={summary?.by_engine ?? []} />
-            {data?.children_type ? (
+            {data?.children_type === 'vulnerabilidad' ? (
+              <Card className="lg:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Vulnerabilidades en repositorio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(data.vulnerabilities?.length ?? 0) === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No se encontraron vulnerabilidades abiertas para este repositorio.
+                    </p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Motor</TableHead>
+                          <TableHead>Severidad</TableHead>
+                          <TableHead>Título</TableHead>
+                          <TableHead>Detección</TableHead>
+                          <TableHead>SLA</TableHead>
+                          <TableHead>Estatus</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {data.vulnerabilities?.map((v) => (
+                          <TableRow key={v.id}>
+                            <TableCell className="font-mono text-xs">{v.id.slice(0, 8)}</TableCell>
+                            <TableCell className="text-xs">{v.motor}</TableCell>
+                            <TableCell className="text-xs">{v.severidad}</TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs">{v.titulo}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {v.fecha_deteccion ?? '—'}
+                            </TableCell>
+                            <TableCell className="text-xs">{v.sla?.slice(0, 10) ?? '—'}</TableCell>
+                            <TableCell className="text-xs">{v.estado}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            ) : data?.children_type ? (
               <ChildrenList
                 title={CHILD_LABEL[data.children_type] ?? 'Detalle'}
                 items={data.children}
                 onClick={handleChildClick}
               />
-            ) : (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Vista de Repositorio</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground mb-3">
-                    Has llegado al nivel más profundo. Aquí se muestra la lista detallada de
-                    vulnerabilidades del repositorio.
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">#</TableHead>
-                        <TableHead>Severidad</TableHead>
-                        <TableHead>Motor</TableHead>
-                        <TableHead className="text-right">Cantidad</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Object.entries(summary?.by_severity ?? {}).map(([sev, count], i) => (
-                        <TableRow key={sev}>
-                          <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                          <TableCell>
-                            <span
-                              className={cn(
-                                'inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold',
-                                SEVERITY_BG[sev] ?? '',
-                              )}
-                            >
-                              {sev}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">Mixto</TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">
-                            {count}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
+            ) : null}
           </div>
         )}
       </div>

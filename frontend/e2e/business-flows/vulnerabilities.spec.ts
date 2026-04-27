@@ -493,7 +493,7 @@ test.describe("Vulnerability Management (M9)", () => {
   test.describe("CSV Import & Bulk Ingest", () => {
     test("should preview CSV before import", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/vulnerabilidads`);
+      await page.goto(`${baseURL}/vulnerabilidads/registros`);
 
       try {
         const importButton = await page.$('[data-testid="import"], button:has-text("Importar")');
@@ -839,7 +839,7 @@ test.describe("Vulnerability Management (M9)", () => {
   test.describe("Export Functionality", () => {
     test("should export vulnerabilities to CSV", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/vulnerabilidads`);
+      await page.goto(`${baseURL}/vulnerabilidads/registros`);
 
       try {
         const exportButton = await page.$('[data-testid="export"], button:has-text("Exportar")');
@@ -907,7 +907,7 @@ test.describe("Vulnerability Management (M9)", () => {
 
     test("should export to Excel with vulnerability details sheet", async ({ page }) => {
       const baseURL = process.env.TEST_APP_URL || "http://localhost:3000";
-      await page.goto(`${baseURL}/vulnerabilidads`);
+      await page.goto(`${baseURL}/vulnerabilidads/registros`);
 
       try {
         const exportButton = await page.$('[data-testid="export"], button:has-text("Exportar")');

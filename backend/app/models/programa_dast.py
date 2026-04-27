@@ -51,3 +51,4 @@ class ProgramaDast(SoftDeleteMixin, Base):
     ejecuciones: Mapped[list[EjecucionDast]] = relationship(
         "EjecucionDast", back_populates="programa_dast", lazy="noload"
     )
+    actividades: Mapped[list] = relationship("ActividadMensualDast", back_populates="programa_dast", lazy="noload")

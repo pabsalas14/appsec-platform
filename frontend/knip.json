@@ -57,6 +57,8 @@
     "file-saver",
     "framer-motion",
     "next-themes",
+    "react-grid-layout",
+    "@types/react-grid-layout",
     "recharts",
     "tailwind-merge",
     "vaul"

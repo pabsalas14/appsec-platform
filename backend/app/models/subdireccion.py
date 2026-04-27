@@ -12,6 +12,7 @@ from app.database import Base
 from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
+    from app.models.direccion import Direccion
     from app.models.gerencia import Gerencia
 
 
@@ -23,6 +24,12 @@ class Subdireccion(SoftDeleteMixin, Base):
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
+    )
+    direccion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("direccions.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -37,4 +44,5 @@ class Subdireccion(SoftDeleteMixin, Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
+    direccion: Mapped["Direccion"] = relationship(back_populates="subdirecciones")
     gerencias: Mapped[list["Gerencia"]] = relationship(back_populates="subdireccion")

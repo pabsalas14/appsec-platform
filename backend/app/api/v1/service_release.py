@@ -10,11 +10,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.logging import logger
 from app.core.permissions import P
 from app.core.response import success
 from app.models.service_release import ServiceRelease
@@ -162,3 +164,50 @@ async def delete_service_release(
     """Elimina (soft-delete) un release (404 si no es del usuario)."""
     await service_release_svc.delete(db, entity.id, scope={"user_id": current_user.id}, actor_id=current_user.id)
     return success(None, meta={"message": "ServiceRelease eliminado"})
+
+
+class ServiceReleaseMoveRequest(BaseModel):
+    """Request schema for moving a release to a new column (Kanban)."""
+
+    column: str
+
+
+@router.patch("/{id}/move")
+async def move_service_release(
+    id: UUID,
+    move_req: ServiceReleaseMoveRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ServiceRelease = Depends(require_ownership(service_release_svc)),
+):
+    """Move a service release to a new kanban column (state transition)."""
+    logger.info(
+        "service_release.move",
+        extra={"event": "service_release.move", "release_id": str(id), "target_column": move_req.column},
+    )
+
+    # Validate column exists
+    valid_columns = [
+        "Borrador",
+        "Pendiente Aprobación",
+        "Design Review",
+        "Security Validation",
+        "En Ejecución",
+        "Completado",
+    ]
+
+    if move_req.column not in valid_columns:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail=f"Invalid column: {move_req.column}")
+
+    # Update the release state
+    update_data = ServiceReleaseUpdate(estado_actual=move_req.column)
+    updated = await service_release_svc.update(
+        db, id, update_data, scope={"user_id": current_user.id}, actor_id=current_user.id
+    )
+
+    return success(
+        ServiceReleaseRead.model_validate(updated).model_dump(mode="json"),
+        meta={"message": f"Release moved to {move_req.column}"},
+    )

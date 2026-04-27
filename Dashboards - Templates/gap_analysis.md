@@ -24,21 +24,24 @@ Consolidación de tu retroalimentación + auditoría completa del código existe
 
 ### 1. Dashboard General Ejecutivo
 
-**Ruta actual**: `dashboards/executive/page.tsx` (68 líneas)
-**Endpoint actual**: `GET /dashboard/executive` — solo devuelve `total_vulnerabilities`, `critical_count`, `sla_compliance` hardcoded, `risk_level`
+**Ruta actual**: `dashboards/executive/page.tsx` — **tablero “command center”** (KPIs, tendencia, top repos, SLA, auditorías, export, drill-down)
 
-| Elemento de la imagen | ¿Existe? | Acción |
-|----------------------|----------|--------|
-| 5 tarjetas KPI clickeables (Avance Programas, Vulns Críticas, Liberaciones, Temas, Auditorías) | ❌ Solo 3 StatCards genéricos | **REESCRIBIR** — 5 KPIs con datos reales, navegación por click |
-| Gráfica tendencia mensual de avance (área + línea) | ❌ | **CREAR** endpoint + componente `AreaLineChart` |
-| Top 5 Repos con más vulns críticas (barras horizontales rojas) | ❌ | **CREAR** endpoint + componente `HorizontalBarRanking` |
-| Semáforo Global de SLAs (En tiempo/En riesgo/Vencidos con mini-barras) | ❌ | **CREAR** endpoint + componente `SemaforoSla` |
-| Tabla Auditorías Activas con paginación | ❌ | **CREAR** endpoint + tabla |
-| Gauge "Postura de Seguridad" (78%) | ❌ | **CREAR** componente `GaugeChart` |
-| Filtro por mes + "Filtros globales" | ❌ Solo `HierarchyFiltersBar` | **EXTENDER** con selector de mes |
-| Paleta dark con acentos azul eléctrico | ❌ Usa tema genérico Shadcn | **REDISEÑAR** CSS |
+**Endpoint actual**: `GET /api/v1/dashboard/executive` — KPIs, `kpi_sub`, `kpi_trends`, `trend_data` (incl. `avance_cierre`, `kpi_activa_releases`, `kpi_temas_inventario`, `kpi_audits_inventario`, `pct_sla_*`), `sla_spark` (seríe histórica de %), `trend_mode` + `ref_month` (anclaje a meses calendario o ventanas deslizantes), `top_repos`, `sla_status`, `audits` paginados (`audits_offset`, `audits_limit`, `audits_solo_activas`, `audits_total`).
 
-**Backend**: Necesita ~4 nuevos endpoints (`/dashboard/executive-kpis`, `/dashboard/sla-semaforo`, `/dashboard/top-repos-criticas`, `/dashboard/auditorias-activas`).
+| Elemento (mock) | Estado |
+|-----------------|--------|
+| 5 KPIs con desglose y sparkline sobre datos reales de tendencia | **Hecho** — `ExecutiveKpiCard` + API |
+| Gráfica avance cierre % vs meta 100% | **Hecho** — `AvanceVsMetaChart` (Recharts) |
+| Top repos (lista con barra) | **Hecho** — `TopReposExecutiveList` |
+| Semáforo SLA + minigráficas (histórico real) | **Hecho** — `SlaExecutiveCards` + `sla_spark` |
+| Postura (anillo) | **Hecho** — `PostureRing` |
+| Filtro mes calendario (`ref_month=YYYY-MM`) + ventanas N | **Hecho** (query + UI `input type="month"`) |
+| Tabla auditorías con paginación y solo abiertas | **Hecho** (query + UI) |
+| Drill-down sin salir (panel + enlace módulo) | **Hecho** — `ExecutiveDrilldownDialog` |
+| Layout ancho fijo, tipografía, paleta dark | **Hecho** — `max-w-[1600px]`, afinado visual |
+| Esquema Pydantic de contrato | **Ref.** — `app/schemas/executive_dashboard_read.py` (cuerpo `data` documentado) |
+
+**Backend**: un solo `GET /dashboard/executive` (sin los 4 sub-endpoints citados con anterioridad; la agregación vive en `dashboard.py`).
 
 ---
 

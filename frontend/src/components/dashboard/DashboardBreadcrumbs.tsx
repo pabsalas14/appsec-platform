@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 
 import { Badge } from '@/components/ui';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
+import { HIERARCHY_LABELS, HIERARCHY_ORDER } from '@/lib/hierarchy';
 import { cn } from '@/lib/utils';
 
 const DASHBOARD_TITLES: Record<string, string> = {
@@ -31,8 +32,7 @@ export function DashboardBreadcrumbs() {
   const sub = parts[1] ?? '';
   const title = DASHBOARD_TITLES[sub] ?? (sub || 'Dashboards');
 
-  const hasH =
-    Boolean(filters.subdireccion_id || filters.gerencia_id || filters.organizacion_id || filters.celula_id);
+  const hasH = HIERARCHY_ORDER.some((k) => Boolean(filters[k]));
 
   if (!inDashboards) return null;
 
@@ -54,26 +54,15 @@ export function DashboardBreadcrumbs() {
       {hasH && (
         <div className="ml-2 flex flex-wrap items-center gap-1">
           <span className="text-xs">·</span>
-          {filters.subdireccion_id && (
-            <Badge variant="default" className="font-mono text-[10px]">
-              sub {filters.subdireccion_id.slice(0, 8)}…
-            </Badge>
-          )}
-          {filters.gerencia_id && (
-            <Badge variant="default" className="font-mono text-[10px]">
-              ger {filters.gerencia_id.slice(0, 8)}…
-            </Badge>
-          )}
-          {filters.organizacion_id && (
-            <Badge variant="default" className="font-mono text-[10px]">
-              org {filters.organizacion_id.slice(0, 8)}…
-            </Badge>
-          )}
-          {filters.celula_id && (
-            <Badge variant="default" className="font-mono text-[10px]">
-              cél {filters.celula_id.slice(0, 8)}…
-            </Badge>
-          )}
+          {HIERARCHY_ORDER.map((key) => {
+            const value = filters[key];
+            if (!value) return null;
+            return (
+              <Badge key={key} variant="default" className="font-mono text-[10px]">
+                {HIERARCHY_LABELS[key]} {value.slice(0, 8)}…
+              </Badge>
+            );
+          })}
           <button
             type="button"
             className={cn('ml-1 text-xs text-primary underline-offset-4 hover:underline')}

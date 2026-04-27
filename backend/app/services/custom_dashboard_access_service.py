@@ -5,9 +5,7 @@ from app.schemas.custom_dashboard_access import CustomDashboardAccessCreate, Cus
 from app.services.base import BaseService
 
 custom_dashboard_access_svc = BaseService[
-    CustomDashboardAccess,
-    CustomDashboardAccessCreate,
-    CustomDashboardAccessUpdate
+    CustomDashboardAccess, CustomDashboardAccessCreate, CustomDashboardAccessUpdate
 ](
     CustomDashboardAccess,
     owner_field=None,  # No single owner; access is multi-party

@@ -1,3 +1,4 @@
+export { BarChartCard, DonutChartCard, LineChartCard } from './themed-chart-cards';
 export { GaugeChart } from './GaugeChart';
 export { SemaforoSla, type SemaforoItem } from './SemaforoSla';
 export { HistoricoMensualGrid } from './HistoricoMensualGrid';
@@ -8,3 +9,6 @@ export { StatusChip } from './StatusChip';
 export { ProgressBarSemaforo } from './ProgressBarSemaforo';
 export { SidePanel, type SidePanelTab } from './SidePanel';
 export { AreaLineChart } from './AreaLineChart';
+export { KPICard, type KPICardProps } from './KPICard';
+export { DataTable, type DataTableColumn, type DataTableRow } from './DataTable';
+export { TrendChart } from './TrendChart';

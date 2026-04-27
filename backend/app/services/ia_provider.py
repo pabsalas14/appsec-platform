@@ -31,6 +31,7 @@ class AIProviderType(StrEnum):
 
 class AIResponse(BaseModel):
     """Unified response from any AI provider"""
+
     content: str
     tokens_used: int | None = None
     provider: str
@@ -39,6 +40,7 @@ class AIResponse(BaseModel):
 
 class AmenazaResponse(BaseModel):
     """Response schema for threat modeling"""
+
     stride: str
     threat: str
     dread_damage: int
@@ -51,6 +53,7 @@ class AmenazaResponse(BaseModel):
 
 class ClassificationResponse(BaseModel):
     """Response schema for FP triage"""
+
     classification: str  # Probable False Positive, Requires Review, Confirmed Vulnerability
     confidence: float
     justificacion: str
@@ -514,11 +517,7 @@ async def run_prompt(
             else str(cfg.proveedor_activo),
             model=cfg.modelo,
         )
-    p = (
-        cfg.proveedor_activo.value
-        if isinstance(cfg.proveedor_activo, Enum)
-        else str(cfg.proveedor_activo)
-    )
+    p = cfg.proveedor_activo.value if isinstance(cfg.proveedor_activo, Enum) else str(cfg.proveedor_activo)
     if p == "ollama":
         base = os.environ.get("OLLAMA_BASE_URL", "http://host.docker.internal:11434")
         oll = OllamaProvider(
@@ -537,8 +536,10 @@ async def run_prompt(
             raise IAProviderError(str(exc)) from exc
         return RunPromptResult(content=r.content, provider=r.provider, model=cfg.modelo)
     if p in ("openai", "anthropic", "openrouter"):
-        key = os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY") or os.environ.get(
-            "OPENROUTER_API_KEY", ""
+        key = (
+            os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("ANTHROPIC_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY", "")
         )
         if not key:
             raise IAProviderError("Falta variable de entorno de API (OPENAI/ANTHROPIC/OPENROUTER).")

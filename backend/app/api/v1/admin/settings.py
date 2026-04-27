@@ -223,10 +223,13 @@ DEFAULT_SETTINGS: list[dict] = [
     {
         "key": "sla.por_motor",
         "value": {
-            "SAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
-            "DAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
-            "SCA": {"critica": 7, "alta": 30, "media": 90, "baja": 180},
-            "ThreatModeling": {"critica": 14, "alta": 45, "media": 90, "baja": 180},
+            "SAST": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "DAST": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
+            "SCA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "CDS": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
+            "MDA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "TM": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "ThreatModeling": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
             "MAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
             "Auditoria": {"critica": 7, "alta": 30, "media": 90, "baja": 180},
             "Terceros": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
@@ -384,6 +387,35 @@ DEFAULT_SETTINGS: list[dict] = [
         },
         "description": "G2: días (anticipación SLA, sin entrada en bitácora de temas emergentes, vuln. inactiva). "
         "Editar aquí, no fijar en código.",
+    },
+    {
+        "key": "periodo.freeze",
+        "value": {
+            "enabled": True,
+            "dia_cierre_mensual": 5,
+            "modulos_bloqueados": ["programas", "indicadores", "okr"],
+            "periodos_cerrados": [],
+        },
+        "description": "Freeze mensual (sección 35): bloquea captura/edición por periodo y módulo.",
+    },
+    {
+        "key": "programas.ciclo_vida",
+        "value": {
+            "permitir_clonacion": True,
+            "congelar_historico": True,
+            "recalculo_automatico_mes_cerrado": True,
+            "anios_historicos_visibles": 5,
+        },
+        "description": "Ciclo de vida de programas (sección 27): cierre anual, clonado y gobernanza.",
+    },
+    {
+        "key": "kpis.ciclo_vida",
+        "value": {
+            "congelar_historico_por_defecto": True,
+            "permitir_recalculo_retroactivo": True,
+            "estado_deprecado_habilitado": True,
+        },
+        "description": "Ciclo de vida de KPIs (sección 28): congelamiento histórico y recálculo opcional.",
     },
     # ── 13. Umbrales de semáforos ─────────────────────────────────────────────
     {

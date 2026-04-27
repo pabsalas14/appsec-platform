@@ -33,9 +33,7 @@ async def export_organizacions_csv(
     items = await organizacion_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "nombre", "codigo", "descripcion", "gerencia_id", "plataforma", "url_base", "responsable"]
-    )
+    writer.writerow(["id", "nombre", "codigo", "descripcion", "gerencia_id", "plataforma", "url_base", "responsable"])
     for r in items:
         writer.writerow(
             [

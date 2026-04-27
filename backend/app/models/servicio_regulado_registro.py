@@ -58,3 +58,6 @@ class ServicioReguladoRegistro(SoftDeleteMixin, Base):
     estados_cumplimiento: Mapped[list[EstadoCumplimiento]] = relationship(
         "EstadoCumplimiento", back_populates="registro", lazy="noload"
     )
+    actividades_mensuales: Mapped[list] = relationship(
+        "ActividadMensualServiciosRegulados", back_populates="servicio_regulado_registro", lazy="noload"
+    )

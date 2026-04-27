@@ -21,7 +21,7 @@ export const WidgetConfigSchema = z.object({
   title: z.string().min(1).max(255),
   dataSource: z.string().min(1).max(100),
   metric: z.string().optional(),
-  filters: z.record(z.any()).optional(),
+  filters: z.record(z.string(), z.unknown()).optional(),
   display: z.object({
     color: z.string().optional(),
     icon: z.string().optional(),
@@ -36,6 +36,7 @@ export const WidgetSchema = z.object({
     'kpi_card',
     'bar_chart',
     'line_chart',
+    'area_chart',
     'donut_gauge',
     'data_table',
     'heatmap',

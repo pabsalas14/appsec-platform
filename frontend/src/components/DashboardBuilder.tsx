@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { GridLayout, Layouts } from 'react-grid-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import GridLayout from 'react-grid-layout';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
-import { Dashboard, DashboardUpdate } from '@/schemas/dashboard-schema';
+import { Dashboard, DashboardUpdate, type Widget } from '@/schemas/dashboard-schema';
 import { useUpdateDashboard } from '@/hooks/useDashboard';
 import { cn } from '@/lib/utils';
 import 'react-grid-layout/css/styles.css';
@@ -75,7 +75,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
   const handleAddWidget = useCallback(() => {
     const newWidget = {
       id: `widget-${Date.now()}`,
-      type: WIDGET_TYPES[0],
+      type: WIDGET_TYPES[0] as Widget['type'],
       layout: { x: 0, y: layout.widgets.length * 2, w: 4, h: 2, minW: 2, minH: 2 },
       config: {
         title: 'Nuevo Widget',
@@ -112,7 +112,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
       setIsDirty(false);
       onSave?.();
     } catch (error) {
-      console.error('Error guardando dashboard:', error);
+      logger.error('dashboard.builder.save_failed', { error: String(error) });
     }
   }, [name, description, layout, updateMutation, onSave]);
 
@@ -213,7 +213,11 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
               width={1200}
               isDraggable={!previewMode}
               isResizable={!previewMode}
-              compactType={layout.grid.compactType as any}
+              compactType={
+                layout.grid.compactType === 'both'
+                  ? 'vertical'
+                  : (layout.grid.compactType as 'vertical' | 'horizontal' | null)
+              }
               preventCollision={false}
               useCSSTransforms={true}
             >

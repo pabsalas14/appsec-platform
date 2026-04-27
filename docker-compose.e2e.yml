@@ -1,0 +1,38 @@
+services:
+  # Playwright E2E runner (Ubuntu/glibc). Our `frontend` container is `node:alpine`,
+  # which cannot execute Playwright's bundled browsers (glibc binaries).
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.59.1-jammy
+    working_dir: /work
+    volumes:
+      - ./frontend:/work
+    env_file:
+      - .env
+    environment:
+      CI: "1"
+      E2E_BASE_URL: "http://frontend:3000"
+      TEST_API_BASE_URL: "http://backend:8000"
+      TEST_APP_URL: "http://frontend:3000"
+      # Match the running backend's seeded admin credentials.
+      E2E_USERNAME: "${E2E_USERNAME:-admin}"
+      E2E_PASSWORD: "${ADMIN_PASSWORD}"
+      # Some legacy specs use try/catch + test.skip() when UI varies by module config.
+      E2E_ALLOW_DYNAMIC_SKIP: "1"
+    depends_on:
+      - nginx
+      - backend
+    command: >
+      sh -c "
+        npm ci &&
+        echo '[e2e] Waiting for backend...' &&
+        for i in $(seq 1 60); do
+          curl -fsS http://backend:8000/api/health >/dev/null && break;
+          sleep 1;
+        done &&
+        echo '[e2e] Waiting for frontend...' &&
+        for i in $(seq 1 60); do
+          curl -fsS http://frontend:3000/ >/dev/null && break;
+          sleep 1;
+        done &&
+        npx playwright test $${PLAYWRIGHT_ARGS:-}
+      "

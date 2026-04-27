@@ -12,7 +12,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.custom_dashboard import CustomDashboard
     from app.models.role import Role
 
 
@@ -27,12 +26,8 @@ class DashboardConfig(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # ─── Target Dashboard ───
-    dashboard_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("custom_dashboards.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
+    # Logical id: built-in slug (e.g. "home") or custom dashboard UUID as string.
+    dashboard_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
 
     # ─── Widget/Panel Identifier ───
     widget_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
@@ -55,5 +50,4 @@ class DashboardConfig(Base):
     # Can users with this role edit the widget's filters and config?
 
     # ─── Relationships ───
-    dashboard: Mapped[CustomDashboard] = relationship(foreign_keys=[dashboard_id])
     role: Mapped[Role] = relationship(foreign_keys=[role_id])

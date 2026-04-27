@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useDashboards } from '@/hooks/useDashboard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Plus } from 'lucide-react';

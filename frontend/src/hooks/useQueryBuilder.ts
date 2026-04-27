@@ -3,11 +3,12 @@
  * Handles: config, chart type, preview data, API calls
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
-interface QueryConfig {
+export interface QueryConfig {
   base_table: string;
   joins?: Array<{ table: string; on_field: string; type: string }>;
   select_fields?: string[];
@@ -44,17 +45,16 @@ export const useQueryBuilder = () => {
   });
 
   const [chartType, setChartType] = useState<string>("data_table");
-  const [widgetName, setWidgetName] = useState<string>("");
 
   // Fetch schema from backend
   const { data: schema = {} } = useQuery({
     queryKey: ["query-builder-schema"],
     queryFn: async () => {
       try {
-        const response = await apiClient.post("/api/v1/admin/query-builder/schema-info", {});
+        const response = await apiClient.post("/admin/query-builder/schema-info", {});
         return response.data;
       } catch (error) {
-        console.error("Failed to fetch schema:", error);
+        logger.error("query_builder.schema_fetch_failed", { error: String(error) });
         return {};
       }
     },
@@ -63,7 +63,7 @@ export const useQueryBuilder = () => {
   // Validate query
   const validateMutation = useMutation({
     mutationFn: async (queryConfig: QueryConfig) => {
-      const response = await apiClient.post("/api/v1/admin/query-builder/validate", queryConfig);
+      const response = await apiClient.post("/admin/query-builder/validate", queryConfig);
       return response.data;
     },
   });
@@ -71,7 +71,7 @@ export const useQueryBuilder = () => {
   // Execute query
   const executeMutation = useMutation({
     mutationFn: async (queryConfig: QueryConfig) => {
-      const response = await apiClient.post("/api/v1/admin/query-builder/execute", {
+      const response = await apiClient.post("/admin/query-builder/execute", {
         query_config: queryConfig,
         timeout_seconds: 30,
         max_rows: 1000,
@@ -83,7 +83,7 @@ export const useQueryBuilder = () => {
   // Save widget
   const saveMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await apiClient.post("/api/v1/admin/query-builder/save", {
+      const response = await apiClient.post("/admin/query-builder/save", {
         nombre: name,
         descripcion: `Query Builder widget: ${name}`,
         query_config: config,
@@ -107,9 +107,7 @@ export const useQueryBuilder = () => {
 
   const save = useCallback(
     async (name: string) => {
-      const result = await saveMutation.mutateAsync(name);
-      setWidgetName("");
-      return result;
+      return saveMutation.mutateAsync(name);
     },
     [saveMutation]
   );

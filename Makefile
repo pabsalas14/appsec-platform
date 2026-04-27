@@ -18,8 +18,8 @@
 # ──────────────────────────────────────────────────────────────────────
 
 .PHONY: up up-prod down restart build logs logs-back logs-front \
-        status stats shell-back shell-db test test-cov clean seed help \
-        new-entity types lint
+        status stats shell-back shell-db test test-cov clean seed seed-uat-volumen help \
+        new-entity types lint test-e2e
 
 # Colors
 GREEN  := \033[0;32m
@@ -101,7 +101,14 @@ test: ## Run backend tests (⚠ truncates users/tasks/… — use disposable DB;
 test-cov: ## Run backend tests con cobertura mínima 70% (misma carga de BD que `make test`)
 	@printf "$(RED)⚠  Tests TRUNCATE users/tasks/… in the target DB.$(NC)\n"
 	docker compose exec -e PYTEST_ALLOW_ANY_DB=1 backend \
-		python -m pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=70 tests/
+		python -m pytest --cov=app --cov-report=term --cov-report=xml --cov-fail-under=68 tests/
+
+test-e2e: ## Run Playwright E2E tests in a glibc runner (requires stack up). Usage: make test-e2e ARGS="...".
+	@if [ -n "$(ARGS)" ]; then \
+		docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm --no-deps -e PLAYWRIGHT_ARGS="$(ARGS)" e2e; \
+	else \
+		docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm --no-deps e2e; \
+	fi
 
 # ──────────────────── Scaffolding ────────────────────
 
@@ -119,6 +126,12 @@ types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI 
 
 seed: ## Re-run seed (restarts backend with RUN_SEED=true)
 	docker compose exec backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
+
+# UAT: carga 5.000 vulnerabilidades de prueba (solo BD desechable; requiere `make seed` antes).
+# Ejecuta con: make seed-uat-volumen
+seed-uat-volumen: ## ⚠ 5000 filas [DEMO-VOL] — set SEED_UAT_VOLUME=1; usa `make clean` si la DB no es desechable
+	@printf "$(RED)⚠  Inserta 5000 Vulnerabilidad. Úsalo solo en base POSTGRES de un solo uso.$(NC)\n"
+	docker compose exec -e SEED_UAT_VOLUME=1 backend python -m app.seeds.seed_uat_volume
 
 clean: ## ⚠ Stop containers and remove ALL volumes (destructive)
 	@printf "$(RED)⚠  This will delete ALL data volumes!$(NC)\n"

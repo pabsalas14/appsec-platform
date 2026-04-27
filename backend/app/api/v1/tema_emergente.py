@@ -92,11 +92,7 @@ async def list_temas_emergentes(
         base_conds.append(TemaEmergente.titulo.ilike(f"%{q.strip()}%"))
 
     # Get paginated items
-    stmt = (
-        select(TemaEmergente)
-        .where(*base_conds)
-        .order_by(TemaEmergente.created_at.desc())
-    )
+    stmt = select(TemaEmergente).where(*base_conds).order_by(TemaEmergente.created_at.desc())
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)

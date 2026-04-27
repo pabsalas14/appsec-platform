@@ -1,5 +1,5 @@
 /**
- * Framework API types.
+ * Plataforma AppSec API types.
  *
  * Generated request-body schemas are re-exported from `./api` (produced by
  * `openapi-typescript` — see ADR-0005 / `make types`). Response shapes are
@@ -141,3 +141,19 @@ export interface AuditLog {
   status: string;
   metadata: Record<string, unknown>;
 }
+
+// ─── AI Rules (FASE 8) ────────────────────────────────────────────────────────
+
+export type {
+  AIRuleBase,
+  AIRuleCreate,
+  AIRuleRead,
+  AIRuleUpdate,
+  AIRuleList,
+  AIRuleTest,
+  AIRuleTestResult,
+  TriggerType,
+  ActionType,
+  TriggerMetadata,
+  ActionMetadata,
+} from './ai-rules';

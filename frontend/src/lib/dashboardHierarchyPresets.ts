@@ -1,6 +1,7 @@
 import type { HierarchyFilters } from '@/hooks/useAppDashboardPanels';
+import { HIERARCHY_ORDER } from '@/lib/hierarchy';
 
-const KEYS = ['subdireccion_id', 'gerencia_id', 'organizacion_id', 'celula_id'] as const;
+const KEYS = HIERARCHY_ORDER;
 
 /** Interpreta `parametros` de FiltroGuardado como filtro jerárquico. */
 export function hierarchyFromParametros(

@@ -28,9 +28,7 @@ def _csvr(scan: str, branch: str, n: int) -> str:
 
 
 @pytest.mark.asyncio
-async def test_hallazgo_pipeline_import_10k_no_timeout(
-    client: AsyncClient, auth_headers: dict[str, str]
-):
+async def test_hallazgo_pipeline_import_10k_no_timeout(client: AsyncClient, auth_headers: dict[str, str]):
     """Carga 10_000 filas: debe completar < 120s (límite defensivo; ajustar en entorno)."""
     from tests.graph_helpers import create_repositorio_id
 

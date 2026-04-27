@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class DashboardConfigBase(BaseModel):
     """Common fields for DashboardConfig."""
 
-    dashboard_id: UUID
+    dashboard_id: str = Field(..., min_length=1, max_length=100)
     widget_id: str = Field(..., min_length=1, max_length=255)
     role_id: UUID
     visible: bool = Field(default=True)

@@ -13,9 +13,11 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.celula import Celula
+    from app.models.organizacion import Organizacion
     from app.models.pipeline_release import PipelineRelease
     from app.models.programa_sast import ProgramaSast
     from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.subdireccion import Subdireccion
     from app.models.vulnerabilidad import Vulnerabilidad
 
 
@@ -38,9 +40,23 @@ class Repositorio(SoftDeleteMixin, Base):
     celula_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("celulas.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    organizacion_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizacions.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
+    subdireccion_responsable_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("subdireccions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    responsable_nombre: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    responsable_contacto: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -49,6 +65,8 @@ class Repositorio(SoftDeleteMixin, Base):
     )
 
     celula: Mapped["Celula"] = relationship(back_populates="repositorios")
+    organizacion: Mapped["Organizacion"] = relationship()
+    subdireccion_responsable: Mapped["Subdireccion"] = relationship()
     vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
         "Vulnerabilidad", back_populates="repositorio", lazy="noload"
     )

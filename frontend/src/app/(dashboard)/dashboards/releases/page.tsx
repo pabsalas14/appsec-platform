@@ -1,10 +1,10 @@
 "use client";
 
-import { Layers } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Layers, Loader2, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
-import { HierarchyFiltersBar } from '@/components/dashboard/HierarchyFiltersBar';
+import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
 import {
   Card,
   CardContent,
@@ -16,11 +16,16 @@ import {
 } from '@/components/ui';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
-import { useDashboardReleasesKanban, useDashboardReleasesTable } from '@/hooks/useAppDashboardPanels';
+import {
+  useDashboardReleases,
+  useDashboardReleasesKanban,
+  useDashboardReleasesTable,
+} from '@/hooks/useAppDashboardPanels';
 import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 
 export default function ReleasesDashboardPage() {
   const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
+  const { data: kpi, isLoading: kpiLoading } = useDashboardReleases(filters);
   const { data: tableData, isLoading: tableLoading } = useDashboardReleasesTable(50, filters);
   const { data: kanbanData, isLoading: kanbanLoading } = useDashboardReleasesKanban(filters);
   const { data: visibility } = useMyDashboardVisibility('releases');
@@ -41,7 +46,76 @@ export default function ReleasesDashboardPage() {
         }
       />
 
-      <HierarchyFiltersBar
+      {/* KPI Cards */}
+      {isVisible('dashboard.releases.panel.kpis') && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                Total Releases
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {kpiLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="text-3xl font-bold">{kpi?.total_releases ?? 0}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Pendientes Aprobación
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {kpiLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="text-3xl font-bold text-amber-600">{kpi?.pending_approval ?? 0}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <PlayCircle className="h-4 w-4 text-blue-500" />
+                En Progreso
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {kpiLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="text-3xl font-bold text-blue-600">{kpi?.in_progress ?? 0}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                Completadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {kpiLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="text-3xl font-bold text-green-600">{kpi?.completed ?? 0}</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <HierarchyFiltersBarCard
         title="Filtros organizacionales"
         filters={filters}
         onChange={updateFilter}
@@ -102,7 +176,7 @@ export default function ReleasesDashboardPage() {
                       {items.map((item) => (
                         <Link
                           key={item.id}
-                          href={`/service_releases?highlight=${item.id}`}
+                          href={`/service_releases/registros?highlight=${item.id}`}
                           className="block rounded bg-muted/40 px-2 py-1 text-xs transition-colors hover:bg-muted/70 hover:underline"
                         >
                           {item.nombre} · v{item.version}

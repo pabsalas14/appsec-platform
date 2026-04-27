@@ -84,15 +84,14 @@ async def test_dashboard_executive_endpoint(client: AsyncClient, auth_headers: d
     data = response.json()
     assert data["status"] == "success"
 
-    # Check KPI structure
+    # Check KPI structure (aligned with /dashboard/executive payload)
     assert "kpis" in data["data"]
-    assert "risk_level" in data["data"]
-    assert "total_vulnerabilities" in data["data"]["kpis"]
-    assert "critical_count" in data["data"]["kpis"]
-    assert "by_severity" in data["data"]
-    assert isinstance(data["data"]["by_severity"], dict)
-    assert "trend" in data["data"]
-    assert "new_vulnerabilities_7d" in data["data"]["trend"]
+    k = data["data"]["kpis"]
+    assert "critical_vulns" in k
+    assert "programs_advancement" in k
+    assert "security_posture" in data["data"]
+    assert "trend_data" in data["data"]
+    assert isinstance(data["data"]["trend_data"], list)
 
 
 @pytest.mark.asyncio

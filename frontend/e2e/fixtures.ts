@@ -3,10 +3,44 @@
  * Provides test data setup, authentication, and cleanup
  */
 
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { TestDataAPI } from "./helpers/api-helpers";
 
+const allowDynamicSkip = process.env.E2E_ALLOW_DYNAMIC_SKIP === "1";
+if (!allowDynamicSkip) {
+  // Prevent try/catch + test.skip() from masking real regressions.
+  Object.defineProperty(base, "skip", {
+    configurable: true,
+    value: (...args: unknown[]) => {
+      const reason = typeof args[0] === "string" ? args[0] : "Runtime test.skip() is disabled.";
+      throw new Error(`Illegal runtime test.skip(): ${reason}`);
+    },
+  });
+}
+
+async function ensureApiSession(request: APIRequestContext, apiRoot: string): Promise<string> {
+  const rawUser = process.env.E2E_USERNAME ?? "admin";
+  const username = rawUser.includes("@") ? "admin" : rawUser;
+  const password = process.env.E2E_PASSWORD ?? "Changeme123!";
+
+  const loginRes = await request.post(`${apiRoot}/api/v1/auth/login`, {
+    data: { username, password },
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!loginRes.ok()) {
+    throw new Error(`E2E API login failed: ${loginRes.status()} ${await loginRes.text()}`);
+  }
+  const state = await request.storageState();
+  const csrf = state.cookies.find((c) => c.name === "csrf_token")?.value;
+  if (!csrf) {
+    throw new Error("Missing csrf_token cookie after API login");
+  }
+  return csrf;
+}
+
 interface TestFixtures {
+  /** Page after cookie login (E2E_USERNAME / E2E_PASSWORD); navigated to /tasks. */
+  authedPage: Page;
   testData: {
     api: TestDataAPI;
     organizacionId: string;
@@ -24,9 +58,33 @@ interface TestFixtures {
 }
 
 export const test = base.extend<TestFixtures>({
+  authedPage: async ({ page }, use) => {
+    const rawUser = process.env.E2E_USERNAME ?? "admin";
+    // Seed admin username is `admin`; CI historically passed admin email — accept both.
+    const username = rawUser.includes("@") ? "admin" : rawUser;
+    const password = process.env.E2E_PASSWORD ?? "Changeme123!";
+
+    await page.goto("/login");
+    await page.locator("#username").fill(username);
+    await page.locator("#password").fill(password);
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30_000 });
+
+    await page.goto("/tasks");
+    await page.waitForURL(/\/tasks/, { timeout: 30_000 });
+
+    await use(page);
+  },
+
   testData: async ({ request }, use) => {
-    const baseURL = process.env.TEST_BASE_URL || "http://localhost:8000";
-    const api = new TestDataAPI(request, baseURL);
+    const apiRoot = (
+      process.env.TEST_API_BASE_URL ??
+      process.env.E2E_API_URL ??
+      "http://127.0.0.1:8000"
+    ).replace(/\/$/, "");
+    const csrf = await ensureApiSession(request, apiRoot);
+    const api = new TestDataAPI(request, apiRoot);
+    api.setCsrfToken(csrf);
 
     // SETUP: Seed test data
     let organizacionId = "";

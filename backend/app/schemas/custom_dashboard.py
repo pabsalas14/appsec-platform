@@ -12,10 +12,7 @@ class CustomDashboardBase(BaseModel):
 
     nombre: str = Field(..., min_length=1, max_length=255)
     descripcion: str | None = Field(None, max_length=1000)
-    layout_json: dict[str, Any] = Field(
-        ...,
-        description="react-grid-layout config: {version, grid, widgets[]}"
-    )
+    layout_json: dict[str, Any] = Field(..., description="react-grid-layout config: {version, grid, widgets[]}")
     chart_type: str = Field(default="dashboard")
     is_system: bool = Field(default=False)
     is_template: bool = Field(default=False)

@@ -2,7 +2,17 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'glass';
+  /** `default` / `destructive` / `link` son alias compatibles con convenciones shadcn. */
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'danger'
+    | 'ghost'
+    | 'outline'
+    | 'glass'
+    | 'default'
+    | 'destructive'
+    | 'link';
   size?: 'sm' | 'md' | 'lg' | 'icon' | 'xs';
   loading?: boolean;
 }
@@ -11,7 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   function Button(
     {
       children,
-      variant = 'primary',
+      variant: variantProp = 'primary',
       size = 'md',
       loading = false,
       className,
@@ -20,6 +30,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) {
+  const variant =
+    variantProp === 'default'
+      ? 'primary'
+      : variantProp === 'destructive'
+        ? 'danger'
+        : variantProp === 'link'
+          ? 'ghost'
+          : variantProp;
+
   const variants = {
     primary:
       'bg-primary-500 text-white shadow-md shadow-primary-500/20 hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-500/50',

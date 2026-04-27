@@ -8,7 +8,10 @@ cruzadas resuelvan sin cargar toda la app FastAPI.
 
 def import_all_orm() -> None:
     import app.models.aceptacion_riesgo
+    import app.models.actividad_mensual_dast
     import app.models.actividad_mensual_sast
+    import app.models.actividad_mensual_servicios_regulados
+    import app.models.actividad_mensual_source_code
     import app.models.activo_web
     import app.models.actualizacion_iniciativa
     import app.models.actualizacion_tema
@@ -17,6 +20,7 @@ def import_all_orm() -> None:
     import app.models.attachment
     import app.models.audit_log
     import app.models.auditoria
+    import app.models.catalog
     import app.models.celula
     import app.models.changelog_entrada
     import app.models.cierre_conclusion
@@ -24,6 +28,7 @@ def import_all_orm() -> None:
     import app.models.control_seguridad
     import app.models.control_source_code
     import app.models.dashboard_config
+    import app.models.direccion
     import app.models.ejecucion_dast
     import app.models.ejecucion_mast
     import app.models.estado_cumplimiento
@@ -46,8 +51,16 @@ def import_all_orm() -> None:
     import app.models.hito_iniciativa
     import app.models.indicador_formula
     import app.models.iniciativa
+    import app.models.kanban_column
     import app.models.notificacion
     import app.models.organizacion
+    import app.models.okr_categoria
+    import app.models.okr_cierre_q
+    import app.models.okr_compromiso
+    import app.models.okr_evidencia
+    import app.models.okr_plan_anual
+    import app.models.okr_revision_q
+    import app.models.okr_subcompromiso
     import app.models.pipeline_release
     import app.models.plan_remediacion
     import app.models.programa_dast

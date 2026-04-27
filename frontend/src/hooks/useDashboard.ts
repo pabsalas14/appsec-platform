@@ -12,7 +12,7 @@ export function useDashboard(id?: string) {
     queryKey: ['dashboard', id],
     queryFn: async () => {
       if (!id) return null;
-      const response = await apiClient.get(`/api/v1/dashboards/${id}`);
+      const response = await apiClient.get(`/admin/dashboard-builder/dashboards/${id}`);
       return response.data.data as Dashboard;
     },
     enabled: !!id,
@@ -27,7 +27,9 @@ export function useDashboards(filters?: DashboardFilters) {
       if (filters?.search) params.append('search', filters.search);
       if (filters?.is_system !== undefined) params.append('is_system', String(filters.is_system));
       
-      const response = await apiClient.get(`/api/v1/dashboards?${params.toString()}`);
+      const response = await apiClient.get(
+        `/admin/dashboard-builder/dashboards?${params.toString()}`,
+      );
       return response.data.data as Dashboard[];
     },
   });
@@ -38,7 +40,7 @@ export function useCreateDashboard() {
 
   return useMutation({
     mutationFn: async (data: DashboardCreate) => {
-      const response = await apiClient.post('/api/v1/dashboards', data);
+      const response = await apiClient.post('/admin/dashboard-builder/dashboards', data);
       return response.data.data as Dashboard;
     },
     onSuccess: () => {
@@ -52,7 +54,7 @@ export function useUpdateDashboard(id: string) {
 
   return useMutation({
     mutationFn: async (data: DashboardUpdate) => {
-      const response = await apiClient.patch(`/api/v1/dashboards/${id}`, data);
+      const response = await apiClient.patch(`/admin/dashboard-builder/dashboards/${id}`, data);
       return response.data.data as Dashboard;
     },
     onSuccess: () => {
@@ -67,7 +69,7 @@ export function useDeleteDashboard() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/api/v1/dashboards/${id}`);
+      await apiClient.delete(`/admin/dashboard-builder/dashboards/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboards'] });

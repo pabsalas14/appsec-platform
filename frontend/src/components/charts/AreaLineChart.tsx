@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 
-interface ChartDataPoint {
+export interface ChartDataPoint {
   name: string;
   [key: string]: string | number;
 }
@@ -16,6 +16,7 @@ interface AreaLineChartProps {
     name: string;
     color: string;
     type: 'area' | 'line';
+    strokeDasharray?: string;
   }>;
   title?: string;
   xAxisKey?: string;
@@ -59,7 +60,14 @@ export const AreaLineChart: React.FC<AreaLineChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xAxisKey} />
           <YAxis />
-          <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card) / 0.95)',
+              border: '1px solid hsl(var(--border))',
+            }}
+            labelStyle={{ color: 'hsl(var(--foreground))' }}
+            wrapperClassName="text-xs"
+          />
           {showLegend && <Legend />}
 
           {series
@@ -86,6 +94,7 @@ export const AreaLineChart: React.FC<AreaLineChartProps> = ({
                 name={s.name}
                 stroke={s.color}
                 strokeWidth={2}
+                strokeDasharray={s.strokeDasharray}
                 dot={false}
               />
             ))}

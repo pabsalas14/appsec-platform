@@ -15,9 +15,7 @@ from app.services.indicator_evaluator import IndicatorEvaluationError, evaluate_
 router = APIRouter()
 
 
-async def _get_formula_for_user(
-    db: AsyncSession, *, code: str, user_id
-) -> IndicadorFormula:
+async def _get_formula_for_user(db: AsyncSession, *, code: str, user_id) -> IndicadorFormula:
     result = await db.execute(
         select(IndicadorFormula).where(
             IndicadorFormula.code == code,
@@ -77,7 +75,9 @@ async def trend_indicador(
     code: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    days: int = Query(7, ge=1, le=30, description="Días hacia atrás; serie v1 = mismo valor (evolución detallada en backlog)."),
+    days: int = Query(
+        7, ge=1, le=30, description="Días hacia atrás; serie v1 = mismo valor (evolución detallada en backlog)."
+    ),
 ):
     """
     E1.3 / F1: serie de puntos para gráficos. v1: repite el valor actual (sin serie histórica materializada).

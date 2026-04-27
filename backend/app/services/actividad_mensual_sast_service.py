@@ -28,9 +28,7 @@ class ActividadMensualSastService(
         total = c + a + m + bj
         record.total_hallazgos = total
         pesos = await get_json_setting(db, "scoring.pesos_severidad", None)
-        record.score = compute_sast_mensual_score(
-            c, a, m, bj, pesos_severidad=pesos
-        )
+        record.score = compute_sast_mensual_score(c, a, m, bj, pesos_severidad=pesos)
         await db.flush()
         await db.refresh(record)
 

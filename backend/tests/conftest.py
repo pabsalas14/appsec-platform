@@ -25,8 +25,10 @@ here.
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
 import asyncpg.exceptions
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy import text
@@ -70,6 +72,31 @@ def _assert_test_database() -> None:
 
 
 _assert_test_database()
+
+_RUNTIME_SKIP_ALLOWLIST = {
+    # Performance smoke tests are opt-in and may legitimately skip.
+    "test_phase_h_import_perf.py",
+}
+
+
+@pytest.fixture(autouse=True)
+def _forbid_runtime_pytest_skip(
+    monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Block runtime ``pytest.skip()`` so test failures cannot be hidden."""
+    test_file = Path(str(request.node.fspath)).name
+    if test_file in _RUNTIME_SKIP_ALLOWLIST:
+        return
+
+    def _fail_skip(reason: str | None = None, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        message = reason or "Runtime pytest.skip() is disabled in this test suite."
+        pytest.fail(
+            f"Illegal runtime pytest.skip() in {test_file}: {message}",
+            pytrace=False,
+        )
+
+    monkeypatch.setattr(pytest, "skip", _fail_skip)
 
 
 def _is_pg_deadlock(exc: BaseException) -> bool:
@@ -135,6 +162,23 @@ async def _session_factory(
     return async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
 
+@pytest_asyncio.fixture(scope="session")
+async def session_factory(
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> async_sessionmaker[AsyncSession]:
+    """Alias for ``_session_factory`` (compat con tests que piden ``session_factory``)."""
+    return _session_factory
+
+
+@pytest_asyncio.fixture
+async def async_db(
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> AsyncGenerator[AsyncSession, None]:
+    """Sesión de lectura/escritura para tests que no pasan por el cliente HTTP."""
+    async with _session_factory() as session:
+        yield session
+
+
 # ─── DB dependency override + per-test data cleanup ──────────────────────────
 
 
@@ -182,6 +226,11 @@ class _DrainingAsyncClient(AsyncClient):
         if "text/event-stream" in ct:
             return r
         await r.aread()
+        # ASGITransport puede entregar el cuerpo antes de que FastAPI ejecute el
+        # teardown de Depends (commit tras ``yield`` en get_db). Sin ceder el
+        # loop, register→login en el mismo cliente ve 401 intermitente.
+        for _ in range(8):
+            await asyncio.sleep(0)
         return r
 
 
@@ -211,12 +260,20 @@ async def _register_and_login(client: AsyncClient, username: str | None = None) 
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, f"Register failed: {resp.text}"
+    await asyncio.sleep(0.05)
 
-    resp = await client.post(
-        "/api/v1/auth/login",
-        json={"username": payload["username"], "password": payload["password"]},
-    )
-    assert resp.status_code == 200, f"Login failed: {resp.text}"
+    login_payload = {"username": payload["username"], "password": payload["password"]}
+    last_login_resp: Response | None = None
+    for attempt in range(8):
+        resp = await client.post("/api/v1/auth/login", json=login_payload)
+        last_login_resp = resp
+        if resp.status_code == 200:
+            break
+        # get_db() commits after dependency teardown; under load it can lag briefly.
+        await asyncio.sleep(0.05 * (attempt + 1))
+
+    assert last_login_resp is not None
+    assert last_login_resp.status_code == 200, f"Login failed: {last_login_resp.text}"
 
 
 @pytest_asyncio.fixture
@@ -266,6 +323,7 @@ async def admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -273,6 +331,8 @@ async def admin_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",
@@ -300,6 +360,7 @@ async def super_admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -307,6 +368,8 @@ async def super_admin_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",
@@ -334,6 +397,7 @@ async def readonly_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
+    await asyncio.sleep(0.05)
 
     async with _session_factory() as session:
         await session.execute(
@@ -341,6 +405,8 @@ async def readonly_auth_headers(
             {"u": username},
         )
         await session.commit()
+
+    await asyncio.sleep(0.02)
 
     resp = await client.post(
         "/api/v1/auth/login",

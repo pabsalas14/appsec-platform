@@ -11,7 +11,7 @@ Tests for:
 import pytest
 from httpx import AsyncClient
 
-from tests.graph_helpers import create_sesion_tm_id
+from tests.graph_helpers import create_actividad_mensual_sast_id, create_sesion_tm_id
 
 
 class TestPhase22ThreatModeling:
@@ -77,8 +77,6 @@ class TestPhase23FPTriage:
         auth_headers: dict,
     ):
         """POST /hallazgo_sasts/{id}/triage-ia should accept triage request."""
-        from tests.graph_helpers import create_actividad_mensual_sast_id
-
         aid = await create_actividad_mensual_sast_id(client, auth_headers)
         # First create a hallazgo_sast (esquema real: actividad_sast_id, severidad, estado, …)
         resp_create = await client.post(
@@ -98,11 +96,7 @@ class TestPhase23FPTriage:
             headers=auth_headers,
         )
 
-        if resp_create.status_code == 404:
-            pytest.skip("HallazgoSast endpoint not available")
-
-        if resp_create.status_code != 201:
-            pytest.skip(f"Could not create test hallazgo: {resp_create.text}")
+        assert resp_create.status_code == 201, f"Could not create test hallazgo: {resp_create.text}"
 
         hallazgo_id = resp_create.json()["data"]["id"]
 
@@ -128,24 +122,25 @@ class TestPhase23FPTriage:
         auth_headers: dict,
     ):
         """FP triage should classify findings as FP/Review/Confirmed."""
+        aid = await create_actividad_mensual_sast_id(client, auth_headers)
         # Create test hallazgo
         resp_create = await client.post(
             "/api/v1/hallazgo_sasts",
             json={
+                "actividad_sast_id": aid,
+                "vulnerabilidad_id": None,
                 "titulo": "Test Classification",
                 "descripcion": "Test code snippet",
                 "severidad": "Media",
-                "tipo_motor": "DAST",
-                "codigo_snippet": "console.log('test')",  # Obviously FP
+                "herramienta": "SAST",
+                "regla": "mock-rule",
+                "archivo": "test_file.py",
+                "linea": 5,
+                "estado": "Abierto",
             },
             headers=auth_headers,
         )
-
-        if resp_create.status_code == 404:
-            pytest.skip("HallazgoSast endpoint not available")
-
-        if resp_create.status_code != 201:
-            pytest.skip("Could not create test hallazgo")
+        assert resp_create.status_code == 201, f"Could not create test hallazgo: {resp_create.text}"
 
         hallazgo_id = resp_create.json()["data"]["id"]
 

@@ -77,6 +77,7 @@ class Settings(BaseSettings):
 
     # ─── Seed control ───
     RUN_SEED: bool = False  # Only run seed when explicitly enabled
+    SEED_FORCE_ADMIN_PASSWORD: bool = False  # Dev/UAT helper: reset admin password if admin already exists
 
     # ───  MCP integration ───
     ARGUS_URL: str = "http://localhost:8899"

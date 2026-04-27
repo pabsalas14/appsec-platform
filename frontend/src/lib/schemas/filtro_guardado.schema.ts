@@ -16,7 +16,7 @@ export const FiltroGuardadoCreateSchema = z.object({
   nombre: z.string().min(1).max(255),
   modulo: z.string().min(1).max(100),
   parametros: z.record(z.string(), z.unknown()),
-  compartido: z.boolean().optional().default(false),
+  compartido: z.boolean(),
 });
 
 export type FiltroGuardado = z.infer<typeof FiltroGuardadoSchema>;

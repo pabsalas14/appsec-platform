@@ -52,13 +52,9 @@ async def test_indicador_trend_y_aggregate(client: AsyncClient, auth_headers: di
         "periodicidad": "monthly",
     }
     await client.post("/api/v1/indicadores_formulas", json=payload, headers=auth_headers)
-    rt = await client.get(
-        "/api/v1/indicadores/EVAL-TREND-1/trend?days=3", headers=auth_headers
-    )
+    rt = await client.get("/api/v1/indicadores/EVAL-TREND-1/trend?days=3", headers=auth_headers)
     assert rt.status_code == 200
     assert "trend_7d" in rt.json()["data"]
-    ra = await client.get(
-        "/api/v1/indicadores/EVAL-TREND-1/aggregate", headers=auth_headers
-    )
+    ra = await client.get("/api/v1/indicadores/EVAL-TREND-1/aggregate", headers=auth_headers)
     assert ra.status_code == 200
     assert "value" in ra.json()["data"]

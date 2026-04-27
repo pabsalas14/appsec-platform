@@ -189,9 +189,7 @@ class ThreatModelingService:
         """Analyst approves/modifies threat after IA generation"""
 
         # Fetch threat
-        result = await self.db.execute(
-            select(Amenaza).where(Amenaza.id == amenaza_id)
-        )
+        result = await self.db.execute(select(Amenaza).where(Amenaza.id == amenaza_id))
         threat = result.scalars().first()
 
         if not threat:

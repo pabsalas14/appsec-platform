@@ -34,7 +34,7 @@ export function useWidgetData(
       }
 
       const response = await apiClient.get(
-        `/api/v1/widget-data?${queryParams.toString()}`
+        `/widget-data?${queryParams.toString()}`
       );
       return response.data.data as WidgetDataResponse;
     },

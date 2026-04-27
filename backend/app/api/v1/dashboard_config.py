@@ -39,7 +39,6 @@ async def my_dashboard_visibility(
                 select(DashboardConfig).where(
                     DashboardConfig.dashboard_id == dashboard_id,
                     DashboardConfig.role_id == role.id,
-                    DashboardConfig.deleted_at.is_(None),
                 )
             )
         )
@@ -102,7 +101,7 @@ async def create_dashboard_config(
 ):
     """Create a new dashboard config (super_admin only)."""
     entity = await dashboard_config_svc.create(db, entity_in)
-    return success(DashboardConfigRead.model_validate(entity).model_dump(mode="json"), status_code=201)
+    return success(DashboardConfigRead.model_validate(entity).model_dump(mode="json"))
 
 
 @router.patch("/{id}")

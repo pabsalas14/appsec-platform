@@ -7,10 +7,12 @@ import { Check, Minus } from 'lucide-react';
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   /** Renders a dash instead of a check (for "select-all" partial state) */
   indeterminate?: boolean;
+  /** Compat Radix/shadcn */
+  onCheckedChange?: (checked: boolean) => void;
 }
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, indeterminate, checked, ...props }, ref) => {
+  ({ className, indeterminate, checked, onCheckedChange, onChange, ...props }, ref) => {
     const innerRef = React.useRef<HTMLInputElement>(null);
     React.useImperativeHandle(ref, () => innerRef.current!);
 
@@ -39,6 +41,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           checked={checked}
           className="sr-only"
           {...props}
+          onChange={(e) => {
+            onChange?.(e);
+            onCheckedChange?.(e.target.checked);
+          }}
         />
         {indeterminate ? (
           <Minus className="h-3.5 w-3.5" />

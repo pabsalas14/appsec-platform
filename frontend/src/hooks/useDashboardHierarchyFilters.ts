@@ -4,15 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import type { HierarchyFilters } from '@/hooks/useAppDashboardPanels';
+import { clearHierarchyDescendants, HIERARCHY_ORDER } from '@/lib/hierarchy';
 
 const STORAGE_KEY = 'dashboard.hierarchy.filters.v1';
 
-const HKEYS: (keyof HierarchyFilters)[] = [
-  'subdireccion_id',
-  'gerencia_id',
-  'organizacion_id',
-  'celula_id',
-];
+const HKEYS: (keyof HierarchyFilters)[] = HIERARCHY_ORDER;
 
 function fromSearchParams(sp: URLSearchParams): HierarchyFilters {
   const out: HierarchyFilters = {};
@@ -81,25 +77,14 @@ export function useDashboardHierarchyFilters() {
         } else {
           nxt[key] = value;
         }
-        if (key === 'subdireccion_id') {
-          delete nxt.gerencia_id;
-          delete nxt.organizacion_id;
-          delete nxt.celula_id;
-        }
-        if (key === 'gerencia_id') {
-          delete nxt.organizacion_id;
-          delete nxt.celula_id;
-        }
-        if (key === 'organizacion_id') {
-          delete nxt.celula_id;
-        }
+        const cleaned = clearHierarchyDescendants(nxt, key);
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(nxt));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
         } catch {
           /* ignore */
         }
-        pushHierarchyToUrl(nxt);
-        return nxt;
+        pushHierarchyToUrl(cleaned);
+        return cleaned;
       });
     },
     [pushHierarchyToUrl],

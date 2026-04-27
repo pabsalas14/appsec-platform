@@ -44,9 +44,7 @@ async def list_revision_source_codes(
         conds.append(RevisionSourceCode.resultado == resultado.strip())
     if q and q.strip():
         conds.append(RevisionSourceCode.notas.ilike(f"%{q.strip()}%"))
-    res = await db.execute(
-        select(RevisionSourceCode).where(*conds).order_by(RevisionSourceCode.fecha_revision.desc())
-    )
+    res = await db.execute(select(RevisionSourceCode).where(*conds).order_by(RevisionSourceCode.fecha_revision.desc()))
     items = res.scalars().all()
     return success([RevisionSourceCodeRead.model_validate(x).model_dump(mode="json") for x in items])
 

@@ -51,12 +51,7 @@ def compute_sast_mensual_score(
     if p_max <= 0:
         return 100.0
 
-    raw = (
-        c * pesos["critica"]
-        + a * pesos["alta"]
-        + m * pesos["media"]
-        + bj * pesos["baja"]
-    )
+    raw = c * pesos["critica"] + a * pesos["alta"] + m * pesos["media"] + bj * pesos["baja"]
     # Penalización media por hallazgo relativa a la peor severidad
     norm = raw / (total * p_max)
     score = 100.0 * (1.0 - min(1.0, max(0.0, norm)))

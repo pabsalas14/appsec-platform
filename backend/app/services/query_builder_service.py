@@ -115,9 +115,7 @@ class QueryBuilderService:
 
             # Convert to dicts for JSON serialization
             row_dicts = [
-                {col: getattr(row, col) for col in inspect(row.__class__).columns}
-                for row in rows
-                if row is not None
+                {col: getattr(row, col) for col in inspect(row.__class__).columns} for row in rows if row is not None
             ]
 
             return {

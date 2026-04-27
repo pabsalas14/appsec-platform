@@ -13,13 +13,14 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import and_, case, exists, func, not_, or_, select
+from sqlalchemy import Integer, and_, case, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_permission
 from app.core.permissions import P
 from app.core.response import success
 from app.models.audit_log import AuditLog
+from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
 from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
@@ -74,12 +75,16 @@ async def _where_sla_vencido_respet_d2(db: AsyncSession):
 
 def _hierarchy_filter_dict(
     *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
+    direccion_id: UUID | None = None,
+    subdireccion_id: UUID | None = None,
+    gerencia_id: UUID | None = None,
+    organizacion_id: UUID | None = None,
+    celula_id: UUID | None = None,
+    repositorio_id: UUID | None = None,
 ) -> dict[str, str]:
     filters: dict[str, str] = {}
+    if direccion_id:
+        filters["direccion_id"] = str(direccion_id)
     if subdireccion_id:
         filters["subdireccion_id"] = str(subdireccion_id)
     if gerencia_id:
@@ -88,6 +93,8 @@ def _hierarchy_filter_dict(
         filters["organizacion_id"] = str(organizacion_id)
     if celula_id:
         filters["celula_id"] = str(celula_id)
+    if repositorio_id:
+        filters["repositorio_id"] = str(repositorio_id)
     return filters
 
 
@@ -124,38 +131,6 @@ def _celula_scope_query(
     if celula_id:
         stmt = stmt.where(Celula.id == celula_id)
     return stmt
-
-
-def _vulnerability_hierarchy_filter(
-    *,
-    subdireccion_id: UUID | None,
-    gerencia_id: UUID | None,
-    organizacion_id: UUID | None,
-    celula_id: UUID | None,
-):
-    from app.models.activo_web import ActivoWeb
-    from app.models.aplicacion_movil import AplicacionMovil
-    from app.models.repositorio import Repositorio
-    from app.models.servicio import Servicio
-    from app.models.vulnerabilidad import Vulnerabilidad
-
-    if not any([subdireccion_id, gerencia_id, organizacion_id, celula_id]):
-        return None
-
-    celula_scope = _celula_scope_query(
-        subdireccion_id=subdireccion_id,
-        gerencia_id=gerencia_id,
-        organizacion_id=organizacion_id,
-        celula_id=celula_id,
-    )
-    return or_(
-        Vulnerabilidad.servicio_id.in_(select(Servicio.id).where(Servicio.celula_id.in_(celula_scope))),
-        Vulnerabilidad.repositorio_id.in_(select(Repositorio.id).where(Repositorio.celula_id.in_(celula_scope))),
-        Vulnerabilidad.activo_web_id.in_(select(ActivoWeb.id).where(ActivoWeb.celula_id.in_(celula_scope))),
-        Vulnerabilidad.aplicacion_movil_id.in_(
-            select(AplicacionMovil.id).where(AplicacionMovil.celula_id.in_(celula_scope))
-        ),
-    )
 
 
 def _release_hierarchy_filter(
@@ -260,15 +235,11 @@ async def dashboard_vulnerabilities(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 4: Vulnerabilities with 7-level drilldown."""
-    from app.models.celula import Celula
-    from app.models.gerencia import Gerencia
-    from app.models.organizacion import Organizacion
-    from app.models.repositorio import Repositorio
-    from app.models.subdireccion import Subdireccion
-    from app.models.vulnerabilidad import Vulnerabilidad
+    """Dashboard 4: Vulnerabilities — drill 7 niveles (Dirección → … → Repositorio → lista)."""
+    from app.services.dashboard_vulnerabilities_org import build_vulnerabilities_org_dashboard
 
-    hierarchy_filter = _vulnerability_hierarchy_filter(
+    payload = await build_vulnerabilities_org_dashboard(
+        db,
         direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
@@ -276,208 +247,7 @@ async def dashboard_vulnerabilities(
         celula_id=celula_id,
         repositorio_id=repositorio_id,
     )
-
-    total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
-
-    severity_counts = {}
-    for sev in ["CRITICA", "ALTA", "MEDIA", "BAJA"]:
-        count = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        Vulnerabilidad.severidad == sev,
-                        Vulnerabilidad.deleted_at.is_(None),
-                        *([hierarchy_filter] if hierarchy_filter is not None else []),
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        severity_counts[sev] = count
-
-    engine_data = []
-    for engine in ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]:
-        count = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        Vulnerabilidad.fuente == engine,
-                        Vulnerabilidad.deleted_at.is_(None),
-                        *([hierarchy_filter] if hierarchy_filter is not None else []),
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        engine_data.append({"motor": engine, "count": count, "trend": 12})
-
-    now = datetime.now(UTC)
-    trend_data = []
-    for month_offset in range(11, -1, -1):
-        month_start = (now - timedelta(days=30 * (month_offset + 1))).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_end = (now - timedelta(days=30 * month_offset)).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
-        count = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        Vulnerabilidad.created_at >= month_start,
-                        Vulnerabilidad.created_at <= month_end,
-                        Vulnerabilidad.deleted_at.is_(None),
-                        *([hierarchy_filter] if hierarchy_filter is not None else []),
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        period = month_start.strftime("%b %Y")
-        trend_data.append({"period": period, "count": count})
-
-    pipeline = {}
-    for state in ["Abierta", "En Progreso", "Remediada", "Cerrada"]:
-        count = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        Vulnerabilidad.estado == state,
-                        Vulnerabilidad.deleted_at.is_(None),
-                        *([hierarchy_filter] if hierarchy_filter is not None else []),
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        pipeline[state] = count
-
-    children = []
-    children_type = None
-
-    if not any([direccion_id, subdireccion_id, gerencia_id, organizacion_id, celula_id, repositorio_id]):
-        subdirs = (
-            await db.execute(
-                select(
-                    Subdireccion.id.label("id"),
-                    Subdireccion.nombre.label("nombre"),
-                    func.count(Vulnerabilidad.id).label("count"),
-                )
-                .select_from(Subdireccion)
-                .outerjoin(Vulnerabilidad, Subdireccion.id == Vulnerabilidad.subdireccion_id)
-                .where(Vulnerabilidad.deleted_at.is_(None))
-                .group_by(Subdireccion.id)
-                .order_by(func.count(Vulnerabilidad.id).desc())
-            )
-        ).all()
-        children = [{"id": str(d.id), "name": d.nombre, "count": int(d.count or 0)} for d in subdirs]
-        children_type = "subdireccion"
-    elif subdireccion_id and not gerencia_id:
-        gerencias = (
-            await db.execute(
-                select(
-                    Gerencia.id.label("id"),
-                    Gerencia.nombre.label("nombre"),
-                    func.count(Vulnerabilidad.id).label("count"),
-                )
-                .select_from(Gerencia)
-                .outerjoin(Vulnerabilidad, Gerencia.id == Vulnerabilidad.gerencia_id)
-                .where(Gerencia.subdireccion_id == subdireccion_id, Vulnerabilidad.deleted_at.is_(None))
-                .group_by(Gerencia.id)
-                .order_by(func.count(Vulnerabilidad.id).desc())
-            )
-        ).all()
-        children = [{"id": str(g.id), "name": g.nombre, "count": int(g.count or 0)} for g in gerencias]
-        children_type = "gerencia"
-    elif gerencia_id and not organizacion_id:
-        organizaciones = (
-            await db.execute(
-                select(
-                    Organizacion.id.label("id"),
-                    Organizacion.nombre.label("nombre"),
-                    func.count(Vulnerabilidad.id).label("count"),
-                )
-                .select_from(Organizacion)
-                .outerjoin(Vulnerabilidad, Organizacion.id == Vulnerabilidad.organizacion_id)
-                .where(Organizacion.gerencia_id == gerencia_id, Vulnerabilidad.deleted_at.is_(None))
-                .group_by(Organizacion.id)
-                .order_by(func.count(Vulnerabilidad.id).desc())
-            )
-        ).all()
-        children = [{"id": str(o.id), "name": o.nombre, "count": int(o.count or 0)} for o in organizaciones]
-        children_type = "organizacion"
-    elif organizacion_id and not celula_id:
-        celulas = (
-            await db.execute(
-                select(
-                    Celula.id.label("id"),
-                    Celula.nombre.label("nombre"),
-                    func.count(Vulnerabilidad.id).label("count"),
-                )
-                .select_from(Celula)
-                .outerjoin(Vulnerabilidad, Celula.id == Vulnerabilidad.celula_id)
-                .where(Celula.organizacion_id == organizacion_id, Vulnerabilidad.deleted_at.is_(None))
-                .group_by(Celula.id)
-                .order_by(func.count(Vulnerabilidad.id).desc())
-            )
-        ).all()
-        children = [{"id": str(c.id), "name": c.nombre, "count": int(c.count or 0)} for c in celulas]
-        children_type = "celula"
-    elif celula_id and not repositorio_id:
-        repos = (
-            await db.execute(
-                select(
-                    Repositorio.id.label("id"),
-                    Repositorio.nombre.label("nombre"),
-                    func.count(Vulnerabilidad.id).label("count"),
-                )
-                .select_from(Repositorio)
-                .outerjoin(Vulnerabilidad, Repositorio.id == Vulnerabilidad.repositorio_id)
-                .where(Repositorio.celula_id == celula_id, Vulnerabilidad.deleted_at.is_(None))
-                .group_by(Repositorio.id)
-                .order_by(func.count(Vulnerabilidad.id).desc())
-            )
-        ).all()
-        children = [{"id": str(r.id), "name": r.nombre, "count": int(r.count or 0)} for r in repos]
-        children_type = "repositorio"
-
-    return success(
-        {
-            "summary": {
-                "total": total,
-                "by_engine": engine_data,
-                "by_severity": severity_counts,
-                "trend": trend_data,
-                "pipeline": pipeline,
-            },
-            "children": children,
-            "children_type": children_type,
-            "applied_filters": _hierarchy_filter_dict(
-                direccion_id=direccion_id,
-                subdireccion_id=subdireccion_id,
-                gerencia_id=gerencia_id,
-                organizacion_id=organizacion_id,
-                celula_id=celula_id,
-                repositorio_id=repositorio_id,
-            ),
-        }
-    )
+    return success(payload)
 
 
 
@@ -697,107 +467,36 @@ async def dashboard_emerging_themes(
 
 @router.get("/executive")
 async def dashboard_executive(
+    direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    trend_months: int = Query(default=6, ge=1, le=18),
+    ref_month: str | None = Query(default=None),
+    audits_offset: int = Query(default=0, ge=0),
+    audits_limit: int = Query(default=10, ge=1, le=50),
+    audits_solo_activas: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 1: Ejecutivo/General - High-level KPIs."""
-    from app.models.vulnerabilidad import Vulnerabilidad
+    """Dashboard 1: Ejecutivo V2 (KPIs, tendencia severidades, top repos, SLA, auditorías)."""
+    from app.services.dashboard_executive import build_executive_dashboard
 
-    hierarchy_filter = _vulnerability_hierarchy_filter(
+    payload = await build_executive_dashboard(
+        db,
+        direccion_id=direccion_id,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        trend_months=trend_months,
+        ref_month=ref_month,
+        audits_offset=audits_offset,
+        audits_limit=audits_limit,
+        audits_solo_activas=audits_solo_activas,
     )
-    vuln_total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
-
-    sev_conds = [
-        Vulnerabilidad.deleted_at.is_(None),
-        *([hierarchy_filter] if hierarchy_filter is not None else []),
-    ]
-    vuln_critica = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    func.lower(Vulnerabilidad.severidad) == "critica",
-                    *sev_conds,
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
-
-    by_severity: dict[str, int] = {}
-    for label in ("Critica", "Alta", "Media", "Baja", "Informativa"):
-        n = int(
-            (
-                await db.execute(
-                    select(func.count())
-                    .select_from(Vulnerabilidad)
-                    .where(
-                        func.lower(Vulnerabilidad.severidad) == label.lower(),
-                        *sev_conds,
-                    )
-                )
-            ).scalar_one()
-            or 0
-        )
-        by_severity[label] = n
-
-    now = datetime.now(UTC)
-    week_ago = now - timedelta(days=7)
-    new_7d = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.created_at >= week_ago,
-                    *sev_conds,
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
-
-    return success(
-        {
-            "kpis": {
-                "total_vulnerabilities": vuln_total,
-                "critical_count": vuln_critica,
-                "sla_compliance": 85,
-            },
-            "by_severity": by_severity,
-            "trend": {
-                "new_vulnerabilities_7d": new_7d,
-            },
-            "risk_level": "MEDIUM" if vuln_critica > 5 else "LOW",
-            "applied_filters": _hierarchy_filter_dict(
-                subdireccion_id=subdireccion_id,
-                gerencia_id=gerencia_id,
-                organizacion_id=organizacion_id,
-                celula_id=celula_id,
-            ),
-        }
-    )
+    return success(payload)
 
 
 @router.get("/programs")
@@ -812,11 +511,13 @@ async def dashboard_programs(
     """Dashboard 3: Programas consolidado usando datos reales de vulnerabilidades."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    hierarchy_filter = _vulnerability_hierarchy_filter(
+    hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
+        direccion_id=None,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=None,
     )
     rows = (
         await db.execute(
@@ -897,11 +598,13 @@ async def dashboard_team(
     """Dashboard 2: Team view by analyst and workload."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    hierarchy_filter = _vulnerability_hierarchy_filter(
+    hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
+        direccion_id=None,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=None,
     )
     res = await db.execute(
         select(
@@ -944,6 +647,30 @@ async def dashboard_team(
     )
 
 
+@router.get("/team/premium")
+async def dashboard_team_premium(
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
+    analista_id: UUID | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 2 V2: KPIs, gráficos y drawer por analista."""
+    from app.services.dashboard_team_premium import build_team_premium
+
+    payload = await build_team_premium(
+        db,
+        analista_id=analista_id,
+        subdireccion_id=subdireccion_id,
+        gerencia_id=gerencia_id,
+        organizacion_id=organizacion_id,
+        celula_id=celula_id,
+    )
+    return success(payload)
+
+
 @router.get("/program-detail")
 async def dashboard_program_detail(
     program: str = "sast",
@@ -954,14 +681,17 @@ async def dashboard_program_detail(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    hierarchy_filter = _vulnerability_hierarchy_filter(
+    """Detalle de programa (motor) con alcance organizacional."""
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
+        direccion_id=None,
         subdireccion_id=subdireccion_id,
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=None,
     )
-    """Dashboard 4: Program detail (zoom) by source/motor."""
-    from app.models.vulnerabilidad import Vulnerabilidad
 
     source_map = {
         "sast": "SAST",
@@ -1161,87 +891,305 @@ async def dashboard_concentrado(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
-    """Dashboard 5: Concentrado - aggregated vulnerability view by motor and severity."""
+    """Dashboard 5: Concentrado (motores V2, severidad, apilado)."""
     from app.models.vulnerabilidad import Vulnerabilidad
-    from sqlalchemy import func
-    from sqlalchemy.orm import aliased
 
-    # Get vulnerabilities grouped by motor (fuente)
+    base = [Vulnerabilidad.deleted_at.is_(None), Vulnerabilidad.fuente.in_(FIVE_MOTORS)]
+
     motors_result = await db.execute(
         select(
             Vulnerabilidad.fuente,
             func.count(Vulnerabilidad.id).label("total"),
-            func.sum(func.cast(Vulnerabilidad.estado == 'Cerrada', Integer)).label("closed"),
-        )
-        .group_by(Vulnerabilidad.fuente)
+            func.sum(func.cast(Vulnerabilidad.estado == "Cerrada", Integer)).label("closed"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            func.lower(Vulnerabilidad.severidad) == "critica",
+                            Vulnerabilidad.estado != "Cerrada",
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("crit"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            func.lower(Vulnerabilidad.severidad) == "alta",
+                            Vulnerabilidad.estado != "Cerrada",
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("alt"),
+        ).where(*base).group_by(Vulnerabilidad.fuente)
     )
 
-    motors_rows = motors_result.all()
-    motors = []
-    for row in motors_rows:
-        total = row.total or 0
-        closed = row.closed or 0
-        motors.append({
-            "motor": row.fuente or "Unknown",
-            "total": total,
-            "closed": closed,
-            "percentage": round((closed / total * 100) if total > 0 else 0, 1),
-        })
+    order = {m: i for i, m in enumerate(FIVE_MOTORS)}
+    motors: list[dict] = []
+    for row in motors_result.all():
+        total = int(row.total or 0)
+        closed = int(row.closed or 0)
+        crit = int(row.crit or 0)
+        alt = int(row.alt or 0)
+        motors.append(
+            {
+                "motor": row.fuente,
+                "total": total,
+                "active": max(total - closed, 0),
+                "closed": closed,
+                "criticas_activas": crit,
+                "altas_activas": alt,
+                "trend_mom": 0,
+                "percentage": round((closed / total * 100) if total > 0 else 0, 1),
+            }
+        )
+    motors.sort(key=lambda x: (order.get(x["motor"], 99), -x["total"]))
 
-    # Get vulnerabilities grouped by severity
     severity_result = await db.execute(
         select(
             Vulnerabilidad.severidad,
             func.count(Vulnerabilidad.id).label("count"),
         )
+        .where(*base)
         .group_by(Vulnerabilidad.severidad)
     )
 
     severity_rows = severity_result.all()
-    total_vulns = sum(row.count for row in severity_rows)
+    total_vulns = sum(int(row.count or 0) for row in severity_rows)
     severities = []
+    _order = ["Critica", "Alta", "Media", "Baja", "Informativa"]
     for row in severity_rows:
-        count = row.count or 0
-        severities.append({
-            "severity": row.severidad or "Unknown",
-            "count": count,
-            "percentage": round((count / total_vulns * 100) if total_vulns > 0 else 0, 1),
-        })
+        count = int(row.count or 0)
+        sev = row.severidad or "Unknown"
+        severities.append(
+            {
+                "severity": sev,
+                "count": count,
+                "percentage": round((count / total_vulns * 100) if total_vulns > 0 else 0, 1),
+            }
+        )
+    severities.sort(key=lambda x: _order.index(x["severity"]) if x["severity"] in _order else 99)
 
-    # Get total and active counts
     total_active = int(
         (
             await db.execute(
                 select(func.count())
                 .select_from(Vulnerabilidad)
-                .where(Vulnerabilidad.estado != 'Cerrada')
+                .where(Vulnerabilidad.deleted_at.is_(None), Vulnerabilidad.estado != "Cerrada")
             )
         ).scalar()
+        or 0
     )
 
-    # Get pipeline stages
-    pipeline_result = await db.execute(
-        select(
-            Vulnerabilidad.etapa_pipeline,
-            func.count(Vulnerabilidad.id).label("count"),
+    estados = (
+        await db.execute(
+            select(Vulnerabilidad.estado, func.count(Vulnerabilidad.id).label("count"))
+            .where(Vulnerabilidad.deleted_at.is_(None))
+            .group_by(Vulnerabilidad.estado)
         )
-        .where(Vulnerabilidad.etapa_pipeline.isnot(None))
-        .group_by(Vulnerabilidad.etapa_pipeline)
-    )
-
-    pipeline_rows = pipeline_result.all()
-    pipeline_stages = {row.etapa_pipeline: row.count for row in pipeline_rows}
+    ).all()
+    pipeline_stages = {r.estado: int(r.count or 0) for r in estados}
 
     return success(
         {
-            "motors": sorted(motors, key=lambda x: x["total"], reverse=True),
-            "severities": sorted(
-                severities,
-                key=lambda x: ["Critica", "Alta", "Media", "Baja", "Informativa"].index(x["severity"]),
-            ),
+            "motors": motors,
+            "severities": severities,
+            "stacked_severity_motor": motors,
             "total_vulnerabilities": total_vulns,
             "total_active": total_active,
             "pipeline_stages": pipeline_stages,
+        }
+    )
+
+
+@router.get("/temas-auditorias")
+async def dashboard_temas_auditorias(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 8 V2: temas emergentes + auditorías en un solo payload."""
+    from app.models.auditoria import Auditoria
+    from app.models.tema_emergente import TemaEmergente
+
+    now = datetime.now(UTC)
+    old7 = now - timedelta(days=7)
+    temas_abiertos = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(TemaEmergente)
+                .where(TemaEmergente.deleted_at.is_(None), TemaEmergente.estado != "Cerrado")
+            )
+        ).scalar_one()
+        or 0
+    )
+    temas_stale = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(TemaEmergente)
+                .where(
+                    TemaEmergente.deleted_at.is_(None),
+                    TemaEmergente.estado != "Cerrado",
+                    TemaEmergente.updated_at < old7,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    trows = (
+        (
+            await db.execute(
+                select(TemaEmergente)
+                .where(TemaEmergente.deleted_at.is_(None))
+                .order_by(TemaEmergente.created_at.desc())
+                .limit(100)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    temas_table = [
+        {
+            "id": str(t.id),
+            "nombre": t.titulo,
+            "tipo": t.tipo,
+            "responsable": str(t.user_id),
+            "fecha_compromiso": t.created_at.date().isoformat() if t.created_at else "—",
+            "dias_abierto": (now - t.created_at.replace(tzinfo=UTC)).days if t.created_at else 0,
+            "estado": t.estado,
+        }
+        for t in trows
+    ]
+    aud_active = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Auditoria)
+                .where(
+                    Auditoria.deleted_at.is_(None),
+                    or_(
+                        Auditoria.estado.ilike("%activ%"),
+                        Auditoria.estado.ilike("%curso%"),
+                    ),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    y0 = datetime(now.year, 1, 1, tzinfo=UTC)
+    aud_cerr = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Auditoria)
+                .where(
+                    Auditoria.deleted_at.is_(None),
+                    or_(
+                        Auditoria.estado.ilike("%cerrad%"),
+                        Auditoria.estado.ilike("%complet%"),
+                    ),
+                    Auditoria.fecha_fin >= y0,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    arows = (
+        (
+            await db.execute(
+                select(Auditoria).where(Auditoria.deleted_at.is_(None)).order_by(Auditoria.fecha_inicio.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    aud_table = [
+        {
+            "id": str(a.id),
+            "nombre": a.titulo,
+            "tipo": a.tipo,
+            "fecha_inicio": a.fecha_inicio.date().isoformat() if a.fecha_inicio else "—",
+            "fecha_fin": a.fecha_fin.date().isoformat() if a.fecha_fin else "—",
+            "estado": a.estado,
+        }
+        for a in arows
+    ]
+    return success(
+        {
+            "temas": {
+                "kpis": {
+                    "total_abiertos": temas_abiertos,
+                    "sin_movimiento_7d": temas_stale,
+                    "proximos_vencer": 0,
+                },
+                "tabla": temas_table,
+            },
+            "auditorias": {
+                "kpis": {
+                    "activas": aud_active,
+                    "cerradas_ano": aud_cerr,
+                    "hallazgos_pendientes": 0,
+                },
+                "tendencia_3m": [],
+                "tabla": aud_table,
+            },
+        }
+    )
+
+
+@router.get("/platform-release")
+async def dashboard_platform_release(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 10 V2: versión y changelog de la plataforma."""
+    from app.models.changelog_entrada import ChangelogEntrada
+
+    rows = (
+        (await db.execute(select(ChangelogEntrada).where(ChangelogEntrada.deleted_at.is_(None))))
+        .scalars()
+        .all()
+    )
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    publicados = [r for r in rows if r.publicado and r.fecha_publicacion]
+    publicados.sort(key=lambda r: r.fecha_publicacion or epoch, reverse=True)
+    ver_actual = publicados[0].version if publicados else "dev"
+    ultima = publicados[0].fecha_publicacion if publicados else None
+    en_dev = len([r for r in rows if not r.publicado])
+    bug_rows = [r for r in rows if r.tipo == "bugfix" and r.publicado]
+    kpis = {
+        "version_actual": f"v{ver_actual}",
+        "ultima_actualizacion": ultima.isoformat() if ultima else "—",
+        "releases_en_desarrollo": en_dev,
+        "bugs_reportados": len(bug_rows),
+    }
+    items = [
+        {
+            "version": r.version,
+            "fecha": r.fecha_publicacion.isoformat() if r.fecha_publicacion else "—",
+            "tipo": r.tipo,
+            "descripcion": r.titulo,
+            "estatus": "publicado" if r.publicado else "borrador",
+        }
+        for r in rows[:200]
+    ]
+    return success(
+        {
+            "kpis": kpis,
+            "timeline": [
+                {
+                    "version": r.version,
+                    "fecha": r.fecha_publicacion.date().isoformat() if r.fecha_publicacion else "—",
+                    "titulo": r.titulo,
+                }
+                for r in publicados[:20]
+            ],
+            "changelog": items,
         }
     )
 

@@ -4,7 +4,10 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     aceptacion_riesgo,
+    actividad_mensual_dast,
     actividad_mensual_sast,
+    actividad_mensual_servicios_regulados,
+    actividad_mensual_source_code,
     activo_web,
     actualizacion_iniciativa,
     actualizacion_tema,
@@ -14,6 +17,7 @@ from app.api.v1 import (
     # ── Módulo 6 — Auditorías ─────────────────────────────────────────────────
     auditoria,
     auth,
+    catalogs,
     celula,
     changelog_entrada,
     cierre_conclusion,
@@ -23,6 +27,7 @@ from app.api.v1 import (
     control_source_code,
     dashboard,
     dashboard_config,
+    direccion,
     ejecucion_dast,
     # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
     ejecucion_mast,
@@ -49,7 +54,15 @@ from app.api.v1 import (
     # ── Módulo 5 — Iniciativas ────────────────────────────────────────────────
     iniciativa,
     madurez,
+    navigation,
     notificacion,
+    okr_categoria,
+    okr_cierre_q,
+    okr_compromiso,
+    okr_evidencia,
+    okr_plan_anual,
+    okr_revision_q,
+    okr_subcompromiso,
     # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
     organizacion,
     pipeline_release,
@@ -89,10 +102,12 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(navigation.router, prefix="/navigation", tags=["Navigation"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
+api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
 api_router.include_router(admin_router, prefix="/admin")
 
 
@@ -103,6 +118,7 @@ async def root():
 
 # ─── Catálogos Centrales (Módulo 1) ──────────────────────────────────────────
 api_router.include_router(subdireccion.router, prefix="/subdireccions", tags=["Subdireccion"])
+api_router.include_router(direccion.router, prefix="/direccions", tags=["Direccion"])
 api_router.include_router(celula.router, prefix="/celulas", tags=["Celula"])
 api_router.include_router(repositorio.router, prefix="/repositorios", tags=["Repositorio"])
 api_router.include_router(activo_web.router, prefix="/activo_webs", tags=["ActivoWeb"])
@@ -144,6 +160,17 @@ api_router.include_router(hallazgo_tercero.router, prefix="/hallazgo_terceros", 
 api_router.include_router(programa_sast.router, prefix="/programa_sasts", tags=["Programa_sast"])
 api_router.include_router(
     actividad_mensual_sast.router, prefix="/actividad_mensual_sasts", tags=["ActividadMensualSast"]
+)
+api_router.include_router(
+    actividad_mensual_dast.router, prefix="/actividad_mensual_dasts", tags=["ActividadMensualDast"]
+)
+api_router.include_router(
+    actividad_mensual_source_code.router, prefix="/actividad_mensual_source_codes", tags=["ActividadMensualSourceCode"]
+)
+api_router.include_router(
+    actividad_mensual_servicios_regulados.router,
+    prefix="/actividad_mensual_servicios_regulados",
+    tags=["ActividadMensualServiciosRegulados"],
 )
 api_router.include_router(hallazgo_sast.router, prefix="/hallazgo_sasts", tags=["Hallazgo_sast"])
 api_router.include_router(programa_dast.router, prefix="/programa_dasts", tags=["Programa_dast"])
@@ -193,6 +220,8 @@ api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones
 
 # ─── Módulo 2 — Panel de Administración (transversal) ─────────────────────────
 api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
+# Compatibilidad: se soporta el prefijo histórico en singular y el nuevo en plural.
+api_router.include_router(indicador_formula.router, prefix="/indicador_formulas", tags=["Indicador_formula"])
 api_router.include_router(indicador_formula.router, prefix="/indicadores_formulas", tags=["Indicador_formula"])
 api_router.include_router(indicadores.router, prefix="/indicadores", tags=["Indicadores"])
 api_router.include_router(madurez.router, prefix="/madurez", tags=["Madurez"])
@@ -200,3 +229,10 @@ api_router.include_router(filtro_guardado.router, prefix="/filtros_guardados", t
 api_router.include_router(dashboard_config.router, prefix="/dashboard_configs", tags=["Dashboard_config"])
 api_router.include_router(changelog_entrada.router, prefix="/changelog_entradas", tags=["Changelog_entrada"])
 api_router.include_router(notificacion.router, prefix="/notificacions", tags=["Notificacion"])
+api_router.include_router(okr_categoria.router, prefix="/okr_categorias", tags=["Okr_categoria"])
+api_router.include_router(okr_plan_anual.router, prefix="/okr_plan_anuals", tags=["Okr_plan_anual"])
+api_router.include_router(okr_compromiso.router, prefix="/okr_compromisos", tags=["Okr_compromiso"])
+api_router.include_router(okr_subcompromiso.router, prefix="/okr_subcompromisos", tags=["Okr_subcompromiso"])
+api_router.include_router(okr_revision_q.router, prefix="/okr_revision_qs", tags=["Okr_revision_q"])
+api_router.include_router(okr_evidencia.router, prefix="/okr_evidencias", tags=["Okr_evidencia"])
+api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["Okr_cierre_q"])

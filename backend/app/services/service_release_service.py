@@ -25,9 +25,7 @@ def _assert_transicion_liberacion(graph: object, prev: str, nxt: str) -> None:
     if not isinstance(allowed, list) or not allowed:
         return
     if nxt not in allowed:
-        raise ValidationException(
-            f"Transición de liberación no permitida: '{prev}' → '{nxt}'. Permitidas: {allowed}"
-        )
+        raise ValidationException(f"Transición de liberación no permitida: '{prev}' → '{nxt}'. Permitidas: {allowed}")
 
 
 class ServiceReleaseService(BaseService[ServiceRelease, ServiceReleaseCreate, ServiceReleaseUpdate]):

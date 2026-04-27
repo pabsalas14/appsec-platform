@@ -49,6 +49,22 @@ async def test_upload_rejects_unsupported_type(client: AsyncClient, auth_headers
 
 
 @pytest.mark.asyncio
+async def test_upload_rejects_pdf_with_wrong_magic_number(client: AsyncClient, auth_headers: dict[str, str]):
+    # Simulate an attacker renaming a script/.exe to .pdf and claiming a PDF content-type.
+    for payload in (
+        b"#!/bin/sh\necho pwned\n",
+        b"MZ\x90\x00\x03\x00\x00\x00\x04\x00\x00\x00\xff\xff",  # PE/EXE signature
+        b"not a pdf at all",
+    ):
+        resp = await client.post(
+            "/api/v1/uploads",
+            headers=auth_headers,
+            files={"file": ("evil.pdf", io.BytesIO(payload), "application/pdf")},
+        )
+        assert resp.status_code == 422, resp.text
+
+
+@pytest.mark.asyncio
 async def test_upload_idor_cross_user(
     client: AsyncClient,
     auth_headers: dict[str, str],

@@ -39,6 +39,23 @@ async function deleteUser(id: string): Promise<void> {
   await api.delete(`/admin/users/${id}`);
 }
 
+async function reassignOwnership({
+  fromUserId,
+  toUserId,
+  entities,
+}: {
+  fromUserId: string;
+  toUserId: string;
+  entities?: string[];
+}): Promise<{ updated: Record<string, number> }> {
+  const res = await api.post<{ data: { updated: Record<string, number> } }>('/admin/users/reassign-ownership', {
+    from_user_id: fromUserId,
+    to_user_id: toUserId,
+    entities,
+  });
+  return res.data.data;
+}
+
 export function useAdminUsers(params: UserListParams = {}) {
   return useQuery({
     queryKey: ['admin', 'users', params],
@@ -71,6 +88,14 @@ export function useDeleteAdminUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteUser,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+export function useReassignOwnership() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reassignOwnership,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 }

@@ -7,10 +7,11 @@
 
 import React from "react";
 import { QueryBuilder } from "@/components/QueryBuilder";
+import { logger } from "@/lib/logger";
 
 export default function QueryBuilderPage() {
   const handleSave = (widgetId: string) => {
-    console.log(`Widget saved: ${widgetId}`);
+    logger.info("query_builder.widget_saved", { widgetId });
   };
 
   return (

@@ -17,12 +17,14 @@ from app.core.catalog_csv import (
     subdireccion_row,
     subdireccion_template_body,
 )
+from app.core.exceptions import NotFoundException
 from app.core.permissions import P
 from app.core.response import success
 from app.models.subdireccion import Subdireccion
 from app.models.user import User
 from app.schemas.subdireccion import SubdireccionCreate, SubdireccionRead, SubdireccionUpdate
 from app.services.audit_service import record as audit_record
+from app.services.direccion_service import direccion_svc
 from app.services.subdireccion_service import subdireccion_svc
 
 router = APIRouter()
@@ -37,9 +39,7 @@ async def export_subdirecciones_csv(
     items = await subdireccion_svc.list(db, filters={"user_id": current_user.id})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        ["id", "nombre", "codigo", "descripcion", "director_nombre", "director_contacto"]
-    )
+    writer.writerow(["id", "nombre", "codigo", "descripcion", "director_nombre", "director_contacto"])
     for r in items:
         writer.writerow(
             [
@@ -103,6 +103,11 @@ async def import_subdirecciones_csv(
             err_list.append({"row": line_no, "message": perr})
             continue
         assert parsed is not None
+        if parsed.direccion_id:
+            direccion = await direccion_svc.get(db, parsed.direccion_id, scope={"user_id": current_user.id})
+            if not direccion:
+                err_list.append({"row": line_no, "message": "direccion_id inexistente o sin acceso"})
+                continue
         ck = parsed.codigo
         if ck in seen_codigo:
             err_list.append(
@@ -168,6 +173,10 @@ async def create_subdireccion(
     current_user: User = Depends(require_permission(P.CATALOGS.CREATE)),
 ):
     """Create a new subdireccion for the current user."""
+    if entity_in.direccion_id:
+        direccion = await direccion_svc.get(db, entity_in.direccion_id, scope={"user_id": current_user.id})
+        if not direccion:
+            raise NotFoundException("direccion_id inexistente o sin acceso")
     entity = await subdireccion_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(SubdireccionRead.model_validate(entity).model_dump(mode="json"))
 
@@ -180,6 +189,10 @@ async def update_subdireccion(
     entity: Subdireccion = Depends(require_ownership(subdireccion_svc)),
 ):
     """Partially update an owned subdireccion (404 if not owned)."""
+    if entity_in.direccion_id:
+        direccion = await direccion_svc.get(db, entity_in.direccion_id, scope={"user_id": current_user.id})
+        if not direccion:
+            raise NotFoundException("direccion_id inexistente o sin acceso")
     updated = await subdireccion_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(SubdireccionRead.model_validate(updated).model_dump(mode="json"))
 

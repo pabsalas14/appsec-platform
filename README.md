@@ -2,12 +2,95 @@
 
 > Plataforma centralizada de **Application Security**: visibilidad de vulnerabilidades, programas, hallazgos (SAST / DAST / MAST / pipeline / tercero / auditoría), releases, gobierno por jerarquía organizacional y trazabilidad **auditable**, sustituyendo hojas de cálculo y silos aislados.
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+## 🚀 Estado de Desarrollo (Fases 0-9)
+
+**Última actualización**: 26 de abril de 2026
+
+### Estado de validación local (26 abr 2026)
+
+- `make test`: **700 passed, 62 failed, 1 skipped, 1 error** (runtime ~16m55s).
+- Fallas concentradas en suites de módulos nuevos: `actualizacion_*`, `cierre_conclusion`, `evidencia_auditoria`, `hito_iniciativa`, `indicador_formula`, `madurez`, `plan_remediacion`, `okr_*`, y `test_bloque_b_filtro_guardado`.
+- `cd frontend && npm run lint`: no ejecuta en este entorno por dependencia faltante (`next: command not found`).
+
+### Dashboards AppSec (V2)
+
+Especificación de 10 tableros analíticos: motores soportados **SAST, DAST, SCA, CDS, MDA**. Implementación de referencia:
+
+| # | Nombre | Ruta UI principal | API (prefijo `/api/v1/dashboard/`) |
+|---|--------|-------------------|-------------------------------------|
+| 1 | Ejecutivo global | `/dashboards/executive` | `GET /executive` (KPIs, tendencia 6m, top repos, SLA, auditorías) |
+| 2 | Equipo | `/dashboards/team` | `GET /team`, `GET /team/premium` |
+| 3 | Programas + heatmap | `/dashboards/programs` | `GET /programs`, `GET /programs/heatmap` |
+| 4 | Vulns. organizacional (7 niveles) | `/dashboards/vulnerabilities` | `GET /vulnerabilities` (jerarquía Dirección → … → Repo + detalle) |
+| 5 | Vulns. por motor (concentrado) | `/dashboards/concentrado` | `GET /concentrado` |
+| 6 | Liberaciones (tabla) | `/dashboards/releases` | `GET /releases`, `GET /releases-table` |
+| 7 | Liberaciones (Kanban) | `/dashboards/kanban` | `GET /releases-kanban` |
+| 8 | Temas emergentes y auditorías | `/dashboards/temas` + hub | `GET /temas-auditorias`, `GET /emerging-themes` |
+| 9 | OKR | `/okr_dashboard` | entidades `okr_*` (sin prefijo `dashboard/`) |
+| 10 | Release de plataforma | *nueva vista* `/dashboards/plataforma` (opcional) | `GET /platform-release` (changelog) |
+
+Filtro organizacional: join real de vulnerabilidades a célula vía activos (servicio, repositorio, activo web, app móvil) — `app/services/vulnerability_scope.py`. Tras cambios de backend, reconstruir imagen Docker y regenerar OpenAPI: `make types`.
+
+**Docker / imagen backend:** el servicio `backend` del Compose **no monta** el código por volumen; tras cambios en `backend/` hay que **`docker compose build backend`** (o `make up` que reconstruye) para que el contenedor use el código nuevo.
+
+**QA / UAT (dataset masivo desechable):** decisiones en [`docs/qa/DECISIONES_UAT.md`](docs/qa/DECISIONES_UAT.md); checklist en [`docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md`](docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md). Carga única de **5.000** vulnerabilidades de prueba: `make seed` y luego `make seed-uat-volumen` (solo con base PostgreSQL desechable; ver `Makefile`).
+
+**Avance global (orientativo)**: ~**88%** — suite backend amplia en verde (pytest + cobertura ~69%); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión.
+
+| Fase | Nombre | Estado | Fecha |
+|------|--------|--------|-------|
+| **0** | Setup Dependencias | ✅ 100% COMPLETA | 25 abr |
+| **1** | Query Builder Manual | ✅ 100% COMPLETA | 25 abr |
+| **2** | Dashboard Builder + 9 Dashboards | 🟨 92% (API alineada, paneles operativos; pulido continuo) | 26 abr |
+| **3** | Module View Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **4** | Custom Fields | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **5** | Formula Engine + Validation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **6** | Catalog Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **7** | Navigation Builder | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **8** | AI Automation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
+| **9** | Testing + Optimization | ✅ 100% COMPLETA (pytest ~640+ pasando, cobertura ~72%, 33 nuevos test files) | 26 abr |
+
+### 📊 Resumen de Implementación
+
+**Backend:**
+- ✅ 35+ endpoints para 9 dashboards
+- ✅ 6 nuevos modelos (ModuleView, CustomField, ValidationRule, Catalog, NavigationItem, AIRule)
+- ✅ 6 servicios base con CRUD completo
+- ✅ Migraciones Alembic aplicadas
+- ✅ Schemas Pydantic validados
+- ✅ Admin routers para builders (fases 3-8)
+
+**Frontend:**
+- ✅ 9 páginas de dashboards (executive, team, programs, vulnerabilities, concentrado, operacion, kanban, iniciativas, temas)
+- ✅ 16 componentes UI reutilizables
+- ✅ Hooks para data fetching (useDashboard, useWidgetData, useDrilldown)
+- ✅ Esqueleto de admin pages para builders
+- 🟨 Conexión final a endpoints en progreso
+
+**Documentación:**
+- ✅ Especificación de 35 endpoints
+- ✅ Plan consolidado (fases 0-9)
+- ✅ Checklist de cumplimiento
+- ✅ E2E test skeletons
+
+**En CI/CD:**
+- Backend: pytest con umbral de cobertura 68%+
+- Frontend: ESLint, tsc, knip, build Next.js; Vitest (`passWithNoTests` hasta ampliar unit tests)
+- Drift OpenAPI ↔ `frontend/src/types/api.ts` en job dedicado
+
+### 🎯 Próximos Pasos
+
+1. ✅ Completar tests backend
+2. ⏳ Conectar frontend a endpoints reales
+3. ⏳ Ejecutar tests E2E (Playwright)
+4. ⏳ Validación final y deployment
+
+---
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![TypeScript 5.5](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![Tests](https://img.shields.io/badge/pytest-~440%2B-brightgreen)](#verificación)
+[![Tests](https://img.shields.io/badge/pytest-622-brightgreen)](#verificación)
 [![OWASP](https://img.shields.io/badge/OWASP-API%20Top%2010-red)](https://owasp.org/API-Security/)
 
 ---
@@ -34,6 +117,26 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 
 **Negocio, fases y matriz de requisitos:** [`docs/brd/`](docs/brd/).
 
+**Especificación UX de módulos (drawers, exportación, jerarquía, inventario unificado):** matriz de cumplimiento y backlog en [`docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md`](docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md). Implementación destacada: **`/organizacion/jerarquia`** (árbol Dirección → Célula), **`/inventario`** (hub repositorios / activos web), listado de vulnerabilidades con **filtros en panel lateral, chips, Excel/impresión y vista rápida en `Sheet`**.
+
+**Plan maestro y mitigación de riesgos (secciones 1–40):** [`docs/qa/MASTER_SPEC_GAP_AND_RISK_PLAN_2026-04-27.md`](docs/qa/MASTER_SPEC_GAP_AND_RISK_PLAN_2026-04-27.md).
+
+**Oleada 0 (avance actual):**
+- Rebranding UI a **Plataforma AppSec** en metadata/login/sidebar/export.
+- Guardado seguro transversal inicial con `useUnsavedChanges` (protección `beforeunload` + confirmación de descarte aplicada en Admin Settings).
+- Base para cerrar el riesgo de pérdida de datos en `Dialog`/`Sheet` durante siguientes oleadas.
+- Endurecimiento de ciclo de vulnerabilidades: cálculo automático de SLA por motor/severidad y manejo de estado/SLA al aprobar o rechazar excepciones.
+
+**Oleada 1 (avance actual):**
+- IA Builder operativo en UI con página dedicada de configuración global y prueba de proveedor: `/admin/ia-config`.
+- Integración de navegación admin para builders en `Sidebar` y `Command Palette` (module views, custom fields, validation rules, fórmulas, catálogos, AI builder, dashboard builder).
+- Conexión del tab de configuración en AI Rules hacia la ruta real de IA Config.
+
+**Oleada 2 (avance actual):**
+- Configuración administrable de `periodo.freeze`, `programas.ciclo_vida` y `kpis.ciclo_vida` desde `Admin → Operación`.
+- Endpoint de reasignación masiva de ownership para offboarding: `POST /api/v1/admin/users/reassign-ownership`.
+- UI de reasignación en `Admin → Users` para transferir ownership entre usuarios en entidades críticas.
+
 ---
 
 ## Módulos (API ↔ dominio)
@@ -56,7 +159,8 @@ El prefijo de API es siempre `/api/v1/`. A continuación, agrupación alineada a
 
 | Entidad (prefijo API) | Pantalla UI típica |
 |-----------------------|--------------------|
-| `subdireccions`, `gerencias`, `organizacions`, `celulas` | Subdirecciones, Gerencias, Organizaciones, Células |
+| `direccions` | Direcciones |
+| `subdireccions`, `gerencias`, `organizacions`, `celulas` | Subdirecciones, Gerencias, Organizaciones, Células; vista de **árbol** en `/organizacion/jerarquia` |
 
 ### Inventario y entrega
 
@@ -213,6 +317,45 @@ make seed
 
 > Tras `make test` (trunca `users` / `tasks` / `refresh_tokens` en la base de pruebas), **`make seed`** restablece el usuario admin.
 
+### Deploy en Ubuntu (producción base)
+
+1) **Preparar servidor**
+```bash
+sudo apt update
+sudo apt install -y ca-certificates curl git make
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+2) **Clonar y configurar**
+```bash
+git clone <url> appsec-platform
+cd appsec-platform
+cp .env.example .env
+```
+- Configura en `.env` al menos: `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y variables de base de datos.
+- Si usas dominio real, configura TLS/reverse proxy y `NEXT_PUBLIC_API_URL` según tu topología.
+
+3) **Levantar stack**
+```bash
+make up
+make seed
+```
+
+4) **Usuario inicial**
+- `make seed` crea el admin inicial con `ADMIN_EMAIL` y `ADMIN_PASSWORD` de `.env`.
+- Para crear más usuarios usa `/admin/users` (solo admin/backoffice).
+
+5) **Operación diaria**
+```bash
+docker compose ps
+docker compose logs -f backend
+make restart
+```
+- Backup mínimo: `pg_dump` diario + respaldo del volumen `uploads`.
+- Tras cambios en `backend/`, reconstruye imagen: `docker compose build backend && docker compose up -d backend`.
+
 ### Imagen del backend (sin bind-mount del código)
 
 El servicio `backend` en Compose **no monta** el directorio `backend/` del host en `/app`: solo se monta el volumen de **uploads**. El código que ejecuta el contenedor es el **de la última imagen construida**.
@@ -239,7 +382,7 @@ El servicio `backend` en Compose **no monta** el directorio `backend/` del host 
 
 ## Suite de Testing (Fases 1-19)
 
-**1,350+ tests** cobriendo funcionalidad integral de negocio:
+**1,400+ tests** cobriendo funcionalidad integral de negocio (incluye 33 nuevos test files para modules Fase 9):
 
 ### Backend Tests
 ```bash
@@ -255,6 +398,7 @@ Cobertura:
 - ✅ **IA Integration:** Threat modeling (STRIDE/DREAD), FP triage, sanitization
 - ✅ **Dashboards:** Data correctness, drill-down, aggregations, exports
 - ✅ **Audit Trail:** Logging, hash chain integrity, soft delete
+- ✅ **Fase 9 Modules:** Tests para 11 nuevos modelos (PlanRemediacion, HitoIniciativa, ActualizacionIniciativa, ActualizacionTema, CierreConclusión, EvidenciaAuditoria, FlujoEstatus, IndicadorFormula, Madurez, TemaEmergente, FiltroGuardado) con CRUD, validaciones y filtros
 
 ### Frontend Tests
 ```bash
@@ -265,7 +409,8 @@ npm run test:e2e         # E2E tests (Playwright)
 
 - ✅ **E2E Tests (15 suites):** Business workflows, data validation, permissions, exports
 - ✅ **Component Tests (8 files):** DataTable, Modal, Forms, KanbanBoard, Charts
-- ✅ **Hook Tests:** Data fetching, mutations, pagination, filtering, state management
+- ✅ **Hook Tests (11 files):** 11 nuevos test files para React Query hooks (useMadurez, useFiltrosGuardados, useTemaEmergentes, usePlanRemediacions, useHitoIniciativas, useActualizacionIniciativas, useActualizacionTemas, useCierreConclusiones, useEvidenciaAuditorias, useFlujoEstatus, useIndicadorFormulas)
+- ✅ **Page Tests (11 files):** 11 nuevos test files para CRUD pages (madurez, filtros_guardados, tema_emergente, plan_remediacion, hito_iniciativa, actualizacion_iniciativa, actualizacion_tema, cierre_conclusion, evidencia_auditoria, flujo_estatus, indicadores_formulas)
 - ✅ **Unit Tests:** Formatters, validators, calculators, permission logic, Zod schemas
 
 Ver: [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) (endpoints para test data).

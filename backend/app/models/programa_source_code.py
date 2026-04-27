@@ -54,3 +54,6 @@ class ProgramaSourceCode(SoftDeleteMixin, Base):
     revisiones: Mapped[list[RevisionSourceCode]] = relationship(
         "RevisionSourceCode", back_populates="programa_sc", lazy="noload"
     )
+    actividades: Mapped[list] = relationship(
+        "ActividadMensualSourceCode", back_populates="programa_source_code", lazy="noload"
+    )

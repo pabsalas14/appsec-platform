@@ -103,11 +103,7 @@ async def list_iniciativas(
         base_conds.append(Iniciativa.titulo.ilike(f"%{q.strip()}%"))
 
     # Get paginated items
-    stmt = (
-        select(Iniciativa)
-        .where(*base_conds)
-        .order_by(Iniciativa.created_at.desc())
-    )
+    stmt = select(Iniciativa).where(*base_conds).order_by(Iniciativa.created_at.desc())
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)

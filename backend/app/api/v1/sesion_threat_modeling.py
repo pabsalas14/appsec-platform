@@ -128,9 +128,7 @@ async def create_sesion_threat_modeling(
 ):
     """Create a new sesion de threat modeling for the current user."""
     if entity_in.activo_web_secundario_id is not None:
-        aw = await activo_web_svc.get(
-            db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id}
-        )
+        aw = await activo_web_svc.get(db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id})
         if not aw:
             raise NotFoundException("Activo web secundario no encontrado")
     entity = await sesion_threat_modeling_svc.create(db, entity_in, extra={"user_id": current_user.id})
@@ -231,9 +229,7 @@ async def update_sesion_threat_modeling(
 ):
     """Partially update an owned sesion de threat modeling."""
     if entity_in.activo_web_secundario_id is not None:
-        aw = await activo_web_svc.get(
-            db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id}
-        )
+        aw = await activo_web_svc.get(db, entity_in.activo_web_secundario_id, scope={"user_id": current_user.id})
         if not aw:
             raise NotFoundException("Activo web secundario no encontrado")
     updated = await sesion_threat_modeling_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})

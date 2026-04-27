@@ -75,11 +75,15 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/releases', label: 'Dashboard Releases', icon: Layers },
       { href: '/dashboards/initiatives', label: 'Dashboard Iniciativas', icon: Briefcase },
       { href: '/dashboards/emerging-themes', label: 'Dashboard Tendencias', icon: LineChart },
+      { href: '/dashboards/temas-auditorias', label: 'Temas + Auditorías (V2)', icon: FileSearch },
+      { href: '/dashboards/plataforma', label: 'Release plataforma (V2)', icon: Server },
     ],
   },
   {
     title: 'Organización (BRD)',
     items: [
+      { href: '/direccions', label: 'Direcciones', icon: Network },
+      { href: '/organizacion/jerarquia', label: 'Jerarquía (árbol)', icon: Network },
       { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
       { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
       { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
@@ -89,6 +93,7 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Inventario (BRD)',
     items: [
+      { href: '/inventario', label: 'Inventario (hub)', icon: Package },
       { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
       { href: '/activo_webs', label: 'Activos web', icon: Link2 },
     ],
@@ -127,6 +132,14 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
       { href: '/admin/roles', label: 'Roles', icon: ShieldCheck, adminOnly: true },
+      { href: '/admin/module-views', label: 'Module Views', icon: LayoutDashboard, adminOnly: true },
+      { href: '/admin/custom-fields', label: 'Custom Fields', icon: ClipboardList, adminOnly: true },
+      { href: '/admin/validation-rules', label: 'Validation Rules', icon: ListChecks, adminOnly: true },
+      { href: '/admin/formulas', label: 'Formulas', icon: LineChart, adminOnly: true },
+      { href: '/admin/catalogs', label: 'Catalogs', icon: ScrollText, adminOnly: true },
+      { href: '/admin/ai-rules', label: 'AI Builder', icon: ShieldCheck, adminOnly: true },
+      { href: '/admin/ia-config', label: 'IA Config', icon: Settings, adminOnly: true },
+      { href: '/dashboards/builder', label: 'Dashboard Builder', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
       { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
@@ -203,7 +216,7 @@ export function Sidebar() {
           <span className="text-sm font-bold">F</span>
         </div>
         {!collapsed && (
-          <span className="truncate text-sm font-semibold text-foreground">Framework</span>
+          <span className="truncate text-sm font-semibold text-foreground">Plataforma AppSec</span>
         )}
       </div>
 

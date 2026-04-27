@@ -53,10 +53,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./backend/app:/app/app
       - uploads:/app/uploads
     command: >
       sh -c "
-        echo '⏳ Running migrations...' &&
+        echo '📦 Running migrations...' &&
         alembic upgrade head &&
         if [ \"$$RUN_SEED\" = 'true' ]; then
           echo '🌱 Running seed...' &&
@@ -64,8 +65,8 @@ services:
         else
           echo '⏭️  Seed skipped (RUN_SEED!=true)';
         fi &&
-        echo '🚀 Starting server...' &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000
+        echo '🚀 Starting server in DEV mode...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
   # ──────────────────────────────────
@@ -86,6 +87,10 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
   # ──────────────────────────────────
   # Nginx (reverse proxy + static)
