@@ -498,7 +498,7 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 | **FASE 3 CRÍTICA: MAST UI** | Backend + Frontend | ✅ DONE | 100% — Grid de apps móviles, Security Score (0-100), Side panel (Info/Hallazgos/Ejecuciones/Historial), Sheet component |
 | **FASE 3 MAYOR: Email Notifications** | Backend + API | ✅ DONE | 100% — Section 18 completa (EmailTemplate, EmailLog, SMTP, Celery, 5 endpoints, 1680+ líneas) |
 | **FASE 3 MAYOR: Email Notifications** | Frontend | ✅ DONE | 100% — 3 tabs (Preferencias, Plantillas, Historial), hooks, componentes, página en /admin/email-notifications |
-| **FASE 3 MINOR: Dark mode** | Frontend | 🟨 PENDING | Tema CSS ya existe, solo activar en settings |
+| **FASE 3 MINOR: Dark mode** | Frontend | ✅ DONE | 100% — ThemeToggle en header + ThemeSettingsTab en perfil + tema persistente |
 | **FASE 3 MINOR: E2E Tests** | Frontend | 🟨 SKELETON | ~40 test cases para dashboards |
 
 ### 📊 Sesión 2 Completada — Dashboard 1 Funcional + Backend Spec
@@ -590,6 +590,17 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
   - Hooks: `useEmailTemplates`, `useUserEmailPreferences`, `useEmailLogs`, `useSendTestNotification`
   - Integración en Sidebar bajo Administración → Email Notifications
   - UX: Tabs (Settings/Mail/History), Sheet drawer para ver templates, status badges
+
+#### 4️⃣ **Dark Mode Support** (Fase 3 Minor — ✅ COMPLETO)
+- **Existing**: `ThemeToggle` en header (sun/moon icons, dropdown con light/dark/system)
+- **New**:
+  - Hook `useTheme` — wrapper sobre `next-themes` con helpers (`isDark`, `isLight`, `isSystem`)
+  - Hook `useThemePreference` — guardar/cargar preferencia de usuario desde servidor
+  - Componente `ThemeSettingsTab` — selector visual (3 cards: Light/Dark/System)
+  - Tab en `/profile` → Theme section
+  - Preferencia guardada en servidor + sincronizada en todos los dispositivos
+  - Smooth transitions sin parpadeos (next-themes + CSS)
+  - Default: System (respeta preferencia del SO)
 
 #### 4️⃣ **Premium Dashboards** (Fase 2 Mayor — ✅ COMPLETO)
 - **Dashboard 2 (Team)** — `/dashboards/team`:

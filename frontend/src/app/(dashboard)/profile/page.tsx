@@ -24,6 +24,7 @@ import {
 } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useChangePassword, useUpdateProfile } from '@/hooks/useProfile';
+import { ThemeSettingsTab } from '@/components/profile/ThemeSettingsTab';
 
 function initials(name: string | null | undefined, fallback: string) {
   const base = (name?.trim() || fallback || '').trim();
@@ -130,6 +131,7 @@ export default function ProfilePage() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
+          <TabsTrigger value="theme">Theme</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -215,6 +217,10 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="theme">
+          <ThemeSettingsTab />
         </TabsContent>
       </Tabs>
     </PageWrapper>
