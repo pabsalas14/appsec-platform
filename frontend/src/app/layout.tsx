@@ -3,7 +3,7 @@ import { Providers } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Development Framework',
+  title: 'Plataforma AppSec',
   description: 'Starter kit for software projects',
 };
 

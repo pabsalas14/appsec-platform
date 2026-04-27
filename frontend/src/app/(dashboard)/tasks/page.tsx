@@ -174,7 +174,7 @@ export default function TasksPage() {
     <PageWrapper className="mx-auto max-w-6xl space-y-6 p-6">
       <PageHeader
         title="Tasks"
-        description="Framework CRUD demo — crear, editar, eliminar, cambiar estado y enlazar a proyectos."
+        description="AppSec CRUD demo — crear, editar, eliminar, cambiar estado y enlazar a proyectos."
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>

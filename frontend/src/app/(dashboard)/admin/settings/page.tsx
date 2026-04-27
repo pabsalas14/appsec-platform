@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -16,6 +16,7 @@ import {
   Select,
   Switch,
 } from '@/components/ui';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useSystemSettings, useUpsertSystemSetting } from '@/hooks/useSystemSettings';
 import type { SystemSetting } from '@/types';
 
@@ -80,6 +81,18 @@ export default function AdminSettingsPage() {
   const upsert = useUpsertSystemSetting();
   const [draft, setDraft] = useState<Draft>({});
 
+  const hasUnsavedChanges = useMemo(() => {
+    if (!data?.length) return false;
+    return data.some((setting) => {
+      const original =
+        setting.value !== null && typeof setting.value === 'object'
+          ? JSON.stringify(setting.value, null, 2)
+          : setting.value;
+      return draft[setting.key] !== original;
+    });
+  }, [data, draft]);
+  const { confirmIfNeeded } = useUnsavedChanges({ enabled: hasUnsavedChanges });
+
   useEffect(() => {
     if (!data) return;
     const initial: Draft = {};
@@ -106,6 +119,11 @@ export default function AdminSettingsPage() {
       <PageHeader
         title="System Settings"
         description="Runtime-configurable values persisted in the database. Changes apply immediately; clients may need to refresh."
+        action={
+          hasUnsavedChanges ? (
+            <span className="text-xs font-medium text-amber-600">Cambios sin guardar</span>
+          ) : null
+        }
       />
 
       {isLoading ? (
@@ -135,7 +153,10 @@ export default function AdminSettingsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDraft((d) => ({ ...d, [setting.key]: original }))}
+                        onClick={() => {
+                          if (!confirmIfNeeded()) return;
+                          setDraft((d) => ({ ...d, [setting.key]: original }));
+                        }}
                       >
                         Discard
                       </Button>

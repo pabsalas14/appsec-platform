@@ -50,7 +50,7 @@ export async function exportXLSX<T>(
   sheetName = 'Data',
 ) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Framework';
+  wb.creator = 'Plataforma AppSec';
   wb.created = new Date();
   const ws = wb.addWorksheet(sheetName);
 

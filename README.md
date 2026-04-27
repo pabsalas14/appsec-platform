@@ -119,6 +119,13 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 
 **Especificación UX de módulos (drawers, exportación, jerarquía, inventario unificado):** matriz de cumplimiento y backlog en [`docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md`](docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md). Implementación destacada: **`/organizacion/jerarquia`** (árbol Dirección → Célula), **`/inventario`** (hub repositorios / activos web), listado de vulnerabilidades con **filtros en panel lateral, chips, Excel/impresión y vista rápida en `Sheet`**.
 
+**Plan maestro y mitigación de riesgos (secciones 1–40):** [`docs/qa/MASTER_SPEC_GAP_AND_RISK_PLAN_2026-04-27.md`](docs/qa/MASTER_SPEC_GAP_AND_RISK_PLAN_2026-04-27.md).
+
+**Oleada 0 (avance actual):**
+- Rebranding UI a **Plataforma AppSec** en metadata/login/sidebar/export.
+- Guardado seguro transversal inicial con `useUnsavedChanges` (protección `beforeunload` + confirmación de descarte aplicada en Admin Settings).
+- Base para cerrar el riesgo de pérdida de datos en `Dialog`/`Sheet` durante siguientes oleadas.
+
 ---
 
 ## Módulos (API ↔ dominio)

@@ -37,7 +37,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to the Development Framework
+            Sign in to the Plataforma AppSec
           </p>
         </div>
 

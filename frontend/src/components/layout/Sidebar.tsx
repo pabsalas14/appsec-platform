@@ -207,7 +207,7 @@ export function Sidebar() {
           <span className="text-sm font-bold">F</span>
         </div>
         {!collapsed && (
-          <span className="truncate text-sm font-semibold text-foreground">Framework</span>
+          <span className="truncate text-sm font-semibold text-foreground">Plataforma AppSec</span>
         )}
       </div>
 

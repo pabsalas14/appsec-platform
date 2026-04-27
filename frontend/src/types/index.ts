@@ -1,5 +1,5 @@
 /**
- * Framework API types.
+ * Plataforma AppSec API types.
  *
  * Generated request-body schemas are re-exported from `./api` (produced by
  * `openapi-typescript` — see ADR-0005 / `make types`). Response shapes are
