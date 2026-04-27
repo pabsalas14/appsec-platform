@@ -65,6 +65,7 @@ from app.api.v1 import (
     revision_source_code,
     revision_tercero,
     # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
+    search,
     service_release,
     servicio,
     servicio_regulado_registro,
@@ -91,6 +92,7 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboar
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(search.router, prefix="/search", tags=["Search"])
 api_router.include_router(admin_router, prefix="/admin")
 
 
