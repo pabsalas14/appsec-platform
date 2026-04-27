@@ -317,6 +317,45 @@ make seed
 
 > Tras `make test` (trunca `users` / `tasks` / `refresh_tokens` en la base de pruebas), **`make seed`** restablece el usuario admin.
 
+### Deploy en Ubuntu (producción base)
+
+1) **Preparar servidor**
+```bash
+sudo apt update
+sudo apt install -y ca-certificates curl git make
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+2) **Clonar y configurar**
+```bash
+git clone <url> appsec-platform
+cd appsec-platform
+cp .env.example .env
+```
+- Configura en `.env` al menos: `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y variables de base de datos.
+- Si usas dominio real, configura TLS/reverse proxy y `NEXT_PUBLIC_API_URL` según tu topología.
+
+3) **Levantar stack**
+```bash
+make up
+make seed
+```
+
+4) **Usuario inicial**
+- `make seed` crea el admin inicial con `ADMIN_EMAIL` y `ADMIN_PASSWORD` de `.env`.
+- Para crear más usuarios usa `/admin/users` (solo admin/backoffice).
+
+5) **Operación diaria**
+```bash
+docker compose ps
+docker compose logs -f backend
+make restart
+```
+- Backup mínimo: `pg_dump` diario + respaldo del volumen `uploads`.
+- Tras cambios en `backend/`, reconstruye imagen: `docker compose build backend && docker compose up -d backend`.
+
 ### Imagen del backend (sin bind-mount del código)
 
 El servicio `backend` en Compose **no monta** el directorio `backend/` del host en `/app`: solo se monta el volumen de **uploads**. El código que ejecuta el contenedor es el **de la última imagen construida**.

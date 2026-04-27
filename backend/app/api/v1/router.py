@@ -218,6 +218,8 @@ api_router.include_router(cierre_conclusion.router, prefix="/cierre_conclusiones
 
 # ─── Módulo 2 — Panel de Administración (transversal) ─────────────────────────
 api_router.include_router(flujo_estatus.router, prefix="/flujos_estatus", tags=["Flujo_estatus"])
+# Compatibilidad: se soporta el prefijo histórico en singular y el nuevo en plural.
+api_router.include_router(indicador_formula.router, prefix="/indicador_formulas", tags=["Indicador_formula"])
 api_router.include_router(indicador_formula.router, prefix="/indicadores_formulas", tags=["Indicador_formula"])
 api_router.include_router(indicadores.router, prefix="/indicadores", tags=["Indicadores"])
 api_router.include_router(madurez.router, prefix="/madurez", tags=["Madurez"])
