@@ -499,7 +499,7 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 | **FASE 3 MAYOR: Email Notifications** | Backend + API | ✅ DONE | 100% — Section 18 completa (EmailTemplate, EmailLog, SMTP, Celery, 5 endpoints, 1680+ líneas) |
 | **FASE 3 MAYOR: Email Notifications** | Frontend | ✅ DONE | 100% — 3 tabs (Preferencias, Plantillas, Historial), hooks, componentes, página en /admin/email-notifications |
 | **FASE 3 MINOR: Dark mode** | Frontend | ✅ DONE | 100% — ThemeToggle en header + ThemeSettingsTab en perfil + tema persistente |
-| **FASE 3 MINOR: E2E Tests** | Frontend | 🟨 SKELETON | ~40 test cases para dashboards |
+| **FASE 3 MINOR: E2E Tests** | Frontend | ✅ DONE | 100% — 40+ tests para omnisearch, dashboards premium, email, dark mode, MAST |
 
 ### 📊 Sesión 2 Completada — Dashboard 1 Funcional + Backend Spec
 
@@ -601,6 +601,55 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
   - Preferencia guardada en servidor + sincronizada en todos los dispositivos
   - Smooth transitions sin parpadeos (next-themes + CSS)
   - Default: System (respeta preferencia del SO)
+
+#### 5️⃣ **E2E Tests — 40+ test cases** (Fase 3 Minor — ✅ COMPLETO)
+**Omnisearch** (5 tests):
+  - Abrir con Ctrl+K
+  - Búsqueda de vulnerabilidades
+  - Navegación desde resultado
+  - Cerrar con Escape
+  - Buscar múltiples tipos de entidades
+
+**Premium Dashboards** (10 tests):
+  - D2 Team: Load, drill-down, analyst details
+  - D3 Programs: 6 cards, heatmaps, navigation
+  - D4 Vulnerabilities: 7-level hierarchy, engine cards, SLA, drill-down
+  - D5 Concentrado: Severity distribution, motor tables
+
+**Email Notifications** (11 tests):
+  - Load page, show tabs
+  - Preferences: 5 types, toggle, save
+  - Templates: view, copy HTML
+  - Logs: pagination, refresh, limits
+
+**Dark Mode** (8 tests):
+  - Show toggle, open menu
+  - Switch dark/light/system
+  - Persist in profile
+  - Save from profile
+  - Sync across tabs
+  - No flashing on switch
+
+**MAST Module** (6 tests):
+  - Load dashboard, grid display
+  - Security score (0-100)
+  - Open detail panel (4 tabs)
+  - Findings/executions/history
+  - Filter by severity
+  - Close panel
+
+**Files**:
+- `frontend/e2e/features/omnisearch.spec.ts` (45 lines)
+- `frontend/e2e/features/premium-dashboards.spec.ts` (100 lines)
+- `frontend/e2e/features/email-notifications.spec.ts` (120 lines)
+- `frontend/e2e/features/dark-mode.spec.ts` (130 lines)
+- `frontend/e2e/features/mast-module.spec.ts` (85 lines)
+
+**Ejecución**:
+```bash
+npm run test:e2e              # Run all E2E tests
+npm run test:e2e -- omnisearch        # Run specific suite
+```
 
 #### 4️⃣ **Premium Dashboards** (Fase 2 Mayor — ✅ COMPLETO)
 - **Dashboard 2 (Team)** — `/dashboards/team`:
