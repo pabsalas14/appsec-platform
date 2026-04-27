@@ -98,6 +98,22 @@ class Settings(BaseSettings):
     NOTIFICATION_CRON_HOUR_UTC: int = 2
     NOTIFICATION_CRON_MINUTE_UTC: int = 0
 
+    # ─── Email notifications (S18) ───
+    EMAIL_ENABLED: bool = False
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "notifications@appsec.local"
+    SMTP_FROM_NAME: str = "AppSec Platform"
+    SMTP_USE_TLS: bool = True
+    EMAIL_MAX_RETRIES: int = 3
+    EMAIL_RETRY_DELAY_SECONDS: int = 60
+    EMAIL_RATE_LIMIT_PER_MIN: int = 100
+    SCHEDULE_EMAIL_WORKER: bool = False
+    EMAIL_WORKER_CRON_HOUR_UTC: int = 0
+    EMAIL_WORKER_CRON_MINUTE_UTC: int = 0
+
     @field_validator("LOG_FORMAT")
     @classmethod
     def log_format_safe_in_prod(cls, v: str, info) -> str:

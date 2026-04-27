@@ -22,6 +22,17 @@ export {
 } from './dialog';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
 export {
+  Sheet,
+  SheetPortal,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './sheet';
+export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
