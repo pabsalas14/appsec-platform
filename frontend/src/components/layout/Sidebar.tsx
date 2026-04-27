@@ -141,6 +141,7 @@ const SECTIONS: NavSection[] = [
       { href: '/admin/ia-config', label: 'IA Config', icon: Settings, adminOnly: true },
       { href: '/dashboards/builder', label: 'Dashboard Builder', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
+      { href: '/admin/email-notifications', label: 'Email Notifications', icon: Upload, adminOnly: true },
       { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
     ],

@@ -497,7 +497,7 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
 | **FASE 3 CRÍTICA: Omnisearch** | Backend + Frontend | ✅ DONE | 100% — Full-text search (9 tipos), GIN indices, `/api/v1/search?q=` endpoint, SearchCommand.tsx con Ctrl+K |
 | **FASE 3 CRÍTICA: MAST UI** | Backend + Frontend | ✅ DONE | 100% — Grid de apps móviles, Security Score (0-100), Side panel (Info/Hallazgos/Ejecuciones/Historial), Sheet component |
 | **FASE 3 MAYOR: Email Notifications** | Backend + API | ✅ DONE | 100% — Section 18 completa (EmailTemplate, EmailLog, SMTP, Celery, 5 endpoints, 1680+ líneas) |
-| **FASE 3 MAYOR: Email Notifications** | Frontend | ⏳ READY | Integración lista (preferencias, templates, logs) — usar endpoints en Section 18 |
+| **FASE 3 MAYOR: Email Notifications** | Frontend | ✅ DONE | 100% — 3 tabs (Preferencias, Plantillas, Historial), hooks, componentes, página en /admin/email-notifications |
 | **FASE 3 MINOR: Dark mode** | Frontend | 🟨 PENDING | Tema CSS ya existe, solo activar en settings |
 | **FASE 3 MINOR: E2E Tests** | Frontend | 🟨 SKELETON | ~40 test cases para dashboards |
 
@@ -581,6 +581,15 @@ Respuestas con `status: success | error`, carga en `data` o `detail`, y `meta` (
   - Rate limiting: 100 emails/min
   - Configuración vía `.env`: SMTP_HOST, SMTP_USER, SMTP_PASSWORD, etc.
   - Documentación completa: 1,680+ líneas (guides + examples)
+
+- **Frontend** (`/admin/email-notifications`):
+  - **Preferencias de Email**: Habilitar/deshabilitar por notification type (5 tipos)
+  - **Plantillas de Email**: Ver contenido HTML, copiar a portapapeles, badges de default
+  - **Historial de Envíos**: Table con destinatario, asunto, estado (sent/failed/pending), retry count
+  - Componentes: `EmailPreferencesTab`, `EmailTemplatesTab`, `EmailLogsTab`
+  - Hooks: `useEmailTemplates`, `useUserEmailPreferences`, `useEmailLogs`, `useSendTestNotification`
+  - Integración en Sidebar bajo Administración → Email Notifications
+  - UX: Tabs (Settings/Mail/History), Sheet drawer para ver templates, status badges
 
 #### 4️⃣ **Premium Dashboards** (Fase 2 Mayor — ✅ COMPLETO)
 - **Dashboard 2 (Team)** — `/dashboards/team`:
