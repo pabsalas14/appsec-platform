@@ -388,6 +388,35 @@ DEFAULT_SETTINGS: list[dict] = [
         "description": "G2: días (anticipación SLA, sin entrada en bitácora de temas emergentes, vuln. inactiva). "
         "Editar aquí, no fijar en código.",
     },
+    {
+        "key": "periodo.freeze",
+        "value": {
+            "enabled": True,
+            "dia_cierre_mensual": 5,
+            "modulos_bloqueados": ["programas", "indicadores", "okr"],
+            "periodos_cerrados": [],
+        },
+        "description": "Freeze mensual (sección 35): bloquea captura/edición por periodo y módulo.",
+    },
+    {
+        "key": "programas.ciclo_vida",
+        "value": {
+            "permitir_clonacion": True,
+            "congelar_historico": True,
+            "recalculo_automatico_mes_cerrado": True,
+            "anios_historicos_visibles": 5,
+        },
+        "description": "Ciclo de vida de programas (sección 27): cierre anual, clonado y gobernanza.",
+    },
+    {
+        "key": "kpis.ciclo_vida",
+        "value": {
+            "congelar_historico_por_defecto": True,
+            "permitir_recalculo_retroactivo": True,
+            "estado_deprecado_habilitado": True,
+        },
+        "description": "Ciclo de vida de KPIs (sección 28): congelamiento histórico y recálculo opcional.",
+    },
     # ── 13. Umbrales de semáforos ─────────────────────────────────────────────
     {
         "key": "semaforo.umbrales",

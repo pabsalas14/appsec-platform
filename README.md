@@ -132,6 +132,11 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 - Integración de navegación admin para builders en `Sidebar` y `Command Palette` (module views, custom fields, validation rules, fórmulas, catálogos, AI builder, dashboard builder).
 - Conexión del tab de configuración en AI Rules hacia la ruta real de IA Config.
 
+**Oleada 2 (avance actual):**
+- Configuración administrable de `periodo.freeze`, `programas.ciclo_vida` y `kpis.ciclo_vida` desde `Admin → Operación`.
+- Endpoint de reasignación masiva de ownership para offboarding: `POST /api/v1/admin/users/reassign-ownership`.
+- UI de reasignación en `Admin → Users` para transferir ownership entre usuarios en entidades críticas.
+
 ---
 
 ## Módulos (API ↔ dominio)

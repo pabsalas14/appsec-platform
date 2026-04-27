@@ -19,6 +19,10 @@ import {
   AlertDialogTrigger,
   Badge,
   Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   DataTable,
   DataTableBody,
   DataTableCell,
@@ -41,6 +45,7 @@ import {
   useAdminUsers,
   useCreateAdminUser,
   useDeleteAdminUser,
+  useReassignOwnership,
   useResetUserPassword,
   useUpdateAdminUser,
 } from '@/hooks/useAdminUsers';
@@ -278,6 +283,8 @@ export default function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [resetting, setResetting] = useState<User | null>(null);
+  const [fromUserId, setFromUserId] = useState('');
+  const [toUserId, setToUserId] = useState('');
 
   const params = {
     q: q || undefined,
@@ -288,6 +295,7 @@ export default function AdminUsersPage() {
   };
   const { data, isLoading } = useAdminUsers(params);
   const deleteMut = useDeleteAdminUser();
+  const reassignMut = useReassignOwnership();
 
   return (
     <PageWrapper className="space-y-6 p-6">
@@ -321,6 +329,56 @@ export default function AdminUsersPage() {
           Active only
         </label>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Reasignación masiva (offboarding)</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Transfiere ownership de registros activos entre usuarios para evitar pendientes huérfanos.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <Select
+            options={[
+              { value: '', label: 'Usuario origen' },
+              ...(data?.items ?? []).map((u) => ({ value: u.id, label: `${u.username} (${u.email})` })),
+            ]}
+            value={fromUserId}
+            onChange={(e) => setFromUserId(e.target.value)}
+          />
+          <Select
+            options={[
+              { value: '', label: 'Usuario destino' },
+              ...(data?.items ?? [])
+                .filter((u) => u.id !== fromUserId)
+                .map((u) => ({ value: u.id, label: `${u.username} (${u.email})` })),
+            ]}
+            value={toUserId}
+            onChange={(e) => setToUserId(e.target.value)}
+          />
+          <Button
+            type="button"
+            disabled={!fromUserId || !toUserId || reassignMut.isPending}
+            onClick={() =>
+              reassignMut.mutate(
+                { fromUserId, toUserId },
+                {
+                  onSuccess: (r) =>
+                    toast.success(
+                      `Reasignación completada (${Object.entries(r.updated)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(', ')})`,
+                    ),
+                  onError: (err) => toast.error(extractErrorMessage(err, 'Error al reasignar ownership')),
+                },
+              )
+            }
+          >
+            {reassignMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Reasignar ownership
+          </Button>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <div className="flex items-center justify-center p-12">

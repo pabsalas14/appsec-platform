@@ -9,7 +9,8 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_backoffice
@@ -22,6 +23,11 @@ from app.core.permissions import VALID_ROLES
 from app.core.response import paginated, success
 from app.core.security import hash_password, validate_password_strength
 from app.models.user import User
+from app.models.vulnerabilidad import Vulnerabilidad
+from app.models.service_release import ServiceRelease
+from app.models.tema_emergente import TemaEmergente
+from app.models.iniciativa import Iniciativa
+from app.models.okr_compromiso import OkrCompromiso
 from app.schemas.user_admin import (
     UserAdminCreate,
     UserAdminRead,
@@ -32,6 +38,14 @@ from app.services.audit_service import record as audit_record
 from app.services.user_admin_service import user_admin_svc
 
 router = APIRouter()
+
+
+class OwnershipReassignRequest(BaseModel):
+    from_user_id: uuid.UUID
+    to_user_id: uuid.UUID
+    entities: list[str] = Field(
+        default_factory=lambda: ["vulnerabilidads", "service_releases", "tema_emergentes", "iniciativas", "okr_compromisos"]
+    )
 
 
 def _ensure_valid_role(role: str) -> None:
@@ -229,6 +243,63 @@ async def delete_user(
     )
 
     return success(None, meta={"message": "User deleted"})
+
+
+@router.post("/reassign-ownership")
+async def reassign_ownership(
+    payload: OwnershipReassignRequest,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_backoffice),
+):
+    """Mass-reassign record ownership during offboarding.
+
+    Reassigns `user_id` across selected owned entities.
+    """
+    if payload.from_user_id == payload.to_user_id:
+        raise ConflictException("from_user_id and to_user_id must be different")
+
+    origin = (await db.execute(select(User).where(User.id == payload.from_user_id))).scalar_one_or_none()
+    target = (await db.execute(select(User).where(User.id == payload.to_user_id))).scalar_one_or_none()
+    if not origin:
+        raise NotFoundException("Origin user not found")
+    if not target:
+        raise NotFoundException("Target user not found")
+
+    model_map = {
+        "vulnerabilidads": Vulnerabilidad,
+        "service_releases": ServiceRelease,
+        "tema_emergentes": TemaEmergente,
+        "iniciativas": Iniciativa,
+        "okr_compromisos": OkrCompromiso,
+    }
+    selected = [e for e in payload.entities if e in model_map]
+    if not selected:
+        raise ConflictException("No valid entities requested")
+
+    updated: dict[str, int] = {}
+    for entity in selected:
+        model = model_map[entity]
+        stmt = (
+            update(model)
+            .where(model.user_id == payload.from_user_id, model.deleted_at.is_(None))
+            .values(user_id=payload.to_user_id)
+        )
+        result = await db.execute(stmt)
+        updated[entity] = int(result.rowcount or 0)
+
+    await audit_record(
+        db,
+        action="user.reassign_ownership",
+        entity_type="users",
+        entity_id=payload.from_user_id,
+        metadata={
+            "to_user_id": str(payload.to_user_id),
+            "updated": updated,
+            "requested_entities": payload.entities,
+            "performed_by": str(admin.id),
+        },
+    )
+    return success({"from_user_id": str(payload.from_user_id), "to_user_id": str(payload.to_user_id), "updated": updated})
 
 
 # Silence unused-import warnings for convenience exports above.
