@@ -9,6 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
@@ -339,6 +340,7 @@ function RuleCard({
 }
 
 export default function AdminAIRulesPage() {
+  const router = useRouter();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingRule, setEditingRule] = useState<AIRuleRead | null>(null);
   const [search, setSearch] = useState("");
@@ -517,7 +519,9 @@ export default function AdminAIRulesPage() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 <p>IA Configuration is managed in a separate section. Update provider, model, and credentials there.</p>
               </div>
-              <Button variant="outline">Go to IA Configuration</Button>
+              <Button variant="outline" onClick={() => router.push('/admin/ia-config')}>
+                Go to IA Configuration
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

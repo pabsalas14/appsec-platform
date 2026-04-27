@@ -127,6 +127,11 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 - Base para cerrar el riesgo de pérdida de datos en `Dialog`/`Sheet` durante siguientes oleadas.
 - Endurecimiento de ciclo de vulnerabilidades: cálculo automático de SLA por motor/severidad y manejo de estado/SLA al aprobar o rechazar excepciones.
 
+**Oleada 1 (avance actual):**
+- IA Builder operativo en UI con página dedicada de configuración global y prueba de proveedor: `/admin/ia-config`.
+- Integración de navegación admin para builders en `Sidebar` y `Command Palette` (module views, custom fields, validation rules, fórmulas, catálogos, AI builder, dashboard builder).
+- Conexión del tab de configuración en AI Rules hacia la ruta real de IA Config.
+
 ---
 
 ## Módulos (API ↔ dominio)

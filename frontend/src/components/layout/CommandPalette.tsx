@@ -225,6 +225,30 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
               <CommandItem onSelect={() => run(() => router.push('/admin/roles'))}>
                 <Users className="mr-2 h-4 w-4" /> Roles
               </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/module-views'))}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Module Views
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/custom-fields'))}>
+                <ClipboardList className="mr-2 h-4 w-4" /> Custom Fields
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/validation-rules'))}>
+                <ListChecks className="mr-2 h-4 w-4" /> Validation Rules
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/formulas'))}>
+                <FileSearch className="mr-2 h-4 w-4" /> Formulas
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/catalogs'))}>
+                <ScrollText className="mr-2 h-4 w-4" /> Catalogs
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/ai-rules'))}>
+                <AlertTriangle className="mr-2 h-4 w-4" /> AI Builder
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/admin/ia-config'))}>
+                <Settings className="mr-2 h-4 w-4" /> IA Config
+              </CommandItem>
+              <CommandItem onSelect={() => run(() => router.push('/dashboards/builder'))}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Builder
+              </CommandItem>
               <CommandItem onSelect={() => run(() => router.push('/admin/audit-logs'))}>
                 <ScrollText className="mr-2 h-4 w-4" /> Audit Logs
               </CommandItem>
