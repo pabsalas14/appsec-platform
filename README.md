@@ -125,6 +125,7 @@ Cambios **normativos** (auth, CSRF, envelopes, ownership, cookies, OpenAPI, scaf
 - Rebranding UI a **Plataforma AppSec** en metadata/login/sidebar/export.
 - Guardado seguro transversal inicial con `useUnsavedChanges` (protección `beforeunload` + confirmación de descarte aplicada en Admin Settings).
 - Base para cerrar el riesgo de pérdida de datos en `Dialog`/`Sheet` durante siguientes oleadas.
+- Endurecimiento de ciclo de vulnerabilidades: cálculo automático de SLA por motor/severidad y manejo de estado/SLA al aprobar o rechazar excepciones.
 
 ---
 

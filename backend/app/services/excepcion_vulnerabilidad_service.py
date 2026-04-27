@@ -17,11 +17,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.excepcion_vulnerabilidad import ExcepcionVulnerabilidad
 from app.models.regla_so_d import ReglaSoD
+from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas.excepcion_vulnerabilidad import (
     ExcepcionVulnerabilidadCreate,
     ExcepcionVulnerabilidadUpdate,
 )
+from app.services.json_setting import get_json_setting
+from app.services.sla_policy import compute_deadline, resolve_sla_days
 from app.services.base import BaseService
+from app.services.vulnerabilidad_flujo import parse_estatus_catalog
 
 
 class ExcepcionVulnerabilidadService(
@@ -43,6 +47,29 @@ class ExcepcionVulnerabilidadService(
             )
         )
         return result.scalar_one_or_none() is not None
+
+    async def _estado_id(self, db: AsyncSession, options: set[str], fallback: str) -> str:
+        raw = await get_json_setting(db, "catalogo.estatus_vulnerabilidad", [])
+        catalog = parse_estatus_catalog(raw)
+        for row in catalog:
+            rid = str(row.get("id", "")).strip()
+            if rid in options:
+                return rid
+        return fallback
+
+    async def _set_vuln_exception_state(self, db: AsyncSession, vulnerabilidad_id: uuid.UUID, *, approved: bool) -> None:
+        vuln = await db.get(Vulnerabilidad, vulnerabilidad_id)
+        if vuln is None:
+            return
+        if approved:
+            vuln.estado = await self._estado_id(db, {"excepcion"}, "excepcion")
+            vuln.fecha_limite_sla = None
+            return
+        # Rechazo de excepción: reactivar ciclo y re-estimar SLA desde ahora
+        vuln.estado = await self._estado_id(db, {"activa", "en_remediacion"}, "activa")
+        days = await resolve_sla_days(db, motor=vuln.fuente, severity=vuln.severidad)
+        if days:
+            vuln.fecha_limite_sla = compute_deadline(days)
 
     async def _get_for_decision(self, db: AsyncSession, excepcion_id: uuid.UUID) -> ExcepcionVulnerabilidad | None:
         """Lee una excepción para aprobar/rechazar sin scope de owner.
@@ -86,6 +113,7 @@ class ExcepcionVulnerabilidadService(
         record.aprobador_id = aprobador_id
         record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
+        await self._set_vuln_exception_state(db, record.vulnerabilidad_id, approved=True)
 
         await db.flush()
         await db.refresh(record)
@@ -120,6 +148,7 @@ class ExcepcionVulnerabilidadService(
         record.aprobador_id = aprobador_id
         record.fecha_aprobacion = datetime.now(UTC)
         record.notas_aprobador = notas
+        await self._set_vuln_exception_state(db, record.vulnerabilidad_id, approved=False)
 
         await db.flush()
         await db.refresh(record)

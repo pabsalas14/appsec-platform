@@ -223,10 +223,13 @@ DEFAULT_SETTINGS: list[dict] = [
     {
         "key": "sla.por_motor",
         "value": {
-            "SAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
-            "DAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
-            "SCA": {"critica": 7, "alta": 30, "media": 90, "baja": 180},
-            "ThreatModeling": {"critica": 14, "alta": 45, "media": 90, "baja": 180},
+            "SAST": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "DAST": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
+            "SCA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "CDS": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
+            "MDA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "TM": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "ThreatModeling": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
             "MAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
             "Auditoria": {"critica": 7, "alta": 30, "media": 90, "baja": 180},
             "Terceros": {"critica": 7, "alta": 30, "media": 60, "baja": 90},

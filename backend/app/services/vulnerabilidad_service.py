@@ -12,8 +12,10 @@ from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas.vulnerabilidad import VulnerabilidadCreate, VulnerabilidadUpdate
 from app.services.base import BaseService
 from app.services.json_setting import get_json_setting
+from app.services.sla_policy import compute_deadline, resolve_sla_days, status_disables_sla
 from app.services.vulnerabilidad_flujo import (
     assert_transicion_permitida,
+    estados_activa_clasificacion,
     normalize_estado_a_id,
     parse_estatus_catalog,
 )
@@ -43,6 +45,12 @@ class VulnerabilidadService(BaseService[Vulnerabilidad, VulnerabilidadCreate, Vu
             )
         if resolved:
             data["estado"] = resolved
+        if status_disables_sla(data.get("estado")):
+            data["fecha_limite_sla"] = None
+        elif data.get("fecha_limite_sla") is None:
+            days = await resolve_sla_days(db, motor=data.get("fuente"), severity=data.get("severidad"))
+            if days:
+                data["fecha_limite_sla"] = compute_deadline(days)
         record = self.model(**data)
         db.add(record)
         await db.flush()
@@ -75,6 +83,23 @@ class VulnerabilidadService(BaseService[Vulnerabilidad, VulnerabilidadCreate, Vu
             except ValueError as e:
                 raise ValidationException(str(e)) from e
             changes["estado"] = nxt
+
+        next_estado = str(changes.get("estado", record.estado))
+        next_fuente = str(changes.get("fuente", record.fuente))
+        next_severidad = str(changes.get("severidad", record.severidad))
+        if status_disables_sla(next_estado):
+            changes["fecha_limite_sla"] = None
+        else:
+            active_ids = estados_activa_clasificacion(catalog) if catalog else set()
+            should_refresh_deadline = (
+                "fecha_limite_sla" not in changes
+                and ("fuente" in changes or "severidad" in changes)
+                and (not active_ids or next_estado in active_ids)
+            )
+            if should_refresh_deadline:
+                days = await resolve_sla_days(db, motor=next_fuente, severity=next_severidad)
+                if days:
+                    changes["fecha_limite_sla"] = compute_deadline(days)
 
         for key, value in changes.items():
             setattr(record, key, value)
