@@ -31,9 +31,9 @@ export default function EvidenciaAuditoriasPage() {
   const isLoading = Boolean(evidenciasQuery?.isLoading);
   const auditoriasQuery = useAuditorias();
   const auditorias = auditoriasQuery?.data ?? [];
-  const createMut = useCreateEvidenciaAuditoria();
-  const updateMut = useUpdateEvidenciaAuditoria();
-  const deleteMut = useDeleteEvidenciaAuditoria();
+  const createMut = useCreateEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EvidenciaAuditoria | null>(null);

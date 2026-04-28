@@ -33,8 +33,8 @@ export default function FiltrosGuardadosPage() {
   const filtrosQuery = useFiltrosGuardados();
   const items = filtrosQuery?.data ?? [];
   const isLoading = Boolean(filtrosQuery?.isLoading);
-  const createMut = useCreateFiltroGuardado();
-  const deleteMut = useDeleteFiltroGuardado();
+  const createMut = useCreateFiltroGuardado() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteFiltroGuardado() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [parametrosText, setParametrosText] = useState('{}');

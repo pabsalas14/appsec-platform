@@ -29,9 +29,9 @@ export default function ActualizacionIniciativasPage() {
   const isLoading = Boolean(actualizacionesQuery?.isLoading);
   const iniciativasQuery = useIniciativas();
   const iniciativas = iniciativasQuery?.data ?? [];
-  const createMut = useCreateActualizacionIniciativa();
-  const updateMut = useUpdateActualizacionIniciativa();
-  const deleteMut = useDeleteActualizacionIniciativa();
+  const createMut = useCreateActualizacionIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateActualizacionIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteActualizacionIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ActualizacionIniciativa | null>(null);

@@ -29,9 +29,9 @@ export default function IndicadoresFormulasPage() {
   const formulasQuery = useIndicadorFormulas();
   const items = formulasQuery?.data ?? [];
   const isLoading = Boolean(formulasQuery?.isLoading);
-  const createMut = useCreateIndicadorFormula();
-  const updateMut = useUpdateIndicadorFormula();
-  const deleteMut = useDeleteIndicadorFormula();
+  const createMut = useCreateIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<IndicadorFormula | null>(null);

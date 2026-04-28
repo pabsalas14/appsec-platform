@@ -29,9 +29,9 @@ export default function ActualizacionTemasPage() {
   const isLoading = Boolean(actualizacionesQuery?.isLoading);
   const temasQuery = useTemaEmergentes();
   const temas = temasQuery?.data ?? [];
-  const createMut = useCreateActualizacionTema();
-  const updateMut = useUpdateActualizacionTema();
-  const deleteMut = useDeleteActualizacionTema();
+  const createMut = useCreateActualizacionTema() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateActualizacionTema() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteActualizacionTema() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ActualizacionTema | null>(null);

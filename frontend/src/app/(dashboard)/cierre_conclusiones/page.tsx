@@ -29,9 +29,9 @@ export default function CierreConclusionesPagina() {
   const isLoading = Boolean(cierresQuery?.isLoading);
   const temasQuery = useTemaEmergentes();
   const temas = temasQuery?.data ?? [];
-  const createMut = useCreateCierreConclusion();
-  const updateMut = useUpdateCierreConclusion();
-  const deleteMut = useDeleteCierreConclusion();
+  const createMut = useCreateCierreConclusion() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateCierreConclusion() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteCierreConclusion() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<CierreConclusion | null>(null);

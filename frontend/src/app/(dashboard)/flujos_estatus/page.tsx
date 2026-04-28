@@ -28,9 +28,9 @@ export default function FlujoEstatusPage() {
   const flujoQuery = useFlujoEstatus();
   const items = flujoQuery?.data ?? [];
   const isLoading = Boolean(flujoQuery?.isLoading);
-  const createMut = useCreateFlujoEstatus();
-  const updateMut = useUpdateFlujoEstatus();
-  const deleteMut = useDeleteFlujoEstatus();
+  const createMut = useCreateFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<FlujoEstatus | null>(null);

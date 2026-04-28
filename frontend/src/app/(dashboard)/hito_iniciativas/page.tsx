@@ -29,9 +29,9 @@ export default function HitoIniciativasPage() {
   const isLoading = Boolean(hitosQuery?.isLoading);
   const iniciativasQuery = useIniciativas();
   const iniciativas = iniciativasQuery?.data ?? [];
-  const createMut = useCreateHitoIniciativa();
-  const updateMut = useUpdateHitoIniciativa();
-  const deleteMut = useDeleteHitoIniciativa();
+  const createMut = useCreateHitoIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const updateMut = useUpdateHitoIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const deleteMut = useDeleteHitoIniciativa() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<HitoIniciativa | null>(null);
