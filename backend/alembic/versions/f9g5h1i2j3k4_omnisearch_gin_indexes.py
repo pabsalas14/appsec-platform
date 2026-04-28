@@ -24,136 +24,43 @@ def upgrade() -> None:
     """Create GIN indexes for omnisearch."""
     # gin_trgm_ops requires pg_trgm extension on fresh PostgreSQL instances.
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
 
-    # Vulnerabilidades
-    op.create_index(
-        "ix_vulnerabilidads_titulo_gin",
-        "vulnerabilidads",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_vulnerabilidads_descripcion_gin",
-        "vulnerabilidads",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
+    specs = [
+        ("ix_vulnerabilidads_titulo_gin", "vulnerabilidads", "titulo"),
+        ("ix_vulnerabilidads_descripcion_gin", "vulnerabilidads", "descripcion"),
+        ("ix_planes_remediacion_descripcion_gin", "planes_remediacion", "descripcion"),
+        (
+            "ix_planes_remediacion_acciones_gin",
+            "planes_remediacion",
+            "acciones_recomendadas",
+        ),
+        ("ix_temas_emergentes_titulo_gin", "temas_emergentes", "titulo"),
+        ("ix_temas_emergentes_descripcion_gin", "temas_emergentes", "descripcion"),
+        ("ix_iniciativas_titulo_gin", "iniciativas", "titulo"),
+        ("ix_iniciativas_descripcion_gin", "iniciativas", "descripcion"),
+        ("ix_hallazgo_sasts_titulo_gin", "hallazgo_sasts", "titulo"),
+        ("ix_hallazgo_sasts_descripcion_gin", "hallazgo_sasts", "descripcion"),
+        ("ix_hallazgo_dasts_titulo_gin", "hallazgo_dasts", "titulo"),
+        ("ix_hallazgo_dasts_descripcion_gin", "hallazgo_dasts", "descripcion"),
+        ("ix_hallazgo_masts_titulo_gin", "hallazgo_masts", "titulo"),
+        ("ix_hallazgo_masts_descripcion_gin", "hallazgo_masts", "descripcion"),
+        ("ix_control_seguridads_nombre_gin", "control_seguridads", "nombre"),
+        ("ix_auditorias_titulo_gin", "auditorias", "titulo"),
+    ]
 
-    # Planes de Remediación
-    op.create_index(
-        "ix_planes_remediacion_descripcion_gin",
-        "planes_remediacion",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_planes_remediacion_acciones_gin",
-        "planes_remediacion",
-        ["acciones_recomendadas"],
-        postgresql_using="gin",
-        postgresql_ops={"acciones_recomendadas": "gin_trgm_ops"},
-    )
-
-    # Temas Emergentes
-    op.create_index(
-        "ix_temas_emergentes_titulo_gin",
-        "temas_emergentes",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_temas_emergentes_descripcion_gin",
-        "temas_emergentes",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-
-    # Iniciativas
-    op.create_index(
-        "ix_iniciativas_titulo_gin",
-        "iniciativas",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_iniciativas_descripcion_gin",
-        "iniciativas",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-
-    # Hallazgos SAST
-    op.create_index(
-        "ix_hallazgo_sasts_titulo_gin",
-        "hallazgo_sasts",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_hallazgo_sasts_descripcion_gin",
-        "hallazgo_sasts",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-
-    # Hallazgos DAST
-    op.create_index(
-        "ix_hallazgo_dasts_titulo_gin",
-        "hallazgo_dasts",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_hallazgo_dasts_descripcion_gin",
-        "hallazgo_dasts",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-
-    # Hallazgos MAST
-    op.create_index(
-        "ix_hallazgo_masts_titulo_gin",
-        "hallazgo_masts",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
-    op.create_index(
-        "ix_hallazgo_masts_descripcion_gin",
-        "hallazgo_masts",
-        ["descripcion"],
-        postgresql_using="gin",
-        postgresql_ops={"descripcion": "gin_trgm_ops"},
-    )
-
-    # Controles de Seguridad
-    op.create_index(
-        "ix_control_seguridads_nombre_gin",
-        "control_seguridads",
-        ["nombre"],
-        postgresql_using="gin",
-        postgresql_ops={"nombre": "gin_trgm_ops"},
-    )
-
-    # Auditorías
-    op.create_index(
-        "ix_auditorias_titulo_gin",
-        "auditorias",
-        ["titulo"],
-        postgresql_using="gin",
-        postgresql_ops={"titulo": "gin_trgm_ops"},
-    )
+    for index_name, table_name, column_name in specs:
+        columns = {c["name"] for c in inspector.get_columns(table_name)}
+        if column_name not in columns:
+            continue
+        op.create_index(
+            index_name,
+            table_name,
+            [column_name],
+            postgresql_using="gin",
+            postgresql_ops={column_name: "gin_trgm_ops"},
+        )
 
 
 def downgrade() -> None:

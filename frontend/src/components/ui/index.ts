@@ -1,6 +1,6 @@
 // Legacy components (upgraded with glass styling)
 export { Button } from './Button';
-export { Input } from './input';
+export { Input } from './Input';
 export { Select } from './Select';
 export { MultiSelect } from './MultiSelect';
 export { Textarea } from './Textarea';
