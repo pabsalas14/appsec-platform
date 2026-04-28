@@ -8,11 +8,11 @@ from httpx import AsyncClient
 BASE_URL = "/api/v1/okr_evidencias"
 
 SAMPLE_PAYLOAD = {
-"revision_q_id": "00000000-0000-0000-0000-000000000000",
-"attachment_id": "00000000-0000-0000-0000-000000000000",
-"url_evidencia": "sample url_evidencia",
-"nombre_archivo": "sample nombre_archivo",
-"tipo_evidencia": "sample tipo_evidencia",
+    "revision_q_id": "00000000-0000-0000-0000-000000000000",
+    "attachment_id": "00000000-0000-0000-0000-000000000000",
+    "url_evidencia": "sample url_evidencia",
+    "nombre_archivo": "sample nombre_archivo",
+    "tipo_evidencia": "sample tipo_evidencia",
 }
 
 
@@ -50,7 +50,5 @@ async def test_okr_evidencia_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

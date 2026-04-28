@@ -51,9 +51,7 @@ async def update_okr_plan_anual(
     entity: OkrPlanAnual = Depends(require_ownership(okr_plan_anual_svc)),
 ):
     """Partially update an owned okr_plan_anual (404 if not owned)."""
-    updated = await okr_plan_anual_svc.update(
-        db, entity.id, entity_in, scope={"user_id": current_user.id}
-    )
+    updated = await okr_plan_anual_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     return success(OkrPlanAnualRead.model_validate(updated).model_dump(mode="json"))
 
 

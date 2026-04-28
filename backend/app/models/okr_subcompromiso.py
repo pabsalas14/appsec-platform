@@ -14,9 +14,7 @@ from app.models.mixins import SoftDeleteMixin
 class OkrSubcompromiso(SoftDeleteMixin, Base):
     __tablename__ = "okr_subcompromisos"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -30,9 +28,7 @@ class OkrSubcompromiso(SoftDeleteMixin, Base):
     resultado_esperado: Mapped[str | None] = mapped_column(Text(), nullable=True)
     peso_interno: Mapped[float] = mapped_column(Float(), nullable=False)
     evidencia_requerida: Mapped[bool] = mapped_column(Boolean(), nullable=False, server_default=text("false"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

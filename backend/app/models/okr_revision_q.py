@@ -14,9 +14,7 @@ from app.models.mixins import SoftDeleteMixin
 class OkrRevisionQ(SoftDeleteMixin, Base):
     __tablename__ = "okr_revision_qs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -32,9 +30,7 @@ class OkrRevisionQ(SoftDeleteMixin, Base):
     comentario_colaborador: Mapped[str | None] = mapped_column(Text(), nullable=True)
     feedback_evaluador: Mapped[str | None] = mapped_column(Text(), nullable=True)
     estado: Mapped[str] = mapped_column(String(255), nullable=False, index=True, server_default=text("'draft'"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

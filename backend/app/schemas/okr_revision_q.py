@@ -30,11 +30,13 @@ class OkrRevisionQBase(BaseModel):
 
 class OkrRevisionQCreate(OkrRevisionQBase):
     """Fields required to create a okr_revision_q. user_id is set from auth context."""
+
     pass
 
 
 class OkrRevisionQUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     subcompromiso_id: UUID | None = None
     quarter: str | None = None
     avance_reportado: float | None = Field(default=None, ge=0, le=100)
@@ -56,6 +58,7 @@ class OkrRevisionQUpdate(BaseModel):
 
 class OkrRevisionQRead(OkrRevisionQBase):
     """Full okr_revision_q representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

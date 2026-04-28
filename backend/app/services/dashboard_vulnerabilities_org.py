@@ -43,9 +43,7 @@ def _hfd(
     return d
 
 
-async def _n(
-    db: AsyncSession, scope, extra: list | None = None
-) -> int:
+async def _n(db: AsyncSession, scope, extra: list | None = None) -> int:
     cond = [Vulnerabilidad.deleted_at.is_(None)]
     if scope is not None:
         cond.append(scope)

@@ -8,14 +8,14 @@ from httpx import AsyncClient
 BASE_URL = "/api/v1/okr_compromisos"
 
 SAMPLE_PAYLOAD = {
-"plan_id": "00000000-0000-0000-0000-000000000000",
-"categoria_id": "00000000-0000-0000-0000-000000000000",
-"nombre_objetivo": "sample nombre_objetivo",
-"descripcion": "sample descripcion",
-"peso_global": 1.0,
-"fecha_inicio": "2026-01-01T00:00:00Z",
-"fecha_fin": "2026-01-01T00:00:00Z",
-"tipo_medicion": "sample tipo_medicion",
+    "plan_id": "00000000-0000-0000-0000-000000000000",
+    "categoria_id": "00000000-0000-0000-0000-000000000000",
+    "nombre_objetivo": "sample nombre_objetivo",
+    "descripcion": "sample descripcion",
+    "peso_global": 1.0,
+    "fecha_inicio": "2026-01-01T00:00:00Z",
+    "fecha_fin": "2026-01-01T00:00:00Z",
+    "tipo_medicion": "sample tipo_medicion",
 }
 
 
@@ -53,7 +53,5 @@ async def test_okr_compromiso_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

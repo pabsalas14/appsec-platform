@@ -16,11 +16,13 @@ class OkrEvidenciaBase(BaseModel):
 
 class OkrEvidenciaCreate(OkrEvidenciaBase):
     """Fields required to create a okr_evidencia. user_id is set from auth context."""
+
     pass
 
 
 class OkrEvidenciaUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     revision_q_id: UUID | None = None
     attachment_id: UUID | None = None
     url_evidencia: str | None = None
@@ -30,6 +32,7 @@ class OkrEvidenciaUpdate(BaseModel):
 
 class OkrEvidenciaRead(OkrEvidenciaBase):
     """Full okr_evidencia representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

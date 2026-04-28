@@ -96,13 +96,17 @@ async def global_search(
     }
 
     # ── Vulnerabilidades ──────────────────────────────────────────────────────
-    stmt = select(Vulnerabilidad).where(
-        Vulnerabilidad.deleted_at.is_(None),
-        or_(
-            Vulnerabilidad.titulo.ilike(pattern),
-            Vulnerabilidad.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(Vulnerabilidad)
+        .where(
+            Vulnerabilidad.deleted_at.is_(None),
+            or_(
+                Vulnerabilidad.titulo.ilike(pattern),
+                Vulnerabilidad.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     vulns = await db.scalars(stmt)
     for vuln in vulns:
         results["Vulnerabilidades"].append(
@@ -116,13 +120,17 @@ async def global_search(
         )
 
     # ── Planes de Remediación ─────────────────────────────────────────────────
-    stmt = select(PlanRemediacion).where(
-        PlanRemediacion.deleted_at.is_(None),
-        or_(
-            PlanRemediacion.descripcion.ilike(pattern),
-            PlanRemediacion.acciones_recomendadas.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(PlanRemediacion)
+        .where(
+            PlanRemediacion.deleted_at.is_(None),
+            or_(
+                PlanRemediacion.descripcion.ilike(pattern),
+                PlanRemediacion.acciones_recomendadas.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     plans = await db.scalars(stmt)
     for plan in plans:
         results["Planes de Remediación"].append(
@@ -136,13 +144,17 @@ async def global_search(
         )
 
     # ── Temas Emergentes ──────────────────────────────────────────────────────
-    stmt = select(TemaEmergente).where(
-        TemaEmergente.deleted_at.is_(None),
-        or_(
-            TemaEmergente.titulo.ilike(pattern),
-            TemaEmergente.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(TemaEmergente)
+        .where(
+            TemaEmergente.deleted_at.is_(None),
+            or_(
+                TemaEmergente.titulo.ilike(pattern),
+                TemaEmergente.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     temas = await db.scalars(stmt)
     for tema in temas:
         results["Temas Emergentes"].append(
@@ -156,13 +168,17 @@ async def global_search(
         )
 
     # ── Iniciativas ───────────────────────────────────────────────────────────
-    stmt = select(Iniciativa).where(
-        Iniciativa.deleted_at.is_(None),
-        or_(
-            Iniciativa.titulo.ilike(pattern),
-            Iniciativa.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(Iniciativa)
+        .where(
+            Iniciativa.deleted_at.is_(None),
+            or_(
+                Iniciativa.titulo.ilike(pattern),
+                Iniciativa.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     inits = await db.scalars(stmt)
     for init in inits:
         results["Iniciativas"].append(
@@ -176,13 +192,17 @@ async def global_search(
         )
 
     # ── Hallazgos SAST ────────────────────────────────────────────────────────
-    stmt = select(HallazgoSast).where(
-        HallazgoSast.deleted_at.is_(None),
-        or_(
-            HallazgoSast.titulo.ilike(pattern),
-            HallazgoSast.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(HallazgoSast)
+        .where(
+            HallazgoSast.deleted_at.is_(None),
+            or_(
+                HallazgoSast.titulo.ilike(pattern),
+                HallazgoSast.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     sasts = await db.scalars(stmt)
     for sast in sasts:
         results["Hallazgos SAST"].append(
@@ -196,13 +216,17 @@ async def global_search(
         )
 
     # ── Hallazgos DAST ────────────────────────────────────────────────────────
-    stmt = select(HallazgoDast).where(
-        HallazgoDast.deleted_at.is_(None),
-        or_(
-            HallazgoDast.titulo.ilike(pattern),
-            HallazgoDast.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(HallazgoDast)
+        .where(
+            HallazgoDast.deleted_at.is_(None),
+            or_(
+                HallazgoDast.titulo.ilike(pattern),
+                HallazgoDast.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     dasts = await db.scalars(stmt)
     for dast in dasts:
         results["Hallazgos DAST"].append(
@@ -216,13 +240,17 @@ async def global_search(
         )
 
     # ── Hallazgos MAST ────────────────────────────────────────────────────────
-    stmt = select(HallazgoMast).where(
-        HallazgoMast.deleted_at.is_(None),
-        or_(
-            HallazgoMast.nombre.ilike(pattern),
-            HallazgoMast.descripcion.ilike(pattern),
-        ),
-    ).limit(10)
+    stmt = (
+        select(HallazgoMast)
+        .where(
+            HallazgoMast.deleted_at.is_(None),
+            or_(
+                HallazgoMast.nombre.ilike(pattern),
+                HallazgoMast.descripcion.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
     masts = await db.scalars(stmt)
     for mast in masts:
         results["Hallazgos MAST"].append(
@@ -236,10 +264,14 @@ async def global_search(
         )
 
     # ── Controles de Seguridad ────────────────────────────────────────────────
-    stmt = select(ControlSeguridad).where(
-        ControlSeguridad.deleted_at.is_(None),
-        ControlSeguridad.nombre.ilike(pattern),
-    ).limit(10)
+    stmt = (
+        select(ControlSeguridad)
+        .where(
+            ControlSeguridad.deleted_at.is_(None),
+            ControlSeguridad.nombre.ilike(pattern),
+        )
+        .limit(10)
+    )
     controls = await db.scalars(stmt)
     for ctrl in controls:
         results["Controles de Seguridad"].append(
@@ -253,10 +285,14 @@ async def global_search(
         )
 
     # ── Auditorías ────────────────────────────────────────────────────────────
-    stmt = select(Auditoria).where(
-        Auditoria.deleted_at.is_(None),
-        Auditoria.titulo.ilike(pattern),
-    ).limit(10)
+    stmt = (
+        select(Auditoria)
+        .where(
+            Auditoria.deleted_at.is_(None),
+            Auditoria.titulo.ilike(pattern),
+        )
+        .limit(10)
+    )
     audits = await db.scalars(stmt)
     for audit in audits:
         results["Auditorías"].append(
@@ -270,10 +306,6 @@ async def global_search(
         )
 
     # ── Filter out empty categories and normalize response ────────────────────
-    grouped_results = {
-        category: [r.to_dict() for r in items]
-        for category, items in results.items()
-        if items
-    }
+    grouped_results = {category: [r.to_dict() for r in items] for category, items in results.items() if items}
 
     return success({"results": grouped_results, "query": q})

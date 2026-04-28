@@ -147,9 +147,7 @@ async def build_team_premium(
         )
 
     con_carga = [a for a in analistas if a["asig"] > 0]
-    prom_avance = (
-        int(sum(a["avance"] for a in con_carga) / len(con_carga)) if con_carga else 0
-    )
+    prom_avance = int(sum(a["avance"] for a in con_carga) / len(con_carga)) if con_carga else 0
     max_tareas = max((a["asig"] for a in analistas), default=0)
 
     kpis = [

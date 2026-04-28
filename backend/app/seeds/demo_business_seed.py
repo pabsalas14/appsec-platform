@@ -271,7 +271,9 @@ async def _ensure_demo_business_context(db: AsyncSession, admin: User) -> Ctx:
         ("Programa anual SAST 2026", "plataforma", "En progreso"),
         ("Estandarizar revisiones tercero", "proceso", "Planificada"),
     ]:
-        ex_i = (await db.execute(select(Iniciativa).where(Iniciativa.user_id == uid, Iniciativa.titulo == titulo))).scalar_one_or_none()
+        ex_i = (
+            await db.execute(select(Iniciativa).where(Iniciativa.user_id == uid, Iniciativa.titulo == titulo))
+        ).scalar_one_or_none()
         if ex_i is None:
             db.add(
                 Iniciativa(

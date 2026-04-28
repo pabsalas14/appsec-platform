@@ -8,9 +8,9 @@ from httpx import AsyncClient
 BASE_URL = "/api/v1/okr_categorias"
 
 SAMPLE_PAYLOAD = {
-"nombre": "sample nombre",
-"descripcion": "sample descripcion",
-"activo": False,
+    "nombre": "sample nombre",
+    "descripcion": "sample descripcion",
+    "activo": False,
 }
 
 
@@ -48,7 +48,5 @@ async def test_okr_categoria_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

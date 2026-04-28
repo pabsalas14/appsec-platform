@@ -287,9 +287,7 @@ class TestAuditabilityA2SoftDelete:
         if resp_audit.status_code == 200:
             logs = resp_audit.json()["data"]
             delete_logs = [
-                log_entry
-                for log_entry in logs
-                if log_entry.get("action") in {"delete", "vulnerabilidad.delete"}
+                log_entry for log_entry in logs if log_entry.get("action") in {"delete", "vulnerabilidad.delete"}
             ]
             assert len(delete_logs) > 0, "A2 FAILED: Deletion not logged"
 

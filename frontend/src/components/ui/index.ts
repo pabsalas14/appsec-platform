@@ -1,11 +1,11 @@
 // Legacy components (upgraded with glass styling)
-export { Button } from './button';
+export { Button } from './Button';
 export { Input } from './Input';
 export { Select } from './Select';
 export { MultiSelect } from './MultiSelect';
 export { Textarea } from './Textarea';
 export { Modal } from './Modal';
-export { Badge } from './badge';
+export { Badge } from './Badge';
 export { Spinner, PageLoader } from './Spinner';
 export { Alert, AlertDescription, AlertTitle } from './alert';
 

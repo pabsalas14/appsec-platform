@@ -118,9 +118,15 @@ async def test_compute_plan_score_weighted_subitems_and_commitments(session_fact
         db.add_all([s11, s12, s21])
         await db.flush()
 
-        await _add_revision(db, user_id=owner.id, subcompromiso_id=s11.id, quarter="Q1", avance_reportado=50, avance_validado=50)
-        await _add_revision(db, user_id=owner.id, subcompromiso_id=s12.id, quarter="Q1", avance_reportado=80, avance_validado=None)
-        await _add_revision(db, user_id=owner.id, subcompromiso_id=s21.id, quarter="Q1", avance_reportado=90, avance_validado=90)
+        await _add_revision(
+            db, user_id=owner.id, subcompromiso_id=s11.id, quarter="Q1", avance_reportado=50, avance_validado=50
+        )
+        await _add_revision(
+            db, user_id=owner.id, subcompromiso_id=s12.id, quarter="Q1", avance_reportado=80, avance_validado=None
+        )
+        await _add_revision(
+            db, user_id=owner.id, subcompromiso_id=s21.id, quarter="Q1", avance_reportado=90, avance_validado=90
+        )
 
         score = await compute_plan_score(db, plan.id, quarter="Q1")
         assert score["score_global"] == 76.0
@@ -167,8 +173,12 @@ async def test_compute_plan_score_filters_by_quarter(session_factory):
         db.add(s)
         await db.flush()
 
-        await _add_revision(db, user_id=owner.id, subcompromiso_id=s.id, quarter="Q1", avance_reportado=40, avance_validado=40)
-        await _add_revision(db, user_id=owner.id, subcompromiso_id=s.id, quarter="Q2", avance_reportado=90, avance_validado=90)
+        await _add_revision(
+            db, user_id=owner.id, subcompromiso_id=s.id, quarter="Q1", avance_reportado=40, avance_validado=40
+        )
+        await _add_revision(
+            db, user_id=owner.id, subcompromiso_id=s.id, quarter="Q2", avance_reportado=90, avance_validado=90
+        )
 
         q1 = await compute_plan_score(db, plan.id, quarter="Q1")
         q2 = await compute_plan_score(db, plan.id, quarter="Q2")

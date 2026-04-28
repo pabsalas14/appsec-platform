@@ -17,11 +17,13 @@ class OkrPlanAnualBase(BaseModel):
 
 class OkrPlanAnualCreate(OkrPlanAnualBase):
     """Fields required to create a okr_plan_anual. user_id is set from auth context."""
+
     pass
 
 
 class OkrPlanAnualUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     colaborador_id: UUID | None = None
     evaluador_id: UUID | None = None
     ano: int | None = None
@@ -32,6 +34,7 @@ class OkrPlanAnualUpdate(BaseModel):
 
 class OkrPlanAnualRead(OkrPlanAnualBase):
     """Full okr_plan_anual representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

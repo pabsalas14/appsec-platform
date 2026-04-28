@@ -29,19 +29,19 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-import app.models.okr_categoria   # noqa: F401
+import app.models.okr_categoria  # noqa: F401
 
-import app.models.okr_plan_anual   # noqa: F401
+import app.models.okr_plan_anual  # noqa: F401
 
-import app.models.okr_compromiso   # noqa: F401
+import app.models.okr_compromiso  # noqa: F401
 
-import app.models.okr_subcompromiso   # noqa: F401
+import app.models.okr_subcompromiso  # noqa: F401
 
-import app.models.okr_revision_q   # noqa: F401
+import app.models.okr_revision_q  # noqa: F401
 
-import app.models.okr_evidencia   # noqa: F401
+import app.models.okr_evidencia  # noqa: F401
 
-import app.models.okr_cierre_q   # noqa: F401
+import app.models.okr_cierre_q  # noqa: F401
 
 target_metadata = Base.metadata
 

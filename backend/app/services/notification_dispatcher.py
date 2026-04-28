@@ -99,12 +99,15 @@ class NotificationDispatcher:
 
         # Send email notification if enabled
         try:
-            if await user_preferences_svc.is_channel_enabled(
-                db,
-                user_id,
-                notification_type,
-                "email",
-            ) and email_template_nombre:
+            if (
+                await user_preferences_svc.is_channel_enabled(
+                    db,
+                    user_id,
+                    notification_type,
+                    "email",
+                )
+                and email_template_nombre
+            ):
                 email_log = await NotificationDispatcher._send_email(
                     db,
                     user,

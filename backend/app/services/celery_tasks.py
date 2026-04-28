@@ -35,9 +35,7 @@ class CeleryTasksManager:
 
         async with async_session() as db:
             try:
-                result = await db.execute(
-                    select(EmailLog).where(EmailLog.id == uuid.UUID(email_log_id))
-                )
+                result = await db.execute(select(EmailLog).where(EmailLog.id == uuid.UUID(email_log_id)))
                 email_log = result.scalar_one_or_none()
 
                 if not email_log:
@@ -123,9 +121,7 @@ class CeleryTasksManager:
         try:
             async with async_session() as db:
                 cutoff = datetime.now(UTC).replace(day=1) - timedelta(days=days_to_keep)
-                result = await db.execute(
-                    select(EmailLog).where(EmailLog.created_at < cutoff)
-                )
+                result = await db.execute(select(EmailLog).where(EmailLog.created_at < cutoff))
                 logs = result.scalars().all()
                 deleted = 0
 

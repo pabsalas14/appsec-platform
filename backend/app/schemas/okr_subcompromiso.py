@@ -16,11 +16,13 @@ class OkrSubcompromisoBase(BaseModel):
 
 class OkrSubcompromisoCreate(OkrSubcompromisoBase):
     """Fields required to create a okr_subcompromiso. user_id is set from auth context."""
+
     pass
 
 
 class OkrSubcompromisoUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     compromiso_id: UUID | None = None
     nombre_sub_item: str | None = None
     resultado_esperado: str | None = None
@@ -30,6 +32,7 @@ class OkrSubcompromisoUpdate(BaseModel):
 
 class OkrSubcompromisoRead(OkrSubcompromisoBase):
     """Full okr_subcompromiso representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

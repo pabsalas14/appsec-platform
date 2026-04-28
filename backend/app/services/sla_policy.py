@@ -93,4 +93,3 @@ def compute_deadline(days: int, *, start_at: datetime | None = None) -> datetime
 def status_disables_sla(status_id: str | None) -> bool:
     s = _norm(status_id)
     return s in {"riesgo_aceptado", "excepcion", "falso_positivo", "cerrada", "remediada"}
-

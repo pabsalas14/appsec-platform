@@ -8,10 +8,10 @@ from httpx import AsyncClient
 BASE_URL = "/api/v1/okr_cierre_qs"
 
 SAMPLE_PAYLOAD = {
-"plan_id": "00000000-0000-0000-0000-000000000000",
-"quarter": "sample quarter",
-"retroalimentacion_general": "sample retroalimentacion_general",
-"cerrado_at": "2026-01-01T00:00:00Z",
+    "plan_id": "00000000-0000-0000-0000-000000000000",
+    "quarter": "sample quarter",
+    "retroalimentacion_general": "sample retroalimentacion_general",
+    "cerrado_at": "2026-01-01T00:00:00Z",
 }
 
 
@@ -49,7 +49,5 @@ async def test_okr_cierre_q_idor_protected(
         ("PATCH", {"json": {}}),
         ("DELETE", {}),
     ]:
-        r = await client.request(
-            method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args
-        )
+        r = await client.request(method, f"{BASE_URL}/{resource_id}", headers=other_auth_headers, **args)
         assert r.status_code == 404, f"IDOR leak on {method}: {r.text}"

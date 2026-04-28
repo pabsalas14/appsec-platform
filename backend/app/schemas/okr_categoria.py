@@ -14,11 +14,13 @@ class OkrCategoriaBase(BaseModel):
 
 class OkrCategoriaCreate(OkrCategoriaBase):
     """Fields required to create a okr_categoria. user_id is set from auth context."""
+
     pass
 
 
 class OkrCategoriaUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     nombre: str | None = None
     descripcion: str | None = None
     activo: bool | None = None
@@ -26,6 +28,7 @@ class OkrCategoriaUpdate(BaseModel):
 
 class OkrCategoriaRead(OkrCategoriaBase):
     """Full okr_categoria representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

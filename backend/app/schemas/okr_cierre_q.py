@@ -23,11 +23,13 @@ class OkrCierreQBase(BaseModel):
 
 class OkrCierreQCreate(OkrCierreQBase):
     """Fields required to create a okr_cierre_q. user_id is set from auth context."""
+
     pass
 
 
 class OkrCierreQUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     plan_id: UUID | None = None
     quarter: str | None = None
     retroalimentacion_general: str | None = Field(default=None, min_length=1)
@@ -46,6 +48,7 @@ class OkrCierreQUpdate(BaseModel):
 
 class OkrCierreQRead(OkrCierreQBase):
     """Full okr_cierre_q representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

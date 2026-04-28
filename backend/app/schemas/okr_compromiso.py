@@ -19,11 +19,13 @@ class OkrCompromisoBase(BaseModel):
 
 class OkrCompromisoCreate(OkrCompromisoBase):
     """Fields required to create a okr_compromiso. user_id is set from auth context."""
+
     pass
 
 
 class OkrCompromisoUpdate(BaseModel):
     """All fields optional for partial updates."""
+
     plan_id: UUID | None = None
     categoria_id: UUID | None = None
     nombre_objetivo: str | None = None
@@ -36,6 +38,7 @@ class OkrCompromisoUpdate(BaseModel):
 
 class OkrCompromisoRead(OkrCompromisoBase):
     """Full okr_compromiso representation returned from the API."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

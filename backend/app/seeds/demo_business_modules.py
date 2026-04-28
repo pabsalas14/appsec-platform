@@ -163,9 +163,7 @@ async def ensure_demo_vulnerabilities(db: AsyncSession, admin: User, ctx: Ctx) -
     await db.flush()
 
 
-async def seed_programas_y_hallazgos(
-    db: AsyncSession, admin: User, ctx: Ctx, vid: list[uuid.UUID]
-) -> None:
+async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vid: list[uuid.UUID]) -> None:
     # ── SAST
     r = await db.execute(
         select(ProgramaSast).where(ProgramaSast.user_id == admin.id, ProgramaSast.nombre == f"{P}Programa SAST 2026")
@@ -451,9 +449,7 @@ async def seed_programas_y_hallazgos(
 
     # ── MAST
     r6 = await db.execute(
-        select(EjecucionMAST).where(
-            EjecucionMAST.user_id == admin.id, EjecucionMAST.aplicacion_movil_id == ctx.amov_id
-        )
+        select(EjecucionMAST).where(EjecucionMAST.user_id == admin.id, EjecucionMAST.aplicacion_movil_id == ctx.amov_id)
     )
     if r6.scalar_one_or_none() is None:
         ejm = EjecucionMAST(
@@ -582,7 +578,9 @@ async def seed_programas_y_hallazgos(
     await db.flush()
 
     # ── Auditoría
-    r9 = await db.execute(select(Auditoria).where(Auditoria.user_id == admin.id, Auditoria.titulo == f"{P}Auditoría interna 2026"))
+    r9 = await db.execute(
+        select(Auditoria).where(Auditoria.user_id == admin.id, Auditoria.titulo == f"{P}Auditoría interna 2026")
+    )
     if r9.scalar_one_or_none() is None:
         aud = Auditoria(
             id=uuid.uuid4(),
@@ -759,7 +757,9 @@ async def seed_programas_y_hallazgos(
         )
         db.add(tema)
         await db.flush()
-    n_ta = await db.scalar(select(func.count()).select_from(ActualizacionTema).where(ActualizacionTema.tema_id == tema.id))
+    n_ta = await db.scalar(
+        select(func.count()).select_from(ActualizacionTema).where(ActualizacionTema.tema_id == tema.id)
+    )
     if not n_ta:
         db.add(
             ActualizacionTema(
@@ -771,7 +771,9 @@ async def seed_programas_y_hallazgos(
                 fuente="comité",
             )
         )
-    n_cc = await db.scalar(select(func.count()).select_from(CierreConclusion).where(CierreConclusion.tema_id == tema.id))
+    n_cc = await db.scalar(
+        select(func.count()).select_from(CierreConclusion).where(CierreConclusion.tema_id == tema.id)
+    )
     if not n_cc:
         db.add(
             CierreConclusion(
