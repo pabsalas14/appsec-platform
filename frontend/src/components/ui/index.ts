@@ -117,8 +117,3 @@ export { TableSkeleton } from './TableSkeleton';
 export { DatePicker } from './date-picker';
 export { DateRangePicker } from './date-range-picker';
 
-// AI Builder components
-export { SliderInput } from './SliderInput';
-export { VariableAutocomplete } from './VariableAutocomplete';
-export { PromptPreview } from './PromptPreview';
-export { RuleStatusBadge } from './RuleStatusBadge';
