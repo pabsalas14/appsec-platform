@@ -8,7 +8,7 @@ import { AlertCircle, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Calendar
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/Textarea';
 
 interface Tema {

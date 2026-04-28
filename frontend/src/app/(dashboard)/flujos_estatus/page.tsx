@@ -28,9 +28,9 @@ export default function FlujoEstatusPage() {
   const flujoQuery = useFlujoEstatus();
   const items = flujoQuery?.data ?? [];
   const isLoading = Boolean(flujoQuery?.isLoading);
-  const createMut = useCreateFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const updateMut = useUpdateFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const deleteMut = useDeleteFlujoEstatus() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const createMut = useCreateFlujoEstatus();
+  const updateMut = useUpdateFlujoEstatus();
+  const deleteMut = useDeleteFlujoEstatus();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<FlujoEstatus | null>(null);
@@ -53,11 +53,11 @@ export default function FlujoEstatusPage() {
   const onSubmit = async (values: FormData) => {
     try {
       if (editTarget) {
-        await updateMut.mutateAsync({ id: editTarget.id, ...values });
+        await updateMut?.mutateAsync?.({ id: editTarget.id, ...values });
         toast.success('Flujo actualizado');
         setEditTarget(null);
       } else {
-        await createMut.mutateAsync(values);
+        await createMut?.mutateAsync?.(values);
         toast.success('Flujo creado');
         setCreateOpen(false);
       }
@@ -69,7 +69,7 @@ export default function FlujoEstatusPage() {
 
   const onDelete = async (id: string) => {
     try {
-      await deleteMut.mutateAsync(id);
+      await deleteMut?.mutateAsync?.(id);
       toast.success('Flujo eliminado');
     } catch (e) {
       toast.error(extractErrorMessage(e, 'Error al eliminar'));
@@ -112,8 +112,8 @@ export default function FlujoEstatusPage() {
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); }}>Cancelar</Button>
         </DialogClose>
-        <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
-          {(createMut.isPending || updateMut.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)}>
+          {(Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {editTarget ? 'Actualizar' : 'Crear'}
         </Button>
       </div>

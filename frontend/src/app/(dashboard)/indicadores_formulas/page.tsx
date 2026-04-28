@@ -29,9 +29,9 @@ export default function IndicadoresFormulasPage() {
   const formulasQuery = useIndicadorFormulas();
   const items = formulasQuery?.data ?? [];
   const isLoading = Boolean(formulasQuery?.isLoading);
-  const createMut = useCreateIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const updateMut = useUpdateIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const deleteMut = useDeleteIndicadorFormula() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const createMut = useCreateIndicadorFormula();
+  const updateMut = useUpdateIndicadorFormula();
+  const deleteMut = useDeleteIndicadorFormula();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<IndicadorFormula | null>(null);
@@ -74,11 +74,11 @@ export default function IndicadoresFormulasPage() {
     try {
       const payload = { ...values, formula: parsedFormula };
       if (editTarget) {
-        await updateMut.mutateAsync({ id: editTarget.id, ...payload });
+        await updateMut?.mutateAsync?.({ id: editTarget.id, ...payload });
         toast.success('Fórmula actualizada');
         setEditTarget(null);
       } else {
-        await createMut.mutateAsync(payload);
+        await createMut?.mutateAsync?.(payload);
         toast.success('Fórmula creada');
         setCreateOpen(false);
       }
@@ -90,7 +90,7 @@ export default function IndicadoresFormulasPage() {
 
   const onDelete = async (id: string) => {
     try {
-      await deleteMut.mutateAsync(id);
+      await deleteMut?.mutateAsync?.(id);
       toast.success('Fórmula eliminada');
     } catch (e) {
       toast.error(extractErrorMessage(e, 'Error al eliminar'));
@@ -149,8 +149,8 @@ export default function IndicadoresFormulasPage() {
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); setFormulaText('{}'); }}>Cancelar</Button>
         </DialogClose>
-        <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
-          {(createMut.isPending || updateMut.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)}>
+          {(Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {editTarget ? 'Actualizar' : 'Crear'}
         </Button>
       </div>

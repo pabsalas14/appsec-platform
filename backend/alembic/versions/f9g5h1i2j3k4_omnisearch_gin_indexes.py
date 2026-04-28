@@ -22,6 +22,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Create GIN indexes for omnisearch."""
+    # gin_trgm_ops requires pg_trgm extension on fresh PostgreSQL instances.
+    op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+
     # Vulnerabilidades
     op.create_index(
         "ix_vulnerabilidads_titulo_gin",

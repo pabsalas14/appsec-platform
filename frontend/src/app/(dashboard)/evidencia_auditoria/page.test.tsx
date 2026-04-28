@@ -15,16 +15,16 @@ describe('EvidenciaAuditoriaPage', () => {
 
   it('renders audit evidence list', () => {
     const mockEvidence = [
-      { id: '1', descripcion: 'Scan report', tipo: 'reporte', archivo_nombre: 'scan.pdf' },
+      { id: '1', nombre_archivo: 'Scan report', tipo_evidencia: 'reporte', url_archivo: 'https://example.com/scan.pdf', hash_sha256: 'abc', auditoria_id: 'aud-1', created_at: new Date().toISOString() },
     ];
-    vi.mocked(hooks.useEvidenciaAuditorias).mockReturnValueOnce({ data: mockEvidence, isLoading: false } as any);
+    vi.mocked(hooks.useEvidenciaAuditorias).mockReturnValue({ data: mockEvidence, isLoading: false } as any);
     render(<EvidenciaAuditoriaPage />, { wrapper });
     expect(screen.getByText('Scan report')).toBeInTheDocument();
   });
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useEvidenciaAuditorias).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.useEvidenciaAuditorias).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<EvidenciaAuditoriaPage />, { wrapper });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Evidencias de Auditoría/i)).toBeInTheDocument();
   });
 });

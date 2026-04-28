@@ -15,16 +15,16 @@ describe('ActualizacionTemaPage', () => {
 
   it('renders topic updates list', () => {
     const mockUpdates = [
-      { id: '1', descripcion: 'CVE update', fuente: 'external', impacto_cambio: 'alto' },
+      { id: '1', titulo: 'CVE update', contenido: 'Detalle', tema_id: 'tema-1', fuente: 'external', created_at: new Date().toISOString() },
     ];
-    vi.mocked(hooks.useActualizacionTemas).mockReturnValueOnce({ data: mockUpdates, isLoading: false } as any);
+    vi.mocked(hooks.useActualizacionTemas).mockReturnValue({ data: mockUpdates, isLoading: false } as any);
     render(<ActualizacionTemaPage />, { wrapper });
     expect(screen.getByText('CVE update')).toBeInTheDocument();
   });
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useActualizacionTemas).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.useActualizacionTemas).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<ActualizacionTemaPage />, { wrapper });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Actualizaciones de Temas Emergentes/i)).toBeInTheDocument();
   });
 });

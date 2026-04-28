@@ -27,7 +27,7 @@ describe('MadurezPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useMadurez).mockReturnValueOnce({
+    vi.mocked(hooks.useMadurez).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
@@ -39,7 +39,7 @@ describe('MadurezPage', () => {
   });
 
   it('renders empty state when no data', async () => {
-    vi.mocked(hooks.useMadurez).mockReturnValueOnce({
+    vi.mocked(hooks.useMadurez).mockReturnValue({
       data: null,
       isLoading: false,
       isError: false,
@@ -62,7 +62,7 @@ describe('MadurezPage', () => {
       by_organizacion: [],
     };
 
-    vi.mocked(hooks.useMadurez).mockReturnValueOnce({
+    vi.mocked(hooks.useMadurez).mockReturnValue({
       data: mockData,
       isLoading: false,
       isError: false,
@@ -75,7 +75,7 @@ describe('MadurezPage', () => {
   });
 
   it('renders export CSV button', () => {
-    vi.mocked(hooks.useMadurez).mockReturnValueOnce({
+    vi.mocked(hooks.useMadurez).mockReturnValue({
       data: { score: 75, total: 100, cerradas: 75, activas: 25 },
       isLoading: false,
       isError: false,
@@ -98,7 +98,7 @@ describe('MadurezPage', () => {
       ],
     };
 
-    vi.mocked(hooks.useMadurez).mockReturnValueOnce({
+    vi.mocked(hooks.useMadurez).mockReturnValue({
       data: mockData,
       isLoading: false,
       isError: false,

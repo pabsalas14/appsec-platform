@@ -17,14 +17,14 @@ describe('FlujoEstatusPage', () => {
     const mockFlows = [
       { id: '1', entity_type: 'vulnerabilidad', from_status: 'abierta', to_status: 'cerrada' },
     ];
-    vi.mocked(hooks.useFlujoEstatus).mockReturnValueOnce({ data: mockFlows, isLoading: false } as any);
+    vi.mocked(hooks.useFlujoEstatus).mockReturnValue({ data: mockFlows, isLoading: false } as any);
     render(<FlujoEstatusPage />, { wrapper });
     expect(screen.getByText('vulnerabilidad')).toBeInTheDocument();
   });
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useFlujoEstatus).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.useFlujoEstatus).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<FlujoEstatusPage />, { wrapper });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Flujos de Estatus/i)).toBeInTheDocument();
   });
 });

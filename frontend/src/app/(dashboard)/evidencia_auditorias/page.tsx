@@ -31,9 +31,9 @@ export default function EvidenciaAuditoriasPage() {
   const isLoading = Boolean(evidenciasQuery?.isLoading);
   const auditoriasQuery = useAuditorias();
   const auditorias = auditoriasQuery?.data ?? [];
-  const createMut = useCreateEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const updateMut = useUpdateEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const deleteMut = useDeleteEvidenciaAuditoria() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const createMut = useCreateEvidenciaAuditoria();
+  const updateMut = useUpdateEvidenciaAuditoria();
+  const deleteMut = useDeleteEvidenciaAuditoria();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<EvidenciaAuditoria | null>(null);
@@ -58,11 +58,11 @@ export default function EvidenciaAuditoriasPage() {
   const onSubmit = async (values: FormData) => {
     try {
       if (editTarget) {
-        await updateMut.mutateAsync({ id: editTarget.id, ...values });
+        await updateMut?.mutateAsync?.({ id: editTarget.id, ...values });
         toast.success('Evidencia actualizada');
         setEditTarget(null);
       } else {
-        await createMut.mutateAsync(values);
+        await createMut?.mutateAsync?.(values);
         toast.success('Evidencia registrada');
         setCreateOpen(false);
       }
@@ -74,7 +74,7 @@ export default function EvidenciaAuditoriasPage() {
 
   const onDelete = async (id: string) => {
     try {
-      await deleteMut.mutateAsync(id);
+      await deleteMut?.mutateAsync?.(id);
       toast.success('Evidencia eliminada');
     } catch (e) {
       toast.error(extractErrorMessage(e, 'Error al eliminar'));
@@ -107,8 +107,8 @@ export default function EvidenciaAuditoriasPage() {
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); }}>Cancelar</Button>
         </DialogClose>
-        <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
-          {(createMut.isPending || updateMut.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)}>
+          {(Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {editTarget ? 'Actualizar' : 'Registrar'}
         </Button>
       </div>

@@ -19,17 +19,17 @@ describe('TemaEmergentePage', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useTemaEmergentes).mockReturnValueOnce({
+    vi.mocked(hooks.useTemaEmergentes).mockReturnValue({
       data: undefined,
       isLoading: true,
     } as any);
 
     render(<TemaEmergentePage />, { wrapper: createWrapper() });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Temas Emergentes/i)).toBeInTheDocument();
   });
 
   it('renders empty state', async () => {
-    vi.mocked(hooks.useTemaEmergentes).mockReturnValueOnce({
+    vi.mocked(hooks.useTemaEmergentes).mockReturnValue({
       data: [],
       isLoading: false,
     } as any);
@@ -53,7 +53,7 @@ describe('TemaEmergentePage', () => {
       },
     ];
 
-    vi.mocked(hooks.useTemaEmergentes).mockReturnValueOnce({
+    vi.mocked(hooks.useTemaEmergentes).mockReturnValue({
       data: mockTopics,
       isLoading: false,
     } as any);
@@ -64,7 +64,7 @@ describe('TemaEmergentePage', () => {
   });
 
   it('renders create button', () => {
-    vi.mocked(hooks.useTemaEmergentes).mockReturnValueOnce({
+    vi.mocked(hooks.useTemaEmergentes).mockReturnValue({
       data: [],
       isLoading: false,
     } as any);

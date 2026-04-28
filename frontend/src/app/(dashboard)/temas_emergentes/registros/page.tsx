@@ -65,11 +65,14 @@ const formSchema = TemaEmergenteCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function TemaEmergentesPage() {
-  const { data: items = [], isLoading } = useTemaEmergentes();
-  const { data: celulas = [] } = useCelulas();
-  const createMut = useCreateTemaEmergente() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const updateMut = useUpdateTemaEmergente() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const deleteMut = useDeleteTemaEmergente() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const temasQuery = useTemaEmergentes();
+  const items = temasQuery?.data ?? [];
+  const isLoading = Boolean(temasQuery?.isLoading);
+  const celulasQuery = useCelulas();
+  const celulas = celulasQuery?.data ?? [];
+  const createMut = useCreateTemaEmergente();
+  const updateMut = useUpdateTemaEmergente();
+  const deleteMut = useDeleteTemaEmergente();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<TemaEmergente | null>(null);
@@ -106,11 +109,11 @@ export default function TemaEmergentesPage() {
     try {
       const payload = { ...values, celula_id: values.celula_id || null };
       if (editTarget) {
-        await updateMut.mutateAsync({ id: editTarget.id, ...payload });
+        await updateMut?.mutateAsync?.({ id: editTarget.id, ...payload });
         toast.success('Tema actualizado');
         setEditTarget(null);
       } else {
-        await createMut.mutateAsync(payload);
+        await createMut?.mutateAsync?.(payload);
         toast.success('Tema creado');
         setCreateOpen(false);
       }
@@ -122,7 +125,7 @@ export default function TemaEmergentesPage() {
 
   const onDelete = async (id: string) => {
     try {
-      await deleteMut.mutateAsync(id);
+      await deleteMut?.mutateAsync?.(id);
       toast.success('Tema eliminado');
     } catch (e) {
       toast.error(extractErrorMessage(e, 'Error al eliminar'));
@@ -167,8 +170,8 @@ export default function TemaEmergentesPage() {
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); }}>Cancelar</Button>
         </DialogClose>
-        <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>
-          {(createMut.isPending || updateMut.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)}>
+          {(Boolean(createMut?.isPending) || Boolean(updateMut?.isPending)) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {editTarget ? 'Actualizar' : 'Crear'}
         </Button>
       </div>

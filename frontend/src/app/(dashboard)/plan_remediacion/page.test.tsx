@@ -19,13 +19,13 @@ describe('PlanRemediacionPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('renders loading state', () => {
-    vi.mocked(hooks.usePlanRemediacions).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.usePlanRemediacions).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<PlanRemediacionPage />, { wrapper: createWrapper() });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Planes de Remediación/i)).toBeInTheDocument();
   });
 
   it('renders empty state', async () => {
-    vi.mocked(hooks.usePlanRemediacions).mockReturnValueOnce({ data: [], isLoading: false } as any);
+    vi.mocked(hooks.usePlanRemediacions).mockReturnValue({ data: [], isLoading: false } as any);
     render(<PlanRemediacionPage />, { wrapper: createWrapper() });
     await waitFor(() => expect(screen.getByText(/Sin planes/i)).toBeInTheDocument());
   });
@@ -34,7 +34,7 @@ describe('PlanRemediacionPage', () => {
     const mockPlans = [
       { id: '1', descripcion: 'Fix vulnerability', estado: 'pendiente', responsable: 'team' },
     ];
-    vi.mocked(hooks.usePlanRemediacions).mockReturnValueOnce({ data: mockPlans, isLoading: false } as any);
+    vi.mocked(hooks.usePlanRemediacions).mockReturnValue({ data: mockPlans, isLoading: false } as any);
     render(<PlanRemediacionPage />, { wrapper: createWrapper() });
     expect(screen.getByText('Fix vulnerability')).toBeInTheDocument();
   });

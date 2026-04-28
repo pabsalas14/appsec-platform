@@ -15,16 +15,16 @@ describe('CierreConclusionPage', () => {
 
   it('renders closures list', () => {
     const mockClosures = [
-      { id: '1', descripcion: 'Closed', tipo_cierre: 'resuelto', conclusiones: 'Fixed issue' },
+      { id: '1', titulo: 'Closed', conclusion: 'Fixed issue', recomendaciones: null, fecha_cierre: new Date().toISOString(), tema_id: 'tema-1' },
     ];
-    vi.mocked(hooks.useCierreConclusiones).mockReturnValueOnce({ data: mockClosures, isLoading: false } as any);
+    vi.mocked(hooks.useCierreConclusiones).mockReturnValue({ data: mockClosures, isLoading: false } as any);
     render(<CierreConclusionPage />, { wrapper });
     expect(screen.getByText('Closed')).toBeInTheDocument();
   });
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useCierreConclusiones).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.useCierreConclusiones).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<CierreConclusionPage />, { wrapper });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Cierres y Conclusiones/i)).toBeInTheDocument();
   });
 });

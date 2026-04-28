@@ -33,8 +33,8 @@ export default function FiltrosGuardadosPage() {
   const filtrosQuery = useFiltrosGuardados();
   const items = filtrosQuery?.data ?? [];
   const isLoading = Boolean(filtrosQuery?.isLoading);
-  const createMut = useCreateFiltroGuardado() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
-  const deleteMut = useDeleteFiltroGuardado() ?? (({ mutateAsync: async () => undefined, isPending: false }) as any);
+  const createMut = useCreateFiltroGuardado();
+  const deleteMut = useDeleteFiltroGuardado();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [parametrosText, setParametrosText] = useState('{}');
@@ -67,7 +67,7 @@ export default function FiltrosGuardadosPage() {
     const parametros = parseParametros(parametrosText);
     if (!parametros) return;
     try {
-      await createMut.mutateAsync({ ...values, parametros });
+      await createMut?.mutateAsync?.({ ...values, parametros });
       toast.success('Filtro guardado');
       setCreateOpen(false);
       form.reset();
@@ -78,7 +78,7 @@ export default function FiltrosGuardadosPage() {
 
   const onDelete = async (id: string) => {
     try {
-      await deleteMut.mutateAsync(id);
+      await deleteMut?.mutateAsync?.(id);
       toast.success('Filtro eliminado');
     } catch (e) {
       toast.error(extractErrorMessage(e, 'Error al eliminar'));
@@ -137,8 +137,8 @@ export default function FiltrosGuardadosPage() {
                 <DialogClose asChild>
                   <Button type="button" variant="outline" onClick={() => form.reset()}>Cancelar</Button>
                 </DialogClose>
-                <Button type="submit" disabled={createMut.isPending}>
-                  {createMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={Boolean(createMut?.isPending)}>
+                  {Boolean(createMut?.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Guardar
                 </Button>
               </div>

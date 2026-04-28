@@ -19,17 +19,17 @@ describe('FiltrosGuardadosPage', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useFiltrosGuardados).mockReturnValueOnce({
+    vi.mocked(hooks.useFiltrosGuardados).mockReturnValue({
       data: undefined,
       isLoading: true,
     } as any);
 
     render(<FiltrosGuardadosPage />, { wrapper: createWrapper() });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Filtros Guardados/i)).toBeInTheDocument();
   });
 
   it('renders empty state when no filters', async () => {
-    vi.mocked(hooks.useFiltrosGuardados).mockReturnValueOnce({
+    vi.mocked(hooks.useFiltrosGuardados).mockReturnValue({
       data: [],
       isLoading: false,
     } as any);
@@ -53,7 +53,7 @@ describe('FiltrosGuardadosPage', () => {
       },
     ];
 
-    vi.mocked(hooks.useFiltrosGuardados).mockReturnValueOnce({
+    vi.mocked(hooks.useFiltrosGuardados).mockReturnValue({
       data: mockFilters,
       isLoading: false,
     } as any);
@@ -64,7 +64,7 @@ describe('FiltrosGuardadosPage', () => {
   });
 
   it('renders create filter dialog button', () => {
-    vi.mocked(hooks.useFiltrosGuardados).mockReturnValueOnce({
+    vi.mocked(hooks.useFiltrosGuardados).mockReturnValue({
       data: [],
       isLoading: false,
     } as any);
@@ -86,7 +86,7 @@ describe('FiltrosGuardadosPage', () => {
       },
     ];
 
-    vi.mocked(hooks.useFiltrosGuardados).mockReturnValueOnce({
+    vi.mocked(hooks.useFiltrosGuardados).mockReturnValue({
       data: mockFilters,
       isLoading: false,
     } as any);

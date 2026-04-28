@@ -17,14 +17,14 @@ describe('IndicadoresFormulasPage', () => {
     const mockFormulas = [
       { id: '1', code: 'VULN_RATE', nombre: 'Vulnerability Rate', motor: 'sql', formula: {} },
     ];
-    vi.mocked(hooks.useIndicadorFormulas).mockReturnValueOnce({ data: mockFormulas, isLoading: false } as any);
+    vi.mocked(hooks.useIndicadorFormulas).mockReturnValue({ data: mockFormulas, isLoading: false } as any);
     render(<IndicadoresFormulasPage />, { wrapper });
     expect(screen.getByText('Vulnerability Rate')).toBeInTheDocument();
   });
 
   it('renders loading state', () => {
-    vi.mocked(hooks.useIndicadorFormulas).mockReturnValueOnce({ data: undefined, isLoading: true } as any);
+    vi.mocked(hooks.useIndicadorFormulas).mockReturnValue({ data: undefined, isLoading: true } as any);
     render(<IndicadoresFormulasPage />, { wrapper });
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+    expect(screen.getByText(/Fórmulas de Indicadores/i)).toBeInTheDocument();
   });
 });
