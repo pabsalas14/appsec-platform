@@ -69,8 +69,6 @@ def repositorio_row_to_create(d: dict[str, str], *, row: int) -> tuple[Repositor
     try:
         org = d.get("organizacion_id", "").strip()
         oid = UUID(org) if org else None
-        if oid is None:
-            return None, f"fila {row}: organizacion_id obligatorio (UUID)"
         cell = d.get("celula_id", "").strip()
         cid = UUID(cell) if cell else None
         sub = d.get("subdireccion_responsable_id", "").strip()

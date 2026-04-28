@@ -25,11 +25,11 @@ import os
 
 from sqlalchemy import func, select
 
+from app.config import settings
 from app.core.logging import configure_logging, logger
 from app.database import async_session
-from app.config import settings
-from app.models.user import User
 from app.models.repositorio import Repositorio
+from app.models.user import User
 from app.models.vulnerabilidad import Vulnerabilidad
 from app.orm_bootstrap import import_all_orm
 from app.schemas.vulnerabilidad import VulnerabilidadCreate

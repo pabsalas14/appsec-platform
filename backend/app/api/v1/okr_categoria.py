@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.okr_categoria import OkrCategoria
+from app.models.user import User
 from app.schemas.okr_categoria import OkrCategoriaCreate, OkrCategoriaRead, OkrCategoriaUpdate
 from app.services.okr_categoria_service import okr_categoria_svc
 

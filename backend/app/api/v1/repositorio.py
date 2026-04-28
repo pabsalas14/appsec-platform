@@ -136,9 +136,24 @@ async def import_repositorios_csv(
             err_list.append({"row": line_no, "message": "url ya existe en tu inventario"})
             continue
         try:
-            await validate_fk_exists(db, Organizacion, parsed.organizacion_id, "Organización")
             if parsed.celula_id is not None:
                 await validate_fk_exists(db, Celula, parsed.celula_id, "Célula")
+                celula = await db.get(Celula, parsed.celula_id)
+                if celula is None:
+                    raise HTTPException(status_code=422, detail="Célula no encontrada")
+                if parsed.organizacion_id is not None and parsed.organizacion_id != celula.organizacion_id:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="organizacion_id debe coincidir con la organización de la célula",
+                    )
+                parsed.organizacion_id = celula.organizacion_id
+            elif parsed.organizacion_id is not None:
+                await validate_fk_exists(db, Organizacion, parsed.organizacion_id, "Organización")
+            else:
+                raise HTTPException(
+                    status_code=422,
+                    detail="organizacion_id es obligatorio cuando no se envía celula_id",
+                )
             if parsed.subdireccion_responsable_id is not None:
                 await validate_fk_exists(
                     db,
@@ -208,7 +223,8 @@ async def create_repositorio(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new repositorio for the current user."""
-    await validate_fk_exists(db, Organizacion, entity_in.organizacion_id, "Organización")
+    if entity_in.organizacion_id is not None:
+        await validate_fk_exists(db, Organizacion, entity_in.organizacion_id, "Organización")
     if entity_in.celula_id is not None:
         await validate_fk_exists(db, Celula, entity_in.celula_id, "Célula")
     if entity_in.subdireccion_responsable_id is not None:
@@ -218,7 +234,21 @@ async def create_repositorio(
             entity_in.subdireccion_responsable_id,
             "Subdirección responsable",
         )
-    entity = await repositorio_svc.create(db, entity_in, extra={"user_id": current_user.id})
+    payload = entity_in.model_copy()
+    if payload.celula_id is not None:
+        celula = await db.get(Celula, payload.celula_id)
+        if celula is None:
+            raise HTTPException(status_code=422, detail="Célula no encontrada")
+        if payload.organizacion_id is not None and payload.organizacion_id != celula.organizacion_id:
+            raise HTTPException(
+                status_code=422,
+                detail="organizacion_id debe coincidir con la organización de la célula",
+            )
+        payload.organizacion_id = celula.organizacion_id
+    elif payload.organizacion_id is None:
+        raise HTTPException(status_code=422, detail="organizacion_id es obligatorio cuando no se envía celula_id")
+
+    entity = await repositorio_svc.create(db, payload, extra={"user_id": current_user.id})
     return success(RepositorioRead.model_validate(entity).model_dump(mode="json"))
 
 

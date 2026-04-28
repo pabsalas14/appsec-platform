@@ -1,7 +1,6 @@
 """OkrCategoria schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -9,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 class OkrCategoriaBase(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     activo: bool
 
 
@@ -20,9 +19,9 @@ class OkrCategoriaCreate(OkrCategoriaBase):
 
 class OkrCategoriaUpdate(BaseModel):
     """All fields optional for partial updates."""
-    nombre: Optional[str] = None
-    descripcion: Optional[str] = None
-    activo: Optional[bool] = None
+    nombre: str | None = None
+    descripcion: str | None = None
+    activo: bool | None = None
 
 
 class OkrCategoriaRead(OkrCategoriaBase):

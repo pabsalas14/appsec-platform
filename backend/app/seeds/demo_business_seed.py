@@ -20,8 +20,8 @@ from app.models.gerencia import Gerencia
 from app.models.iniciativa import Iniciativa
 from app.models.organizacion import Organizacion
 from app.models.repositorio import Repositorio
-from app.models.servicio import Servicio
 from app.models.service_release import ServiceRelease
+from app.models.servicio import Servicio
 from app.models.subdireccion import Subdireccion
 from app.models.tema_emergente import TemaEmergente
 from app.models.user import User

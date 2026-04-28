@@ -5,7 +5,7 @@ import { FileIcon, ImageIcon, Trash2, UploadCloud } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import AuthImage from '@/components/ui/authimage';
+import AuthImage from '@/components/ui/AuthImage';
 import {
   Badge,
   Button,

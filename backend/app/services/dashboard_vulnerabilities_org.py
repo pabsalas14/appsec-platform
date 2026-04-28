@@ -85,7 +85,7 @@ async def build_vulnerabilities_org_dashboard(
         by_sev[api_k] = c
 
     engine_data = []
-    for m in list(FIVE_MOTORS) + ["MAST"]:
+    for m in [*list(FIVE_MOTORS), "MAST"]:
         c = await _n(db, scope, [Vulnerabilidad.fuente == m])
         engine_data.append({"motor": m, "count": c, "trend": 0})
 
@@ -184,7 +184,12 @@ async def build_vulnerabilities_org_dashboard(
             )
     elif organizacion_id is not None and celula_id is None:
         children_type = "celula"
-        rq = await db.execute(select(Celula).where(Celula.organizacion_id == organizacion_id, Celula.deleted_at.is_(None)))
+        rq = await db.execute(
+            select(Celula).where(
+                Celula.organizacion_id == organizacion_id,
+                Celula.deleted_at.is_(None),
+            )
+        )
         for cel in rq.scalars().all():
             s = vulnerabilidad_en_celulas_o_repo(
                 direccion_id=direccion_id,

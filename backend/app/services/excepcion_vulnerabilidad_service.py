@@ -22,9 +22,9 @@ from app.schemas.excepcion_vulnerabilidad import (
     ExcepcionVulnerabilidadCreate,
     ExcepcionVulnerabilidadUpdate,
 )
+from app.services.base import BaseService
 from app.services.json_setting import get_json_setting
 from app.services.sla_policy import compute_deadline, resolve_sla_days
-from app.services.base import BaseService
 from app.services.vulnerabilidad_flujo import parse_estatus_catalog
 
 
@@ -57,7 +57,13 @@ class ExcepcionVulnerabilidadService(
                 return rid
         return fallback
 
-    async def _set_vuln_exception_state(self, db: AsyncSession, vulnerabilidad_id: uuid.UUID, *, approved: bool) -> None:
+    async def _set_vuln_exception_state(
+        self,
+        db: AsyncSession,
+        vulnerabilidad_id: uuid.UUID,
+        *,
+        approved: bool,
+    ) -> None:
         vuln = await db.get(Vulnerabilidad, vulnerabilidad_id)
         if vuln is None:
             return

@@ -4,19 +4,20 @@ import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.email_template import EmailTemplate
 from app.services.email_service import (
     EmailServiceError,
-    SMTPConnectionError,
     TemplateNotFoundError,
     email_service,
 )
 
 
-@pytest.fixture
-async def email_template(db: AsyncSession) -> EmailTemplate:
+@pytest_asyncio.fixture
+async def email_template(async_db: AsyncSession) -> EmailTemplate:
     """Create test email template."""
     template = EmailTemplate(
         nombre="test_template",
@@ -25,9 +26,15 @@ async def email_template(db: AsyncSession) -> EmailTemplate:
         variables=["titulo", "descripcion"],
         activo=True,
     )
-    db.add(template)
-    await db.flush()
+    async_db.add(template)
+    await async_db.flush()
     return template
+
+
+@pytest.fixture(autouse=True)
+def _enable_email_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep tests focused on service behavior, not environment toggles."""
+    monkeypatch.setattr(settings, "EMAIL_ENABLED", True)
 
 
 @pytest.mark.asyncio
@@ -50,26 +57,26 @@ async def test_validate_email():
 
 
 @pytest.mark.asyncio
-async def test_get_template_found(db: AsyncSession, email_template: EmailTemplate):
+async def test_get_template_found(async_db: AsyncSession, email_template: EmailTemplate):
     """Test retrieving existing template."""
-    template = await email_service.get_template(db, "test_template")
+    template = await email_service.get_template(async_db, "test_template")
     assert template.id == email_template.id
     assert template.nombre == "test_template"
 
 
 @pytest.mark.asyncio
-async def test_get_template_not_found(db: AsyncSession):
+async def test_get_template_not_found(async_db: AsyncSession):
     """Test retrieving non-existent template."""
     with pytest.raises(TemplateNotFoundError):
-        await email_service.get_template(db, "non_existent")
+        await email_service.get_template(async_db, "non_existent")
 
 
 @pytest.mark.asyncio
-async def test_send_email_creates_log(db: AsyncSession, email_template: EmailTemplate):
+async def test_send_email_creates_log(async_db: AsyncSession, email_template: EmailTemplate):
     """Test sending email creates audit log."""
     with patch.object(email_service, "_send_smtp", new_callable=AsyncMock):
         email_log = await email_service.send_email(
-            db,
+            async_db,
             destinatario="test@example.com",
             template_nombre="test_template",
             variables={"titulo": "Alert", "descripcion": "Test body"},
@@ -83,11 +90,11 @@ async def test_send_email_creates_log(db: AsyncSession, email_template: EmailTem
 
 
 @pytest.mark.asyncio
-async def test_send_email_invalid_email(db: AsyncSession, email_template: EmailTemplate):
+async def test_send_email_invalid_email(async_db: AsyncSession, email_template: EmailTemplate):
     """Test sending to invalid email address."""
     with pytest.raises(EmailServiceError, match="Invalid email"):
         await email_service.send_email(
-            db,
+            async_db,
             destinatario="invalid-email",
             template_nombre="test_template",
             variables={},
@@ -95,7 +102,7 @@ async def test_send_email_invalid_email(db: AsyncSession, email_template: EmailT
 
 
 @pytest.mark.asyncio
-async def test_retry_failed_emails(db: AsyncSession, email_template: EmailTemplate):
+async def test_retry_failed_emails(async_db: AsyncSession, email_template: EmailTemplate):
     """Test retry mechanism for failed emails."""
     from app.models.email_log import EmailLog
 
@@ -109,11 +116,11 @@ async def test_retry_failed_emails(db: AsyncSession, email_template: EmailTempla
         reintentos=1,
         error_mensaje="SMTP connection failed",
     )
-    db.add(email_log)
-    await db.flush()
+    async_db.add(email_log)
+    await async_db.flush()
 
     with patch.object(email_service, "_send_smtp", new_callable=AsyncMock):
-        result = await email_service.retry_failed_emails(db)
+        result = await email_service.retry_failed_emails(async_db)
 
         assert result["retried"] >= 0
         assert "success" in result

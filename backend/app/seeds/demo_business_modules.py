@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,10 +23,9 @@ from app.models.actividad_mensual_source_code import ActividadMensualSourceCode
 from app.models.actualizacion_iniciativa import ActualizacionIniciativa
 from app.models.actualizacion_tema import ActualizacionTema
 from app.models.amenaza import Amenaza
-from app.models.aplicacion_movil import AplicacionMovil
 from app.models.auditoria import Auditoria
-from app.models.cierre_conclusion import CierreConclusion
 from app.models.changelog_entrada import ChangelogEntrada
+from app.models.cierre_conclusion import CierreConclusion
 from app.models.control_mitigacion import ControlMitigacion
 from app.models.control_source_code import ControlSourceCode
 from app.models.ejecucion_dast import EjecucionDast
@@ -65,8 +64,8 @@ from app.models.project import Project
 from app.models.regulacion_control import RegulacionControl
 from app.models.revision_source_code import RevisionSourceCode
 from app.models.revision_tercero import RevisionTercero
-from app.models.servicio_regulado_registro import ServicioReguladoRegistro
 from app.models.service_release import ServiceRelease
+from app.models.servicio_regulado_registro import ServicioReguladoRegistro
 from app.models.sesion_threat_modeling import SesionThreatModeling
 from app.models.task import Task
 from app.models.tema_emergente import TemaEmergente
@@ -266,7 +265,7 @@ async def seed_programas_y_hallazgos(
                 titulo=f"{P}DAST — reflejado en búsqueda",
                 descripcion="Demo",
                 severidad="Alta",
-                url=f"https://example.com/q=test",
+                url="https://example.com/q=test",
                 estado="Abierto",
             )
         )

@@ -24,7 +24,7 @@ here.
 
 import asyncio
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 
 import asyncpg.exceptions
@@ -77,6 +77,20 @@ _RUNTIME_SKIP_ALLOWLIST = {
     # Performance smoke tests are opt-in and may legitimately skip.
     "test_phase_h_import_perf.py",
 }
+
+
+@pytest.fixture(scope="session")
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+    """Use a single loop for the full test session.
+
+    Session-scoped async fixtures (engine/session factory) and asyncpg connections
+    must stay on the same loop to avoid cross-loop RuntimeError in CI.
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        yield loop
+    finally:
+        loop.close()
 
 
 @pytest.fixture(autouse=True)

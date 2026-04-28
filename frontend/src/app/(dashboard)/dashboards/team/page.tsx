@@ -98,12 +98,12 @@ export default function TeamDashboardPremium() {
   const ICONS = [Users, ClipboardList, AlertTriangle, Target];
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 font-sans">
+    <div data-testid="d2-page" className="min-h-screen bg-background text-foreground p-6 font-sans">
       
       {/* HEADER */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-wide">Dashboard de Equipo</h1>
+          <h1 data-testid="d2-title" className="text-3xl font-bold tracking-wide">Dashboard de Equipo</h1>
           <p className="text-muted-foreground text-sm mt-1">Jefatura de Ciberseguridad Aplicativa</p>
         </div>
         <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function TeamDashboardPremium() {
               <DropdownMenuItem className="cursor-pointer">Año 2025</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button onClick={handleExport} className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
+          <button data-testid="d2-export" onClick={handleExport} className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
             Exportar <Download className="w-4 h-4" />
           </button>
         </div>
@@ -189,7 +189,7 @@ export default function TeamDashboardPremium() {
         <div className="p-5 border-b border-border">
           <h2 className="text-lg font-semibold text-card-foreground">Rendimiento y Carga de Trabajo por Analista</h2>
         </div>
-        <table className="w-full text-left border-collapse">
+        <table data-testid="d2-analysts-table" className="w-full text-left border-collapse">
           <thead>
             <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border bg-muted/20">
               <th className="py-4 px-5 font-medium">Analista</th>
@@ -204,6 +204,7 @@ export default function TeamDashboardPremium() {
           <tbody className="divide-y divide-border/50">
             {dashboardData.analistas.map((row) => (
               <tr 
+                data-testid={`d2-analyst-row-${row.id}`}
                 key={row.id} 
                 onClick={() => setSelectedAnalystId(row.id)}
                 className="hover:bg-muted/50 transition-colors cursor-pointer group"

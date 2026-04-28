@@ -24,6 +24,7 @@ def _hierarchy_dict(
     gerencia_id: UUID | None,
     organizacion_id: UUID | None,
     celula_id: UUID | None,
+    repositorio_id: UUID | None,
 ) -> dict[str, str]:
     d: dict[str, str] = {}
     if direccion_id:
@@ -36,6 +37,8 @@ def _hierarchy_dict(
         d["organizacion_id"] = str(organizacion_id)
     if celula_id:
         d["celula_id"] = str(celula_id)
+    if repositorio_id:
+        d["repositorio_id"] = str(repositorio_id)
     return d
 
 
@@ -59,6 +62,7 @@ async def build_executive_dashboard(
     gerencia_id: UUID | None,
     organizacion_id: UUID | None,
     celula_id: UUID | None,
+    repositorio_id: UUID | None,
     trend_months: int,
     ref_month: str | None,
     audits_offset: int,
@@ -71,7 +75,7 @@ async def build_executive_dashboard(
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
-        repositorio_id=None,
+        repositorio_id=repositorio_id,
     )
     vbase = [Vulnerabilidad.deleted_at.is_(None)]
     if scope is not None:
@@ -111,7 +115,7 @@ async def build_executive_dashboard(
                 .select_from(Vulnerabilidad)
                 .where(
                     *vbase,
-                    * _activa_vuln_conds(),
+                    *_activa_vuln_conds(),
                     func.lower(Vulnerabilidad.severidad) == "critica",
                 )
             )
@@ -120,15 +124,10 @@ async def build_executive_dashboard(
     )
     # releases "activas"
     r_rows = (
-        (
-            await db.execute(
-                select(ServiceRelease.nombre, ServiceRelease.estado_actual).where(
-                    ServiceRelease.deleted_at.is_(None)
-                )
-            )
+        await db.execute(
+            select(ServiceRelease.nombre, ServiceRelease.estado_actual).where(ServiceRelease.deleted_at.is_(None))
         )
-        .all()
-    )
+    ).all()
     active_releases = sum(1 for _n, st in r_rows if _is_release_active_row(st))
     # SLA riesgo releases (próximos 3 días) — aprox: estado no terminal y jira o fecha
     at_risk_releases = 0
@@ -272,7 +271,7 @@ async def build_executive_dashboard(
                 .select_from(Vulnerabilidad)
                 .where(
                     *vbase,
-                    * _activa_vuln_conds(),
+                    *_activa_vuln_conds(),
                     Vulnerabilidad.fecha_limite_sla.isnot(None),
                     Vulnerabilidad.fecha_limite_sla > now_ts + timedelta(days=3),
                 )
@@ -287,7 +286,7 @@ async def build_executive_dashboard(
                 .select_from(Vulnerabilidad)
                 .where(
                     *vbase,
-                    * _activa_vuln_conds(),
+                    *_activa_vuln_conds(),
                     Vulnerabilidad.fecha_limite_sla.isnot(None),
                     Vulnerabilidad.fecha_limite_sla <= now_ts + timedelta(days=3),
                     Vulnerabilidad.fecha_limite_sla >= now_ts,
@@ -303,7 +302,7 @@ async def build_executive_dashboard(
                 .select_from(Vulnerabilidad)
                 .where(
                     *vbase,
-                    * _activa_vuln_conds(),
+                    *_activa_vuln_conds(),
                     Vulnerabilidad.fecha_limite_sla.isnot(None),
                     Vulnerabilidad.fecha_limite_sla < now_ts,
                 )
@@ -342,12 +341,12 @@ async def build_executive_dashboard(
                 Auditoria.estado.ilike("%curso%"),
             )
         )
-    q_aud = q_aud.order_by(Auditoria.fecha_inicio.desc()).offset(audits_offset).limit(
-        max(1, min(audits_limit, 50))
-    )
+    q_aud = q_aud.order_by(Auditoria.fecha_inicio.desc()).offset(audits_offset).limit(max(1, min(audits_limit, 50)))
     ad_rows = (await db.execute(q_aud)).scalars().all()
     tot_aud = int(
-        (await db.execute(select(func.count()).select_from(Auditoria).where(Auditoria.deleted_at.is_(None)))).scalar_one()
+        (
+            await db.execute(select(func.count()).select_from(Auditoria).where(Auditoria.deleted_at.is_(None)))
+        ).scalar_one()
         or 0
     )
     audits_out = [
@@ -378,9 +377,7 @@ async def build_executive_dashboard(
             "critical_by_fuente": by_fuente,
             "emerging_stale_7d": 0,
             "releases_sla_riesgo": at_risk_releases,
-            "releases_riesgo_pct": int(
-                (at_risk_releases * 100 / active_releases) if active_releases else 0
-            ),
+            "releases_riesgo_pct": int((at_risk_releases * 100 / active_releases) if active_releases else 0),
             "audits_not_completed": max(0, tot_aud - audits_active),
         },
         "kpi_trends": {
@@ -408,5 +405,6 @@ async def build_executive_dashboard(
             gerencia_id=gerencia_id,
             organizacion_id=organizacion_id,
             celula_id=celula_id,
+            repositorio_id=repositorio_id,
         ),
     }

@@ -17,6 +17,7 @@ interface SemaforoSlaProps {
   layout?: 'vertical' | 'horizontal';
   showPercentage?: boolean;
   className?: string;
+  'data-testid'?: string;
   /** Panel oscuro (p. ej. dashboard ejecutivo) */
   appearance?: 'default' | 'slate';
 }
@@ -63,11 +64,12 @@ export const SemaforoSla: React.FC<SemaforoSlaProps> = ({
   layout = 'vertical',
   showPercentage = true,
   className,
+  'data-testid': dataTestId,
   appearance = 'default',
 }) => {
   const theme = appearance === 'slate' ? statusConfigSlate : statusConfig;
   return (
-    <div className={cn('flex flex-col gap-3', className)}>
+    <div data-testid={dataTestId} className={cn('flex flex-col gap-3', className)}>
       {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
 
       <div className={cn('flex gap-4', {

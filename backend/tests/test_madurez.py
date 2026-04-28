@@ -59,7 +59,7 @@ async def test_madurez_breakdown_by_celula(client: AsyncClient, auth_headers: di
     """Test that maturity score includes breakdown by celula."""
     r = await client.get(f"{BASE_URL}/summary", headers=auth_headers)
     payload = r.json()["data"]
-    if "by_celula" in payload and payload["by_celula"]:
+    if payload.get("by_celula"):
         for item in payload["by_celula"]:
             assert "celula" in item
             assert "score" in item
@@ -70,7 +70,7 @@ async def test_madurez_breakdown_by_organizacion(client: AsyncClient, auth_heade
     """Test that maturity score includes breakdown by organizacion."""
     r = await client.get(f"{BASE_URL}/summary", headers=auth_headers)
     payload = r.json()["data"]
-    if "by_organizacion" in payload and payload["by_organizacion"]:
+    if payload.get("by_organizacion"):
         for item in payload["by_organizacion"]:
             assert "organizacion" in item
             assert "score" in item

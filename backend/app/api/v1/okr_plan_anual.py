@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.api.deps_ownership import require_ownership
 from app.core.response import success
-from app.models.user import User
 from app.models.okr_plan_anual import OkrPlanAnual
+from app.models.user import User
 from app.schemas.okr_plan_anual import OkrPlanAnualCreate, OkrPlanAnualRead, OkrPlanAnualUpdate
 from app.services.okr_plan_anual_service import okr_plan_anual_svc
 

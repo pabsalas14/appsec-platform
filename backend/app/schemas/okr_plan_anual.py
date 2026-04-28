@@ -1,7 +1,6 @@
 """OkrPlanAnual schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -12,8 +11,8 @@ class OkrPlanAnualBase(BaseModel):
     evaluador_id: UUID
     ano: int
     estado: str
-    fecha_aprobado: Optional[datetime] = None
-    aprobado_por_id: Optional[UUID] = None
+    fecha_aprobado: datetime | None = None
+    aprobado_por_id: UUID | None = None
 
 
 class OkrPlanAnualCreate(OkrPlanAnualBase):
@@ -23,12 +22,12 @@ class OkrPlanAnualCreate(OkrPlanAnualBase):
 
 class OkrPlanAnualUpdate(BaseModel):
     """All fields optional for partial updates."""
-    colaborador_id: Optional[UUID] = None
-    evaluador_id: Optional[UUID] = None
-    ano: Optional[int] = None
-    estado: Optional[str] = None
-    fecha_aprobado: Optional[datetime] = None
-    aprobado_por_id: Optional[UUID] = None
+    colaborador_id: UUID | None = None
+    evaluador_id: UUID | None = None
+    ano: int | None = None
+    estado: str | None = None
+    fecha_aprobado: datetime | None = None
+    aprobado_por_id: UUID | None = None
 
 
 class OkrPlanAnualRead(OkrPlanAnualBase):

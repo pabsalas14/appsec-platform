@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -122,7 +122,7 @@ class CeleryTasksManager:
 
         try:
             async with async_session() as db:
-                cutoff = datetime.now(UTC).replace(day=1) - timezone.timedelta(days=days_to_keep)
+                cutoff = datetime.now(UTC).replace(day=1) - timedelta(days=days_to_keep)
                 result = await db.execute(
                     select(EmailLog).where(EmailLog.created_at < cutoff)
                 )

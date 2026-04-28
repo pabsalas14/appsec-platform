@@ -7,7 +7,9 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
+from app.models.email_log import EmailLog
 from app.models.notificacion import Notificacion
+from app.models.user import User
 from app.schemas.notificacion import NotificacionCreate
 from app.services.email_service import email_service
 from app.services.notificacion_service import notificacion_svc
@@ -161,7 +163,6 @@ class NotificationDispatcher:
         notificacion_id: uuid.UUID | None = None,
     ) -> EmailLog:
         """Send email notification."""
-        from app.models.email_log import EmailLog
 
         email_log = await email_service.send_email(
             db,

@@ -53,7 +53,6 @@ def import_all_orm() -> None:
     import app.models.iniciativa
     import app.models.kanban_column
     import app.models.notificacion
-    import app.models.organizacion
     import app.models.okr_categoria
     import app.models.okr_cierre_q
     import app.models.okr_compromiso
@@ -61,6 +60,7 @@ def import_all_orm() -> None:
     import app.models.okr_plan_anual
     import app.models.okr_revision_q
     import app.models.okr_subcompromiso
+    import app.models.organizacion
     import app.models.pipeline_release
     import app.models.plan_remediacion
     import app.models.programa_dast

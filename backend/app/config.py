@@ -115,6 +115,10 @@ class Settings(BaseSettings):
     EMAIL_WORKER_CRON_HOUR_UTC: int = 0
     EMAIL_WORKER_CRON_MINUTE_UTC: int = 0
 
+    # ─── Dashboard cache (Redis preferred, memory fallback) ───
+    REDIS_URL: str = ""
+    DASHBOARD_CACHE_TTL_SECONDS: int = 120
+
     @field_validator("LOG_FORMAT")
     @classmethod
     def log_format_safe_in_prod(cls, v: str, info) -> str:

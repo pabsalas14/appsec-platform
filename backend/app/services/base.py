@@ -37,6 +37,7 @@ from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import cache_delete_prefix
 from app.database import Base
 
 ModelT = TypeVar("ModelT", bound=Base)
@@ -178,6 +179,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
         await db.refresh(record)
 
         await self._audit(db, "create", record, metadata={"created": _safe_dump(data)})
+        await cache_delete_prefix("dashboard:")
         return record
 
     # ─── Update ──────────────────────────────────────────────────────────────
@@ -241,6 +243,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
                 "new": _safe_dump(new_vals) if new_vals else None,
             },
         )
+        await cache_delete_prefix("dashboard:")
         return record
 
     # ─── Delete ──────────────────────────────────────────────────────────────
@@ -284,6 +287,7 @@ class BaseService(Generic[ModelT, CreateSchemaT, UpdateSchemaT]):
             override_entity_id=entity_id,
             metadata={"previous": _safe_dump(del_payload) if del_payload else None},
         )
+        await cache_delete_prefix("dashboard:")
         return True
 
     # ─── Audit ──────────────────────────────────────────────────────────────

@@ -7,7 +7,6 @@ global, para evitar reglas hardcodeadas en routers/servicios.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +30,7 @@ def _severity_keys(severity: str | None) -> list[str]:
     }
     for canon, keys in aliases.items():
         if s in keys:
-            out = keys + [canon]
+            out = [*keys, canon]
             break
     # preserve order while deduplicating
     seen: set[str] = set()

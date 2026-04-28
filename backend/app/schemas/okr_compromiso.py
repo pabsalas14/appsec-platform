@@ -1,7 +1,6 @@
 """OkrCompromiso schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,9 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class OkrCompromisoBase(BaseModel):
     plan_id: UUID
-    categoria_id: Optional[UUID] = None
+    categoria_id: UUID | None = None
     nombre_objetivo: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     peso_global: float = Field(ge=0, le=100)
     fecha_inicio: datetime
     fecha_fin: datetime
@@ -25,14 +24,14 @@ class OkrCompromisoCreate(OkrCompromisoBase):
 
 class OkrCompromisoUpdate(BaseModel):
     """All fields optional for partial updates."""
-    plan_id: Optional[UUID] = None
-    categoria_id: Optional[UUID] = None
-    nombre_objetivo: Optional[str] = None
-    descripcion: Optional[str] = None
-    peso_global: Optional[float] = Field(default=None, ge=0, le=100)
-    fecha_inicio: Optional[datetime] = None
-    fecha_fin: Optional[datetime] = None
-    tipo_medicion: Optional[str] = None
+    plan_id: UUID | None = None
+    categoria_id: UUID | None = None
+    nombre_objetivo: str | None = None
+    descripcion: str | None = None
+    peso_global: float | None = Field(default=None, ge=0, le=100)
+    fecha_inicio: datetime | None = None
+    fecha_fin: datetime | None = None
+    tipo_medicion: str | None = None
 
 
 class OkrCompromisoRead(OkrCompromisoBase):

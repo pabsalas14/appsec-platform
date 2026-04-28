@@ -1,7 +1,6 @@
 """OkrCierreQ schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -29,14 +28,14 @@ class OkrCierreQCreate(OkrCierreQBase):
 
 class OkrCierreQUpdate(BaseModel):
     """All fields optional for partial updates."""
-    plan_id: Optional[UUID] = None
-    quarter: Optional[str] = None
-    retroalimentacion_general: Optional[str] = Field(default=None, min_length=1)
-    cerrado_at: Optional[datetime] = None
+    plan_id: UUID | None = None
+    quarter: str | None = None
+    retroalimentacion_general: str | None = Field(default=None, min_length=1)
+    cerrado_at: datetime | None = None
 
     @field_validator("quarter")
     @classmethod
-    def validate_optional_quarter(cls, value: Optional[str]) -> Optional[str]:
+    def validate_optional_quarter(cls, value: str | None) -> str | None:
         if value is None:
             return value
         cleaned = value.strip().upper()

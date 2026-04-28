@@ -1,7 +1,7 @@
 """OkrRevisionQ schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -14,9 +14,9 @@ class OkrRevisionQBase(BaseModel):
     subcompromiso_id: UUID
     quarter: str
     avance_reportado: float = Field(ge=0, le=100)
-    avance_validado: Optional[float] = Field(default=None, ge=0, le=100)
-    comentario_colaborador: Optional[str] = None
-    feedback_evaluador: Optional[str] = None
+    avance_validado: float | None = Field(default=None, ge=0, le=100)
+    comentario_colaborador: str | None = None
+    feedback_evaluador: str | None = None
     estado: QState = "draft"
 
     @field_validator("quarter")
@@ -35,17 +35,17 @@ class OkrRevisionQCreate(OkrRevisionQBase):
 
 class OkrRevisionQUpdate(BaseModel):
     """All fields optional for partial updates."""
-    subcompromiso_id: Optional[UUID] = None
-    quarter: Optional[str] = None
-    avance_reportado: Optional[float] = Field(default=None, ge=0, le=100)
-    avance_validado: Optional[float] = Field(default=None, ge=0, le=100)
-    comentario_colaborador: Optional[str] = None
-    feedback_evaluador: Optional[str] = None
-    estado: Optional[QState] = None
+    subcompromiso_id: UUID | None = None
+    quarter: str | None = None
+    avance_reportado: float | None = Field(default=None, ge=0, le=100)
+    avance_validado: float | None = Field(default=None, ge=0, le=100)
+    comentario_colaborador: str | None = None
+    feedback_evaluador: str | None = None
+    estado: QState | None = None
 
     @field_validator("quarter")
     @classmethod
-    def validate_optional_quarter(cls, value: Optional[str]) -> Optional[str]:
+    def validate_optional_quarter(cls, value: str | None) -> str | None:
         if value is None:
             return value
         cleaned = value.strip().upper()
@@ -65,17 +65,17 @@ class OkrRevisionQRead(OkrRevisionQBase):
 
 
 class OkrRevisionSubmitPayload(BaseModel):
-    comentario_colaborador: Optional[str] = None
+    comentario_colaborador: str | None = None
 
 
 class OkrRevisionApprovePayload(BaseModel):
     avance_validado: float = Field(ge=0, le=100)
-    feedback_evaluador: Optional[str] = None
+    feedback_evaluador: str | None = None
 
 
 class OkrRevisionEditadoPayload(BaseModel):
     avance_validado: float = Field(ge=0, le=100)
-    feedback_evaluador: Optional[str] = None
+    feedback_evaluador: str | None = None
 
 
 class OkrRevisionRejectPayload(BaseModel):

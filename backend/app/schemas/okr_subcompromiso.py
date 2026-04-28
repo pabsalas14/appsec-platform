@@ -1,7 +1,6 @@
 """OkrSubcompromiso schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -10,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class OkrSubcompromisoBase(BaseModel):
     compromiso_id: UUID
     nombre_sub_item: str
-    resultado_esperado: Optional[str] = None
+    resultado_esperado: str | None = None
     peso_interno: float = Field(ge=0, le=100)
     evidencia_requerida: bool
 
@@ -22,11 +21,11 @@ class OkrSubcompromisoCreate(OkrSubcompromisoBase):
 
 class OkrSubcompromisoUpdate(BaseModel):
     """All fields optional for partial updates."""
-    compromiso_id: Optional[UUID] = None
-    nombre_sub_item: Optional[str] = None
-    resultado_esperado: Optional[str] = None
-    peso_interno: Optional[float] = Field(default=None, ge=0, le=100)
-    evidencia_requerida: Optional[bool] = None
+    compromiso_id: UUID | None = None
+    nombre_sub_item: str | None = None
+    resultado_esperado: str | None = None
+    peso_interno: float | None = Field(default=None, ge=0, le=100)
+    evidencia_requerida: bool | None = None
 
 
 class OkrSubcompromisoRead(OkrSubcompromisoBase):

@@ -18,22 +18,22 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_, select, func, text
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.response import success
 from app.core.search import sanitize_search_term
-from app.models.user import User
-from app.models.vulnerabilidad import Vulnerabilidad
-from app.models.plan_remediacion import PlanRemediacion
-from app.models.tema_emergente import TemaEmergente
-from app.models.iniciativa import Iniciativa
-from app.models.hallazgo_sast import HallazgoSast
+from app.models.auditoria import Auditoria
+from app.models.control_seguridad import ControlSeguridad
 from app.models.hallazgo_dast import HallazgoDast
 from app.models.hallazgo_mast import HallazgoMast
-from app.models.control_seguridad import ControlSeguridad
-from app.models.auditoria import Auditoria
+from app.models.hallazgo_sast import HallazgoSast
+from app.models.iniciativa import Iniciativa
+from app.models.plan_remediacion import PlanRemediacion
+from app.models.tema_emergente import TemaEmergente
+from app.models.user import User
+from app.models.vulnerabilidad import Vulnerabilidad
 
 router = APIRouter()
 

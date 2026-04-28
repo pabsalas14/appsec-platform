@@ -26,8 +26,8 @@ import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { GaugeChart } from '@/components/charts';
+import { Button } from '@/components/ui/Button';
+import { GaugeChart, HistoricoMensualGrid } from '@/components/charts';
 import { cn } from '@/lib/utils';
 
 interface ProgramBreakdown {
@@ -89,7 +89,7 @@ function MiniHeatmap({ months, color }: { months: HeatmapEntry[]; color: string 
     return m?.value ?? 0;
   });
   return (
-    <div className="grid grid-cols-12 gap-0.5">
+    <div data-testid="d3-mini-heatmap" className="grid grid-cols-12 gap-0.5">
       {filled.map((v, i) => (
         <div
           key={i}
@@ -125,6 +125,7 @@ function ProgramCard({
   const currentMonth = heatmap[heatmap.length - 1]?.value ?? 0;
   return (
     <button
+      data-testid={`d3-program-card-${program.toLowerCase()}`}
       type="button"
       onClick={onClick}
       className={cn(
@@ -326,7 +327,7 @@ export default function ProgramsDashboardPage() {
   });
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div data-testid="d3-page" className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -335,7 +336,7 @@ export default function ProgramsDashboardPage() {
               Consolidado de Programas
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-1">
+          <h1 data-testid="d3-title" className="text-2xl md:text-3xl font-bold tracking-tight mt-1">
             Dashboard de Programas Anuales
           </h1>
           <p className="text-xs text-muted-foreground">
@@ -363,7 +364,7 @@ export default function ProgramsDashboardPage() {
       <div className={cn('grid gap-4', selectedProgram ? 'lg:grid-cols-[1fr_360px]' : 'grid-cols-1')}>
         <div className="space-y-4 min-w-0">
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-56" />
               ))}
@@ -475,6 +476,45 @@ export default function ProgramsDashboardPage() {
                         ))}
                       </LineChart>
                     </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sección: Actividad Mensual con 4 Históricos */}
+          <div className="col-span-full">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Actividad Mensual por Programa</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">Histórico de completitud mensual (12 meses)</p>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-32" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                    {['SAST', 'DAST', 'Threat Modeling', 'Source Code'].map((label, idx) => {
+                      const programs = ['SAST', 'DAST', 'SAST', 'DAST'];
+                      const heatmapEntries = idx < 2 ? (heatmapData?.heatmap?.[programs[idx]] ?? []) : [];
+                      const monthData = (heatmapEntries || []).map((h: HeatmapEntry) => ({
+                        month: h.month,
+                        value: h.value ?? 0,
+                      }));
+                      return (
+                        <div key={label}>
+                          <HistoricoMensualGrid
+                            months={monthData.length > 0 ? monthData : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, value: 0 }))}
+                            title={label}
+                            className="p-3 rounded-lg border border-border/50 bg-card/30"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

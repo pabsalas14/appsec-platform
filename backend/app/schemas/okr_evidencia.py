@@ -1,7 +1,6 @@
 """OkrEvidencia schemas — Pydantic v2."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -9,9 +8,9 @@ from pydantic import BaseModel, ConfigDict
 
 class OkrEvidenciaBase(BaseModel):
     revision_q_id: UUID
-    attachment_id: Optional[UUID] = None
-    url_evidencia: Optional[str] = None
-    nombre_archivo: Optional[str] = None
+    attachment_id: UUID | None = None
+    url_evidencia: str | None = None
+    nombre_archivo: str | None = None
     tipo_evidencia: str
 
 
@@ -22,11 +21,11 @@ class OkrEvidenciaCreate(OkrEvidenciaBase):
 
 class OkrEvidenciaUpdate(BaseModel):
     """All fields optional for partial updates."""
-    revision_q_id: Optional[UUID] = None
-    attachment_id: Optional[UUID] = None
-    url_evidencia: Optional[str] = None
-    nombre_archivo: Optional[str] = None
-    tipo_evidencia: Optional[str] = None
+    revision_q_id: UUID | None = None
+    attachment_id: UUID | None = None
+    url_evidencia: str | None = None
+    nombre_archivo: str | None = None
+    tipo_evidencia: str | None = None
 
 
 class OkrEvidenciaRead(OkrEvidenciaBase):

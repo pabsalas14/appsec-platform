@@ -14,7 +14,7 @@ class RepositorioBase(BaseModel):
     plataforma: str
     rama_default: str
     activo: bool = True
-    organizacion_id: UUID
+    organizacion_id: UUID | None = None
     celula_id: UUID | None = None
     subdireccion_responsable_id: UUID | None = None
     responsable_nombre: str | None = None

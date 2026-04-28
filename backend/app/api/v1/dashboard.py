@@ -7,8 +7,8 @@ Scope rules:
   from ``audit_logs``.
 """
 
-from __future__ import annotations
-
+import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -17,15 +17,52 @@ from sqlalchemy import Integer, and_, case, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_permission
+from app.config import settings
+from app.core.cache import cache_get_json, cache_set_json
+from app.core.exceptions import NotFoundException
 from app.core.permissions import P
 from app.core.response import success
 from app.models.audit_log import AuditLog
-from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
 from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
+from app.schemas.dashboard import (
+    DashboardEnvelopeProgramDetailRead,
+    DashboardEnvelopeProgramsHeatmapRead,
+    DashboardEnvelopeProgramsRead,
+    DashboardEnvelopeTeamRead,
+    DashboardEnvelopeVulnerabilitiesRead,
+)
+from app.schemas.executive_dashboard_read import ApiSuccessEnvelope
+from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
 
 router = APIRouter()
+
+
+def _dashboard_cache_key(route: str, *, user_id: UUID, params: dict[str, object]) -> str:
+    material = json.dumps(
+        {"route": route, "user_id": str(user_id), "params": params},
+        sort_keys=True,
+        default=str,
+    )
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()
+    return f"dashboard:{route}:{digest}"
+
+
+async def _cached_payload(
+    route: str,
+    *,
+    user_id: UUID,
+    params: dict[str, object],
+    builder,
+):
+    key = _dashboard_cache_key(route, user_id=user_id, params=params)
+    cached = await cache_get_json(key)
+    if cached is not None:
+        return cached
+    payload = await builder()
+    await cache_set_json(key, payload, settings.DASHBOARD_CACHE_TTL_SECONDS)
+    return payload
 
 
 async def _where_sla_vencido_respet_d2(db: AsyncSession):
@@ -224,7 +261,7 @@ async def dashboard_stats(
     )
 
 
-@router.get("/vulnerabilities")
+@router.get("/vulnerabilities", response_model=DashboardEnvelopeVulnerabilitiesRead)
 async def dashboard_vulnerabilities(
     direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
@@ -238,17 +275,28 @@ async def dashboard_vulnerabilities(
     """Dashboard 4: Vulnerabilities — drill 7 niveles (Dirección → … → Repositorio → lista)."""
     from app.services.dashboard_vulnerabilities_org import build_vulnerabilities_org_dashboard
 
-    payload = await build_vulnerabilities_org_dashboard(
-        db,
-        direccion_id=direccion_id,
-        subdireccion_id=subdireccion_id,
-        gerencia_id=gerencia_id,
-        organizacion_id=organizacion_id,
-        celula_id=celula_id,
-        repositorio_id=repositorio_id,
+    payload = await _cached_payload(
+        "vulnerabilities",
+        user_id=current_user.id,
+        params={
+            "direccion_id": direccion_id,
+            "subdireccion_id": subdireccion_id,
+            "gerencia_id": gerencia_id,
+            "organizacion_id": organizacion_id,
+            "celula_id": celula_id,
+            "repositorio_id": repositorio_id,
+        },
+        builder=lambda: build_vulnerabilities_org_dashboard(
+            db,
+            direccion_id=direccion_id,
+            subdireccion_id=subdireccion_id,
+            gerencia_id=gerencia_id,
+            organizacion_id=organizacion_id,
+            celula_id=celula_id,
+            repositorio_id=repositorio_id,
+        ),
     )
     return success(payload)
-
 
 
 @router.get("/releases")
@@ -465,13 +513,155 @@ async def dashboard_emerging_themes(
     )
 
 
-@router.get("/executive")
+@router.get("/emerging-themes-summary")
+async def dashboard_emerging_themes_summary(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 9 detail: resumen + listado de temas emergentes."""
+    from app.models.tema_emergente import TemaEmergente
+
+    now = datetime.now(UTC)
+    temas = (
+        (
+            await db.execute(
+                select(TemaEmergente)
+                .where(
+                    TemaEmergente.deleted_at.is_(None),
+                    TemaEmergente.user_id == current_user.id,
+                )
+                .order_by(TemaEmergente.created_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    serialized = []
+    high_impact = 0
+    recent_themes = 0
+    for tema in temas:
+        created_at = tema.created_at
+        dias_abierto = max((now - created_at).days, 0) if created_at else 0
+        if tema.impacto and tema.impacto.lower() == "alto":
+            high_impact += 1
+        if created_at and (now - created_at) <= timedelta(days=7):
+            recent_themes += 1
+        serialized.append(
+            {
+                "id": str(tema.id),
+                "titulo": tema.titulo,
+                "descripcion": tema.descripcion,
+                "estado": tema.estado,
+                "impacto": tema.impacto,
+                "dias_abierto": dias_abierto,
+                "created_at": created_at.isoformat() if created_at else None,
+                "updated_at": tema.updated_at.isoformat() if tema.updated_at else None,
+            }
+        )
+
+    return success(
+        {
+            "total_themes": len(serialized),
+            "high_impact_themes": high_impact,
+            "recent_themes": recent_themes,
+            "kpis": {
+                "total": len(serialized),
+                "high_impact": high_impact,
+                "recent": recent_themes,
+            },
+            "themes": serialized,
+        }
+    )
+
+
+@router.get("/tema/{tema_id}/detail")
+async def dashboard_tema_detail(
+    tema_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 9 detail: ficha de tema + bitácora."""
+    from app.models.actualizacion_tema import ActualizacionTema
+    from app.models.tema_emergente import TemaEmergente
+
+    tema = (
+        (
+            await db.execute(
+                select(TemaEmergente).where(
+                    TemaEmergente.id == tema_id,
+                    TemaEmergente.user_id == current_user.id,
+                    TemaEmergente.deleted_at.is_(None),
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if tema is None:
+        raise NotFoundException("Tema emergente")
+
+    updates = (
+        (
+            await db.execute(
+                select(ActualizacionTema)
+                .where(
+                    ActualizacionTema.tema_id == tema.id,
+                    ActualizacionTema.user_id == current_user.id,
+                    ActualizacionTema.deleted_at.is_(None),
+                )
+                .order_by(ActualizacionTema.created_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    now = datetime.now(UTC)
+    tema_payload = {
+        "id": str(tema.id),
+        "titulo": tema.titulo,
+        "descripcion": tema.descripcion,
+        "tipo": tema.tipo,
+        "impacto": tema.impacto,
+        "estado": tema.estado,
+        "fuente": tema.fuente,
+        "dias_abierto": max((now - tema.created_at).days, 0) if tema.created_at else 0,
+        "created_at": tema.created_at.isoformat() if tema.created_at else None,
+        "updated_at": tema.updated_at.isoformat() if tema.updated_at else None,
+        "creado_por": current_user.email,
+    }
+    bitacora = [
+        {
+            "id": str(u.id),
+            "titulo": u.titulo,
+            "contenido": u.contenido,
+            "autor": current_user.email,
+            "fecha": u.created_at.isoformat() if u.created_at else None,
+        }
+        for u in updates
+    ]
+
+    return success(
+        {
+            "tema": tema_payload,
+            "bitacora": bitacora,
+            "metadata": {
+                "total_updates": len(bitacora),
+                "last_update": bitacora[0]["fecha"] if bitacora else None,
+            },
+        }
+    )
+
+
+@router.get("/executive", response_model=ApiSuccessEnvelope)
 async def dashboard_executive(
     direccion_id: UUID | None = Query(default=None),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
+    repositorio_id: UUID | None = Query(default=None),
     trend_months: int = Query(default=6, ge=1, le=18),
     ref_month: str | None = Query(default=None),
     audits_offset: int = Query(default=0, ge=0),
@@ -490,6 +680,7 @@ async def dashboard_executive(
         gerencia_id=gerencia_id,
         organizacion_id=organizacion_id,
         celula_id=celula_id,
+        repositorio_id=repositorio_id,
         trend_months=trend_months,
         ref_month=ref_month,
         audits_offset=audits_offset,
@@ -499,7 +690,7 @@ async def dashboard_executive(
     return success(payload)
 
 
-@router.get("/programs")
+@router.get("/programs", response_model=DashboardEnvelopeProgramsRead)
 async def dashboard_programs(
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
@@ -509,8 +700,6 @@ async def dashboard_programs(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3: Programas consolidado usando datos reales de vulnerabilidades."""
-    from app.models.vulnerabilidad import Vulnerabilidad
-
     hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
         direccion_id=None,
         subdireccion_id=subdireccion_id,
@@ -519,20 +708,20 @@ async def dashboard_programs(
         celula_id=celula_id,
         repositorio_id=None,
     )
-    rows = (
-        await db.execute(
-            select(
-                Vulnerabilidad.fuente,
-                func.count().label("total"),
-                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
-            )
-            .where(
-                Vulnerabilidad.deleted_at.is_(None),
-                *([hierarchy_filter] if hierarchy_filter is not None else []),
-            )
-            .group_by(Vulnerabilidad.fuente)
-        )
-    ).all()
+    rows = await _cached_payload(
+        "programs-rows",
+        user_id=current_user.id,
+        params={
+            "subdireccion_id": subdireccion_id,
+            "gerencia_id": gerencia_id,
+            "organizacion_id": organizacion_id,
+            "celula_id": celula_id,
+        },
+        builder=lambda: _program_rows(
+            db=db,
+            hierarchy_filter=hierarchy_filter,
+        ),
+    )
 
     total_programs = len(rows)
     if total_programs == 0:
@@ -586,7 +775,7 @@ async def dashboard_programs(
     )
 
 
-@router.get("/team")
+@router.get("/team", response_model=DashboardEnvelopeTeamRead)
 async def dashboard_team(
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
@@ -596,8 +785,6 @@ async def dashboard_team(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 2: Team view by analyst and workload."""
-    from app.models.vulnerabilidad import Vulnerabilidad
-
     hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
         direccion_id=None,
         subdireccion_id=subdireccion_id,
@@ -606,19 +793,20 @@ async def dashboard_team(
         celula_id=celula_id,
         repositorio_id=None,
     )
-    res = await db.execute(
-        select(
-            Vulnerabilidad.user_id,
-            func.count().label("total"),
-            func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
-        )
-        .where(
-            Vulnerabilidad.deleted_at.is_(None),
-            *([hierarchy_filter] if hierarchy_filter is not None else []),
-        )
-        .group_by(Vulnerabilidad.user_id)
+    rows = await _cached_payload(
+        "team-rows",
+        user_id=current_user.id,
+        params={
+            "subdireccion_id": subdireccion_id,
+            "gerencia_id": gerencia_id,
+            "organizacion_id": organizacion_id,
+            "celula_id": celula_id,
+        },
+        builder=lambda: _team_rows(
+            db=db,
+            hierarchy_filter=hierarchy_filter,
+        ),
     )
-    rows = res.all()
     team_items = []
     for user_id, total, closed in rows:
         total_i = int(total or 0)
@@ -671,9 +859,9 @@ async def dashboard_team_premium(
     return success(payload)
 
 
-@router.get("/program-detail")
+@router.get("/program-detail", response_model=DashboardEnvelopeProgramDetailRead)
 async def dashboard_program_detail(
-    program: str = "sast",
+    program: str = Query(default="sast"),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
@@ -682,8 +870,6 @@ async def dashboard_program_detail(
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Detalle de programa (motor) con alcance organizacional."""
-    from app.models.vulnerabilidad import Vulnerabilidad
-
     hierarchy_filter = vulnerabilidad_en_celulas_o_repo(
         direccion_id=None,
         subdireccion_id=subdireccion_id,
@@ -704,51 +890,26 @@ async def dashboard_program_detail(
     }
     source = source_map.get(program.lower(), "SAST")
 
-    total = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.fuente == source,
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
+    counts = await _cached_payload(
+        "program-detail-counts",
+        user_id=current_user.id,
+        params={
+            "program": program,
+            "subdireccion_id": subdireccion_id,
+            "gerencia_id": gerencia_id,
+            "organizacion_id": organizacion_id,
+            "celula_id": celula_id,
+        },
+        builder=lambda: _program_detail_counts(
+            db=db,
+            source=source,
+            hierarchy_filter=hierarchy_filter,
+        ),
     )
-    closed = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.fuente == source,
-                    Vulnerabilidad.estado == "Cerrada",
-                    Vulnerabilidad.deleted_at.is_(None),
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
+    total = int(counts["total"])
+    closed = int(counts["closed"])
     open_count = max(total - closed, 0)
-    sla_d2 = await _where_sla_vencido_respet_d2(db)
-    overdue = int(
-        (
-            await db.execute(
-                select(func.count())
-                .select_from(Vulnerabilidad)
-                .where(
-                    Vulnerabilidad.fuente == source,
-                    sla_d2,
-                    *([hierarchy_filter] if hierarchy_filter is not None else []),
-                )
-            )
-        ).scalar_one()
-        or 0
-    )
+    overdue = int(counts["overdue"])
 
     return success(
         {
@@ -771,7 +932,7 @@ async def dashboard_program_detail(
 
 @router.get("/releases-table")
 async def dashboard_releases_table(
-    limit: int = 50,
+    limit: int = Query(default=50, ge=1, le=200),
     subdireccion_id: UUID | None = Query(default=None),
     gerencia_id: UUID | None = Query(default=None),
     organizacion_id: UUID | None = Query(default=None),
@@ -925,7 +1086,9 @@ async def dashboard_concentrado(
                     else_=0,
                 )
             ).label("alt"),
-        ).where(*base).group_by(Vulnerabilidad.fuente)
+        )
+        .where(*base)
+        .group_by(Vulnerabilidad.fuente)
     )
 
     order = {m: i for i, m in enumerate(FIVE_MOTORS)}
@@ -1150,11 +1313,7 @@ async def dashboard_platform_release(
     """Dashboard 10 V2: versión y changelog de la plataforma."""
     from app.models.changelog_entrada import ChangelogEntrada
 
-    rows = (
-        (await db.execute(select(ChangelogEntrada).where(ChangelogEntrada.deleted_at.is_(None))))
-        .scalars()
-        .all()
-    )
+    rows = (await db.execute(select(ChangelogEntrada).where(ChangelogEntrada.deleted_at.is_(None)))).scalars().all()
     epoch = datetime(1970, 1, 1, tzinfo=UTC)
     publicados = [r for r in rows if r.publicado and r.fecha_publicacion]
     publicados.sort(key=lambda r: r.fecha_publicacion or epoch, reverse=True)
@@ -1194,28 +1353,137 @@ async def dashboard_platform_release(
     )
 
 
-@router.get("/programs/heatmap")
+@router.get("/programs/heatmap", response_model=DashboardEnvelopeProgramsHeatmapRead)
 async def dashboard_programs_heatmap(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
     """Dashboard 3 helper: heatmap mensual de avance por programa (motor)."""
-    from app.models.vulnerabilidad import Vulnerabilidad
-
     now = datetime.now(UTC)
     year = now.year
     motors = ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]
-    heatmap: dict[str, list[dict]] = {}
+    heatmap = await _cached_payload(
+        "programs-heatmap",
+        user_id=current_user.id,
+        params={"year": year},
+        builder=lambda: _programs_heatmap(db=db, year=year, motors=motors),
+    )
 
+    return success({"heatmap": heatmap, "year": year})
+
+
+async def _program_detail_counts(
+    *,
+    db: AsyncSession,
+    source: str,
+    hierarchy_filter,
+) -> dict[str, int]:
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    total = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.fuente == source,
+                    Vulnerabilidad.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    closed = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.fuente == source,
+                    Vulnerabilidad.estado == "Cerrada",
+                    Vulnerabilidad.deleted_at.is_(None),
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    sla_d2 = await _where_sla_vencido_respet_d2(db)
+    overdue = int(
+        (
+            await db.execute(
+                select(func.count())
+                .select_from(Vulnerabilidad)
+                .where(
+                    Vulnerabilidad.fuente == source,
+                    sla_d2,
+                    *([hierarchy_filter] if hierarchy_filter is not None else []),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    return {"total": total, "closed": closed, "overdue": overdue}
+
+
+async def _program_rows(*, db: AsyncSession, hierarchy_filter) -> list[list[object]]:
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    rows = (
+        await db.execute(
+            select(
+                Vulnerabilidad.fuente,
+                func.count().label("total"),
+                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
+            )
+            .where(
+                Vulnerabilidad.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
+            )
+            .group_by(Vulnerabilidad.fuente)
+        )
+    ).all()
+    return [list(item) for item in rows]
+
+
+async def _team_rows(*, db: AsyncSession, hierarchy_filter) -> list[list[object]]:
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    rows = (
+        await db.execute(
+            select(
+                Vulnerabilidad.user_id,
+                func.count().label("total"),
+                func.sum(case((Vulnerabilidad.estado == "Cerrada", 1), else_=0)).label("closed"),
+            )
+            .where(
+                Vulnerabilidad.deleted_at.is_(None),
+                *([hierarchy_filter] if hierarchy_filter is not None else []),
+            )
+            .group_by(Vulnerabilidad.user_id)
+        )
+    ).all()
+    return [list(item) for item in rows]
+
+
+async def _programs_heatmap(
+    *,
+    db: AsyncSession,
+    year: int,
+    motors: list[str],
+) -> dict[str, list[dict[str, int]]]:
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+    heatmap: dict[str, list[dict[str, int]]] = {}
     for motor in motors:
-        months: list[dict] = []
-        for m in range(1, 13):
-            month_start = datetime(year, m, 1, tzinfo=UTC)
-            if m == 12:
+        months: list[dict[str, int]] = []
+        for month in range(1, 13):
+            month_start = datetime(year, month, 1, tzinfo=UTC)
+            if month == 12:
                 next_start = datetime(year + 1, 1, 1, tzinfo=UTC)
             else:
-                next_start = datetime(year, m + 1, 1, tzinfo=UTC)
-
+                next_start = datetime(year, month + 1, 1, tzinfo=UTC)
             total = int(
                 (
                     await db.execute(
@@ -1247,15 +1515,13 @@ async def dashboard_programs_heatmap(
                 ).scalar_one()
                 or 0
             )
-            value = int((closed / total * 100) if total > 0 else 0)
             months.append(
                 {
-                    "month": m,
-                    "value": value,
+                    "month": month,
+                    "value": int((closed / total * 100) if total > 0 else 0),
                     "total": total,
                     "closed": closed,
                 }
             )
         heatmap[motor] = months
-
-    return success({"heatmap": heatmap, "year": year})
+    return heatmap

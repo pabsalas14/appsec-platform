@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -33,7 +33,8 @@ import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
+import { SemaforoSla } from '@/components/charts';
 import { cn } from '@/lib/utils';
 import {
   Table,
@@ -129,7 +130,7 @@ function LevelSidebar({
   onLevelClick: (level: number) => void;
 }) {
   return (
-    <div className="hidden lg:flex flex-col gap-1 w-44 shrink-0">
+    <div data-testid="d4-level-sidebar" className="hidden lg:flex flex-col gap-1 w-44 shrink-0">
       {LEVELS.map((level) => {
         const Icon = level.icon;
         const isActive = level.id === currentLevel;
@@ -137,6 +138,7 @@ function LevelSidebar({
         const pathItem = path.find((p) => p.level === level.id);
         return (
           <button
+            data-testid={`d4-level-${level.id}`}
             key={level.id}
             type="button"
             disabled={!isReachable}
@@ -550,11 +552,13 @@ const CHILD_LABEL: Record<string, string> = {
   repositorio: 'Repositorios',
   vulnerabilidad: 'Vulnerabilidades en repositorio',
 };
+const TABLE_WINDOW_SIZE = 100;
 
 export default function VulnerabilitiesDashboardPage() {
   const [path, setPath] = useState<{ name: string; level: number; id: string }[]>([
     { name: 'Global', level: 0, id: 'root' },
   ]);
+  const [visibleRows, setVisibleRows] = useState(TABLE_WINDOW_SIZE);
 
   const currentLevel = path.length - 1;
   const filters: Partial<Record<FilterKey, string>> = {};
@@ -577,6 +581,15 @@ export default function VulnerabilitiesDashboardPage() {
     },
   });
 
+  const { data: slaData, isLoading: slaLoading } = useQuery({
+    queryKey: ['dashboard-sla-semaforo'],
+    queryFn: async () => {
+      const response = await apiClient.get('/dashboard/sla-semaforo');
+      return response.data.data;
+    },
+    enabled: currentLevel === 0,
+  });
+
   const handleChildClick = (item: ChildEntity) => {
     if (currentLevel >= 6) return;
     setPath([...path, { name: item.name, level: currentLevel + 1, id: item.id }]);
@@ -592,9 +605,15 @@ export default function VulnerabilitiesDashboardPage() {
   const totalCerrada = summary?.pipeline?.Cerrada ?? 0;
   const slaVencidos = data?.overdue_count ?? 0;
   const levelIdx = Math.min(currentLevel, 6);
+  const vulnRows = useMemo(() => data?.vulnerabilities ?? [], [data?.vulnerabilities]);
+  const renderedRows = useMemo(() => vulnRows.slice(0, visibleRows), [vulnRows, visibleRows]);
+
+  useEffect(() => {
+    setVisibleRows(TABLE_WINDOW_SIZE);
+  }, [path]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
+    <div data-testid="d4-page" className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
       {/* Left sidebar: niveles */}
       <LevelSidebar
         currentLevel={currentLevel}
@@ -624,7 +643,7 @@ export default function VulnerabilitiesDashboardPage() {
                 </span>
               ))}
             </div>
-            <h1 className="text-2xl font-bold tracking-tight mt-1">
+            <h1 data-testid="d4-title" className="text-2xl font-bold tracking-tight mt-1">
               Dashboard de Vulnerabilidades · {LEVELS[levelIdx].name}
             </h1>
             <p className="text-xs text-muted-foreground">
@@ -702,6 +721,37 @@ export default function VulnerabilitiesDashboardPage() {
           />
         </div>
 
+        {/* SLA Semáforo - Level 0 Only */}
+        {currentLevel === 0 && !slaLoading && slaData && (
+          <div className="w-full">
+            <SemaforoSla
+              data-testid="d4-sla-semaforo"
+              items={[
+                {
+                  status: 'ok',
+                  label: 'Al Día',
+                  count: slaData.on_time ?? 0,
+                  percentage: slaData.percentages?.on_time,
+                },
+                {
+                  status: 'warning',
+                  label: 'En Riesgo',
+                  count: slaData.at_risk ?? 0,
+                  percentage: slaData.percentages?.at_risk,
+                },
+                {
+                  status: 'critical',
+                  label: 'Vencidas',
+                  count: slaData.overdue ?? 0,
+                  percentage: slaData.percentages?.overdue,
+                },
+              ]}
+              title="Estado SLA Global"
+              layout="horizontal"
+            />
+          </div>
+        )}
+
         {/* Charts row */}
         {!isLoading && summary && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -732,34 +782,50 @@ export default function VulnerabilitiesDashboardPage() {
                       No se encontraron vulnerabilidades abiertas para este repositorio.
                     </p>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Motor</TableHead>
-                          <TableHead>Severidad</TableHead>
-                          <TableHead>Título</TableHead>
-                          <TableHead>Detección</TableHead>
-                          <TableHead>SLA</TableHead>
-                          <TableHead>Estatus</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data.vulnerabilities?.map((v) => (
-                          <TableRow key={v.id}>
-                            <TableCell className="font-mono text-xs">{v.id.slice(0, 8)}</TableCell>
-                            <TableCell className="text-xs">{v.motor}</TableCell>
-                            <TableCell className="text-xs">{v.severidad}</TableCell>
-                            <TableCell className="max-w-[200px] truncate text-xs">{v.titulo}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {v.fecha_deteccion ?? '—'}
-                            </TableCell>
-                            <TableCell className="text-xs">{v.sla?.slice(0, 10) ?? '—'}</TableCell>
-                            <TableCell className="text-xs">{v.estado}</TableCell>
+                    <>
+                      <Table data-testid="d4-vulnerabilities-table">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Motor</TableHead>
+                            <TableHead>Severidad</TableHead>
+                            <TableHead>Título</TableHead>
+                            <TableHead>Detección</TableHead>
+                            <TableHead>SLA</TableHead>
+                            <TableHead>Estatus</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {renderedRows.map((v) => (
+                            <TableRow key={v.id}>
+                              <TableCell className="font-mono text-xs">{v.id.slice(0, 8)}</TableCell>
+                              <TableCell className="text-xs">{v.motor}</TableCell>
+                              <TableCell className="text-xs">{v.severidad}</TableCell>
+                              <TableCell className="max-w-[200px] truncate text-xs">{v.titulo}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {v.fecha_deteccion ?? '—'}
+                              </TableCell>
+                              <TableCell className="text-xs">{v.sla?.slice(0, 10) ?? '—'}</TableCell>
+                              <TableCell className="text-xs">{v.estado}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      {vulnRows.length > visibleRows && (
+                        <div className="mt-3 flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Mostrando {renderedRows.length} de {vulnRows.length} filas.
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setVisibleRows((prev) => prev + TABLE_WINDOW_SIZE)}
+                          >
+                            Cargar m&aacute;s
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>

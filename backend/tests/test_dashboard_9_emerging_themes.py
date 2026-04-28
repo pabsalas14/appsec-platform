@@ -111,13 +111,19 @@ async def emerging_themes_with_updates(session_factory, admin_user):
 
 @pytest.fixture
 async def auth_headers(client: AsyncClient, admin_user: User):
-    """Get auth headers for a user."""
-    response = await client.post(
-        "/api/v1/auth/login",
-        json={"username": admin_user.username, "password": "TestPassword123!"},
-    )
-    token = response.cookies.get("access_token")
-    return {"Cookie": f"access_token={token}"} if token else {}
+    """Authenticate client cookie jar and keep request headers empty."""
+    last = None
+    for _ in range(6):
+        response = await client.post(
+            "/api/v1/auth/login",
+            json={"username": admin_user.username, "password": "TestPassword123!"},
+        )
+        last = response
+        if response.status_code == 200:
+            return {}
+    assert last is not None
+    assert last.status_code == 200, last.text
+    return {}
 
 
 # ─── TESTS ───────────────────────────────────────────────────────────────────

@@ -2,13 +2,19 @@
 
 Documentación completa de todos los endpoints de dashboards implementados en la plataforma AppSec.
 
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Última actualización:** Abril 2026  
 **Total de endpoints:** 24 implementados + 11 planificados (fases 3-8)
 
 ---
 
 ## 📊 Resumen de Endpoints
+
+Actualización v1.1:
+- Los endpoints D2-D4 (`/team`, `/programs`, `/program-detail`, `/vulnerabilities`, `/programs/heatmap`) exponen contrato OpenAPI tipado mediante `response_model`.
+- El parámetro `program` en `/program-detail` valida dominio cerrado (`sast`, `dast`, `sca`, `tm`, `mast`, `auditoria`, `terceros`).
+- `releases-table` declara límites de query (`limit` entre 1 y 200).
+- Se habilitó caché de dashboards con TTL (`DASHBOARD_CACHE_TTL_SECONDS`) y backend Redis opcional (`REDIS_URL`) con fallback en memoria.
 
 ### Dashboard Analytics (11 endpoints)
 Endpoints de lectura para vistas analíticas multidimensionales.
@@ -73,7 +79,7 @@ Obtiene estadísticas agregadas del dashboard para el usuario actual.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "scope": "user",
     "totals": {
@@ -139,7 +145,7 @@ Dashboard 1 - KPIs ejecutivos de alto nivel.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "kpis": {
       "total_vulnerabilities": 234,
@@ -186,7 +192,7 @@ Dashboard 2 - Vista de equipo por analista y carga de trabajo.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "team_size": 5,
     "analysts": [
@@ -222,7 +228,7 @@ Dashboard 3 - Programas consolidados usando datos de vulnerabilidades.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "total_programs": 7,
     "avg_completion": 68,
@@ -263,7 +269,7 @@ Dashboard 4 - Detalle de programa (zoom) por motor/fuente.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "program": "sast",
     "source": "SAST",
@@ -296,7 +302,7 @@ Dashboard 5 - Vista multidimensional de vulnerabilidades.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "total_vulnerabilities": 234,
     "by_severity": {
@@ -339,7 +345,7 @@ Dashboard 6-7 - Resumen de releases (tabla + kanban).
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "total_releases": 42,
     "pending_approval": 8,
@@ -372,7 +378,7 @@ Dashboard 6 - Releases en formato tabla.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "items": [
       {
@@ -401,7 +407,7 @@ Dashboard 7 - Releases en formato kanban.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "columns": {
       "Pendiente Aprobación": [
@@ -433,7 +439,7 @@ Dashboard 8 - Iniciativas.
 **Response:**
 ```json
 {
-  "code": 200,
+  "status": "success",
   "data": {
     "total_initiatives": 12,
     "in_progress": 7,
@@ -815,10 +821,8 @@ Todos los endpoints retornan un envelope consistente:
 
 ```json
 {
-  "code": 200,
-  "data": {},
-  "meta": {},
-  "error": null
+  "status": "success",
+  "data": {}
 }
 ```
 

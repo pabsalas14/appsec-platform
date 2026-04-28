@@ -5,7 +5,6 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-
 BASE_URL = "/api/v1/okr_compromisos"
 
 SAMPLE_PAYLOAD = {

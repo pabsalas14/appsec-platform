@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, ChevronDown, ChevronUp, X, AlertTriangle } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 interface Release {
   id: string;

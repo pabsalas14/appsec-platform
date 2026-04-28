@@ -56,6 +56,11 @@ ignore = [
 "app/services/threat_modeling_service.py" = ["RUF012"]
 "app/services/ia_provider.py" = ["E501"]
 "app/models/ai_rule.py" = ["E501"]
+"alembic/versions/g2h3i4j5k6l7_add_missing_deleted_by_columns.py" = ["S608"]
+"app/populate_mock.py" = ["S311", "SIM113", "E501", "F821"]
+"app/services/email_template_seed.py" = ["E501"]
+"app/seeds/demo_business_modules.py" = ["E501"]
+"app/seeds/demo_business_seed.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -1,7 +1,7 @@
 """User preferences service for notification channels (S18)."""
 
 import uuid
-from typing import Literal
+from typing import ClassVar, Literal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ class UserPreferencesService:
     """Manage user notification preferences."""
 
     # Tipo de notificación
-    NOTIFICATION_TYPES = {
+    NOTIFICATION_TYPES: ClassVar[set[str]] = {
         "sla_vencida",
         "vulnerabilidad_critica",
         "excepcion_temporal",
@@ -25,7 +25,7 @@ class UserPreferencesService:
     }
 
     # Canales disponibles
-    CHANNELS = {"in_app", "email"}
+    CHANNELS: ClassVar[set[str]] = {"in_app", "email"}
 
     @staticmethod
     async def get_preferences(db: AsyncSession, user_id: uuid.UUID) -> dict:
@@ -135,10 +135,7 @@ class UserPreferencesService:
         Enable email notifications for specific types or all types.
         If all_types=True, enable all notification types.
         """
-        if all_types:
-            notification_types = list(UserPreferencesService.NOTIFICATION_TYPES)
-        else:
-            notification_types = notification_types or []
+        notification_types = list(UserPreferencesService.NOTIFICATION_TYPES) if all_types else notification_types or []
 
         email_prefs = {}
         for nt in notification_types:
@@ -163,7 +160,7 @@ class UserPreferencesService:
         email_prefs = current.get("email_notificaciones", {})
 
         if all_types:
-            email_prefs = {k: False for k in email_prefs}
+            email_prefs = dict.fromkeys(email_prefs, False)
         else:
             for nt in notification_types or []:
                 if nt in email_prefs:

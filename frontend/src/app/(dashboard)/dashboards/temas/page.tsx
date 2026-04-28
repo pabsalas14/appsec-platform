@@ -7,8 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Lightbulb, MessageCircle, ChevronDown, ChevronUp, Calendar, User, TrendingUp, Plus } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Tema {

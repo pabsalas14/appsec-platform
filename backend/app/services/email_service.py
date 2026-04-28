@@ -1,6 +1,5 @@
 """Email service — SMTP client with retry logic (S18)."""
 
-import asyncio
 import re
 from datetime import UTC, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
@@ -14,7 +13,6 @@ from app.config import settings
 from app.core.logging import logger
 from app.models.email_log import EmailLog
 from app.models.email_template import EmailTemplate
-from app.models.user import User
 
 
 class EmailServiceError(Exception):

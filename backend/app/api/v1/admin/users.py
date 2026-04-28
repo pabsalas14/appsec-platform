@@ -22,12 +22,12 @@ from app.core.exceptions import (
 from app.core.permissions import VALID_ROLES
 from app.core.response import paginated, success
 from app.core.security import hash_password, validate_password_strength
-from app.models.user import User
-from app.models.vulnerabilidad import Vulnerabilidad
-from app.models.service_release import ServiceRelease
-from app.models.tema_emergente import TemaEmergente
 from app.models.iniciativa import Iniciativa
 from app.models.okr_compromiso import OkrCompromiso
+from app.models.service_release import ServiceRelease
+from app.models.tema_emergente import TemaEmergente
+from app.models.user import User
+from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas.user_admin import (
     UserAdminCreate,
     UserAdminRead,
@@ -44,7 +44,13 @@ class OwnershipReassignRequest(BaseModel):
     from_user_id: uuid.UUID
     to_user_id: uuid.UUID
     entities: list[str] = Field(
-        default_factory=lambda: ["vulnerabilidads", "service_releases", "tema_emergentes", "iniciativas", "okr_compromisos"]
+        default_factory=lambda: [
+            "vulnerabilidads",
+            "service_releases",
+            "tema_emergentes",
+            "iniciativas",
+            "okr_compromisos",
+        ]
     )
 
 
@@ -299,7 +305,13 @@ async def reassign_ownership(
             "performed_by": str(admin.id),
         },
     )
-    return success({"from_user_id": str(payload.from_user_id), "to_user_id": str(payload.to_user_id), "updated": updated})
+    return success(
+        {
+            "from_user_id": str(payload.from_user_id),
+            "to_user_id": str(payload.to_user_id),
+            "updated": updated,
+        }
+    )
 
 
 # Silence unused-import warnings for convenience exports above.
