@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { apiClient as api } from '@/lib/api';
 
 export interface UserThemePreference {
   id: string;

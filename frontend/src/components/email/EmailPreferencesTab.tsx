@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
   Switch,
-  Badge,
 } from '@/components/ui';
 import { useUserEmailPreferences, useUpsertUserEmailPreference } from '@/hooks/useEmailNotifications';
 
@@ -51,7 +50,7 @@ export function EmailPreferencesTab() {
         delete next[notificationType];
         return next;
       });
-    } catch (err) {
+    } catch (_err) {
       toast.error('Error al actualizar preferencia');
     }
   };

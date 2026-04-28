@@ -7,7 +7,6 @@ import {
   Bug,
   BookOpen,
   CheckCircle,
-  Command,
   FileText,
   Lightbulb,
   Loader,
@@ -153,7 +152,7 @@ export function SearchCommand() {
         )}
 
         {!isLoading && !error && query && totalResults === 0 && (
-          <CommandEmpty>No results found for "{query}"</CommandEmpty>
+          <CommandEmpty>No results found for &quot;{query}&quot;</CommandEmpty>
         )}
 
         {!isLoading && !error && !query && (

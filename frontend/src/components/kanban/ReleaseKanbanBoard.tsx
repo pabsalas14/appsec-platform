@@ -11,7 +11,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { PageHeader, PageWrapper, Badge } from '@/components/ui';
-import { Spinner } from '@/components/ui/Spinner';
+import { Spinner } from '@/components/ui/spinner';
 import { AlertCircle, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';

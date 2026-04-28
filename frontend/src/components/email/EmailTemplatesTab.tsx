@@ -20,11 +20,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui';
-import { useEmailTemplates } from '@/hooks/useEmailNotifications';
+import { useEmailTemplates, type EmailTemplate } from '@/hooks/useEmailNotifications';
 
 export function EmailTemplatesTab() {
   const { data: templates = [], isLoading } = useEmailTemplates();
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

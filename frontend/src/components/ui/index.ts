@@ -1,12 +1,13 @@
 // Legacy components (upgraded with glass styling)
-export { Button } from './Button';
-export { Input } from './Input';
-export { Select } from './Select';
-export { MultiSelect } from './MultiSelect';
-export { Textarea } from './Textarea';
-export { Modal } from './Modal';
-export { Badge } from './Badge';
-export { Spinner, PageLoader } from './Spinner';
+export { default as AuthImage } from './authimage';
+export { Button } from './button';
+export { Input } from './input';
+export { Select } from './select';
+export { MultiSelect } from './multiselect';
+export { Textarea } from './textarea';
+export { Modal } from './modal';
+export { Badge } from './badge';
+export { Spinner, PageLoader } from './spinner';
 
 // shadcn / Radix components
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card';
@@ -58,6 +59,7 @@ export {
   AlertDialogCancel,
 } from './alert-dialog';
 export { Popover, PopoverTrigger, PopoverContent } from './popover';
+export { Alert, AlertTitle, AlertDescription } from './alert';
 export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandDialog } from './command';
 export { Label } from './label';
 export {
@@ -110,7 +112,7 @@ export {
 export type { SortDirection } from './data-table';
 
 // Skeleton helpers
-export { TableSkeleton } from './TableSkeleton';
+export { TableSkeleton } from './tableskeleton';
 
 // Date pickers
 export { DatePicker } from './date-picker';

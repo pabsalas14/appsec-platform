@@ -8,7 +8,7 @@ import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFilters
 import {
   Card, CardContent, CardHeader, CardTitle, EmptyState, PageHeader, PageWrapper,
 } from '@/components/ui';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import { useMadurez } from '@/hooks/useMadurez';

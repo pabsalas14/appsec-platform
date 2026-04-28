@@ -6,16 +6,14 @@ import { toast } from 'sonner';
 
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Button,
   Alert,
   AlertDescription,
 } from '@/components/ui';
 import { useTheme } from '@/hooks/useTheme';
-import { useThemePreference, useUpdateThemePreference } from '@/hooks/useThemePreference';
+import { useUpdateThemePreference } from '@/hooks/useThemePreference';
 
 const THEMES = [
   {
@@ -40,7 +38,6 @@ const THEMES = [
 
 export function ThemeSettingsTab() {
   const { theme: currentTheme, setTheme } = useTheme();
-  const { data: savedPreference } = useThemePreference();
   const updatePreference = useUpdateThemePreference();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system' | null>(null);
 
@@ -56,7 +53,7 @@ export function ThemeSettingsTab() {
       // Guardar preferencia en servidor
       await updatePreference.mutateAsync(theme);
       toast.success('Tema actualizado');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Error al actualizar tema');
       setTheme(currentTheme || 'system');
       setSelectedTheme((currentTheme || 'system') as 'light' | 'dark' | 'system');

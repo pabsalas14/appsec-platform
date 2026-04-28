@@ -1,6 +1,39 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
-import type { EmailTemplate, EmailLog, UserEmailPreference } from '@/types/api';
+import { apiClient as api } from '@/lib/api';
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  description: string;
+  subject?: string;
+  body?: string;
+  html_content?: string;
+  is_default: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EmailLog {
+  id: string;
+  user_id: string;
+  notification_type: string;
+  subject: string;
+  recipient_email: string;
+  status: 'sent' | 'failed' | 'pending';
+  retry_count: number;
+  error_message?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface UserEmailPreference {
+  id: string;
+  user_id: string;
+  notification_type: string;
+  email_enabled: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
 
 // Email Templates
 export function useEmailTemplates() {
