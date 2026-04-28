@@ -35,7 +35,7 @@ describe('MadurezPage', () => {
 
     render(<MadurezPage />, { wrapper: createWrapper() });
 
-    expect(screen.getByText(/Dashboard de Madurez/i)).toBeInTheDocument();
+    expect(screen.getByText(/Score de Madurez/i)).toBeInTheDocument();
   });
 
   it('renders empty state when no data', async () => {

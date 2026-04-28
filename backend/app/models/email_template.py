@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -22,6 +22,9 @@ class EmailTemplate(Base):
     variables: Mapped[list[str] | None] = mapped_column(
         # JSON list of variable names like ["titulo", "descripcion", "enlace"]
         # For interpolation: {{ variable_name }}
+        JSONB,
+        nullable=True,
+        server_default=text("'[]'::jsonb"),
     )
     descripcion: Mapped[str | None] = mapped_column(Text(), nullable=True)
     activo: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=True, server_default=text("true"))
