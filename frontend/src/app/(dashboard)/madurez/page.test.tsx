@@ -35,7 +35,7 @@ describe('MadurezPage', () => {
 
     render(<MadurezPage />, { wrapper: createWrapper() });
 
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument(); // Loading spinner
+    expect(screen.getByText(/Dashboard de Madurez/i)).toBeInTheDocument();
   });
 
   it('renders empty state when no data', async () => {

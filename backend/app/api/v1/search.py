@@ -27,7 +27,7 @@ from app.core.search import sanitize_search_term
 from app.models.auditoria import Auditoria
 from app.models.control_seguridad import ControlSeguridad
 from app.models.hallazgo_dast import HallazgoDast
-from app.models.hallazgo_mast import HallazgoMast
+from app.models.hallazgo_mast import HallazgoMAST
 from app.models.hallazgo_sast import HallazgoSast
 from app.models.iniciativa import Iniciativa
 from app.models.plan_remediacion import PlanRemediacion
@@ -241,12 +241,12 @@ async def global_search(
 
     # ── Hallazgos MAST ────────────────────────────────────────────────────────
     stmt = (
-        select(HallazgoMast)
+        select(HallazgoMAST)
         .where(
-            HallazgoMast.deleted_at.is_(None),
+            HallazgoMAST.deleted_at.is_(None),
             or_(
-                HallazgoMast.nombre.ilike(pattern),
-                HallazgoMast.descripcion.ilike(pattern),
+                HallazgoMAST.nombre.ilike(pattern),
+                HallazgoMAST.descripcion.ilike(pattern),
             ),
         )
         .limit(10)
