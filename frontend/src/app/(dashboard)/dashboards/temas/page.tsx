@@ -9,7 +9,7 @@ import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/Textarea';
 
 interface Tema {
   id: string;

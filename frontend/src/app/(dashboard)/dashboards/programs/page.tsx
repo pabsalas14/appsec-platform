@@ -25,7 +25,7 @@ import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { GaugeChart, HistoricoMensualGrid } from '@/components/charts';
 import { cn } from '@/lib/utils';

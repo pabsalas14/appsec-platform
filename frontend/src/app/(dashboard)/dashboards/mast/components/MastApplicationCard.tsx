@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Shield, Zap } from 'lucide-react';
 import { useMemo } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { AplicacionMovil } from '@/lib/schemas/aplicacion_movil.schema';

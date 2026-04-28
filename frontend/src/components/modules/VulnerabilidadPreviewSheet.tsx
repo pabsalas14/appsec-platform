@@ -3,7 +3,7 @@
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useVulnerabilidad } from '@/hooks/useVulnerabilidads';
