@@ -24,8 +24,11 @@ const formSchema = ActualizacionTemaCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function ActualizacionTemasPage() {
-  const { data: items = [], isLoading } = useActualizacionTemas();
-  const { data: temas = [] } = useTemaEmergentes();
+  const actualizacionesQuery = useActualizacionTemas();
+  const items = actualizacionesQuery?.data ?? [];
+  const isLoading = Boolean(actualizacionesQuery?.isLoading);
+  const temasQuery = useTemaEmergentes();
+  const temas = temasQuery?.data ?? [];
   const createMut = useCreateActualizacionTema();
   const updateMut = useUpdateActualizacionTema();
   const deleteMut = useDeleteActualizacionTema();

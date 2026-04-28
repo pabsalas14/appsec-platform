@@ -26,7 +26,9 @@ const formSchema = IndicadorFormulaCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function IndicadoresFormulasPage() {
-  const { data: items = [], isLoading } = useIndicadorFormulas();
+  const formulasQuery = useIndicadorFormulas();
+  const items = formulasQuery?.data ?? [];
+  const isLoading = Boolean(formulasQuery?.isLoading);
   const createMut = useCreateIndicadorFormula();
   const updateMut = useUpdateIndicadorFormula();
   const deleteMut = useDeleteIndicadorFormula();

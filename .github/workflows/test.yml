@@ -117,7 +117,7 @@ jobs:
 
       - name: Apply migrations
         working-directory: backend
-        run: alembic upgrade head
+        run: alembic upgrade heads
 
       - name: Run tests with coverage (68% gate)
         working-directory: backend
@@ -239,7 +239,7 @@ jobs:
 
       - name: Apply migrations
         working-directory: backend
-        run: alembic upgrade head
+        run: alembic upgrade heads
 
       - name: Start backend
         working-directory: backend
@@ -324,7 +324,7 @@ jobs:
       - name: Apply migrations + seed
         working-directory: backend
         run: |
-          alembic upgrade head
+          alembic upgrade heads
           python -m app.seed
 
       - name: Start backend

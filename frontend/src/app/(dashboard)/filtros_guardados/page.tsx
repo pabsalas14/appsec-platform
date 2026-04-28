@@ -30,7 +30,9 @@ const formSchema = FiltroGuardadoCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function FiltrosGuardadosPage() {
-  const { data: items = [], isLoading } = useFiltrosGuardados();
+  const filtrosQuery = useFiltrosGuardados();
+  const items = filtrosQuery?.data ?? [];
+  const isLoading = Boolean(filtrosQuery?.isLoading);
   const createMut = useCreateFiltroGuardado();
   const deleteMut = useDeleteFiltroGuardado();
 

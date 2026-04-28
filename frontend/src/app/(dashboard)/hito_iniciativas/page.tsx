@@ -24,8 +24,11 @@ const formSchema = HitoIniciativaCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function HitoIniciativasPage() {
-  const { data: items = [], isLoading } = useHitoIniciativas();
-  const { data: iniciativas = [] } = useIniciativas();
+  const hitosQuery = useHitoIniciativas();
+  const items = hitosQuery?.data ?? [];
+  const isLoading = Boolean(hitosQuery?.isLoading);
+  const iniciativasQuery = useIniciativas();
+  const iniciativas = iniciativasQuery?.data ?? [];
   const createMut = useCreateHitoIniciativa();
   const updateMut = useUpdateHitoIniciativa();
   const deleteMut = useDeleteHitoIniciativa();

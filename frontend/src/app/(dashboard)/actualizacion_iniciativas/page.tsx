@@ -24,8 +24,11 @@ const formSchema = ActualizacionIniciativaCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function ActualizacionIniciativasPage() {
-  const { data: items = [], isLoading } = useActualizacionIniciativas();
-  const { data: iniciativas = [] } = useIniciativas();
+  const actualizacionesQuery = useActualizacionIniciativas();
+  const items = actualizacionesQuery?.data ?? [];
+  const isLoading = Boolean(actualizacionesQuery?.isLoading);
+  const iniciativasQuery = useIniciativas();
+  const iniciativas = iniciativasQuery?.data ?? [];
   const createMut = useCreateActualizacionIniciativa();
   const updateMut = useUpdateActualizacionIniciativa();
   const deleteMut = useDeleteActualizacionIniciativa();

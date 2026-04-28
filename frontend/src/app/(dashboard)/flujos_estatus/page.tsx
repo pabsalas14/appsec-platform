@@ -25,7 +25,9 @@ const formSchema = FlujoEstatusCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function FlujoEstatusPage() {
-  const { data: items = [], isLoading } = useFlujoEstatus();
+  const flujoQuery = useFlujoEstatus();
+  const items = flujoQuery?.data ?? [];
+  const isLoading = Boolean(flujoQuery?.isLoading);
   const createMut = useCreateFlujoEstatus();
   const updateMut = useUpdateFlujoEstatus();
   const deleteMut = useDeleteFlujoEstatus();

@@ -32,8 +32,11 @@ const formSchema = PlanRemediacionCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function PlanRemediacionsPage() {
-  const { data: items = [], isLoading } = usePlanRemediacions();
-  const { data: auditorias = [] } = useAuditorias();
+  const planesQuery = usePlanRemediacions();
+  const items = planesQuery?.data ?? [];
+  const isLoading = Boolean(planesQuery?.isLoading);
+  const auditoriasQuery = useAuditorias();
+  const auditorias = auditoriasQuery?.data ?? [];
   const createMut = useCreatePlanRemediacion();
   const updateMut = useUpdatePlanRemediacion();
   const deleteMut = useDeletePlanRemediacion();

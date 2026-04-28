@@ -26,8 +26,11 @@ const formSchema = EvidenciaAuditoriaCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function EvidenciaAuditoriasPage() {
-  const { data: items = [], isLoading } = useEvidenciaAuditorias();
-  const { data: auditorias = [] } = useAuditorias();
+  const evidenciasQuery = useEvidenciaAuditorias();
+  const items = evidenciasQuery?.data ?? [];
+  const isLoading = Boolean(evidenciasQuery?.isLoading);
+  const auditoriasQuery = useAuditorias();
+  const auditorias = auditoriasQuery?.data ?? [];
   const createMut = useCreateEvidenciaAuditoria();
   const updateMut = useUpdateEvidenciaAuditoria();
   const deleteMut = useDeleteEvidenciaAuditoria();

@@ -24,8 +24,11 @@ const formSchema = CierreConclusionCreateSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function CierreConclusionesPagina() {
-  const { data: items = [], isLoading } = useCierreConclusiones();
-  const { data: temas = [] } = useTemaEmergentes();
+  const cierresQuery = useCierreConclusiones();
+  const items = cierresQuery?.data ?? [];
+  const isLoading = Boolean(cierresQuery?.isLoading);
+  const temasQuery = useTemaEmergentes();
+  const temas = temasQuery?.data ?? [];
   const createMut = useCreateCierreConclusion();
   const updateMut = useUpdateCierreConclusion();
   const deleteMut = useDeleteCierreConclusion();
