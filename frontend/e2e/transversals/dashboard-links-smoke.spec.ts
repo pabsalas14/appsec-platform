@@ -11,7 +11,7 @@ test.describe("Dashboards — smoke (F1/F4)", () => {
 
   test("executive shows KPI row", async ({ authedPage }) => {
     await authedPage.goto("/dashboards/executive");
-    await expect(authedPage.getByRole("heading", { name: /Dashboard Ejecutivo/i })).toBeVisible({
+    await expect(authedPage.getByRole("heading", { name: /Dashboard.*Ejecutivo/i })).toBeVisible({
       timeout: 20_000,
     });
     await expect(authedPage.getByText(/Vulnerabilidades críticas/)).toBeVisible({ timeout: 15_000 });

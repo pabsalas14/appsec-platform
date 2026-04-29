@@ -13,6 +13,7 @@ test.describe('Tasks CRUD', () => {
     await expect(page).toHaveURL(/\/tasks/);
 
     // ── Create ────────────────────────────────────────────────────────
+    await expect(page.getByRole('button', { name: /new task/i })).toBeVisible({ timeout: 30_000 });
     await page.getByRole('button', { name: /new task/i }).click();
     const createDialog = page.getByRole('dialog');
     await createDialog.getByLabel(/title/i).fill(title);

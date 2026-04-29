@@ -210,4 +210,14 @@ test.describe("Dashboards D2-D4", () => {
       await expect(page.locator("[data-testid='d4-title']")).toBeVisible();
     });
   });
+
+  test.describe("D5 Concentrado", () => {
+    test("D5 renderiza vista consolidada", async ({ authedPage: page }) => {
+      await page.goto("/dashboards/concentrado");
+      await expect(
+        page.getByRole("heading", { name: /Dashboard de Vulnerabilidades/i }),
+      ).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText(/Dimensión por Motor/i)).toBeVisible();
+    });
+  });
 });

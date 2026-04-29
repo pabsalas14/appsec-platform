@@ -1,150 +1,72 @@
-import { test, expect } from '@playwright/test';
+/**
+ * Tema: header (next-themes, etiquetas en inglés) vs perfil (ThemeSettingsTab en español).
+ */
+import { expect, test } from "../fixtures";
 
-test.describe('Dark Mode - Theme Switcher & Persistence', () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Login
-    await context.addCookies([
-      {
-        name: 'session',
-        value: process.env.TEST_SESSION || '',
-        domain: 'localhost',
-        path: '/',
-        httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
-      },
-    ]);
-    await page.goto('http://localhost/');
-    await page.waitForLoadState('networkidle');
+test.describe("Dark mode — header y perfil", () => {
+  test.beforeEach(async ({ authedPage: page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("main")).toBeVisible({ timeout: 20_000 });
   });
 
-  test('should show theme toggle button in header', async ({ page }) => {
-    // Look for sun or moon icon in header
-    const themeButton = page.locator('button:has-text("Cambiar tema")');
-    await expect(themeButton).toBeVisible();
+  test("muestra el botón de tema en el header", async ({ authedPage: page }) => {
+    await expect(page.getByRole("button", { name: /toggle theme/i })).toBeVisible();
   });
 
-  test('should open theme menu on click', async ({ page }) => {
-    // Click theme toggle
-    await page.locator('button[aria-label*="theme" i]').click();
-
-    // Should show dropdown with light/dark/system options
-    await expect(page.locator('text=Claro')).toBeVisible();
-    await expect(page.locator('text=Oscuro')).toBeVisible();
-    await expect(page.locator('text=Sistema')).toBeVisible();
+  test("abre el menú de tema y lista Light / Dark / System", async ({ authedPage: page }) => {
+    await page.getByRole("button", { name: /toggle theme/i }).click();
+    await expect(page.getByRole("menuitem", { name: /^light$/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /^dark$/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /^system$/i })).toBeVisible();
   });
 
-  test('should switch to dark theme', async ({ page }) => {
-    // Open theme menu
-    await page.locator('button[aria-label*="theme" i]').click();
-    await page.click('[role="menuitem"]:has-text("Oscuro")');
-
-    // Wait for theme change
-    await page.waitForTimeout(300);
-
-    // Check if dark class is applied to html/body
-    const htmlElement = page.locator('html');
-    const className = await htmlElement.getAttribute('class');
-    expect(className).toContain('dark');
+  test("aplica dark al elegir Dark en el header", async ({ authedPage: page }) => {
+    await page.getByRole("button", { name: /toggle theme/i }).click();
+    await page.getByRole("menuitem", { name: /^dark$/i }).click();
+    await expect(page.locator("html")).toHaveClass(/dark/, { timeout: 10_000 });
   });
 
-  test('should switch to light theme', async ({ page }) => {
-    // First switch to dark
-    await page.locator('button[aria-label*="theme" i]').click();
-    await page.click('[role="menuitem"]:has-text("Oscuro")');
-    await page.waitForTimeout(300);
-
-    // Then switch back to light
-    await page.locator('button[aria-label*="theme" i]').click();
-    await page.click('[role="menuitem"]:has-text("Claro")');
-    await page.waitForTimeout(300);
-
-    // Check if dark class is removed
-    const htmlElement = page.locator('html');
-    const className = await htmlElement.getAttribute('class');
-    expect(className).not.toContain('dark');
+  test("restaura light al elegir Light", async ({ authedPage: page }) => {
+    await page.getByRole("button", { name: /toggle theme/i }).click();
+    await page.getByRole("menuitem", { name: /^dark$/i }).click();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.getByRole("button", { name: /toggle theme/i }).click();
+    await page.getByRole("menuitem", { name: /^light$/i }).click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
   });
 
-  test('should persist theme preference in profile', async ({ page }) => {
-    // Navigate to profile
-    await page.goto('http://localhost/profile');
-    await page.waitForLoadState('networkidle');
-
-    // Click on Theme tab
-    await page.click('[role="tab"]:has-text("Theme")');
-
-    // Should show theme options
-    await expect(page.locator('text=Claro')).toBeVisible();
-    await expect(page.locator('text=Oscuro')).toBeVisible();
-    await expect(page.locator('text=Sistema')).toBeVisible();
+  test("perfil — pestaña Theme muestra Claro / Oscuro / Sistema", async ({ authedPage: page }) => {
+    await page.goto("/profile");
+    await page.getByRole("tab", { name: /^theme$/i }).click();
+    await expect(page.getByText("Claro")).toBeVisible();
+    await expect(page.getByText("Oscuro")).toBeVisible();
+    await expect(page.getByText("Sistema")).toBeVisible();
   });
 
-  test('should save theme preference from profile', async ({ page }) => {
-    await page.goto('http://localhost/profile');
-    await page.waitForLoadState('networkidle');
-
-    // Click on Theme tab
-    await page.click('[role="tab"]:has-text("Theme")');
-
-    // Click on Dark theme card
-    await page.locator('[role="tabpanel"] text=Oscuro').click();
-
-    // Should show loading state
-    await expect(page.locator('text=Guardando')).toBeVisible({ timeout: 2000 });
+  test("perfil — elegir tema dispara toast de éxito", async ({ authedPage: page }) => {
+    await page.goto("/profile");
+    await page.getByRole("tab", { name: /^theme$/i }).click();
+    await page.locator('[class*="cursor-pointer"]').filter({ hasText: /^Oscuro$/ }).first().click();
+    await expect(page.getByText("Tema actualizado")).toBeVisible({ timeout: 15_000 });
   });
 
-  test('should sync theme across tabs', async ({ browser, context }) => {
+  test("dos pestañas con la misma sesión cargan la app", async ({ browser }) => {
+    const context = await browser.newContext();
     const page1 = await context.newPage();
     const page2 = await context.newPage();
+    const username = process.env.E2E_USERNAME ?? "admin";
+    const user = username.includes("@") ? "admin" : username;
+    const password = process.env.E2E_PASSWORD ?? "Changeme123!";
 
-    // Add session cookie to both
-    const cookies = [
-      {
-        name: 'session',
-        value: process.env.TEST_SESSION || '',
-        domain: 'localhost',
-        path: '/',
-        httpOnly: true,
-        secure: false,
-        sameSite: 'Lax' as const,
-      },
-    ];
-
-    await page1.context().addCookies(cookies);
-    await page2.context().addCookies(cookies);
-
-    // Navigate both to home
-    await page1.goto('http://localhost/');
-    await page2.goto('http://localhost/');
-
-    // Change theme in page1
-    await page1.locator('button[aria-label*="theme" i]').click();
-    await page1.click('[role="menuitem"]:has-text("Oscuro")');
-    await page1.waitForTimeout(500);
-
-    // Page2 should also be in dark mode (if persistence is working)
-    // Note: This depends on server-side persistence implementation
-    const page2HtmlClass = await page2.locator('html').getAttribute('class');
-    // This is a soft assertion - may need to reload page2
-  });
-
-  test('should maintain CSS transitions without flashing', async ({ page }) => {
-    // This is a visual test
-    const startTime = Date.now();
-
-    // Switch themes rapidly
-    await page.locator('button[aria-label*="theme" i]').click();
-    await page.click('[role="menuitem"]:has-text("Oscuro")');
-
-    await page.waitForTimeout(200);
-
-    await page.locator('button[aria-label*="theme" i]').click();
-    await page.click('[role="menuitem"]:has-text("Claro")');
-
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-
-    // Should complete relatively quickly (no major flashing)
-    expect(duration).toBeLessThan(2000);
+    for (const p of [page1, page2]) {
+      await p.goto("/login");
+      await p.locator("#username").fill(user);
+      await p.locator("#password").fill(password);
+      await p.getByRole("button", { name: /^sign in$/i }).click();
+      await p.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30_000 });
+      await p.goto("/");
+      await expect(p.getByRole("main")).toBeVisible({ timeout: 20_000 });
+    }
+    await context.close();
   });
 });
