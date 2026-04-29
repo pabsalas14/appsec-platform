@@ -58,9 +58,7 @@ async def test_validate_email():
 
 
 @pytest.mark.asyncio
-async def test_get_template_found(
-    async_db: AsyncSession, email_template: EmailTemplate
-):
+async def test_get_template_found(async_db: AsyncSession, email_template: EmailTemplate):
     """Test retrieving existing template."""
     template = await email_service.get_template(async_db, "test_template")
     assert template.id == email_template.id
@@ -75,9 +73,7 @@ async def test_get_template_not_found(async_db: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_send_email_creates_log(
-    async_db: AsyncSession, email_template: EmailTemplate
-):
+async def test_send_email_creates_log(async_db: AsyncSession, email_template: EmailTemplate):
     """Test sending email creates audit log."""
     user = User(
         username="email_test_user",
@@ -105,9 +101,7 @@ async def test_send_email_creates_log(
 
 
 @pytest.mark.asyncio
-async def test_send_email_invalid_email(
-    async_db: AsyncSession, email_template: EmailTemplate
-):
+async def test_send_email_invalid_email(async_db: AsyncSession, email_template: EmailTemplate):
     """Test sending to invalid email address."""
     with pytest.raises(EmailServiceError, match="Invalid email"):
         await email_service.send_email(
@@ -119,9 +113,7 @@ async def test_send_email_invalid_email(
 
 
 @pytest.mark.asyncio
-async def test_retry_failed_emails(
-    async_db: AsyncSession, email_template: EmailTemplate
-):
+async def test_retry_failed_emails(async_db: AsyncSession, email_template: EmailTemplate):
     """Test retry mechanism for failed emails."""
     from app.models.email_log import EmailLog
 
