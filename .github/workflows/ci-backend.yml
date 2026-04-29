@@ -13,6 +13,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
+  APPSEC_MASTER_KEY: "bOEizITi-HIjCc8gIlF3FMfwidr6I0z7RFGXJdfizwU="
 
 jobs:
   test-backend:
