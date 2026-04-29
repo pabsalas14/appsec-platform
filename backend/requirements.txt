@@ -27,6 +27,7 @@ Pillow==12.2.0
 # Phase 5 — AI Provider integration (scan workflow intelligence)
 openai>=1.30.0
 anthropic>=0.25.0
+litellm>=1.0.0
 
 # G2: ejecución programada (cron) en el proceso API
 apscheduler==3.10.4

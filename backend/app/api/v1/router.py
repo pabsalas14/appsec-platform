@@ -22,6 +22,7 @@ from app.api.v1 import (
     changelog_entrada,
     cierre_conclusion,
     client_logs,
+    code_security_review,
     control_mitigacion,
     control_seguridad,
     control_source_code,
@@ -63,7 +64,7 @@ from app.api.v1 import (
     okr_plan_anual,
     okr_revision_q,
     okr_subcompromiso,
-    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
+    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────
     organizacion,
     pipeline_release,
     plan_remediacion,
@@ -77,7 +78,8 @@ from app.api.v1 import (
     repositorio,
     revision_source_code,
     revision_tercero,
-    # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
+    scr_github,
+    # ── Módulo 8 — Operación (Releases) ────────────────────────────────
     search,
     service_release,
     servicio,
@@ -92,6 +94,7 @@ from app.api.v1 import (
     # ── Módulo 9 — Gestión de Vulnerabilidades ─────────────────────────────
     vulnerabilidad,
 )
+from app.api.v1.agents.router import router as agents_router
 from app.api.v1.admin.router import admin_router
 
 api_router = APIRouter(prefix="/api/v1")
@@ -108,6 +111,7 @@ api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Clie
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
 api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
+api_router.include_router(agents_router, prefix="/agents", tags=["Agents"])
 api_router.include_router(admin_router, prefix="/admin")
 
 
@@ -236,3 +240,5 @@ api_router.include_router(okr_subcompromiso.router, prefix="/okr_subcompromisos"
 api_router.include_router(okr_revision_q.router, prefix="/okr_revision_qs", tags=["Okr_revision_q"])
 api_router.include_router(okr_evidencia.router, prefix="/okr_evidencias", tags=["Okr_evidencia"])
 api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["Okr_cierre_q"])
+api_router.include_router(code_security_review.router, prefix="/code_security_reviews", tags=["Code_security_review"])
+api_router.include_router(scr_github.router, prefix="/code_security", tags=["scr_github"])

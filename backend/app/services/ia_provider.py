@@ -27,6 +27,7 @@ class AIProviderType(StrEnum):
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     OPENROUTER = "openrouter"
+    LITELLM = "litellm"
 
 
 class AIResponse(BaseModel):
@@ -440,6 +441,87 @@ class OpenRouterProvider(AIProvider):
             return False
 
 
+class LiteLLMProvider(AIProvider):
+    """LiteLLM provider for accessing multiple LLMs through a unified interface"""
+
+    def __init__(
+        self,
+        api_key: str = "",
+        model: str = "gpt-3.5-turbo",
+        base_url: str = "http://localhost:4000",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url
+        self.client = httpx.AsyncClient(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
+            timeout=self.timeout_seconds,
+        )
+
+    async def generate(
+        self,
+        prompt: str,
+        system: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+    ) -> AIResponse:
+        """Generate using LiteLLM"""
+
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        async def call():
+            response = await self.client.post("/chat/completions", json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return AIResponse(
+                content=data["choices"][0]["message"]["content"],
+                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                provider="litellm",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call())
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        """Classify using LiteLLM"""
+
+        prompt = f"Classify the following text into one of these categories: {', '.join(categories)}\n\nText: {text}\n\nCategory:"
+
+        response = await self.generate(
+            prompt=prompt,
+            temperature=0.1,
+        )
+
+        classification = response.content.strip().lower()
+        return {
+            "classification": classification,
+            "provider": "litellm",
+        }
+
+    async def health_check(self) -> bool:
+        """Check LiteLLM availability"""
+
+        try:
+            response = await self.client.get("/health", timeout=5)
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"LiteLLM health check failed: {e}")
+            return False
+
+
 def get_ai_provider(
     provider_type: AIProviderType,
     **kwargs,
@@ -451,6 +533,7 @@ def get_ai_provider(
         AIProviderType.ANTHROPIC: AnthropicProvider,
         AIProviderType.OPENAI: OpenAIProvider,
         AIProviderType.OPENROUTER: OpenRouterProvider,
+        AIProviderType.LITELLM: LiteLLMProvider,
     }
 
     provider_class = providers.get(provider_type)

@@ -142,6 +142,59 @@ export interface AuditLog {
   metadata: Record<string, unknown>;
 }
 
+export interface CodeSecurityReview {
+  id: string;
+  user_id: string;
+  titulo: string;
+  estado: string;
+  descripcion: string | null;
+  progreso: number;
+  rama_analizar: string;
+  url_repositorio: string | null;
+  scan_mode: string;
+  repositorio_id: string | null;
+  github_org_slug?: string | null;
+  scan_batch_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CodeSecurityFinding {
+  id: string;
+  review_id: string;
+  archivo: string;
+  linea_inicio: number;
+  linea_fin: number;
+  tipo_malicia: string;
+  severidad: string;
+  confianza: number;
+  descripcion: string;
+  estado: string;
+}
+
+export interface CodeSecurityEvent {
+  id: string;
+  review_id: string;
+  event_ts: string;
+  commit_hash: string;
+  autor: string;
+  archivo: string;
+  accion: string;
+  nivel_riesgo: string;
+  indicadores: string[];
+  descripcion?: string | null;
+}
+
+export interface CodeSecurityReport {
+  id: string;
+  review_id: string;
+  resumen_ejecutivo: string;
+  desglose_severidad: Record<string, number>;
+  narrativa_evolucion?: string | null;
+  pasos_remediacion: string[];
+  puntuacion_riesgo_global: number;
+}
+
 // ─── AI Rules (FASE 8) ────────────────────────────────────────────────────────
 
 export type {

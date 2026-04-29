@@ -23,6 +23,12 @@ def import_all_orm() -> None:
     import app.models.catalog
     import app.models.celula
     import app.models.changelog_entrada
+    import app.models.code_security_event
+    import app.models.code_security_finding
+    import app.models.code_security_finding_history
+    import app.models.code_security_report
+    import app.models.code_security_scan_batch
+    import app.models.code_security_review
     import app.models.cierre_conclusion
     import app.models.control_mitigacion
     import app.models.control_seguridad

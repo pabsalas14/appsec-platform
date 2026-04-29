@@ -270,7 +270,7 @@ export interface paths {
         };
         /**
          * Dashboard Vulnerabilities
-         * @description Dashboard 5: Vulnerabilities multidimensional view (org→subdireccion→celula).
+         * @description Dashboard 4: Vulnerabilities — drill 7 niveles (Dirección → … → Repositorio → lista).
          */
         get: operations["dashboard_vulnerabilities_api_v1_dashboard_vulnerabilities_get"];
         put?: never;
@@ -341,6 +341,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/emerging-themes-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Emerging Themes Summary
+         * @description Dashboard 9 detail: resumen + listado de temas emergentes.
+         */
+        get: operations["dashboard_emerging_themes_summary_api_v1_dashboard_emerging_themes_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/tema/{tema_id}/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Tema Detail
+         * @description Dashboard 9 detail: ficha de tema + bitácora.
+         */
+        get: operations["dashboard_tema_detail_api_v1_dashboard_tema__tema_id__detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/executive": {
         parameters: {
             query?: never;
@@ -350,7 +390,7 @@ export interface paths {
         };
         /**
          * Dashboard Executive
-         * @description Dashboard 1: Ejecutivo/General - Comprehensive KPIs + Trends + Top Repos + SLA + Audits.
+         * @description Dashboard 1: Ejecutivo V2 (KPIs, tendencia severidades, top repos, SLA, auditorías).
          */
         get: operations["dashboard_executive_api_v1_dashboard_executive_get"];
         put?: never;
@@ -401,6 +441,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/team/premium": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Team Premium
+         * @description Dashboard 2 V2: KPIs, gráficos y drawer por analista.
+         */
+        get: operations["dashboard_team_premium_api_v1_dashboard_team_premium_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/program-detail": {
         parameters: {
             query?: never;
@@ -408,7 +468,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Dashboard Program Detail */
+        /**
+         * Dashboard Program Detail
+         * @description Detalle de programa (motor) con alcance organizacional.
+         */
         get: operations["dashboard_program_detail_api_v1_dashboard_program_detail_get"];
         put?: never;
         post?: never;
@@ -438,813 +501,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/dashboard/executive-kpis": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Executive Kpis
-         * @description Dashboard 1: Ejecutivo KPIs aggregation.
-         */
-        get: operations["dashboard_executive_kpis_api_v1_dashboard_executive_kpis_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/security-posture": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Security Posture
-         * @description Dashboard 1: Security Posture trend (6 meses).
-         */
-        get: operations["dashboard_security_posture_api_v1_dashboard_security_posture_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/top-repos-criticas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Top Repos Criticas
-         * @description Dashboard 1: Top 5 repos with critical vulnerabilities.
-         */
-        get: operations["dashboard_top_repos_criticas_api_v1_dashboard_top_repos_criticas_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/sla-semaforo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Sla Semaforo
-         * @description Dashboard 1: SLA traffic light (on_time, at_risk, overdue).
-         */
-        get: operations["dashboard_sla_semaforo_api_v1_dashboard_sla_semaforo_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/team-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Team Summary
-         * @description Dashboard 2: Team summary (total analysts, workload, avg).
-         */
-        get: operations["dashboard_team_summary_api_v1_dashboard_team_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/team-detail/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Team Detail
-         * @description Dashboard 2: Team detail for a specific analyst.
-         */
-        get: operations["dashboard_team_detail_api_v1_dashboard_team_detail__user_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/team/resumen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Team Resumen
-         * @description Dashboard 2: Team summary — KPIs for team view.
-         */
-        get: operations["dashboard_team_resumen_api_v1_dashboard_team_resumen_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/team/distribucion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Team Distribucion
-         * @description Dashboard 2: Team distribution — vulnerabilities by severity.
-         */
-        get: operations["dashboard_team_distribucion_api_v1_dashboard_team_distribucion_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/team/tabla": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Team Tabla
-         * @description Dashboard 2: Team table — teams with metrics, paginated and sortable.
-         */
-        get: operations["dashboard_team_tabla_api_v1_dashboard_team_tabla_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/programs-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Programs Summary
-         * @description Dashboard 3: Programs summary consolidation.
-         */
-        get: operations["dashboard_programs_summary_api_v1_dashboard_programs_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/program/{code}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Program Detail New
-         * @description Dashboard 3: Program detail (by code/fuente).
-         */
-        get: operations["dashboard_program_detail_new_api_v1_dashboard_program__code__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-global": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Global
-         * @description Dashboard 4: Global vulnerabilities aggregation (level 0).
-         */
-        get: operations["dashboard_vuln_global_api_v1_dashboard_vuln_global_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-subdireccion/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Subdireccion
-         * @description Dashboard 4: Vulnerabilities by subdireccion (level 1).
-         */
-        get: operations["dashboard_vuln_subdireccion_api_v1_dashboard_vuln_subdireccion__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-celula/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Celula
-         * @description Dashboard 4: Vulnerabilities by celula (level 2).
-         */
-        get: operations["dashboard_vuln_celula_api_v1_dashboard_vuln_celula__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/sast": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Sast
-         * @description Dashboard 4: SAST vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_sast_api_v1_dashboard_vuln_repositorio__id__sast_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/dast": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Dast
-         * @description Dashboard 4: DAST vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_dast_api_v1_dashboard_vuln_repositorio__id__dast_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/sca": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Sca
-         * @description Dashboard 4: SCA vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_sca_api_v1_dashboard_vuln_repositorio__id__sca_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/mast-mda": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Mast Mda
-         * @description Dashboard 4: MAST+MDA vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_mast_mda_api_v1_dashboard_vuln_repositorio__id__mast_mda_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/secrets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Secrets
-         * @description Dashboard 4: Secrets vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_secrets_api_v1_dashboard_vuln_repositorio__id__secrets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/cds": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Cds
-         * @description Dashboard 4: CDS vulnerabilities for a repository (paginated).
-         */
-        get: operations["dashboard_vuln_repo_cds_api_v1_dashboard_vuln_repositorio__id__cds_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/historial": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Historial
-         * @description Dashboard 4: Vulnerability timeline history for a repository.
-         */
-        get: operations["dashboard_vuln_repo_historial_api_v1_dashboard_vuln_repositorio__id__historial_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Config
-         * @description Dashboard 4: Repository metadata and config.
-         */
-        get: operations["dashboard_vuln_repo_config_api_v1_dashboard_vuln_repositorio__id__config_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/resumen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Resumen
-         * @description Dashboard 4: Repository vulnerability summary.
-         */
-        get: operations["dashboard_vuln_repo_resumen_api_v1_dashboard_vuln_repositorio__id__resumen_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-repositorio/{id}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Repo Detail
-         * @description Dashboard 4: Full repository vulnerability details.
-         */
-        get: operations["dashboard_vuln_repo_detail_api_v1_dashboard_vuln_repositorio__id__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-concentrated/by-motor": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Concentrated By Motor
-         * @description Dashboard 5: Concentrated vulnerabilities by motor/source.
-         */
-        get: operations["dashboard_vuln_concentrated_by_motor_api_v1_dashboard_vuln_concentrated_by_motor_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-concentrated/by-severity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Concentrated By Severity
-         * @description Dashboard 5: Concentrated vulnerabilities by severity.
-         */
-        get: operations["dashboard_vuln_concentrated_by_severity_api_v1_dashboard_vuln_concentrated_by_severity_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/vuln-concentrated/table": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Vuln Concentrated Table
-         * @description Dashboard 5: Concentrated vulnerabilities table (paginated).
-         */
-        get: operations["dashboard_vuln_concentrated_table_api_v1_dashboard_vuln_concentrated_table_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/release-terceros": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Release Terceros
-         * @description Dashboard 6: Third-party releases table (paginated).
-         */
-        get: operations["dashboard_release_terceros_api_v1_dashboard_release_terceros_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/release/{id}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Release Detail
-         * @description Dashboard 6: Release detail.
-         */
-        get: operations["dashboard_release_detail_api_v1_dashboard_release__id__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/initiatives-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Initiatives Summary
-         * @description Dashboard 8: Initiatives summary with full list.
-         */
-        get: operations["dashboard_initiatives_summary_api_v1_dashboard_initiatives_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/initiative/{id}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Initiative Detail
-         * @description Dashboard 8: Initiative detail with hitos and actualizaciones.
-         */
-        get: operations["dashboard_initiative_detail_api_v1_dashboard_initiative__id__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/initiatives/resumen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Initiatives Resumen
-         * @description Dashboard 8: Iniciativas resumen - KPIs y métricas generales.
-         */
-        get: operations["dashboard_initiatives_resumen_api_v1_dashboard_initiatives_resumen_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/initiatives/tabla": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Initiatives Tabla
-         * @description Dashboard 8: Iniciativas tabla - Lista completa con estado y progreso.
-         */
-        get: operations["dashboard_initiatives_tabla_api_v1_dashboard_initiatives_tabla_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/initiatives/timeline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Initiatives Timeline
-         * @description Dashboard 8: Iniciativas timeline - Hitos y progreso en línea de tiempo.
-         */
-        get: operations["dashboard_initiatives_timeline_api_v1_dashboard_initiatives_timeline_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/emerging-themes-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Emerging Themes Summary
-         * @description Dashboard 9: Emerging themes summary with full list.
-         */
-        get: operations["dashboard_emerging_themes_summary_api_v1_dashboard_emerging_themes_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/tema/{id}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Tema Detail
-         * @description Dashboard 9: Emerging theme detail with bitácora timeline.
-         */
-        get: operations["dashboard_tema_detail_api_v1_dashboard_tema__id__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/dashboard3/programs-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard3 Programs Summary
-         * @description Dashboard 3: Program types summary.
-         *
-         *     Returns aggregated data for SAST, DAST, Threat Modeling, and Source Code programs,
-         *     with completion percentages and activity metrics.
-         */
-        get: operations["dashboard3_programs_summary_api_v1_dashboard_dashboard3_programs_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/dashboard3/program/{code}/detail": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard3 Program Detail
-         * @description Dashboard 3: Program detail (by code: SAST, DAST, THREAT_MODELING, SOURCE_CODE).
-         *
-         *     Returns detailed data including monthly activities and trends for a specific program type.
-         */
-        get: operations["dashboard3_program_detail_api_v1_dashboard_dashboard3_program__code__detail_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/releases-terceros": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Releases Terceros
-         * @description Dashboard 6: Third-party releases table (paginated).
-         */
-        get: operations["dashboard_releases_terceros_api_v1_dashboard_releases_terceros_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/dashboard/release-kanban-columns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard Release Kanban Columns
-         * @description Dashboard 7.1: Obtiene las columnas configuradas del kanban.
-         *
-         *     Retorna las 8 columnas en orden configurado.
-         */
-        get: operations["dashboard_release_kanban_columns_api_v1_dashboard_release_kanban_columns_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/dashboard/releases-kanban": {
         parameters: {
             query?: never;
@@ -1254,9 +510,7 @@ export interface paths {
         };
         /**
          * Dashboard Releases Kanban
-         * @description Dashboard 7.2: Obtiene datos completos del kanban con releases agrupadas por columna.
-         *
-         *     Retorna todas las releases agrupadas por estado (columnas).
+         * @description Dashboard 7: Releases kanban grouped by status.
          */
         get: operations["dashboard_releases_kanban_api_v1_dashboard_releases_kanban_get"];
         put?: never;
@@ -1267,36 +521,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/dashboard/service-releases/{id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Move Service Release
-         * @description Dashboard 7.3: Mueve un release a otra columna (drag-drop).
-         *
-         *     Aplica validación de SoD si aplica.
-         *
-         *     Request body:
-         *     {
-         *         "column_id": "<uuid>",
-         *         "nueva_etapa": "En Produccion",
-         *         "notas": "Movido a producción"
-         *     }
-         */
-        patch: operations["move_service_release_api_v1_dashboard_service_releases__id__move_patch"];
-        trace?: never;
-    };
-    "/api/v1/dashboard/programs/resumen": {
+    "/api/v1/dashboard/concentrado": {
         parameters: {
             query?: never;
             header?: never;
@@ -1304,10 +529,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Dashboard Programs Resumen
-         * @description Dashboard 3: Programas resumen — KPIs for programs view.
+         * Dashboard Concentrado
+         * @description Dashboard 5: Concentrado (motores V2, severidad, apilado).
          */
-        get: operations["dashboard_programs_resumen_api_v1_dashboard_programs_resumen_get"];
+        get: operations["dashboard_concentrado_api_v1_dashboard_concentrado_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1316,7 +541,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/dashboard/programs/distribucion": {
+    "/api/v1/dashboard/temas-auditorias": {
         parameters: {
             query?: never;
             header?: never;
@@ -1324,10 +549,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Dashboard Programs Distribucion
-         * @description Dashboard 3: Programas distribution by engine/type.
+         * Dashboard Temas Auditorias
+         * @description Dashboard 8 V2: temas emergentes + auditorías en un solo payload.
          */
-        get: operations["dashboard_programs_distribucion_api_v1_dashboard_programs_distribucion_get"];
+        get: operations["dashboard_temas_auditorias_api_v1_dashboard_temas_auditorias_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1336,7 +561,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/dashboard/programs/tabla": {
+    "/api/v1/dashboard/platform-release": {
         parameters: {
             query?: never;
             header?: never;
@@ -1344,10 +569,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Dashboard Programs Tabla
-         * @description Dashboard 3: Programas table — all programs paginated and sortable.
+         * Dashboard Platform Release
+         * @description Dashboard 10 V2: versión y changelog de la plataforma.
          */
-        get: operations["dashboard_programs_tabla_api_v1_dashboard_programs_tabla_get"];
+        get: operations["dashboard_platform_release_api_v1_dashboard_platform_release_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1365,10 +590,7 @@ export interface paths {
         };
         /**
          * Dashboard Programs Heatmap
-         * @description Dashboard 3: Heatmap mensual — actividad mensual por tipo de programa (últimos 12 meses).
-         *
-         *     Retorna para cada tipo de programa (SAST, DAST, Threat Modeling, Source Code) un array
-         *     de 12 entradas con el porcentaje de completitud mensual (hallazgos cerrados / total).
+         * @description Dashboard 3 helper: heatmap mensual de avance por programa (motor).
          */
         get: operations["dashboard_programs_heatmap_api_v1_dashboard_programs_heatmap_get"];
         put?: never;
@@ -1515,6 +737,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Global Search
+         * @description Global omnisearch across all indexed entities.
+         *
+         *     Groups results by type for intuitive navigation.
+         *     Supports basic text matching on indexed fields.
+         *
+         *     Returns: {tipo: "Vulnerabilidades" | "Planes" | ..., results: [{id, nombre, descripcion, url}, ...]}
+         */
+        get: operations["global_search_api_v1_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalogs/{catalog_type}": {
         parameters: {
             query?: never;
@@ -1604,6 +851,28 @@ export interface paths {
          * @description Reset a user's password to a new value (admin only).
          */
         post: operations["reset_password_api_v1_admin_users__user_id__reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/reassign-ownership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign Ownership
+         * @description Mass-reassign record ownership during offboarding.
+         *
+         *     Reassigns `user_id` across selected owned entities.
+         */
+        post: operations["reassign_ownership_api_v1_admin_users_reassign_ownership_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2962,6 +2231,43 @@ export interface paths {
          * @description Partially update an owned subdireccion (404 if not owned).
          */
         patch: operations["update_subdireccion_api_v1_subdireccions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/direccions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Direccions */
+        get: operations["list_direccions_api_v1_direccions_get"];
+        put?: never;
+        /** Create Direccion */
+        post: operations["create_direccion_api_v1_direccions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/direccions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Direccion */
+        get: operations["get_direccion_api_v1_direccions__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Direccion */
+        delete: operations["delete_direccion_api_v1_direccions__id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Direccion */
+        patch: operations["update_direccion_api_v1_direccions__id__patch"];
         trace?: never;
     };
     "/api/v1/celulas/export.csv": {
@@ -6703,6 +6009,78 @@ export interface paths {
         patch: operations["update_flujo_estatus_api_v1_flujos_estatus__id__patch"];
         trace?: never;
     };
+    "/api/v1/indicador_formulas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Indicador Formulas
+         * @description List indicador formulas owned by the current user.
+         */
+        get: operations["list_indicador_formulas_api_v1_indicador_formulas_get"];
+        put?: never;
+        /**
+         * Create Indicador Formula
+         * @description Create a new indicador formula for the current user.
+         */
+        post: operations["create_indicador_formula_api_v1_indicador_formulas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicador_formulas/{id}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Evaluate Indicador Formula
+         * @description Evalúa la fórmula (motor E1) y devuelve valor + semáforo.
+         */
+        get: operations["evaluate_indicador_formula_api_v1_indicador_formulas__id__evaluate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicador_formulas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Indicador Formula
+         * @description Get a single owned indicador formula by ID (404 if not owned).
+         */
+        get: operations["get_indicador_formula_api_v1_indicador_formulas__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Indicador Formula
+         * @description Delete an owned indicador formula (404 if not owned).
+         */
+        delete: operations["delete_indicador_formula_api_v1_indicador_formulas__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Indicador Formula
+         * @description Partially update an owned indicador formula (404 if not owned).
+         */
+        patch: operations["update_indicador_formula_api_v1_indicador_formulas__id__patch"];
+        trace?: never;
+    };
     "/api/v1/indicadores_formulas": {
         parameters: {
             query?: never;
@@ -7162,6 +6540,691 @@ export interface paths {
          * @description Partially update an owned notificacion (404 if not owned).
          */
         patch: operations["update_notificacion_api_v1_notificacions__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_categorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Categorias
+         * @description List okr_categorias owned by the current user.
+         */
+        get: operations["list_okr_categorias_api_v1_okr_categorias_get"];
+        put?: never;
+        /**
+         * Create Okr Categoria
+         * @description Create a new okr_categoria for the current user.
+         */
+        post: operations["create_okr_categoria_api_v1_okr_categorias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_categorias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Categoria
+         * @description Get a single owned okr_categoria by ID (404 if not owned).
+         */
+        get: operations["get_okr_categoria_api_v1_okr_categorias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Categoria
+         * @description Delete an owned okr_categoria (404 if not owned).
+         */
+        delete: operations["delete_okr_categoria_api_v1_okr_categorias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Categoria
+         * @description Partially update an owned okr_categoria (404 if not owned).
+         */
+        patch: operations["update_okr_categoria_api_v1_okr_categorias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_plan_anuals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Plan Anuals
+         * @description List okr_plan_anuals owned by the current user.
+         */
+        get: operations["list_okr_plan_anuals_api_v1_okr_plan_anuals_get"];
+        put?: never;
+        /**
+         * Create Okr Plan Anual
+         * @description Create a new okr_plan_anual for the current user.
+         */
+        post: operations["create_okr_plan_anual_api_v1_okr_plan_anuals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_plan_anuals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Plan Anual
+         * @description Get a single owned okr_plan_anual by ID (404 if not owned).
+         */
+        get: operations["get_okr_plan_anual_api_v1_okr_plan_anuals__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Plan Anual
+         * @description Delete an owned okr_plan_anual (404 if not owned).
+         */
+        delete: operations["delete_okr_plan_anual_api_v1_okr_plan_anuals__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Plan Anual
+         * @description Partially update an owned okr_plan_anual (404 if not owned).
+         */
+        patch: operations["update_okr_plan_anual_api_v1_okr_plan_anuals__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_compromisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Compromisos
+         * @description List okr_compromisos owned by the current user.
+         */
+        get: operations["list_okr_compromisos_api_v1_okr_compromisos_get"];
+        put?: never;
+        /**
+         * Create Okr Compromiso
+         * @description Create a new okr_compromiso for the current user.
+         */
+        post: operations["create_okr_compromiso_api_v1_okr_compromisos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_compromisos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Compromiso
+         * @description Get a single owned okr_compromiso by ID (404 if not owned).
+         */
+        get: operations["get_okr_compromiso_api_v1_okr_compromisos__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Compromiso
+         * @description Delete an owned okr_compromiso (404 if not owned).
+         */
+        delete: operations["delete_okr_compromiso_api_v1_okr_compromisos__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Compromiso
+         * @description Partially update an owned okr_compromiso (404 if not owned).
+         */
+        patch: operations["update_okr_compromiso_api_v1_okr_compromisos__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_subcompromisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Subcompromisos
+         * @description List okr_subcompromisos owned by the current user.
+         */
+        get: operations["list_okr_subcompromisos_api_v1_okr_subcompromisos_get"];
+        put?: never;
+        /**
+         * Create Okr Subcompromiso
+         * @description Create a new okr_subcompromiso for the current user.
+         */
+        post: operations["create_okr_subcompromiso_api_v1_okr_subcompromisos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_subcompromisos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Subcompromiso
+         * @description Get a single owned okr_subcompromiso by ID (404 if not owned).
+         */
+        get: operations["get_okr_subcompromiso_api_v1_okr_subcompromisos__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Subcompromiso
+         * @description Delete an owned okr_subcompromiso (404 if not owned).
+         */
+        delete: operations["delete_okr_subcompromiso_api_v1_okr_subcompromisos__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Subcompromiso
+         * @description Partially update an owned okr_subcompromiso (404 if not owned).
+         */
+        patch: operations["update_okr_subcompromiso_api_v1_okr_subcompromisos__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Revision Qs
+         * @description List okr_revision_qs owned by the current user.
+         */
+        get: operations["list_okr_revision_qs_api_v1_okr_revision_qs_get"];
+        put?: never;
+        /**
+         * Create Okr Revision Q
+         * @description Create a new okr_revision_q for the current user.
+         */
+        post: operations["create_okr_revision_q_api_v1_okr_revision_qs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Revision Q
+         * @description Get a single owned okr_revision_q by ID (404 if not owned).
+         */
+        get: operations["get_okr_revision_q_api_v1_okr_revision_qs__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Revision Q
+         * @description Delete an owned okr_revision_q (404 if not owned).
+         */
+        delete: operations["delete_okr_revision_q_api_v1_okr_revision_qs__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Revision Q
+         * @description Partially update an owned okr_revision_q (404 if not owned).
+         */
+        patch: operations["update_okr_revision_q_api_v1_okr_revision_qs__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Okr Revision Q */
+        post: operations["submit_okr_revision_q_api_v1_okr_revision_qs__id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Okr Revision Q */
+        post: operations["approve_okr_revision_q_api_v1_okr_revision_qs__id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs/{id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Edit Okr Revision Q */
+        post: operations["edit_okr_revision_q_api_v1_okr_revision_qs__id__edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_revision_qs/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Okr Revision Q */
+        post: operations["reject_okr_revision_q_api_v1_okr_revision_qs__id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_evidencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Evidencias
+         * @description List okr_evidencias owned by the current user.
+         */
+        get: operations["list_okr_evidencias_api_v1_okr_evidencias_get"];
+        put?: never;
+        /**
+         * Create Okr Evidencia
+         * @description Create a new okr_evidencia for the current user.
+         */
+        post: operations["create_okr_evidencia_api_v1_okr_evidencias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_evidencias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Evidencia
+         * @description Get a single owned okr_evidencia by ID (404 if not owned).
+         */
+        get: operations["get_okr_evidencia_api_v1_okr_evidencias__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Evidencia
+         * @description Delete an owned okr_evidencia (404 if not owned).
+         */
+        delete: operations["delete_okr_evidencia_api_v1_okr_evidencias__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Evidencia
+         * @description Partially update an owned okr_evidencia (404 if not owned).
+         */
+        patch: operations["update_okr_evidencia_api_v1_okr_evidencias__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_cierre_qs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Okr Cierre Qs
+         * @description List okr_cierre_qs owned by the current user.
+         */
+        get: operations["list_okr_cierre_qs_api_v1_okr_cierre_qs_get"];
+        put?: never;
+        /**
+         * Create Okr Cierre Q
+         * @description Create a new okr_cierre_q for the current user.
+         */
+        post: operations["create_okr_cierre_q_api_v1_okr_cierre_qs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/okr_cierre_qs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Cierre Q
+         * @description Get a single owned okr_cierre_q by ID (404 if not owned).
+         */
+        get: operations["get_okr_cierre_q_api_v1_okr_cierre_qs__id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Okr Cierre Q
+         * @description Quarter close record is immutable once created.
+         */
+        delete: operations["delete_okr_cierre_q_api_v1_okr_cierre_qs__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Okr Cierre Q
+         * @description Quarter close record is immutable once created.
+         */
+        patch: operations["update_okr_cierre_q_api_v1_okr_cierre_qs__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/okr_cierre_qs/plans/{plan_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Okr Quarter */
+        post: operations["close_okr_quarter_api_v1_okr_cierre_qs_plans__plan_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Code Security Reviews
+         * @description Fase 3 — lista revisiones SCR del usuario actual.
+         */
+        get: operations["list_code_security_reviews_api_v1_code_security_reviews_get"];
+        put?: never;
+        /** Create Code Security Review */
+        post: operations["create_code_security_review_api_v1_code_security_reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Code Security Review */
+        get: operations["get_code_security_review_api_v1_code_security_reviews__review_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Code Security Review */
+        delete: operations["delete_code_security_review_api_v1_code_security_reviews__review_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Code Security Review */
+        patch: operations["update_code_security_review_api_v1_code_security_reviews__review_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze Code Security Review
+         * @description Fases 4–6 — encola pipeline stub (Inspector/Detective/Fiscal).
+         */
+        post: operations["analyze_code_security_review_api_v1_code_security_reviews__review_id__analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Progress */
+        get: operations["review_progress_api_v1_code_security_reviews__review_id__progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Review Findings */
+        get: operations["list_review_findings_api_v1_code_security_reviews__review_id__findings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Finding */
+        patch: operations["patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Review Events */
+        get: operations["list_review_events_api_v1_code_security_reviews__review_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Report */
+        get: operations["get_review_report_api_v1_code_security_reviews__review_id__report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Review Bundle
+         * @description Fase 8 — export JSON bundles; PDF pendiente librería dedicada.
+         */
+        get: operations["export_review_bundle_api_v1_code_security_reviews__review_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/batch/org": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Org Batch Placeholder
+         * @description Fase 3/4 — crea lote por organización y encola análisis para cada repo visible.
+         */
+        post: operations["create_org_batch_placeholder_api_v1_code_security_reviews_batch_org_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security/github/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Github Repos Visible Stub */
+        get: operations["list_github_repos_visible_stub_api_v1_code_security_github_repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security/github/orgs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Github Orgs Stub */
+        get: operations["list_github_orgs_stub_api_v1_code_security_github_orgs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security/github/orgs/{org_slug}/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Github Org Repos */
+        get: operations["list_github_org_repos_api_v1_code_security_github_orgs__org_slug__repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/health": {
@@ -7681,6 +7744,17 @@ export interface components {
             /** Estado */
             estado?: string | null;
         };
+        /** ApiSuccessEnvelope */
+        ApiSuccessEnvelope: {
+            /**
+             * Status
+             * @default success
+             * @constant
+             * @enum {string}
+             */
+            status: "success";
+            data: components["schemas"]["ExecutiveDashboardData"];
+        };
         /**
          * AplicacionMovilCreate
          * @description Fields required to create a aplicacion_movil. user_id is set from auth context.
@@ -8043,6 +8117,84 @@ export interface components {
             request_id?: string | null;
             /** Version */
             version?: string | null;
+        };
+        /** CodeSecurityFindingUpdate */
+        CodeSecurityFindingUpdate: {
+            /** Estado */
+            estado?: string | null;
+            /** Asignado A Id */
+            asignado_a_id?: string | null;
+        };
+        /** CodeSecurityOrgBatchCreate */
+        CodeSecurityOrgBatchCreate: {
+            /** Github Org Slug */
+            github_org_slug: string;
+            /** Titulo */
+            titulo: string;
+            /**
+             * Rama Analizar
+             * @default main
+             */
+            rama_analizar: string;
+        };
+        /**
+         * CodeSecurityReviewCreate
+         * @description Crear revisión SCR.
+         */
+        CodeSecurityReviewCreate: {
+            /** Titulo */
+            titulo: string;
+            /**
+             * Estado
+             * @description PENDING | ANALYZING | COMPLETED | FAILED
+             * @default PENDING
+             */
+            estado: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Progreso
+             * @default 0
+             */
+            progreso: number;
+            /** Rama Analizar */
+            rama_analizar: string;
+            /** Url Repositorio */
+            url_repositorio?: string | null;
+            /**
+             * Scan Mode
+             * @description PUBLIC_URL | REPO_TOKEN | BRANCH_TARGET | ORG_BATCH
+             */
+            scan_mode: string;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Github Org Slug */
+            github_org_slug?: string | null;
+            /** Scan Batch Id */
+            scan_batch_id?: string | null;
+        };
+        /** CodeSecurityReviewUpdate */
+        CodeSecurityReviewUpdate: {
+            /** Titulo */
+            titulo?: string | null;
+            /** Estado */
+            estado?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Progreso */
+            progreso?: number | null;
+            /** Rama Analizar */
+            rama_analizar?: string | null;
+            /** Url Repositorio */
+            url_repositorio?: string | null;
+            /** Scan Mode */
+            scan_mode?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+            /** Github Org Slug */
+            github_org_slug?: string | null;
+            /** Scan Batch Id */
+            scan_batch_id?: string | null;
         };
         /**
          * ConfiguracionIACreate
@@ -8467,6 +8619,15 @@ export interface components {
             /** Config */
             config?: string | null;
         };
+        /** DashboardChildRead */
+        DashboardChildRead: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Count */
+            count: number;
+        };
         /**
          * DashboardConfigCreate
          * @description Fields required to create config.
@@ -8501,6 +8662,236 @@ export interface components {
             visible?: boolean | null;
             /** Editable By Role */
             editable_by_role?: boolean | null;
+        };
+        /** DashboardEngineStatRead */
+        DashboardEngineStatRead: {
+            /** Motor */
+            motor: string;
+            /** Count */
+            count: number;
+            /** Trend */
+            trend: number;
+        };
+        /** DashboardEnvelopeProgramDetailRead */
+        DashboardEnvelopeProgramDetailRead: {
+            /**
+             * Status
+             * @default success
+             */
+            status: string;
+            data: components["schemas"]["DashboardProgramDetailDataRead"];
+        };
+        /** DashboardEnvelopeProgramsHeatmapRead */
+        DashboardEnvelopeProgramsHeatmapRead: {
+            /**
+             * Status
+             * @default success
+             */
+            status: string;
+            data: components["schemas"]["DashboardProgramsHeatmapDataRead"];
+        };
+        /** DashboardEnvelopeProgramsRead */
+        DashboardEnvelopeProgramsRead: {
+            /**
+             * Status
+             * @default success
+             */
+            status: string;
+            data: components["schemas"]["DashboardProgramsDataRead"];
+        };
+        /** DashboardEnvelopeTeamRead */
+        DashboardEnvelopeTeamRead: {
+            /**
+             * Status
+             * @default success
+             */
+            status: string;
+            data: components["schemas"]["DashboardTeamDataRead"];
+        };
+        /** DashboardEnvelopeVulnerabilitiesRead */
+        DashboardEnvelopeVulnerabilitiesRead: {
+            /**
+             * Status
+             * @default success
+             */
+            status: string;
+            data: components["schemas"]["DashboardVulnerabilitiesDataRead"];
+        };
+        /** DashboardHeatmapCellRead */
+        DashboardHeatmapCellRead: {
+            /** Month */
+            month: number;
+            /** Value */
+            value: number;
+            /** Total */
+            total: number;
+            /** Closed */
+            closed: number;
+        };
+        /** DashboardProgramDetailDataRead */
+        DashboardProgramDetailDataRead: {
+            /** Program */
+            program: string;
+            /** Source */
+            source: string;
+            /** Total Findings */
+            total_findings: number;
+            /** Open Findings */
+            open_findings: number;
+            /** Closed Findings */
+            closed_findings: number;
+            /** Overdue Findings */
+            overdue_findings: number;
+            /** Completion Percentage */
+            completion_percentage: number;
+            applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
+        };
+        /** DashboardProgramsBreakdownRead */
+        DashboardProgramsBreakdownRead: {
+            /** Program */
+            program: string;
+            /** Total Findings */
+            total_findings: number;
+            /** Closed Findings */
+            closed_findings: number;
+            /** Completion Percentage */
+            completion_percentage: number;
+        };
+        /** DashboardProgramsDataRead */
+        DashboardProgramsDataRead: {
+            /** Total Programs */
+            total_programs: number;
+            /** Avg Completion */
+            avg_completion: number;
+            /** Programs At Risk */
+            programs_at_risk: number;
+            /** Program Breakdown */
+            program_breakdown: components["schemas"]["DashboardProgramsBreakdownRead"][];
+            applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
+        };
+        /** DashboardProgramsHeatmapDataRead */
+        DashboardProgramsHeatmapDataRead: {
+            /** Heatmap */
+            heatmap: {
+                [key: string]: components["schemas"]["DashboardHeatmapCellRead"][];
+            };
+            /** Year */
+            year: number;
+        };
+        /** DashboardTeamAnalystRead */
+        DashboardTeamAnalystRead: {
+            /** User Id */
+            user_id: string;
+            /** Total Vulnerabilities */
+            total_vulnerabilities: number;
+            /** Open Vulnerabilities */
+            open_vulnerabilities: number;
+            /** Closed Vulnerabilities */
+            closed_vulnerabilities: number;
+            /** Closure Rate */
+            closure_rate: number;
+        };
+        /** DashboardTeamDataRead */
+        DashboardTeamDataRead: {
+            /** Team Size */
+            team_size: number;
+            /** Analysts */
+            analysts: components["schemas"]["DashboardTeamAnalystRead"][];
+            applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
+        };
+        /** DashboardTrendPointRead */
+        DashboardTrendPointRead: {
+            /** Period */
+            period: string;
+            /** Count */
+            count: number;
+        };
+        /** DashboardVulnerabilitiesDataRead */
+        DashboardVulnerabilitiesDataRead: {
+            summary: components["schemas"]["DashboardVulnerabilitiesSummaryRead"];
+            /** Children */
+            children: components["schemas"]["DashboardChildRead"][];
+            /** Children Type */
+            children_type?: string | null;
+            /** Vulnerabilities */
+            vulnerabilities?: components["schemas"]["DashboardVulnerabilityRowRead"][] | null;
+            /** Total Vulnerabilities */
+            total_vulnerabilities?: number | null;
+            /** By Severity */
+            by_severity?: {
+                [key: string]: number;
+            } | null;
+            /** By State */
+            by_state?: {
+                [key: string]: number;
+            } | null;
+            /** Sla Status */
+            sla_status?: {
+                [key: string]: number;
+            } | null;
+            /** Overdue Count */
+            overdue_count?: number | null;
+            applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
+        };
+        /** DashboardVulnerabilitiesSummaryRead */
+        DashboardVulnerabilitiesSummaryRead: {
+            /** Total */
+            total: number;
+            /** By Engine */
+            by_engine: components["schemas"]["DashboardEngineStatRead"][];
+            /** By Severity */
+            by_severity: {
+                [key: string]: number;
+            };
+            /** Trend */
+            trend: components["schemas"]["DashboardTrendPointRead"][];
+            /** Pipeline */
+            pipeline: {
+                [key: string]: number;
+            };
+        };
+        /** DashboardVulnerabilityRowRead */
+        DashboardVulnerabilityRowRead: {
+            /** Id */
+            id: string;
+            /** Motor */
+            motor: string;
+            /** Severidad */
+            severidad: string;
+            /** Titulo */
+            titulo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Fecha Deteccion */
+            fecha_deteccion?: string | null;
+            /** Sla */
+            sla?: string | null;
+            /** Estado */
+            estado: string;
+        };
+        /**
+         * DireccionCreate
+         * @description Fields required to create a direccion. user_id is set from auth context.
+         */
+        DireccionCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Codigo */
+            codigo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+        };
+        /**
+         * DireccionUpdate
+         * @description All fields optional for partial updates.
+         */
+        DireccionUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Codigo */
+            codigo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
         };
         /**
          * EjecucionDastCreate
@@ -8854,6 +9245,67 @@ export interface components {
             fecha_aprobacion?: string | null;
             /** Notas Aprobador */
             notas_aprobador?: string | null;
+        };
+        /**
+         * ExecutiveDashboardData
+         * @description Cuerpo `data` de la respuesta exitosa de `/api/v1/dashboard/executive`.
+         */
+        ExecutiveDashboardData: {
+            /** Kpis */
+            kpis: Record<string, never>;
+            /** Kpi Sub */
+            kpi_sub?: Record<string, never> | null;
+            /** Kpi Trends */
+            kpi_trends?: Record<string, never> | null;
+            /** Risk Level */
+            risk_level: string;
+            /** Security Posture */
+            security_posture: number;
+            /** Trend Months */
+            trend_months: number;
+            /**
+             * Trend Mode
+             * @default sliding
+             * @enum {string}
+             */
+            trend_mode: "sliding" | "calendar";
+            /** Ref Month */
+            ref_month?: string | null;
+            /** Trend Data */
+            trend_data: Record<string, never>[];
+            sla_spark?: components["schemas"]["SlaSparkRead"] | null;
+            /** Top Repos */
+            top_repos: Record<string, never>[];
+            /** Sla Status */
+            sla_status: components["schemas"]["SlaStatusItemRead"][];
+            /** Audits */
+            audits: Record<string, never>[];
+            /**
+             * Audits Total
+             * @default 0
+             */
+            audits_total: number;
+            /**
+             * Audits Offset
+             * @default 0
+             */
+            audits_offset: number;
+            /**
+             * Audits Limit
+             * @default 10
+             */
+            audits_limit: number;
+            /**
+             * Audits Solo Activas
+             * @default false
+             */
+            audits_solo_activas: boolean;
+            /** Generated At */
+            generated_at?: string | null;
+            /** Applied Filters */
+            applied_filters?: Record<string, never> | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * FiltroGuardadoCreate
@@ -9355,6 +9807,23 @@ export interface components {
             url_base?: string | null;
             /** Api Token */
             api_token?: string | null;
+        };
+        /** HierarchyFiltersRead */
+        HierarchyFiltersRead: {
+            /** Direccion Id */
+            direccion_id?: string | null;
+            /** Subdireccion Id */
+            subdireccion_id?: string | null;
+            /** Gerencia Id */
+            gerencia_id?: string | null;
+            /** Organizacion Id */
+            organizacion_id?: string | null;
+            /** Celula Id */
+            celula_id?: string | null;
+            /** Repositorio Id */
+            repositorio_id?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * HistorialVulnerabilidadCreate
@@ -9874,6 +10343,307 @@ export interface components {
             leida?: boolean | null;
         };
         /**
+         * OkrCategoriaCreate
+         * @description Fields required to create a okr_categoria. user_id is set from auth context.
+         */
+        OkrCategoriaCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo */
+            activo: boolean;
+        };
+        /**
+         * OkrCategoriaUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrCategoriaUpdate: {
+            /** Nombre */
+            nombre?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo */
+            activo?: boolean | null;
+        };
+        /**
+         * OkrCierreQCreate
+         * @description Fields required to create a okr_cierre_q. user_id is set from auth context.
+         */
+        OkrCierreQCreate: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Quarter */
+            quarter: string;
+            /** Retroalimentacion General */
+            retroalimentacion_general: string;
+            /**
+             * Cerrado At
+             * Format: date-time
+             */
+            cerrado_at: string;
+        };
+        /**
+         * OkrCierreQUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrCierreQUpdate: {
+            /** Plan Id */
+            plan_id?: string | null;
+            /** Quarter */
+            quarter?: string | null;
+            /** Retroalimentacion General */
+            retroalimentacion_general?: string | null;
+            /** Cerrado At */
+            cerrado_at?: string | null;
+        };
+        /** OkrCloseQuarterPayload */
+        OkrCloseQuarterPayload: {
+            /** Quarter */
+            quarter: string;
+            /** Retroalimentacion General */
+            retroalimentacion_general: string;
+        };
+        /**
+         * OkrCompromisoCreate
+         * @description Fields required to create a okr_compromiso. user_id is set from auth context.
+         */
+        OkrCompromisoCreate: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Categoria Id */
+            categoria_id?: string | null;
+            /** Nombre Objetivo */
+            nombre_objetivo: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Peso Global */
+            peso_global: number;
+            /**
+             * Fecha Inicio
+             * Format: date-time
+             */
+            fecha_inicio: string;
+            /**
+             * Fecha Fin
+             * Format: date-time
+             */
+            fecha_fin: string;
+            /** Tipo Medicion */
+            tipo_medicion: string;
+        };
+        /**
+         * OkrCompromisoUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrCompromisoUpdate: {
+            /** Plan Id */
+            plan_id?: string | null;
+            /** Categoria Id */
+            categoria_id?: string | null;
+            /** Nombre Objetivo */
+            nombre_objetivo?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Peso Global */
+            peso_global?: number | null;
+            /** Fecha Inicio */
+            fecha_inicio?: string | null;
+            /** Fecha Fin */
+            fecha_fin?: string | null;
+            /** Tipo Medicion */
+            tipo_medicion?: string | null;
+        };
+        /**
+         * OkrEvidenciaCreate
+         * @description Fields required to create a okr_evidencia. user_id is set from auth context.
+         */
+        OkrEvidenciaCreate: {
+            /**
+             * Revision Q Id
+             * Format: uuid
+             */
+            revision_q_id: string;
+            /** Attachment Id */
+            attachment_id?: string | null;
+            /** Url Evidencia */
+            url_evidencia?: string | null;
+            /** Nombre Archivo */
+            nombre_archivo?: string | null;
+            /** Tipo Evidencia */
+            tipo_evidencia: string;
+        };
+        /**
+         * OkrEvidenciaUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrEvidenciaUpdate: {
+            /** Revision Q Id */
+            revision_q_id?: string | null;
+            /** Attachment Id */
+            attachment_id?: string | null;
+            /** Url Evidencia */
+            url_evidencia?: string | null;
+            /** Nombre Archivo */
+            nombre_archivo?: string | null;
+            /** Tipo Evidencia */
+            tipo_evidencia?: string | null;
+        };
+        /**
+         * OkrPlanAnualCreate
+         * @description Fields required to create a okr_plan_anual. user_id is set from auth context.
+         */
+        OkrPlanAnualCreate: {
+            /**
+             * Colaborador Id
+             * Format: uuid
+             */
+            colaborador_id: string;
+            /**
+             * Evaluador Id
+             * Format: uuid
+             */
+            evaluador_id: string;
+            /** Ano */
+            ano: number;
+            /** Estado */
+            estado: string;
+            /** Fecha Aprobado */
+            fecha_aprobado?: string | null;
+            /** Aprobado Por Id */
+            aprobado_por_id?: string | null;
+        };
+        /**
+         * OkrPlanAnualUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrPlanAnualUpdate: {
+            /** Colaborador Id */
+            colaborador_id?: string | null;
+            /** Evaluador Id */
+            evaluador_id?: string | null;
+            /** Ano */
+            ano?: number | null;
+            /** Estado */
+            estado?: string | null;
+            /** Fecha Aprobado */
+            fecha_aprobado?: string | null;
+            /** Aprobado Por Id */
+            aprobado_por_id?: string | null;
+        };
+        /** OkrRevisionApprovePayload */
+        OkrRevisionApprovePayload: {
+            /** Avance Validado */
+            avance_validado: number;
+            /** Feedback Evaluador */
+            feedback_evaluador?: string | null;
+        };
+        /** OkrRevisionEditadoPayload */
+        OkrRevisionEditadoPayload: {
+            /** Avance Validado */
+            avance_validado: number;
+            /** Feedback Evaluador */
+            feedback_evaluador?: string | null;
+        };
+        /**
+         * OkrRevisionQCreate
+         * @description Fields required to create a okr_revision_q. user_id is set from auth context.
+         */
+        OkrRevisionQCreate: {
+            /**
+             * Subcompromiso Id
+             * Format: uuid
+             */
+            subcompromiso_id: string;
+            /** Quarter */
+            quarter: string;
+            /** Avance Reportado */
+            avance_reportado: number;
+            /** Avance Validado */
+            avance_validado?: number | null;
+            /** Comentario Colaborador */
+            comentario_colaborador?: string | null;
+            /** Feedback Evaluador */
+            feedback_evaluador?: string | null;
+            /**
+             * Estado
+             * @default draft
+             * @enum {string}
+             */
+            estado: "draft" | "en_revision" | "aprobado" | "editado" | "rechazado" | "cerrado";
+        };
+        /**
+         * OkrRevisionQUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrRevisionQUpdate: {
+            /** Subcompromiso Id */
+            subcompromiso_id?: string | null;
+            /** Quarter */
+            quarter?: string | null;
+            /** Avance Reportado */
+            avance_reportado?: number | null;
+            /** Avance Validado */
+            avance_validado?: number | null;
+            /** Comentario Colaborador */
+            comentario_colaborador?: string | null;
+            /** Feedback Evaluador */
+            feedback_evaluador?: string | null;
+            /** Estado */
+            estado?: ("draft" | "en_revision" | "aprobado" | "editado" | "rechazado" | "cerrado") | null;
+        };
+        /** OkrRevisionRejectPayload */
+        OkrRevisionRejectPayload: {
+            /** Feedback Evaluador */
+            feedback_evaluador: string;
+        };
+        /** OkrRevisionSubmitPayload */
+        OkrRevisionSubmitPayload: {
+            /** Comentario Colaborador */
+            comentario_colaborador?: string | null;
+        };
+        /**
+         * OkrSubcompromisoCreate
+         * @description Fields required to create a okr_subcompromiso. user_id is set from auth context.
+         */
+        OkrSubcompromisoCreate: {
+            /**
+             * Compromiso Id
+             * Format: uuid
+             */
+            compromiso_id: string;
+            /** Nombre Sub Item */
+            nombre_sub_item: string;
+            /** Resultado Esperado */
+            resultado_esperado?: string | null;
+            /** Peso Interno */
+            peso_interno: number;
+            /** Evidencia Requerida */
+            evidencia_requerida: boolean;
+        };
+        /**
+         * OkrSubcompromisoUpdate
+         * @description All fields optional for partial updates.
+         */
+        OkrSubcompromisoUpdate: {
+            /** Compromiso Id */
+            compromiso_id?: string | null;
+            /** Nombre Sub Item */
+            nombre_sub_item?: string | null;
+            /** Resultado Esperado */
+            resultado_esperado?: string | null;
+            /** Peso Interno */
+            peso_interno?: number | null;
+            /** Evidencia Requerida */
+            evidencia_requerida?: boolean | null;
+        };
+        /**
          * OrganizacionCreate
          * @description Fields required to create a organizacion. user_id is set from auth context.
          */
@@ -9918,6 +10688,21 @@ export interface components {
             url_base?: string | null;
             /** Responsable */
             responsable?: string | null;
+        };
+        /** OwnershipReassignRequest */
+        OwnershipReassignRequest: {
+            /**
+             * From User Id
+             * Format: uuid
+             */
+            from_user_id: string;
+            /**
+             * To User Id
+             * Format: uuid
+             */
+            to_user_id: string;
+            /** Entities */
+            entities?: string[];
         };
         /** PasswordChange */
         PasswordChange: {
@@ -10292,21 +11077,6 @@ export interface components {
             obligatorio?: boolean | null;
         };
         /**
-         * ReleaseKanbanMove
-         * @description Move a release to a new column.
-         */
-        ReleaseKanbanMove: {
-            /**
-             * Column Id
-             * Format: uuid
-             */
-            column_id: string;
-            /** Nueva Etapa */
-            nueva_etapa?: string | null;
-            /** Notas */
-            notas?: string | null;
-        };
-        /**
          * RepositorioCreate
          * @description Fields required to create a repositorio. user_id is set from auth context.
          */
@@ -10324,11 +11094,16 @@ export interface components {
              * @default true
              */
             activo: boolean;
-            /**
-             * Celula Id
-             * Format: uuid
-             */
-            celula_id: string;
+            /** Organizacion Id */
+            organizacion_id?: string | null;
+            /** Celula Id */
+            celula_id?: string | null;
+            /** Subdireccion Responsable Id */
+            subdireccion_responsable_id?: string | null;
+            /** Responsable Nombre */
+            responsable_nombre?: string | null;
+            /** Responsable Contacto */
+            responsable_contacto?: string | null;
         };
         /**
          * RepositorioUpdate
@@ -10347,6 +11122,14 @@ export interface components {
             activo?: boolean | null;
             /** Celula Id */
             celula_id?: string | null;
+            /** Organizacion Id */
+            organizacion_id?: string | null;
+            /** Subdireccion Responsable Id */
+            subdireccion_responsable_id?: string | null;
+            /** Responsable Nombre */
+            responsable_nombre?: string | null;
+            /** Responsable Contacto */
+            responsable_contacto?: string | null;
         };
         /**
          * RevisionSourceCodeCreate
@@ -10735,11 +11518,38 @@ export interface components {
             /** Adjuntos Referencias */
             adjuntos_referencias?: Record<string, never>[] | null;
         };
+        /** SlaSparkRead */
+        SlaSparkRead: {
+            /** A Tiempo Pct */
+            a_tiempo_pct?: number[];
+            /** En Riesgo Pct */
+            en_riesgo_pct?: number[];
+            /** Vencido Pct */
+            vencido_pct?: number[];
+        };
+        /** SlaStatusItemRead */
+        SlaStatusItemRead: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "warning" | "critical";
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+            /** Percentage */
+            percentage: number;
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * SubdireccionCreate
          * @description Fields required to create a subdireccion. user_id is set from auth context.
          */
         SubdireccionCreate: {
+            /** Direccion Id */
+            direccion_id?: string | null;
             /** Nombre */
             nombre: string;
             /** Codigo */
@@ -11821,10 +12631,12 @@ export interface operations {
     dashboard_vulnerabilities_api_v1_dashboard_vulnerabilities_get: {
         parameters: {
             query?: {
+                direccion_id?: string | null;
                 subdireccion_id?: string | null;
                 gerencia_id?: string | null;
                 organizacion_id?: string | null;
                 celula_id?: string | null;
+                repositorio_id?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -11843,7 +12655,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DashboardEnvelopeVulnerabilitiesRead"];
                 };
             };
             /** @description Validation Error */
@@ -11974,14 +12786,9 @@ export interface operations {
             };
         };
     };
-    dashboard_executive_api_v1_dashboard_executive_get: {
+    dashboard_emerging_themes_summary_api_v1_dashboard_emerging_themes_summary_get: {
         parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
+            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -12000,6 +12807,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_tema_detail_api_v1_dashboard_tema__tema_id__detail_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                tema_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_executive_api_v1_dashboard_executive_get: {
+        parameters: {
+            query?: {
+                direccion_id?: string | null;
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+                repositorio_id?: string | null;
+                trend_months?: number;
+                ref_month?: string | null;
+                audits_offset?: number;
+                audits_limit?: number;
+                audits_solo_activas?: boolean;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiSuccessEnvelope"];
                 };
             };
             /** @description Validation Error */
@@ -12038,7 +12927,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DashboardEnvelopeProgramsRead"];
                 };
             };
             /** @description Validation Error */
@@ -12059,6 +12948,46 @@ export interface operations {
                 gerencia_id?: string | null;
                 organizacion_id?: string | null;
                 celula_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardEnvelopeTeamRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_team_premium_api_v1_dashboard_team_premium_get: {
+        parameters: {
+            query?: {
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+                analista_id?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -12117,7 +13046,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DashboardEnvelopeProgramDetailRead"];
                 };
             };
             /** @description Validation Error */
@@ -12140,1493 +13069,6 @@ export interface operations {
                 organizacion_id?: string | null;
                 celula_id?: string | null;
             };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_executive_kpis_api_v1_dashboard_executive_kpis_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_security_posture_api_v1_dashboard_security_posture_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_top_repos_criticas_api_v1_dashboard_top_repos_criticas_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_sla_semaforo_api_v1_dashboard_sla_semaforo_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_team_summary_api_v1_dashboard_team_summary_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_team_detail_api_v1_dashboard_team_detail__user_id__get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                user_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_team_resumen_api_v1_dashboard_team_resumen_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_team_distribucion_api_v1_dashboard_team_distribucion_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_team_tabla_api_v1_dashboard_team_tabla_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                sort_by?: string;
-                sort_order?: string;
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_programs_summary_api_v1_dashboard_programs_summary_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_program_detail_new_api_v1_dashboard_program__code__detail_get: {
-        parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                code: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_global_api_v1_dashboard_vuln_global_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_subdireccion_api_v1_dashboard_vuln_subdireccion__id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_celula_api_v1_dashboard_vuln_celula__id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_sast_api_v1_dashboard_vuln_repositorio__id__sast_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_dast_api_v1_dashboard_vuln_repositorio__id__dast_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_sca_api_v1_dashboard_vuln_repositorio__id__sca_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_mast_mda_api_v1_dashboard_vuln_repositorio__id__mast_mda_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_secrets_api_v1_dashboard_vuln_repositorio__id__secrets_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_cds_api_v1_dashboard_vuln_repositorio__id__cds_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_historial_api_v1_dashboard_vuln_repositorio__id__historial_get: {
-        parameters: {
-            query?: {
-                days?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_config_api_v1_dashboard_vuln_repositorio__id__config_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_resumen_api_v1_dashboard_vuln_repositorio__id__resumen_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_repo_detail_api_v1_dashboard_vuln_repositorio__id__detail_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_concentrated_by_motor_api_v1_dashboard_vuln_concentrated_by_motor_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_concentrated_by_severity_api_v1_dashboard_vuln_concentrated_by_severity_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_vuln_concentrated_table_api_v1_dashboard_vuln_concentrated_table_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                fuente?: string | null;
-                severidad?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_release_terceros_api_v1_dashboard_release_terceros_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_release_detail_api_v1_dashboard_release__id__detail_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_initiatives_summary_api_v1_dashboard_initiatives_summary_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_initiative_detail_api_v1_dashboard_initiative__id__detail_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_initiatives_resumen_api_v1_dashboard_initiatives_resumen_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_initiatives_tabla_api_v1_dashboard_initiatives_tabla_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_initiatives_timeline_api_v1_dashboard_initiatives_timeline_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_emerging_themes_summary_api_v1_dashboard_emerging_themes_summary_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_tema_detail_api_v1_dashboard_tema__id__detail_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard3_programs_summary_api_v1_dashboard_dashboard3_programs_summary_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard3_program_detail_api_v1_dashboard_dashboard3_program__code__detail_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                code: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_releases_terceros_api_v1_dashboard_releases_terceros_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_release_kanban_columns_api_v1_dashboard_release_kanban_columns_get: {
-        parameters: {
-            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -13697,47 +13139,7 @@ export interface operations {
             };
         };
     };
-    move_service_release_api_v1_dashboard_service_releases__id__move_patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReleaseKanbanMove"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    dashboard_programs_resumen_api_v1_dashboard_programs_resumen_get: {
+    dashboard_concentrado_api_v1_dashboard_concentrado_get: {
         parameters: {
             query?: never;
             header?: {
@@ -13771,7 +13173,7 @@ export interface operations {
             };
         };
     };
-    dashboard_programs_distribucion_api_v1_dashboard_programs_distribucion_get: {
+    dashboard_temas_auditorias_api_v1_dashboard_temas_auditorias_get: {
         parameters: {
             query?: never;
             header?: {
@@ -13805,15 +13207,9 @@ export interface operations {
             };
         };
     };
-    dashboard_programs_tabla_api_v1_dashboard_programs_tabla_get: {
+    dashboard_platform_release_api_v1_dashboard_platform_release_get: {
         parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                sort_by?: string;
-                sort_order?: string;
-                tipo?: string | null;
-            };
+            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -13865,7 +13261,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DashboardEnvelopeProgramsHeatmapRead"];
                 };
             };
             /** @description Validation Error */
@@ -14176,6 +13572,43 @@ export interface operations {
             };
         };
     };
+    global_search_api_v1_search_get: {
+        parameters: {
+            query: {
+                /** @description Search query */
+                q: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_catalog_by_type_api_v1_catalogs__catalog_type__get: {
         parameters: {
             query?: never;
@@ -14415,6 +13848,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UserPasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reassign_ownership_api_v1_admin_users_reassign_ownership_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipReassignRequest"];
             };
         };
         responses: {
@@ -18210,6 +17681,184 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SubdireccionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_direccions_api_v1_direccions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_direccion_api_v1_direccions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DireccionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_direccion_api_v1_direccions__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_direccion_api_v1_direccions__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_direccion_api_v1_direccions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DireccionUpdate"];
             };
         };
         responses: {
@@ -29718,6 +29367,218 @@ export interface operations {
             };
         };
     };
+    list_indicador_formulas_api_v1_indicador_formulas_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_indicador_formula_api_v1_indicador_formulas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicadorFormulaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluate_indicador_formula_api_v1_indicador_formulas__id__evaluate_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_indicador_formula_api_v1_indicador_formulas__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_indicador_formula_api_v1_indicador_formulas__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_indicador_formula_api_v1_indicador_formulas__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicadorFormulaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_indicador_formulas_api_v1_indicadores_formulas_get: {
         parameters: {
             query?: never;
@@ -30966,6 +30827,2019 @@ export interface operations {
                 "application/json": components["schemas"]["NotificacionUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_categorias_api_v1_okr_categorias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_categoria_api_v1_okr_categorias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCategoriaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_categoria_api_v1_okr_categorias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_categoria_api_v1_okr_categorias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_categoria_api_v1_okr_categorias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCategoriaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_plan_anuals_api_v1_okr_plan_anuals_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_plan_anual_api_v1_okr_plan_anuals_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrPlanAnualCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_plan_anual_api_v1_okr_plan_anuals__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_plan_anual_api_v1_okr_plan_anuals__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_plan_anual_api_v1_okr_plan_anuals__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrPlanAnualUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_compromisos_api_v1_okr_compromisos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_compromiso_api_v1_okr_compromisos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCompromisoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_compromiso_api_v1_okr_compromisos__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_compromiso_api_v1_okr_compromisos__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_compromiso_api_v1_okr_compromisos__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCompromisoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_subcompromisos_api_v1_okr_subcompromisos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_subcompromiso_api_v1_okr_subcompromisos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrSubcompromisoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_subcompromiso_api_v1_okr_subcompromisos__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_subcompromiso_api_v1_okr_subcompromisos__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_subcompromiso_api_v1_okr_subcompromisos__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrSubcompromisoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_revision_qs_api_v1_okr_revision_qs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_revision_q_api_v1_okr_revision_qs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionQCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_revision_q_api_v1_okr_revision_qs__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_revision_q_api_v1_okr_revision_qs__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_revision_q_api_v1_okr_revision_qs__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionQUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_okr_revision_q_api_v1_okr_revision_qs__id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionSubmitPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_okr_revision_q_api_v1_okr_revision_qs__id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionApprovePayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_okr_revision_q_api_v1_okr_revision_qs__id__edit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionEditadoPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_okr_revision_q_api_v1_okr_revision_qs__id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrRevisionRejectPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_evidencias_api_v1_okr_evidencias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_evidencia_api_v1_okr_evidencias_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrEvidenciaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_evidencia_api_v1_okr_evidencias__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_evidencia_api_v1_okr_evidencias__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_evidencia_api_v1_okr_evidencias__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrEvidenciaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_okr_cierre_qs_api_v1_okr_cierre_qs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_okr_cierre_q_api_v1_okr_cierre_qs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCierreQCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_cierre_q_api_v1_okr_cierre_qs__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_okr_cierre_q_api_v1_okr_cierre_qs__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_okr_cierre_q_api_v1_okr_cierre_qs__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCierreQUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_okr_quarter_api_v1_okr_cierre_qs_plans__plan_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                plan_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCloseQuarterPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_code_security_reviews_api_v1_code_security_reviews_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_code_security_review_api_v1_code_security_reviews_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_code_security_review_api_v1_code_security_reviews__review_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_code_security_review_api_v1_code_security_reviews__review_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_code_security_review_api_v1_code_security_reviews__review_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityReviewUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_code_security_review_api_v1_code_security_reviews__review_id__analyze_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_progress_api_v1_code_security_reviews__review_id__progress_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_findings_api_v1_code_security_reviews__review_id__findings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityFindingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_events_api_v1_code_security_reviews__review_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_report_api_v1_code_security_reviews__review_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_review_bundle_api_v1_code_security_reviews__review_id__export_get: {
+        parameters: {
+            query?: {
+                /** @description Por ahora solo json (PDF fase 8). */
+                format?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_org_batch_placeholder_api_v1_code_security_reviews_batch_org_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityOrgBatchCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_github_repos_visible_stub_api_v1_code_security_github_repos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_github_orgs_stub_api_v1_code_security_github_orgs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_github_org_repos_api_v1_code_security_github_orgs__org_slug__repos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                org_slug: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

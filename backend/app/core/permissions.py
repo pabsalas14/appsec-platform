@@ -115,6 +115,16 @@ class _Catalogs:
     DELETE = "catalogs.delete"
 
 
+class _CodeSecurity:
+    """Code Security Review (malicia, SCR) — ajeno al catálogo SAST de vulnerabilities."""
+
+    VIEW = "code_security.view"
+    CREATE = "code_security.create"
+    EDIT = "code_security.edit"
+    DELETE = "code_security.delete"
+    EXPORT = "code_security.export"
+
+
 class _EmergingThemes:
     VIEW = "emerging_themes.view"
     CREATE = "emerging_themes.create"
@@ -155,6 +165,7 @@ class P:
     ADMIN = _Admin
     AUDIT_LOGS = _AuditLogs
     CATALOGS = _Catalogs
+    CODE_SECURITY = _CodeSecurity
     EMERGING_THEMES = _EmergingThemes
     IA = _IA
     INVENTORY = _Inventory
@@ -207,6 +218,14 @@ _NOTIF_CORE = [
     "notifications.edit",
 ]
 
+# SCR — operación cotidiana igual que otros módulos con ownership (usuarios estándar)
+_CODE_SECURITY_OPS = [
+    "code_security.create",
+    "code_security.edit",
+    "code_security.delete",
+    "code_security.export",
+]
+
 # Programas SAST — export CSV (BRD A3); mismo código que `programs.export`
 _PROGRAM_SAST_EXPORT = ["programs.export"]
 
@@ -219,6 +238,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         + _CATALOG_MUTATION
         + _INVENTORY_BULK
         + _NOTIF_CORE
+        + _CODE_SECURITY_OPS
         + [
             "vulnerabilities.approve",
             "releases.approve",
@@ -263,6 +283,8 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "notifications.view",
         *_INVENTORY_BULK,
         *_NOTIF_CORE,
+        *_CODE_SECURITY_OPS,
+        "code_security.view",
     ],
     "analista": [
         "programs.view",
@@ -291,6 +313,8 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         *_INVENTORY_BULK,
         *_NOTIF_CORE,
         *_PROGRAM_SAST_EXPORT,
+        *_CODE_SECURITY_OPS,
+        "code_security.view",
     ],
     "auditor": [
         *_VIEW_CODES,
@@ -308,6 +332,14 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "programs.view",
         "catalogs.view",
         "notifications.view",
+        "code_security.view",
     ],
-    "user": _VIEW_CODES + _CATALOG_MUTATION + _INVENTORY_BULK + _NOTIF_CORE + _PROGRAM_SAST_EXPORT,
+    "user": (
+        _VIEW_CODES
+        + _CATALOG_MUTATION
+        + _INVENTORY_BULK
+        + _NOTIF_CORE
+        + _PROGRAM_SAST_EXPORT
+        + _CODE_SECURITY_OPS
+    ),
 }

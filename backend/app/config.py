@@ -86,6 +86,9 @@ class Settings(BaseSettings):
     ARGUS_MAX_CONCURRENT_SCANS: int = 3
     ARGUS_TIMEOUT_DEFAULT: int = 300  # seconds per tool
 
+    # ─── Code Security Review (SCR) — token GitHub dedicado (distinto del inventario) ───
+    SCR_GITHUB_TOKEN: str = ""
+
     # ─── AI Provider ───
     AI_DEFAULT_PROVIDER: str = "openai"  # openai | anthropic | openrouter | ollama
     AI_DEFAULT_MODEL: str = "gpt-4o"

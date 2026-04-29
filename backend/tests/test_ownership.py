@@ -171,6 +171,25 @@ async def _create_notificacion(client: AsyncClient, headers: dict[str, str]) -> 
     return resp.json()["data"]["id"]
 
 
+async def _create_code_security_review(client: AsyncClient, headers: dict[str, str]) -> str:
+    resp = await client.post(
+        "/api/v1/code_security_reviews",
+        headers=headers,
+        json={
+            "titulo": "OwnedCSR",
+            "estado": "PENDING",
+            "descripcion": None,
+            "progreso": 0,
+            "rama_analizar": "main",
+            "url_repositorio": "https://github.example.com/demo/repo.git",
+            "scan_mode": "PUBLIC_URL",
+            "repositorio_id": None,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    return resp.json()["data"]["id"]
+
+
 # patch_body: cuerpo válido para PATCH (detección IDOR) según el schema de cada entidad
 OWNED_ENTITIES = [
     pytest.param("tasks", _create_task, "/api/v1/tasks/{id}", {"title": "pwn"}, id="tasks"),
@@ -208,6 +227,13 @@ OWNED_ENTITIES = [
         "/api/v1/notificacions/{id}",
         {"titulo": "pwn"},
         id="notificacions",
+    ),
+    pytest.param(
+        "code_security_reviews",
+        _create_code_security_review,
+        "/api/v1/code_security_reviews/{id}",
+        {"titulo": "pwn"},
+        id="code_security_reviews",
     ),
 ]
 
