@@ -7,8 +7,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.email_template import EmailTemplate
 from app.core.security import hash_password
+from app.models.email_template import EmailTemplate
 from app.models.user import User
 from app.services.email_service import (
     EmailServiceError,
