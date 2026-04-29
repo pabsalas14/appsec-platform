@@ -43,6 +43,8 @@ import app.models.okr_evidencia  # noqa: F401
 
 import app.models.okr_cierre_q  # noqa: F401
 
+import app.models.code_security_review   # noqa: F401
+
 target_metadata = Base.metadata
 
 

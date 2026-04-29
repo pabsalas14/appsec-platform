@@ -22,6 +22,7 @@ from app.api.v1 import (
     changelog_entrada,
     cierre_conclusion,
     client_logs,
+    code_security_review,
     control_mitigacion,
     control_seguridad,
     control_source_code,
@@ -77,6 +78,7 @@ from app.api.v1 import (
     repositorio,
     revision_source_code,
     revision_tercero,
+    scr_github,
     # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
     search,
     service_release,
@@ -236,3 +238,5 @@ api_router.include_router(okr_subcompromiso.router, prefix="/okr_subcompromisos"
 api_router.include_router(okr_revision_q.router, prefix="/okr_revision_qs", tags=["Okr_revision_q"])
 api_router.include_router(okr_evidencia.router, prefix="/okr_evidencias", tags=["Okr_evidencia"])
 api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["Okr_cierre_q"])
+api_router.include_router(code_security_review.router, prefix="/code_security_reviews", tags=["Code_security_review"])
+api_router.include_router(scr_github.router, prefix="/code_security", tags=["scr_github"])

@@ -97,6 +97,8 @@ async def test_permission_catalogue_seeded(
     assert "admin.view" in codes
     assert "inventory.repos.export" in codes
     assert "inventory.repos.import" in codes
+    assert "code_security.view" in codes
+    assert "code_security.create" in codes
 
 
 @pytest.mark.asyncio
