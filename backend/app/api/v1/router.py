@@ -64,7 +64,7 @@ from app.api.v1 import (
     okr_plan_anual,
     okr_revision_q,
     okr_subcompromiso,
-    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────────
+    # ── Módulo 1 — Catálogos Centrales (Organización) ──────────────────────
     organizacion,
     pipeline_release,
     plan_remediacion,
@@ -79,7 +79,7 @@ from app.api.v1 import (
     revision_source_code,
     revision_tercero,
     scr_github,
-    # ── Módulo 8 — Operación (Releases) ────────────────────────────────────
+    # ── Módulo 8 — Operación (Releases) ────────────────────────────────
     search,
     service_release,
     servicio,
@@ -94,6 +94,7 @@ from app.api.v1 import (
     # ── Módulo 9 — Gestión de Vulnerabilidades ─────────────────────────────
     vulnerabilidad,
 )
+from app.api.v1.agents.router import router as agents_router
 from app.api.v1.admin.router import admin_router
 
 api_router = APIRouter(prefix="/api/v1")
@@ -110,6 +111,7 @@ api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Clie
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
 api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
+api_router.include_router(agents_router, prefix="/agents", tags=["Agents"])
 api_router.include_router(admin_router, prefix="/admin")
 
 

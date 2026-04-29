@@ -27,6 +27,17 @@ export function useCodeSecurityReviews() {
   });
 }
 
+export function useCodeSecurityReview(reviewId?: string) {
+  return useQuery({
+    queryKey: [...KEY, reviewId],
+    enabled: Boolean(reviewId),
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<CodeSecurityReview>>(`/code_security_reviews/${reviewId}`);
+      return data.data;
+    },
+  });
+}
+
 export function useCreateCodeSecurityReview() {
   const qc = useQueryClient();
   return useMutation({

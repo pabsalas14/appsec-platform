@@ -15,6 +15,8 @@ from app.models.code_security_finding import CodeSecurityFinding
 from app.models.code_security_report import CodeSecurityReport
 from app.models.code_security_review import CodeSecurityReview
 from app.services.scr_agents import fingerprint_for_finding, run_detective_stub, run_fiscal_stub
+from app.services.scr_agents.scr_detective_agent import run_detective_agent
+from app.services.scr_agents.scr_fiscal_agent import run_fiscal_agent
 from app.services.scr_inspector_agent import run_inspector_stub
 
 
@@ -101,15 +103,6 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
         )
         inspector_out = await run_inspector_stub(rutas_fuente=source_files)
 
-    review.progreso = 55
-    await db.flush()
-
-    # PASO 3: Detective (stub correlacionando con commits reales)
-    if commits:
-        detective_out = await run_detective_stub(inspector_rows=inspector_out, commits=commits)
-    else:
-        detective_out = await run_detective_stub(inspector_rows=inspector_out)
-
     merged_findings: list[CodeSecurityFinding] = []
     for row in inspector_out:
         fp = fingerprint_for_finding(review.id, row["archivo"], row["linea_inicio"], row["tipo_malicia"])
@@ -134,39 +127,44 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
         )
 
     db.add_all(merged_findings)
+    review.progreso = 60
+    await db.flush()
+
+    # PASO 3: Detective (real analysis with commits)
+    if commits:
+        await run_detective_agent(
+            review_id=str(review.id),
+            inspector_findings=inspector_out,
+            commits=commits,
+            db=db,
+        )
+    else:
+        # Fallback to stub if no commits
+        detective_out = await run_detective_stub(inspector_rows=inspector_out)
+        for idx, evt in enumerate(detective_out):
+            db.add(
+                CodeSecurityEvent(
+                    review_id=review.id,
+                    event_ts=datetime.now(UTC),
+                    commit_hash=evt["commit_hash"][:64],
+                    autor=evt["autor"][:512],
+                    archivo=evt["archivo"][:1024],
+                    accion=evt["accion"][:32],
+                    mensaje_commit=evt.get("mensaje_commit"),
+                    nivel_riesgo=evt["nivel_riesgo"],
+                    indicadores=list(evt["indicadores"]),
+                    descripcion=evt.get("descripcion"),
+                )
+            )
+
     review.progreso = 80
     await db.flush()
 
-    for idx, evt in enumerate(detective_out):
-        db.add(
-            CodeSecurityEvent(
-                review_id=review.id,
-                event_ts=datetime.now(UTC),
-                commit_hash=evt["commit_hash"][:64],
-                autor=evt["autor"][:512],
-                archivo=evt["archivo"][:1024],
-                accion=evt["accion"][:32],
-                mensaje_commit=evt.get("mensaje_commit"),
-                nivel_riesgo=evt["nivel_riesgo"],
-                indicadores=list(evt["indicadores"]),
-                descripcion=evt.get("descripcion"),
-            )
-        )
-        logger.info(
-            "scr.pipeline.event_stub",
-            extra={"event": "scr.pipeline.event_stub", "review_id": str(review_id), "i": idx},
-        )
-
-    fiscal = await run_fiscal_stub(findings=inspector_out, forensic=detective_out, titulo=review.titulo)
-    db.add(
-        CodeSecurityReport(
-            review_id=review.id,
-            resumen_ejecutivo=fiscal["resumen_ejecutivo"],
-            desglose_severidad=dict(fiscal["desglose_severidad"]),
-            narrativa_evolucion=fiscal.get("narrativa_evolucion"),
-            pasos_remediacion=list(fiscal["pasos_remediacion"]),
-            puntuacion_riesgo_global=int(fiscal["puntuacion_riesgo_global"]),
-        )
+    # PASO 4: Fiscal (real report generation)
+    await run_fiscal_agent(
+        review_id=str(review.id),
+        review_title=review.titulo,
+        db=db,
     )
 
     review.estado = "COMPLETED"

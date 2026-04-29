@@ -4,47 +4,46 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+import os
+from typing import Any, Dict
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
+from app.models.agente_config import AgenteConfig
 from app.services.ia_provider import AIProviderType, get_ai_provider
 
-# Patrones de malicia a detectar
-MALICIOUS_PATTERNS = {
+DEFAULT_MALICIOUS_PATTERNS = {
     "EXEC_ENV_BACKDOOR": "Ejecución oculta vía variables de entorno o configuración",
-    "INJECTION_VULNERABILITY": "Vulnerabilidades de inyección de código",
     "LOGIC_BOMB": "Código que ejecuta condicionalmente para causar daño",
     "OBFUSCATED_CODE": "Código deliberadamente ofuscado para ocultar funcionalidad",
     "PRIVILEGE_ESCALATION": "Intentos de elevar privilegios",
     "DATA_EXFILTRATION": "Código que exfiltra datos sensibles",
     "SUPPLY_CHAIN_ATTACK": "Dependencias o imports sospechosos",
     "TIMING_ATTACK": "Código que explota side-channels de timing",
-    "HARDCODED_SECRETS": "Secretos hardcodeados en el código",
     "SUSPICIOUS_PERMISSIONS": "Solicitudes de permisos sospechosas",
+    "DEFERRED_EXECUTION": "Código diseñado para ejecutarse en un momento futuro o bajo condiciones específicas",
+    "DYNAMIC_CODE_EXECUTION": "Uso de eval(), exec(), o similares para ejecutar código dinámicamente desde cadenas",
 }
 
-# Severidad basada en patrón
-PATTERN_SEVERITY = {
+DEFAULT_PATTERN_SEVERITY = {
     "EXEC_ENV_BACKDOOR": "CRITICO",
-    "INJECTION_VULNERABILITY": "ALTO",
     "LOGIC_BOMB": "CRITICO",
     "OBFUSCATED_CODE": "MEDIO",
     "PRIVILEGE_ESCALATION": "ALTO",
     "DATA_EXFILTRATION": "CRITICO",
     "SUPPLY_CHAIN_ATTACK": "ALTO",
     "TIMING_ATTACK": "MEDIO",
-    "HARDCODED_SECRETS": "ALTO",
     "SUSPICIOUS_PERMISSIONS": "MEDIO",
+    "DEFERRED_EXECUTION": "ALTO",
+    "DYNAMIC_CODE_EXECUTION": "ALTO",
 }
 
 
-def _build_inspector_system_prompt() -> str:
+def _build_inspector_system_prompt(patterns: Dict[str, str]) -> str:
     """Construye el prompt del sistema para Inspector Agent."""
-    patterns_list = "\n".join(
-        f"  - {k}: {v}" for k, v in MALICIOUS_PATTERNS.items()
-    )
+    patterns_list = "\n".join(f"  - {k}: {v}" for k, v in patterns.items())
     return f"""Eres un experto en seguridad de código especializado en detectar patrones maliciosos.
 Tu rol es analizar código fuente e identificar:
 
@@ -59,14 +58,11 @@ IMPORTANTE:
 
 
 def _build_inspector_prompt(code_chunks: list[tuple[str, str]]) -> str:
-    """Construye el prompt para análisis de código.
-
-    Args:
-        code_chunks: Lista de (filepath, contenido) del código a analizar
-    """
+    """Construye el prompt para análisis de código."""
     files_text = "\n\n".join(
         f"--- Archivo: {filepath} ---\n{content[:1000]}..."  # Primeros 1000 chars
-        if len(content) > 1000 else f"--- Archivo: {filepath} ---\n{content}"
+        if len(content) > 1000
+        else f"--- Archivo: {filepath} ---\n{content}"
         for filepath, content in code_chunks
     )
 
@@ -101,41 +97,37 @@ async def run_inspector_real(
     temperature: float = 0.3,
     max_tokens: int = 4096,
 ) -> list[dict[str, Any]]:
-    """Inspector Agent real — Detecta patrones maliciosos usando LLM.
-
-    Args:
-        rutas_fuente: Dict {filepath: contenido} del código fuente
-        db: AsyncSession (opcional, para configuración de BD)
-        provider: Tipo de proveedor LLM
-        model: Modelo a usar
-        temperature: Temperatura para generación
-        max_tokens: Máximo de tokens en respuesta
-
-    Returns:
-        Lista de hallazgos detectados
-    """
+    """Inspector Agent real — Detecta patrones maliciosos usando LLM."""
 
     if not rutas_fuente:
         logger.warning("scr.inspector.empty_source", extra={"event": "scr.inspector.empty_source"})
         return []
 
     try:
-        # Preparar chunks de código (máximo 5 archivos para no saturar el LLM)
-        code_chunks = [
-            (filepath, content)
-            for filepath, content in list(rutas_fuente.items())[:5]
-        ]
+        code_chunks = [(filepath, content) for filepath, content in list(rutas_fuente.items())[:5]]
 
-        # Inicializar proveedor LLM
-        # Para Anthropic, necesitamos la API key del entorno o configuración
-        import os
+        patterns = DEFAULT_MALICIOUS_PATTERNS.copy()
+        pattern_severity = DEFAULT_PATTERN_SEVERITY.copy()
+
+        if db is not None:
+            stmt = (
+                select(AgenteConfig)
+                .where(AgenteConfig.agente_tipo == "inspector", AgenteConfig.activo == True)
+                .order_by(AgenteConfig.creado_en.desc())
+                .limit(1)
+            )
+
+            result = await db.execute(stmt)
+            config = result.scalar_one_or_none()
+
+            if config and config.patrones_personalizados:
+                patterns.update(config.patrones_personalizados)
 
         if provider == AIProviderType.ANTHROPIC:
             api_key = os.getenv("ANTHROPIC_API_KEY", "")
             if not api_key:
                 logger.warning(
-                    "scr.inspector.no_api_key",
-                    extra={"event": "scr.inspector.no_api_key", "provider": "anthropic"}
+                    "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": "anthropic"}
                 )
                 return await run_inspector_stub(rutas_fuente=rutas_fuente)
 
@@ -154,18 +146,15 @@ async def run_inspector_real(
             api_key = os.getenv(f"{provider.upper()}_API_KEY", "")
             if not api_key:
                 logger.warning(
-                    "scr.inspector.no_api_key",
-                    extra={"event": "scr.inspector.no_api_key", "provider": provider}
+                    "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": provider}
                 )
                 return await run_inspector_stub(rutas_fuente=rutas_fuente)
 
             llm_provider = get_ai_provider(provider, api_key=api_key, model=model)
 
-        # Construir prompts
-        system_prompt = _build_inspector_system_prompt()
+        system_prompt = _build_inspector_system_prompt(patterns)
         user_prompt = _build_inspector_prompt(code_chunks)
 
-        # Llamar al LLM
         logger.info(
             "scr.inspector.llm_call",
             extra={
@@ -173,7 +162,7 @@ async def run_inspector_real(
                 "provider": provider,
                 "model": model,
                 "files_count": len(code_chunks),
-            }
+            },
         )
 
         response = await llm_provider.generate(
@@ -183,25 +172,23 @@ async def run_inspector_real(
             max_tokens=max_tokens,
         )
 
-        # Parsear respuesta
         try:
             result = json.loads(response.content)
             findings_raw = result.get("findings", [])
         except json.JSONDecodeError:
             logger.error(
                 "scr.inspector.json_parse_error",
-                extra={"event": "scr.inspector.json_parse_error", "content": response.content[:200]}
+                extra={"event": "scr.inspector.json_parse_error", "content": response.content[:200]},
             )
             return await run_inspector_stub(rutas_fuente=rutas_fuente)
 
-        # Enriquecer hallazgos con severidad y validar
         findings = []
         for finding in findings_raw:
             if not isinstance(finding, dict):
                 continue
 
             tipo = finding.get("tipo_malicia", "OBFUSCATED_CODE")
-            severidad = PATTERN_SEVERITY.get(tipo, "MEDIO")
+            severidad = pattern_severity.get(tipo, "MEDIO")
 
             enriched = {
                 "archivo": str(finding.get("archivo", "unknown.py")),
@@ -225,17 +212,13 @@ async def run_inspector_real(
                 "event": "scr.inspector.complete",
                 "findings_count": len(findings),
                 "provider": provider,
-            }
+            },
         )
 
         return findings
 
     except Exception as e:
-        logger.error(
-            "scr.inspector.error",
-            extra={"event": "scr.inspector.error", "error": str(e)[:200]}
-        )
-        # Fallback a stub
+        logger.error("scr.inspector.error", extra={"event": "scr.inspector.error", "error": str(e)[:200]})
         return await run_inspector_stub(rutas_fuente=rutas_fuente)
 
 

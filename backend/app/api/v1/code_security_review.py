@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
+from app.core.rate_limit import enforce_rate_limit
 from app.core.response import success
 from app.models.code_security_event import CodeSecurityEvent
 from app.models.code_security_finding import CodeSecurityFinding
@@ -65,6 +66,13 @@ async def create_code_security_review(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.CODE_SECURITY.CREATE)),
 ):
+    # Rate limit: max 5 SCR creations per user per hour
+    enforce_rate_limit(
+        bucket="scr_create",
+        key=str(current_user.id),
+        limit=5,
+        window_seconds=3600,
+    )
     entity = await code_security_review_svc.create(db, entity_in, extra={"user_id": current_user.id})
     return success(CodeSecurityReviewRead.model_validate(entity).model_dump(mode="json"))
 
@@ -94,9 +102,16 @@ async def delete_code_security_review(
 async def analyze_code_security_review(
     background_tasks: BackgroundTasks,
     review_entity: CodeSecurityReview = Depends(require_ownership(code_security_review_svc, id_param="review_id")),
-    _: User = Depends(require_permission(P.CODE_SECURITY.EDIT)),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.EDIT)),
 ):
     """Fases 4–6 — encola pipeline stub (Inspector/Detective/Fiscal)."""
+    # Rate limit: max 3 analyses per user per hour
+    enforce_rate_limit(
+        bucket="scr_analyze",
+        key=str(current_user.id),
+        limit=3,
+        window_seconds=3600,
+    )
     background_tasks.add_task(run_scr_analysis_background, review_entity.id)
     return success(
         CodeSecurityAnalyzeResponse(
