@@ -50,6 +50,16 @@ Filtro organizacional: join real de vulnerabilidades a célula vía activos (ser
 | **8** | AI Automation Rules | ✅ Modelos + Schemas + Servicios listos | 26 abr |
 | **9** | Testing + Optimization | ✅ 100% COMPLETA (pytest ~640+ pasando, cobertura ~72%, 33 nuevos test files) | 26 abr |
 
+**Code Security Reviews (SCR) — Integración Phase 1-9 [NUEVO]:**
+
+| Fase | Nombre | Estado | Fecha |
+|------|--------|--------|-------|
+| **1** | Git Real Integration | ✅ 100% COMPLETA (clone, commits, file content) | 28 abr |
+| **2** | LLM Real Integration + Inspector Agent | ✅ 100% COMPLETA (Anthropic/OpenAI/Ollama; multi-pattern detection) | 29 abr |
+| **3** | Detective Agent (forensic timeline) | 🟨 Pendiente | TBD |
+| **4** | Fiscal Agent (executive synthesis) | 🟨 Pendiente | TBD |
+| **5-9** | Frontend + Testing + QA | 🟨 Pendiente | TBD |
+
 ### 📊 Resumen de Implementación
 
 **Backend:**
@@ -212,6 +222,26 @@ El prefijo de API es siempre `/api/v1/`. A continuación, agrupación alineada a
 | Prefijo | Uso |
 |---------|-----|
 | `hallazgo_pipelines`, `revision_terceros`, `hallazgo_terceros` | Hallazgos en CI/CD y revisiones tercero. |
+
+### Módulo 10 — Code Security Reviews (SCR) — NUEVO [Fase 1-2]
+
+**Objetivo:** Análisis automatizado de código fuente con tres agentes especializados (Inspector, Detective, Fiscal) para detectar patrones maliciosos, construir líneas de tiempo forenses y generar reportes ejecutivos. **Completamente independiente** de otros módulos.
+
+| Prefijo | Uso | Fase | Estado |
+|---------|-----|------|--------|
+| `code_security_reviews` | Encabezado de análisis (URL repo, rama, progreso) | 1-9 | ✅ Endpoints |
+| `code_security_findings` | Hallazgos detectados (Inspector Agent) | 2 | ✅ Fase 2: LLM Real |
+| `code_security_events` | Timeline forense (Detective Agent) | 3 | 🟨 Fase 3: Pendiente |
+| `code_security_reports` | Reportes ejecutivos (Fiscal Agent) | 4 | 🟨 Fase 4: Pendiente |
+
+**Agentes:**
+- **Inspector:** Detecta patrones maliciosos (backdoors, injections, logic bombs, obfuscation, exfiltration, etc.) usando LLM (Anthropic, OpenAI, Ollama, OpenRouter).
+- **Detective:** Correlaciona hallazgos con Git history; detecta anomalías de timing, authored patterns, reverts sospechosos.
+- **Fiscal:** Sintetiza reportes ejecutivos con risk scoring, remediation roadmaps, narrativa de evolución del ataque.
+
+**Integración LLM:** Fase 2 implementa abstracción multi-proveedor vía `ia_provider.py` (Anthropic prioritario).
+
+**Persistencia:** Tablas independientes (`code_security_*`); **NO sincroniza con Vulnerabilidades** (aislamiento completo).
 
 ### Módulo 2 (panel transversal y governance)
 

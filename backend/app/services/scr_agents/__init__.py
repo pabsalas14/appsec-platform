@@ -1,7 +1,10 @@
 """
 Agentes SCR (Inspector, Detective, Fiscal) — prompts orientados a **malicia**, no secrets/SAST CWE genéricos.
 
-Fase 5: integración opcional con `ia_provider`; stubs deterministas para desarrollo/tests.
+NOTA: La implementación REAL del Inspector Agent está en `scr_inspector_agent.py`.
+Este módulo proporciona stubs para fallback y testing.
+
+Fase 5-6: integración con `ia_provider` (real); stubs como fallback.
 """
 
 from __future__ import annotations

@@ -14,7 +14,8 @@ from app.models.code_security_event import CodeSecurityEvent
 from app.models.code_security_finding import CodeSecurityFinding
 from app.models.code_security_report import CodeSecurityReport
 from app.models.code_security_review import CodeSecurityReview
-from app.services.scr_agents import fingerprint_for_finding, run_detective_stub, run_fiscal_stub, run_inspector_stub
+from app.services.scr_agents import fingerprint_for_finding, run_detective_stub, run_fiscal_stub
+from app.services.scr_inspector_agent import run_inspector_stub
 
 
 async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
@@ -86,8 +87,20 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
         source_files = {"_error": f"# Git error: {str(e)[:100]}"}
         commits = []
 
-    # PASO 2: Inspector (LLM stub por ahora - reemplazar con LLM real)
-    inspector_out = await run_inspector_stub(rutas_fuente=source_files)
+    # PASO 2: Inspector (LLM real o fallback a stub)
+    try:
+        from app.services.scr_inspector_agent import run_inspector_real
+        inspector_out = await run_inspector_real(
+            rutas_fuente=source_files,
+            db=db,
+        )
+    except Exception as e:
+        logger.error(
+            "scr.pipeline.inspector_error",
+            extra={"review_id": str(review_id), "error": str(e)[:200]},
+        )
+        inspector_out = await run_inspector_stub(rutas_fuente=source_files)
+
     review.progreso = 55
     await db.flush()
 
