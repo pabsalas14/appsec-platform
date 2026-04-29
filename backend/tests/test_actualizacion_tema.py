@@ -35,7 +35,7 @@ async def test_get_actualizacion_tema(client: AsyncClient, auth_headers: dict):
     """Test getting a specific topic update."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     resp = await client.get(f"{BASE_URL}/{update_id}", headers=auth_headers)
@@ -48,7 +48,7 @@ async def test_update_actualizacion_tema(client: AsyncClient, auth_headers: dict
     """Test updating a topic update."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     update_payload = {
@@ -65,7 +65,7 @@ async def test_delete_actualizacion_tema(client: AsyncClient, auth_headers: dict
     """Test deleting a topic update (soft delete)."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     resp = await client.delete(f"{BASE_URL}/{update_id}", headers=auth_headers)

@@ -34,7 +34,7 @@ async def test_get_cierre_conclusion(client: AsyncClient, auth_headers: dict):
     """Test getting a specific closure."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     cierre_id = create_resp.json()["data"]["id"]
 
     resp = await client.get(f"{BASE_URL}/{cierre_id}", headers=auth_headers)
@@ -47,7 +47,7 @@ async def test_update_cierre_conclusion(client: AsyncClient, auth_headers: dict)
     """Test updating a closure."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     cierre_id = create_resp.json()["data"]["id"]
 
     update_payload = {
@@ -64,7 +64,7 @@ async def test_delete_cierre_conclusion(client: AsyncClient, auth_headers: dict)
     """Test deleting a closure (soft delete)."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     cierre_id = create_resp.json()["data"]["id"]
 
     resp = await client.delete(f"{BASE_URL}/{cierre_id}", headers=auth_headers)

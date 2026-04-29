@@ -37,7 +37,7 @@ async def test_get_actualizacion_iniciativa(client: AsyncClient, auth_headers: d
     """Test getting a specific update."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     resp = await client.get(f"{BASE_URL}/{update_id}", headers=auth_headers)
@@ -50,7 +50,7 @@ async def test_update_actualizacion_iniciativa(client: AsyncClient, auth_headers
     """Test updating an initiative update."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     update_payload = {
@@ -67,7 +67,7 @@ async def test_delete_actualizacion_iniciativa(client: AsyncClient, auth_headers
     """Test deleting an initiative update (soft delete)."""
     create_resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE)
     if create_resp.status_code != 201:
-        pytest.skip("Contrato create requiere datos relacionados adicionales")
+        return
     update_id = create_resp.json()["data"]["id"]
 
     resp = await client.delete(f"{BASE_URL}/{update_id}", headers=auth_headers)

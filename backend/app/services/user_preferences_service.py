@@ -54,9 +54,10 @@ class UserPreferencesService:
         if not user:
             raise ValueError(f"User {user_id} not found")
 
-        # Merge with existing preferences
+        # Merge against defaults to preserve required keys
+        defaults = UserPreferencesService._default_preferences()
         current = user.preferences or {}
-        updated = {**current, **preferences}
+        updated = {**defaults, **current, **preferences}
 
         user.preferences = updated
         await db.flush()
@@ -70,7 +71,7 @@ class UserPreferencesService:
             },
         )
 
-        return updated
+        return {**defaults, **updated}
 
     @staticmethod
     async def is_channel_enabled(

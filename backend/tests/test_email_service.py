@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.email_template import EmailTemplate
+from app.models.user import User
+from app.core.security import hash_password
 from app.services.email_service import (
     EmailServiceError,
     TemplateNotFoundError,
@@ -74,13 +76,23 @@ async def test_get_template_not_found(async_db: AsyncSession):
 @pytest.mark.asyncio
 async def test_send_email_creates_log(async_db: AsyncSession, email_template: EmailTemplate):
     """Test sending email creates audit log."""
+    user = User(
+        username="email_test_user",
+        email="email_test@example.com",
+        hashed_password=hash_password("TestPassword123!"),
+        role="user",
+        is_active=True,
+    )
+    async_db.add(user)
+    await async_db.flush()
+
     with patch.object(email_service, "_send_smtp", new_callable=AsyncMock):
         email_log = await email_service.send_email(
             async_db,
             destinatario="test@example.com",
             template_nombre="test_template",
             variables={"titulo": "Alert", "descripcion": "Test body"},
-            user_id=uuid.uuid4(),
+            user_id=user.id,
         )
 
         assert email_log.destinatario == "test@example.com"
@@ -105,10 +117,19 @@ async def test_send_email_invalid_email(async_db: AsyncSession, email_template: 
 async def test_retry_failed_emails(async_db: AsyncSession, email_template: EmailTemplate):
     """Test retry mechanism for failed emails."""
     from app.models.email_log import EmailLog
+    user = User(
+        username="email_retry_user",
+        email="email_retry@example.com",
+        hashed_password=hash_password("TestPassword123!"),
+        role="user",
+        is_active=True,
+    )
+    async_db.add(user)
+    await async_db.flush()
 
     # Create a failed email log
     email_log = EmailLog(
-        user_id=uuid.uuid4(),
+        user_id=user.id,
         email_template_id=email_template.id,
         destinatario="test@example.com",
         asunto="Test",
