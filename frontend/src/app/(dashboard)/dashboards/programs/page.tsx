@@ -370,7 +370,7 @@ export default function ProgramsDashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {PROGRAM_TYPES.map((program) => (
                 <ProgramCard
                   key={program}

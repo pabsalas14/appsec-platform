@@ -1,0 +1,213 @@
+name: CI/Quality
+
+on:
+  push:
+    branches: [main, frontend-testing]
+  pull_request:
+    branches: [main, frontend-testing]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  drift-types:
+    name: Type Drift Check (backend vs frontend)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: framework
+          POSTGRES_PASSWORD: framework_secret
+          POSTGRES_DB: framework
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U framework"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgresql+asyncpg://framework:framework_secret@localhost:5432/framework
+      SECRET_KEY: "ci_secret_${{ github.run_id }}_padding_to_reach_32_chars"
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: Testpassword123
+      ENV: dev
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend deps
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations
+        working-directory: backend
+        run: alembic upgrade heads
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fs http://127.0.0.1:8000/api/health >/dev/null; then
+              echo "backend ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "backend failed to start"; tail -n 100 uvicorn.log; exit 1
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Regenerate and validate types
+        working-directory: frontend
+        run: |
+          npx openapi-typescript http://127.0.0.1:8000/openapi.json -o src/types/api.ts
+          npm run lint
+
+      - name: Upload generated API types
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-api-types
+          path: frontend/src/types/api.ts
+
+  test-e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: framework
+          POSTGRES_PASSWORD: framework_secret
+          POSTGRES_DB: framework
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U framework"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgresql+asyncpg://framework:framework_secret@localhost:5432/framework
+      SECRET_KEY: "ci_secret_${{ github.run_id }}_padding_to_reach_32_chars"
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: Changeme123!
+      RUN_SEED: "true"
+      AUTH_LOGIN_RATE_LIMIT_PER_MIN: "10000"
+      NEXT_PUBLIC_API_URL: ""
+      BACKEND_INTERNAL_URL: http://127.0.0.1:8000
+      E2E_BASE_URL: "http://127.0.0.1:3000"
+      E2E_API_URL: "http://127.0.0.1:8000"
+      E2E_USERNAME: admin
+      E2E_PASSWORD: Changeme123!
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend deps
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations + seed
+        working-directory: backend
+        run: |
+          alembic upgrade heads
+          python -m app.seed
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fs http://127.0.0.1:8000/api/health >/dev/null; then
+              echo "backend ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "backend failed to start"; tail -n 100 uvicorn.log; exit 1
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Start frontend
+        working-directory: frontend
+        run: |
+          nohup npm run start -- -p 3000 > next.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fs http://127.0.0.1:3000 >/dev/null; then
+              echo "frontend ready"; exit 0
+            fi
+            sleep 1
+          done
+          echo "frontend failed to start"; tail -n 200 next.log; exit 1
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Upload playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+
+      - name: Upload Playwright evidence (screenshots/videos/traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence
+          path: frontend/test-results
+          retention-days: 7
+
+      - name: Upload runtime logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-runtime-logs
+          path: |
+            backend/uvicorn.log
+            frontend/next.log
+          retention-days: 7

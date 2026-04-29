@@ -15,7 +15,7 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-  globalTimeout: 600000,
+  globalTimeout: 1800000,
 
   use: {
     baseURL: TEST_BASE_URL,
@@ -26,6 +26,7 @@ export default defineConfig({
     navigationTimeout: 10000,
     actionTimeout: 5000,
   },
+  outputDir: 'test-results',
 
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
