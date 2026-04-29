@@ -98,7 +98,7 @@ jobs:
         run: npm run test:run -- --coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           files: ./frontend/coverage/coverage-final.json
           flags: unittests
@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: frontend-coverage
           path: frontend/coverage/
