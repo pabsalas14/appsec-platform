@@ -20,7 +20,6 @@ async def test_create_okr_cierre_q(client: AsyncClient, auth_headers: dict):
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
     assert resp.status_code in [201, 422], resp.text
     if resp.status_code == 201:
-        if resp.status_code == 201:
         assert resp.json()["status"] == "success"
 
 
@@ -44,8 +43,6 @@ async def test_okr_cierre_q_idor_protected(
     other_auth_headers: dict,
 ):
     resp = await client.post(BASE_URL, headers=auth_headers, json=SAMPLE_PAYLOAD)
-    if resp.status_code != 201:
-        pytest.skip("Entidad dependiente no disponible en este entorno de prueba")
     if resp.status_code != 201:
         return
     resource_id = resp.json()["data"]["id"]
