@@ -36,7 +36,26 @@ from app.schemas.dashboard import (
 from app.schemas.executive_dashboard_read import ApiSuccessEnvelope
 from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
 
+from app.services.dashboard_okr import build_okr_dashboard
+
 router = APIRouter()
+
+@router.get("/okr", response_model=ApiSuccessEnvelope)
+async def get_dashboard_okr(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+    year: int | None = Query(None, description="Año del OKR"),
+):
+    """
+    Dashboard de OKRs (Simulador de Cascada).
+    """
+    payload = await _cached_payload(
+        "okr",
+        user_id=user.id,
+        params={"year": year},
+        builder=lambda: build_okr_dashboard(db, year=year),
+    )
+    return success(payload)
 
 
 def _dashboard_cache_key(route: str, *, user_id: UUID, params: dict[str, object]) -> str:

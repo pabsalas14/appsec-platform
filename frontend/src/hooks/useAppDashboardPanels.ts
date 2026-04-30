@@ -20,6 +20,8 @@ export type ExecutiveDashboardResponse = {
     active_releases: number;
     emerging_themes: number;
     audits: number;
+    initiatives_active?: number;
+    initiatives_advancement?: number;
   };
   kpi_sub?: {
     critical_by_fuente: Array<{ fuente: string; count: number }>;

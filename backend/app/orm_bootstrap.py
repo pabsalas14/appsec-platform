@@ -37,6 +37,8 @@ def import_all_orm() -> None:
     import app.models.direccion
     import app.models.ejecucion_dast
     import app.models.ejecucion_mast
+    import app.models.email_log
+    import app.models.email_template
     import app.models.estado_cumplimiento
     import app.models.etapa_release
     import app.models.evidencia_auditoria
@@ -45,6 +47,7 @@ def import_all_orm() -> None:
     import app.models.excepcion_vulnerabilidad
     import app.models.filtro_guardado
     import app.models.flujo_estatus
+    import app.models.formula
     import app.models.gerencia
     import app.models.hallazgo_auditoria
     import app.models.hallazgo_dast

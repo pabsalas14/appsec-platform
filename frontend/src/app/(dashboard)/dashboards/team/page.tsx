@@ -109,18 +109,18 @@ export default function TeamDashboardPremium() {
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
+              <button className="flex items-center gap-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
                 📅 Reporte Actual <ChevronDown className="w-4 h-4 ml-2" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+            <DropdownMenuContent align="end" className="w-48 bg-[#0f172a] border-white/[0.08] text-white">
               <DropdownMenuItem className="cursor-pointer">Reporte Actual</DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">Mes Pasado</DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">Q1 2026</DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">Año 2025</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button data-testid="d2-export" onClick={handleExport} className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
+          <button data-testid="d2-export" onClick={handleExport} className="flex items-center gap-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] px-4 py-2 rounded-md text-sm transition-colors text-foreground shadow-sm outline-none">
             Exportar <Download className="w-4 h-4" />
           </button>
         </div>
@@ -133,7 +133,7 @@ export default function TeamDashboardPremium() {
           {dashboardData.kpis.map((kpi, i) => {
             const IconComponent = ICONS[i] || Users;
             return (
-              <div key={i} className={`bg-card border border-border rounded-xl p-5 border-b-4 ${kpi.border} shadow-sm`}>
+              <div key={i} className={`glass-hover p-5 border-b-4 ${kpi.border}`}>
                 <div className="flex items-center gap-3">
                   <IconComponent className={`w-6 h-6 ${kpi.border.replace('border-b-', 'text-')}`} />
                   <h3 className="text-muted-foreground text-sm font-medium w-3/4">{kpi.title}</h3>

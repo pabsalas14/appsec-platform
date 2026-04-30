@@ -378,10 +378,10 @@ export default function ExecutiveDashboardPage() {
             cardClassName="border-border bg-card shadow-none"
           />
 
-          {/* Fila 1: KPIs (5 columnas) */}
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-5" data-testid="kpi-row">
+          {/* Fila 1: KPIs (6 columnas) */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6" data-testid="kpi-row">
             {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
+              ? Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-40 rounded-xl" />
                 ))
               : data && (
@@ -413,15 +413,20 @@ export default function ExecutiveDashboardPage() {
                     <ExecutiveKpiCard
                       title="Liberaciones activas"
                       mainValue={data.kpis.active_releases}
-                      subtitle={
-                        sub != null && sub.releases_sla_riesgo > 0
-                          ? `En etapa de riesgo/aprobación: ${sub.releases_sla_riesgo}`
-                          : 'Sin colas calientes en el alcance'
-                      }
+                      subtitle="Total de liberaciones en curso"
                       trendDirection={releaseRiskPct > 0 ? 'down' : 'up'}
                       trendValue={`${sub?.releases_riesgo_pct ?? 0}% en cola riesgo/aprobación`}
                       onClick={go('/service_releases')}
                       icon={Rocket}
+                    />
+                    <ExecutiveKpiCard
+                      title="Liberaciones SLA Riesgo"
+                      mainValue={sub != null ? sub.releases_sla_riesgo : 0}
+                      subtitle="A punto de vencer"
+                      trendDirection={(sub?.releases_sla_riesgo ?? 0) > 0 ? 'down' : 'up'}
+                      trendValue={(sub?.releases_sla_riesgo ?? 0) > 0 ? 'Atención requerida' : 'Flujo sano'}
+                      onClick={go('/service_releases')}
+                      icon={AlertCircle}
                     />
                     <ExecutiveKpiCard
                       title="Temas emergentes abiertos"

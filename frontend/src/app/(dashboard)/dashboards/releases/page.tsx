@@ -49,69 +49,37 @@ export default function ReleasesDashboardPage() {
       {/* KPI Cards */}
       {isVisible('dashboard.releases.panel.kpis') && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                Total Releases
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {kpiLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
-                <div className="text-3xl font-bold">{kpi?.total_releases ?? 0}</div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="glass-hover border-b-4 border-slate-500 p-5 rounded-xl">
+            <div className="flex items-center gap-2 mb-2 text-slate-400">
+              <Layers className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Releases</span>
+            </div>
+            {kpiLoading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <div className="text-3xl font-bold">{kpi?.total_releases ?? 0}</div>}
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                Pendientes Aprobación
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {kpiLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
-                <div className="text-3xl font-bold text-amber-600">{kpi?.pending_approval ?? 0}</div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="glass-hover border-b-4 border-amber-500 p-5 rounded-xl">
+            <div className="flex items-center gap-2 mb-2 text-amber-500">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pendientes Aprobación</span>
+            </div>
+            {kpiLoading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <div className="text-3xl font-bold text-amber-500">{kpi?.pending_approval ?? 0}</div>}
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <PlayCircle className="h-4 w-4 text-blue-500" />
-                En Progreso
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {kpiLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
-                <div className="text-3xl font-bold text-blue-600">{kpi?.in_progress ?? 0}</div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="glass-hover border-b-4 border-blue-500 p-5 rounded-xl">
+            <div className="flex items-center gap-2 mb-2 text-blue-500">
+              <PlayCircle className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">En Progreso</span>
+            </div>
+            {kpiLoading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <div className="text-3xl font-bold text-blue-500">{kpi?.in_progress ?? 0}</div>}
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Completadas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {kpiLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
-                <div className="text-3xl font-bold text-green-600">{kpi?.completed ?? 0}</div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="glass-hover border-b-4 border-green-500 p-5 rounded-xl">
+            <div className="flex items-center gap-2 mb-2 text-green-500">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Completadas</span>
+            </div>
+            {kpiLoading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : <div className="text-3xl font-bold text-green-500">{kpi?.completed ?? 0}</div>}
+          </div>
         </div>
       )}
 

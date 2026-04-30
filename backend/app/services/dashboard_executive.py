@@ -10,6 +10,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.auditoria import Auditoria
+from app.models.hito_iniciativa import HitoIniciativa
+from app.models.iniciativa import Iniciativa
 from app.models.repositorio import Repositorio
 from app.models.service_release import ServiceRelease
 from app.models.tema_emergente import TemaEmergente
@@ -184,6 +186,24 @@ async def build_executive_dashboard(
         ).scalar_one()
         or 0
     )
+
+    # Iniciativas activas y avance promedio (§13.3)
+    ini_filters = [Iniciativa.deleted_at.is_(None), Iniciativa.estado != "Completada"]
+    if celula_id:
+        ini_filters.append(Iniciativa.celula_id == celula_id)
+    
+    initiatives_active = int(
+        (await db.execute(select(func.count()).select_from(Iniciativa).where(*ini_filters))).scalar_one() or 0
+    )
+    
+    initiatives_advancement = 0
+    if initiatives_active > 0:
+        ini_ids = (await db.execute(select(Iniciativa.id).where(*ini_filters))).scalars().all()
+        h_stmt = select(func.avg(HitoIniciativa.porcentaje_completado)).where(
+            HitoIniciativa.iniciativa_id.in_(ini_ids),
+            HitoIniciativa.deleted_at.is_(None)
+        )
+        initiatives_advancement = int((await db.execute(h_stmt)).scalar_one() or 0)
 
     posture = max(0, min(100, 100 - min(crit_active * 8, 80)))
     if crit_active == 0 and programs_advancement >= 80:
@@ -372,6 +392,8 @@ async def build_executive_dashboard(
             "active_releases": active_releases,
             "emerging_themes": emerging,
             "audits": audits_active,
+            "initiatives_active": initiatives_active,
+            "initiatives_advancement": initiatives_advancement,
         },
         "kpi_sub": {
             "critical_by_fuente": by_fuente,

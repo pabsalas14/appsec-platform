@@ -26,6 +26,11 @@ from app.models.sesion_threat_modeling import SesionThreatModeling
 from app.models.system_catalog import SystemCatalog
 from app.models.validation_rule import ValidationRule
 from app.models.vulnerabilidad import Vulnerabilidad
+from app.models.email_template import EmailTemplate
+from app.models.email_log import EmailLog
+from app.models.indicador_formula import IndicadorFormula
+from app.models.formula import Formula
+from app.models.regla_so_d import ReglaSoD
 
 __all__ = [
     "AIAutomationRule",
@@ -54,4 +59,9 @@ __all__ = [
     "SystemCatalog",
     "ValidationRule",
     "Vulnerabilidad",
+    "EmailTemplate",
+    "EmailLog",
+    "IndicadorFormula",
+    "Formula",
+    "ReglaSoD",
 ]

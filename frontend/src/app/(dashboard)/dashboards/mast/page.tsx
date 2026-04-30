@@ -119,24 +119,18 @@ export default function MastDashboardPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{stats.totalApps}</div>
-              <p className="text-xs text-muted-foreground">Aplicaciones</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{stats.totalFindings}</div>
-              <p className="text-xs text-muted-foreground">Hallazgos</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-red-500">{stats.criticals}</div>
-              <p className="text-xs text-muted-foreground">Críticas</p>
-            </CardContent>
-          </Card>
+          <div className="glass-hover border-b-4 border-slate-500 p-5 rounded-xl">
+            <div className="text-3xl font-bold">{stats.totalApps}</div>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">Aplicaciones</p>
+          </div>
+          <div className="glass-hover border-b-4 border-amber-500 p-5 rounded-xl">
+            <div className="text-3xl font-bold text-amber-500">{stats.totalFindings}</div>
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-500/80 mt-1">Hallazgos</p>
+          </div>
+          <div className="glass-hover border-b-4 border-rose-500 p-5 rounded-xl">
+            <div className="text-3xl font-bold text-rose-500">{stats.criticals}</div>
+            <p className="text-xs font-bold uppercase tracking-wider text-rose-500/80 mt-1">Críticas</p>
+          </div>
         </div>
       </div>
 

@@ -129,9 +129,9 @@ function ProgramCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'group text-left rounded-xl border-2 bg-card p-4 transition-all',
-        'hover:shadow-lg hover:-translate-y-0.5',
-        selected ? 'border-primary shadow-md' : 'border-border/60 hover:border-border',
+        'group text-left rounded-xl p-4 transition-all',
+        'hover:-translate-y-0.5',
+        selected ? 'glass-hover border-b-4 border-primary shadow-md' : 'glass-card border-b-4 border-transparent hover:border-slate-700',
       )}
     >
       <div className="flex items-start justify-between mb-3">

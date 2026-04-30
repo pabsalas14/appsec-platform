@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   DndContext,
@@ -110,18 +110,14 @@ export default function KanbanDashboardPage() {
       </div>
 
       {/* Total Cards */}
-      <Card data-testid="total-cards-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Total de Tarjetas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-10 w-1/2" />
-          ) : (
-            <div className="text-3xl font-bold">{data?.total_cards || 0}</div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="glass-hover border-b-4 border-emerald-500 rounded-xl p-5 mb-2" data-testid="total-cards-card">
+        <h3 className="text-sm font-medium text-muted-foreground mb-1">Total de Tarjetas</h3>
+        {isLoading ? (
+          <Skeleton className="h-10 w-16" />
+        ) : (
+          <div className="text-3xl font-bold">{data?.total_cards || 0}</div>
+        )}
+      </div>
 
       {/* Kanban Board */}
       {isLoading ? (
@@ -145,13 +141,13 @@ export default function KanbanDashboardPage() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" data-testid="kanban-board">
             {Object.entries(displayColumns).map(([status, cards]) => (
-              <Card key={status} className="h-fit">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">
+              <div key={status} className="glass-card flex flex-col h-fit rounded-xl p-4 border border-white/[0.08]">
+                <div className="pb-3 border-b border-white/[0.08] mb-3">
+                  <h3 className="text-sm font-semibold text-slate-200">
                     {status} ({cards.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
+                  </h3>
+                </div>
+                <div className="space-y-3">
                   <SortableContext
                     items={cards.map(c => c.id)}
                     strategy={verticalListSortingStrategy}
@@ -167,8 +163,8 @@ export default function KanbanDashboardPage() {
                       </div>
                     ))}
                   </SortableContext>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </DndContext>

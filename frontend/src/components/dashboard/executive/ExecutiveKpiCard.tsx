@@ -35,7 +35,7 @@ export function ExecutiveKpiCard({
     trendDirection === 'up' ? 'text-emerald-400' : 'text-rose-300';
   const TrendIcon = trendDirection === 'up' ? TrendingUp : TrendingDown;
   const base =
-    'relative overflow-hidden rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:bg-muted/20';
+    'glass-hover relative overflow-hidden rounded-xl p-4 text-left shadow-sm';
 
   const content = (
     <>
@@ -44,7 +44,7 @@ export function ExecutiveKpiCard({
       ) : null}
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-foreground">
             <Icon className="h-4 w-4 text-primary" />
           </span>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>

@@ -253,7 +253,7 @@ function KpiCard({
   trend?: { value: number; positive: boolean };
 }) {
   return (
-    <Card>
+    <div className={`glass-hover border-b-4 ${color.replace('text-', 'border-').split(' ')[0]} rounded-xl`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', color)}>
@@ -278,7 +278,7 @@ function KpiCard({
         <div className="text-xs font-medium mt-1">{label}</div>
         {hint && <div className="text-[11px] text-muted-foreground mt-0.5">{hint}</div>}
       </CardContent>
-    </Card>
+    </div>
   );
 }
 
@@ -692,7 +692,7 @@ export default function VulnerabilitiesDashboardPage() {
             label="Total Hallazgos Activos"
             value={summary?.total ?? 0}
             icon={Bug}
-            color="bg-rose-500/10 text-rose-500"
+            color="bg-rose-500/10 border-rose-500 text-rose-500"
             trend={{ value: 8, positive: false }}
           />
           <KpiCard
@@ -700,7 +700,7 @@ export default function VulnerabilitiesDashboardPage() {
             hint="Severidad CRÍTICA"
             value={totalCritica}
             icon={AlertTriangle}
-            color="bg-red-500/10 text-red-500"
+            color="bg-red-500/10 border-red-500 text-red-500"
             trend={{ value: 12, positive: false }}
           />
           <KpiCard
@@ -708,7 +708,7 @@ export default function VulnerabilitiesDashboardPage() {
             hint="Estimado D2 (7%)"
             value={slaVencidos}
             icon={Activity}
-            color="bg-amber-500/10 text-amber-500"
+            color="bg-amber-500/10 border-amber-500 text-amber-500"
             trend={{ value: 3, positive: true }}
           />
           <KpiCard
@@ -716,7 +716,7 @@ export default function VulnerabilitiesDashboardPage() {
             hint="Estado: Cerrada"
             value={totalCerrada}
             icon={CheckCircle2}
-            color="bg-emerald-500/10 text-emerald-500"
+            color="bg-emerald-500/10 border-emerald-500 text-emerald-500"
             trend={{ value: 15, positive: true }}
           />
         </div>
