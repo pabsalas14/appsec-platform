@@ -61,6 +61,12 @@ async def build_vulnerabilities_org_dashboard(
     organizacion_id: UUID | None,
     celula_id: UUID | None,
     repositorio_id: UUID | None,
+    engines: list[str] | None = None,
+    severities: list[str] | None = None,
+    statuses: list[str] | None = None,
+    sla: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
 ) -> dict:
     scope = vulnerabilidad_en_celulas_o_repo(
         direccion_id=direccion_id,
@@ -71,23 +77,42 @@ async def build_vulnerabilities_org_dashboard(
         repositorio_id=repositorio_id,
     )
 
-    total = await _n(db, scope)
+    extra_filters = []
+    if engines:
+        extra_filters.append(Vulnerabilidad.fuente.in_(engines))
+    if severities:
+        extra_filters.append(func.lower(Vulnerabilidad.severidad).in_([s.lower() for s in severities]))
+    if statuses:
+        extra_filters.append(Vulnerabilidad.estado.in_(statuses))
+    
+    now = datetime.now(UTC)
+    if sla == "vencido":
+        extra_filters.append(Vulnerabilidad.fecha_limite_sla < now)
+        extra_filters.append(Vulnerabilidad.estado != "Cerrada")
+    elif sla == "en_tiempo":
+        extra_filters.append(Vulnerabilidad.fecha_limite_sla >= now)
+    
+    if start_date:
+        extra_filters.append(Vulnerabilidad.created_at >= start_date)
+    if end_date:
+        extra_filters.append(Vulnerabilidad.created_at <= end_date)
+
+    total = await _n(db, scope, extra_filters)
     sev_map = [("CRITICA", "Critica"), ("ALTA", "Alta"), ("MEDIA", "Media"), ("BAJA", "Baja")]
     by_sev = {}
     for api_k, col in sev_map:
         c = await _n(
             db,
             scope,
-            [func.lower(Vulnerabilidad.severidad) == col.lower()],
+            [*extra_filters, func.lower(Vulnerabilidad.severidad) == col.lower()],
         )
         by_sev[api_k] = c
 
     engine_data = []
     for m in [*list(FIVE_MOTORS), "MAST"]:
-        c = await _n(db, scope, [Vulnerabilidad.fuente == m])
+        c = await _n(db, scope, [*extra_filters, Vulnerabilidad.fuente == m])
         engine_data.append({"motor": m, "count": c, "trend": 0})
 
-    now = datetime.now(UTC)
     trend_data = []
     for month_offset in range(5, -1, -1):
         month_start = (now - timedelta(days=30 * (month_offset + 1))).replace(
@@ -100,21 +125,21 @@ async def build_vulnerabilities_org_dashboard(
         cnt = await _n(
             db,
             scope,
-            [Vulnerabilidad.created_at >= month_start, Vulnerabilidad.created_at <= month_end],
+            [*extra_filters, Vulnerabilidad.created_at >= month_start, Vulnerabilidad.created_at <= month_end],
         )
         trend_data.append({"period": period, "count": cnt})
 
     by_state: dict[str, int] = {}
     for st in ("Abierta", "En Progreso", "Remediada", "Cerrada"):
-        by_state[st] = await _n(db, scope, [Vulnerabilidad.estado == st])
+        by_state[st] = await _n(db, scope, [*extra_filters, Vulnerabilidad.estado == st])
 
-    now_ts = now
     sla_ok = await _n(
         db,
         scope,
         [
+            *extra_filters,
             Vulnerabilidad.fecha_limite_sla.isnot(None),
-            Vulnerabilidad.fecha_limite_sla > now_ts,
+            Vulnerabilidad.fecha_limite_sla > now,
             Vulnerabilidad.estado != "Cerrada",
         ],
     )
@@ -122,8 +147,9 @@ async def build_vulnerabilities_org_dashboard(
         db,
         scope,
         [
+            *extra_filters,
             Vulnerabilidad.fecha_limite_sla.isnot(None),
-            Vulnerabilidad.fecha_limite_sla < now_ts,
+            Vulnerabilidad.fecha_limite_sla < now,
             Vulnerabilidad.estado != "Cerrada",
         ],
     )
@@ -142,7 +168,7 @@ async def build_vulnerabilities_org_dashboard(
             .where(
                 Vulnerabilidad.deleted_at.is_(None),
                 Vulnerabilidad.repositorio_id == repositorio_id,
-                Vulnerabilidad.estado != "Cerrada",
+                *extra_filters,
             )
             .order_by(Vulnerabilidad.created_at.desc())
             .limit(200)

@@ -45,10 +45,10 @@ export default function ConcentradoMotoresPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const engines = data?.summary?.by_engine || [];
-  const allVulns = data?.vulnerabilities || [];
+  const allVulns = data?.vulnerabilities;
 
   const filteredVulns = useMemo(() => {
-    let result = allVulns;
+    let result = allVulns || [];
     if (selectedEngine) {
       result = result.filter((v) => v.motor === selectedEngine);
     }

@@ -288,6 +288,12 @@ async def dashboard_vulnerabilities(
     organizacion_id: UUID | None = Query(default=None),
     celula_id: UUID | None = Query(default=None),
     repositorio_id: UUID | None = Query(default=None),
+    engines: list[str] | None = Query(default=None),
+    severities: list[str] | None = Query(default=None),
+    statuses: list[str] | None = Query(default=None),
+    sla: str | None = Query(default=None),
+    start_date: datetime | None = Query(default=None),
+    end_date: datetime | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
 ):
@@ -304,6 +310,12 @@ async def dashboard_vulnerabilities(
             "organizacion_id": organizacion_id,
             "celula_id": celula_id,
             "repositorio_id": repositorio_id,
+            "engines": engines,
+            "severities": severities,
+            "statuses": statuses,
+            "sla": sla,
+            "start_date": start_date,
+            "end_date": end_date,
         },
         builder=lambda: build_vulnerabilities_org_dashboard(
             db,
@@ -313,6 +325,12 @@ async def dashboard_vulnerabilities(
             organizacion_id=organizacion_id,
             celula_id=celula_id,
             repositorio_id=repositorio_id,
+            engines=engines,
+            severities=severities,
+            statuses=statuses,
+            sla=sla,
+            start_date=start_date,
+            end_date=end_date,
         ),
     )
     return success(payload)
@@ -1388,7 +1406,37 @@ async def dashboard_programs_heatmap(
         builder=lambda: _programs_heatmap(db=db, year=year, motors=motors),
     )
 
-    return success({"heatmap": heatmap, "year": year})
+@router.get("/releases-kanban")
+async def dashboard_releases_kanban(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 7: Kanban view logic."""
+    from app.services.dashboard_extra import build_releases_kanban
+    payload = await build_releases_kanban(db)
+    return success(payload)
+
+
+@router.get("/temas-auditorias")
+async def dashboard_temas_auditorias(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 8: Temas emergentes y auditorías consolidado."""
+    from app.services.dashboard_extra import build_temas_auditorias
+    payload = await build_temas_auditorias(db)
+    return success(payload)
+
+
+@router.get("/platform-release")
+async def dashboard_platform_release(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Dashboard 10: AppSec Platform internal releases."""
+    from app.services.dashboard_extra import build_platform_release
+    payload = await build_platform_release(db)
+    return success(payload)
 
 
 async def _program_detail_counts(

@@ -99,67 +99,47 @@ export default function KanbanDashboardPage() {
   const displayColumns = isLoading ? {} : columns;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard Kanban</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestión de liberaciones por estado (drag &amp; drop)
-          </p>
+    <div className="min-h-screen bg-[#0d0f1a] text-[#e2e8f0] p-6 font-sans">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-wide">7. Kanban Liberaciones</h1>
+        <p className="text-muted-foreground text-sm mt-1">Gestión visual del flujo de trabajo de releases (Drag & Drop).</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="glass-hover border-b-4 border-[#e8365d] p-5 rounded-xl bg-[#141728]/50">
+          <div className="flex items-center gap-2 mb-2 text-[#e8365d]">
+            <Layers className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Tarjetas</span>
+          </div>
+          {isLoading ? <div className="h-8 w-12 bg-[#252a45] animate-pulse rounded" /> : <div className="text-3xl font-bold">{data?.total_cards ?? 0}</div>}
         </div>
       </div>
 
-      {/* Total Cards */}
-      <div className="glass-hover border-b-4 border-emerald-500 rounded-xl p-5 mb-2" data-testid="total-cards-card">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Total de Tarjetas</h3>
-        {isLoading ? (
-          <Skeleton className="h-10 w-16" />
-        ) : (
-          <div className="text-3xl font-bold">{data?.total_cards || 0}</div>
-        )}
-      </div>
-
-      {/* Kanban Board */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 5 }).map((_, idx) => (
-            <Card key={idx}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-40 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+           {[1,2,3,4].map(i => <div key={i} className="h-96 bg-[#141728] border border-[#252a45] rounded-xl animate-pulse" />)}
         </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" data-testid="kanban-board">
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
             {Object.entries(displayColumns).map(([status, cards]) => (
-              <div key={status} className="glass-card flex flex-col h-fit rounded-xl p-4 border border-white/[0.08]">
-                <div className="pb-3 border-b border-white/[0.08] mb-3">
-                  <h3 className="text-sm font-semibold text-slate-200">
-                    {status} ({cards.length})
-                  </h3>
+              <div key={status} className="bg-[#141728]/40 border border-[#252a45] rounded-xl flex flex-col min-h-[500px]">
+                <div className="p-4 border-b border-[#252a45] bg-[#1c2035]/30 flex justify-between items-center">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-300">{status}</h3>
+                  <span className="px-2 py-0.5 bg-[#252a45] rounded text-[10px] text-slate-400">{cards.length}</span>
                 </div>
-                <div className="space-y-3">
-                  <SortableContext
-                    items={cards.map(c => c.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
+                <div className="p-3 flex-1 overflow-y-auto space-y-3">
+                  <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
                     {cards.map(card => (
-                      <div
-                        key={card.id}
-                        className="p-3 bg-muted rounded cursor-move hover:shadow-md transition-shadow"
-                        data-testid={`kanban-card-${card.id}`}
+                      <div 
+                        key={card.id} 
+                        className="bg-[#1c2035] border border-[#252a45] p-4 rounded-lg shadow-lg hover:border-[#e8365d]/50 transition-all cursor-move group"
                       >
-                        <p className="text-sm font-medium truncate">{card.nombre}</p>
-                        <p className="text-xs text-muted-foreground">v{card.version}</p>
+                        <p className="text-sm font-semibold text-slate-100 group-hover:text-[#e8365d] transition-colors">{card.nombre}</p>
+                        <div className="mt-2 flex items-center justify-between">
+                           <span className="text-[10px] px-2 py-0.5 bg-[#252a45] rounded text-slate-400">v{card.version}</span>
+                           <span className="text-[10px] text-muted-foreground italic">ID: {card.id.slice(0,5)}</span>
+                        </div>
                       </div>
                     ))}
                   </SortableContext>
