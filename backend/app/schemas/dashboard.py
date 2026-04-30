@@ -91,6 +91,7 @@ class DashboardVulnerabilityRowRead(BaseModel):
 
 
 class DashboardChildRead(BaseModel):
+    model_config = ConfigDict(extra="allow")
     id: str
     name: str
     count: int
@@ -105,6 +106,7 @@ class DashboardVulnerabilitiesSummaryRead(BaseModel):
 
 
 class DashboardVulnerabilitiesDataRead(BaseModel):
+    model_config = ConfigDict(extra="allow")
     summary: DashboardVulnerabilitiesSummaryRead
     children: list[DashboardChildRead]
     children_type: str | None = None
@@ -115,6 +117,13 @@ class DashboardVulnerabilitiesDataRead(BaseModel):
     sla_status: dict[str, int] | None = None
     overdue_count: int | None = None
     applied_filters: HierarchyFiltersRead | None = None
+    
+    # New fields for Cyber-Vibrant UI
+    semaforo: dict | None = None
+    motores: list[dict] | None = None
+    tendencia: dict | None = None
+    top_vulns: list[dict] | None = None
+    pipeline: dict | None = None
 
 
 class DashboardEnvelopeTeamRead(BaseModel):
