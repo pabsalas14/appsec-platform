@@ -70,7 +70,7 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/team', label: '2. Dashboard Equipo', icon: Users },
       { href: '/dashboards/programs', label: '3. Programas e Iniciativas', icon: Target },
       { href: '/dashboards/vulnerabilities', label: '4. Vuln (Organizacional)', icon: ShieldCheck },
-      { href: '/dashboards/mast', label: '5. Vuln (Por Motor)', icon: Bug },
+      { href: '/dashboards/mast', label: '5. Concentrado (Motores)', icon: Bug },
       { href: '/dashboards/releases', label: '6. Liberaciones (Tabla)', icon: ListChecks },
       { href: '/dashboards/kanban', label: '7. Kanban Liberaciones', icon: FolderKanban },
       { href: '/dashboards/emerging-themes', label: '8. Temas y Auditorías', icon: FileSearch },

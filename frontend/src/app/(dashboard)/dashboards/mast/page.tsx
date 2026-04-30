@@ -1,287 +1,197 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, Plus } from 'lucide-react';
-
+import { Bug, Activity, Search } from 'lucide-react';
 import {
-  Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Input,
-  Select,
   Badge,
 } from '@/components/ui';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAplicacionMovils } from '@/hooks/useAplicacionMovils';
-import { useHallazgoMASTs } from '@/hooks/useHallazgoMASTs';
-import { useEjecucionMASTs } from '@/hooks/useEjecucionMASTs';
+import { useDashboardVulnerabilities } from '@/hooks/useAppDashboardPanels';
 import {
-  MastApplicationCard,
-  MastFindingsTable,
-  MastDetailPanel,
-} from './components';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
-type SeverityFilter = 'Todos' | 'Critica' | 'Alta' | 'Media' | 'Baja';
-type PlatformFilter = 'Todos' | 'iOS' | 'Android';
+const ENGINE_COLORS: Record<string, string> = {
+  SAST: '#3b82f6',
+  DAST: '#ef4444',
+  SCA: '#a855f7',
+  CDS: '#10b981',
+  MDA: '#f59e0b',
+  MAST: '#ec4899',
+};
 
-export default function MastDashboardPage() {
-  const { data: apps, isLoading: appsLoading } = useAplicacionMovils();
-  const { data: findings, isLoading: findingsLoading } = useHallazgoMASTs();
-  const { data: executions, isLoading: executionsLoading } = useEjecucionMASTs();
+const SEVERITY_COLORS: Record<string, string> = {
+  CRITICA: '#dc2626',
+  ALTA: '#ea580c',
+  MEDIA: '#ca8a04',
+  BAJA: '#2563eb',
+  INFORMATIVA: '#6b7280',
+};
 
+export default function ConcentradoMotoresPage() {
+  const { data, isLoading } = useDashboardVulnerabilities({ path: '' });
+  const [selectedEngine, setSelectedEngine] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSeverity, setSelectedSeverity] = useState<SeverityFilter>('Todos');
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformFilter>('Todos');
-  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
-  // Get selected app details
-  const selectedApp = useMemo(() => {
-    return apps?.find((a) => a.id === selectedAppId);
-  }, [apps, selectedAppId]);
+  const engines = data?.summary?.by_engine || [];
+  const allVulns = data?.vulnerabilities || [];
 
-  // Get executions and findings for selected app
-  const selectedAppExecutions = useMemo(() => {
-    if (!selectedAppId || !executions) return [];
-    return executions.filter((e) => e.aplicacion_movil_id === selectedAppId);
-  }, [selectedAppId, executions]);
-
-  const selectedAppFindings = useMemo(() => {
-    if (!selectedAppId || !findings) return [];
-    const execIds = selectedAppExecutions.map((e) => e.id);
-    return findings.filter((f) => execIds.includes(f.ejecucion_mast_id));
-  }, [selectedAppId, findings, selectedAppExecutions]);
-
-  // Filter applications
-  const filteredApps = useMemo(() => {
-    if (!apps) return [];
-    let result = apps;
-
-    // Search filter
+  const filteredVulns = useMemo(() => {
+    let result = allVulns;
+    if (selectedEngine) {
+      result = result.filter((v) => v.motor === selectedEngine);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (app) =>
-          app.nombre.toLowerCase().includes(q) ||
-          app.bundle_id.toLowerCase().includes(q) ||
-          app.plataforma.toLowerCase().includes(q),
+        (v) =>
+          v.titulo.toLowerCase().includes(q) ||
+          v.motor.toLowerCase().includes(q) ||
+          v.severidad.toLowerCase().includes(q)
       );
     }
-
-    // Platform filter
-    if (selectedPlatform !== 'Todos') {
-      result = result.filter((app) => app.plataforma === selectedPlatform);
-    }
-
     return result;
-  }, [apps, searchQuery, selectedPlatform]);
-
-  // Filter findings by severity
-  const filteredFindings = useMemo(() => {
-    if (!selectedAppFindings) return [];
-    if (selectedSeverity === 'Todos') return selectedAppFindings;
-    return selectedAppFindings.filter((f) => f.severidad === selectedSeverity);
-  }, [selectedAppFindings, selectedSeverity]);
-
-  // Statistics
-  const stats = useMemo(() => {
-    if (!apps || !findings) return { totalApps: 0, totalFindings: 0, criticals: 0 };
-
-    const totalFindings = findings.length;
-    const criticals = findings.filter((f) => f.severidad === 'Critica').length;
-
-    return {
-      totalApps: apps.length,
-      totalFindings,
-      criticals,
-    };
-  }, [apps, findings]);
-
-  const isLoading = appsLoading || findingsLoading || executionsLoading;
+  }, [allVulns, selectedEngine, searchQuery]);
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">MAST</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Mobile Application Security Testing
-            </p>
-          </div>
-          <Button className="gap-2 md:w-auto w-full">
-            <Plus className="h-4 w-4" />
-            Nueva Aplicación
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="glass-hover border-b-4 border-slate-500 p-5 rounded-xl">
-            <div className="text-3xl font-bold">{stats.totalApps}</div>
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-1">Aplicaciones</p>
-          </div>
-          <div className="glass-hover border-b-4 border-amber-500 p-5 rounded-xl">
-            <div className="text-3xl font-bold text-amber-500">{stats.totalFindings}</div>
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-500/80 mt-1">Hallazgos</p>
-          </div>
-          <div className="glass-hover border-b-4 border-rose-500 p-5 rounded-xl">
-            <div className="text-3xl font-bold text-rose-500">{stats.criticals}</div>
-            <p className="text-xs font-bold uppercase tracking-wider text-rose-500/80 mt-1">Críticas</p>
-          </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Concentrado por Motor</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Métricas de descubrimiento y remediación por tecnología de análisis
+          </p>
         </div>
       </div>
 
-      {/* Filters */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
+          : engines.map((eng) => {
+              const color = ENGINE_COLORS[eng.motor] || '#888';
+              const isSelected = selectedEngine === eng.motor;
+              return (
+                <button
+                  key={eng.motor}
+                  type="button"
+                  onClick={() => setSelectedEngine(isSelected ? null : eng.motor)}
+                  className={cn(
+                    "glass-hover flex flex-col text-left border-b-4 p-4 rounded-xl transition-all",
+                    isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:bg-muted/10"
+                  )}
+                  style={{ borderBottomColor: color }}
+                >
+                  <div className="flex items-center justify-between w-full mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-md flex items-center justify-center font-bold text-xs" style={{ backgroundColor: `${color}20`, color }}>
+                        {eng.motor.substring(0, 2)}
+                      </div>
+                      <span className="font-bold">{eng.motor}</span>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold tabular-nums tracking-tight mt-1">{eng.count.toLocaleString()}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                    {eng.trend >= 0 ? '+' : ''}{eng.trend}% vs ciclo ant.
+                  </div>
+                </button>
+              );
+            })}
+      </div>
+
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Filtros</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            Detalle de Hallazgos
+            {selectedEngine && <Badge variant="outline">Filtro: {selectedEngine}</Badge>}
+          </CardTitle>
+          <div className="relative w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar..."
+              className="h-9 pl-9 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar app…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            {/* Platform Filter */}
-            <Select
-              value={selectedPlatform}
-              onChange={(e) => setSelectedPlatform(e.target.value as PlatformFilter)}
-              options={[
-                { value: 'Todos', label: 'Todas las plataformas' },
-                { value: 'iOS', label: 'iOS' },
-                { value: 'Android', label: 'Android' },
-              ]}
-            />
-
-            {/* Severity Filter (only when app is selected) */}
-            {selectedAppId && (
-              <Select
-                value={selectedSeverity}
-                onChange={(e) => setSelectedSeverity(e.target.value as SeverityFilter)}
-                options={[
-                  { value: 'Todos', label: 'Todas las severidades' },
-                  { value: 'Critica', label: 'Crítica' },
-                  { value: 'Alta', label: 'Alta' },
-                  { value: 'Media', label: 'Media' },
-                  { value: 'Baja', label: 'Baja' },
-                ]}
-              />
-            )}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">ID</TableHead>
+                  <TableHead>Motor</TableHead>
+                  <TableHead>Severidad</TableHead>
+                  <TableHead className="max-w-[400px]">Título</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Detección</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                      Cargando datos...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredVulns.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                      No se encontraron hallazgos.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredVulns.slice(0, 50).map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="font-medium text-xs font-mono">{v.id.split('-')[0]}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" style={{ color: ENGINE_COLORS[v.motor], borderColor: `${ENGINE_COLORS[v.motor]}40` }}>
+                          {v.motor}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          style={{
+                            backgroundColor: `${SEVERITY_COLORS[v.severidad] || '#888'}20`,
+                            color: SEVERITY_COLORS[v.severidad] || '#888',
+                            borderColor: 'transparent'
+                          }}
+                        >
+                          {v.severidad}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[400px] truncate text-sm" title={v.titulo}>
+                        {v.titulo}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs">{v.estado}</span>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {v.fecha_deteccion ? new Date(v.fecha_deteccion).toLocaleDateString() : 'N/A'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            Mostrando hasta 50 resultados.
           </div>
         </CardContent>
       </Card>
-
-      {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Applications Grid */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">Aplicaciones Móviles</CardTitle>
-                <Badge variant="outline">{filteredApps.length}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-64" />
-                  ))}
-                </div>
-              ) : filteredApps.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-2">
-                  <p className="text-sm text-muted-foreground">
-                    {apps?.length === 0
-                      ? 'Sin aplicaciones registradas'
-                      : 'Sin aplicaciones que coincidan con los filtros'}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredApps.map((app) => {
-                    const appExecs = executions?.filter(
-                      (e) => e.aplicacion_movil_id === app.id,
-                    ) ?? [];
-                    const appFindings = findings?.filter((f) => {
-                      const execIds = appExecs.map((e) => e.id);
-                      return execIds.includes(f.ejecucion_mast_id);
-                    }) ?? [];
-
-                    return (
-                      <MastApplicationCard
-                        key={app.id}
-                        app={app}
-                        executions={appExecs}
-                        findings={appFindings}
-                        selected={selectedAppId === app.id}
-                        onClick={() => setSelectedAppId(app.id)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Findings Detail */}
-        <div>
-          {selectedAppId ? (
-            <Card className="sticky top-4">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Hallazgos Detectados</CardTitle>
-                  <Badge variant="outline">{filteredFindings.length}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {selectedAppFindings.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <p className="text-xs text-center text-emerald-500 font-medium">
-                      Sin hallazgos 🎉
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <MastFindingsTable
-                      findings={filteredFindings}
-                      onFindingClick={() => {}}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 gap-2">
-                <p className="text-xs text-center text-muted-foreground">
-                  Selecciona una aplicación para ver los hallazgos
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Detail Panel */}
-      <MastDetailPanel
-        app={selectedApp}
-        executions={selectedAppExecutions}
-        findings={selectedAppFindings}
-        isLoading={isLoading}
-        onClose={() => setSelectedAppId(null)}
-      />
     </div>
   );
 }

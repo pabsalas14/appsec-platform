@@ -259,15 +259,24 @@ export default function ExecutiveDashboardPage() {
   }
 
   return (
-    <div className="px-2 pb-10 pt-1 md:px-4">
-      <div className="mx-auto max-w-[1600px] text-[13px] leading-normal">
-      <div
-        className="relative overflow-hidden rounded-2xl border border-border bg-background shadow-sm"
-        data-testid="executive-command-board"
-      >
-        <div className="relative z-10 space-y-5 p-4 text-foreground md:p-6">
-          {/* Cabecera estilo mockup */}
-          <div className="flex flex-col gap-4 border-b border-border pb-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="px-2 pb-10 pt-4 md:px-6">
+      <div className="mx-auto max-w-[1600px] text-[13px] leading-normal space-y-6">
+        
+        {/* Filtros Globales Arriba */}
+        <div className="mb-4">
+          <HierarchyFiltersBarCard
+            title="Filtros globales (organización e inventario)"
+            filters={filters}
+            onChange={updateFilter}
+            onClear={clearFilters}
+            savedModulo={DASHBOARD_FILTER_MODULO.executive}
+            onApplyFilters={applyFilters}
+            cardClassName="border-white/[0.08] bg-slate-950/40 backdrop-blur-md shadow-none"
+          />
+        </div>
+
+        {/* Cabecera y Postura */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-1 flex items-center gap-2 text-primary">
                 <Sparkles className="h-4 w-4" />
@@ -282,17 +291,17 @@ export default function ExecutiveDashboardPage() {
               ) : null}
             </div>
 
-            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-              {isLoading ? (
-                <Skeleton className="h-[120px] w-[120px] rounded-full" />
-              ) : (
-                <button
-                  type="button"
-                  onClick={go('/vulnerabilidads/registros')}
-                  className="flex flex-col items-center rounded-2xl border border-border bg-card px-3 py-2 text-left transition hover:bg-muted/20"
-                  title="Abrir detalle de vulnerabilidades"
-                >
-                  <PostureRing value={data?.security_posture ?? 0} label="Postura" sub="Riesgo global" size={120} />
+              <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+                {isLoading ? (
+                  <Skeleton className="h-[120px] w-[120px] rounded-full" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={go('/vulnerabilidads/registros')}
+                    className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-slate-900/50 p-4 transition-all hover:bg-slate-800/60 shadow-lg"
+                    title="Abrir detalle de vulnerabilidades"
+                  >
+                    <PostureRing value={data?.security_posture ?? 0} label="POSTURA" sub="Riesgo global" size={100} />
                   {data?.risk_level ? (
                     <Badge
                       variant="outline"
@@ -367,16 +376,6 @@ export default function ExecutiveDashboardPage() {
               </div>
             </div>
           </div>
-
-          <HierarchyFiltersBarCard
-            title="Filtros globales (organización e inventario)"
-            filters={filters}
-            onChange={updateFilter}
-            onClear={clearFilters}
-            savedModulo={DASHBOARD_FILTER_MODULO.executive}
-            onApplyFilters={applyFilters}
-            cardClassName="border-border bg-card shadow-none"
-          />
 
           {/* Fila 1: KPIs (6 columnas) */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6" data-testid="kpi-row">
@@ -693,9 +692,7 @@ export default function ExecutiveDashboardPage() {
             Datos actualizados: {footerTime} · Zona: America/Mexico_City ·{' '}
             <span className="text-slate-600">Incluye filtros jerárquicos, periodo y mes de anclaje si aplica</span>
           </footer>
-        </div>
       </div>
-    </div>
     </div>
   );
 }

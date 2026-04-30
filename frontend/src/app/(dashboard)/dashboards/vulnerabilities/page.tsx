@@ -92,13 +92,13 @@ interface VulnerabilitiesResponse {
 // ─── Constants ─────────────────────────────────────────────────────────
 
 const LEVELS = [
-  { id: 0, label: 'NIVEL 1', name: 'Global', icon: Home },
-  { id: 1, label: 'NIVEL 2', name: 'Dirección', icon: Layers },
-  { id: 2, label: 'NIVEL 3', name: 'Subdirección', icon: Layers },
-  { id: 3, label: 'NIVEL 4', name: 'Gerencia', icon: Layers },
-  { id: 4, label: 'NIVEL 5', name: 'Organización', icon: Layers },
-  { id: 5, label: 'NIVEL 6', name: 'Célula', icon: Layers },
-  { id: 6, label: 'NIVEL 7', name: 'Repositorio', icon: Bug },
+  { id: 0, label: 'NIVEL 1', name: 'Global' },
+  { id: 1, label: 'NIVEL 2', name: 'Dirección' },
+  { id: 2, label: 'NIVEL 3', name: 'Subdirección' },
+  { id: 3, label: 'NIVEL 4', name: 'Gerencia' },
+  { id: 4, label: 'NIVEL 5', name: 'Organización' },
+  { id: 5, label: 'NIVEL 6', name: 'Célula' },
+  { id: 6, label: 'NIVEL 7', name: 'Repositorio' },
 ] as const;
 
 const ENGINE_COLORS: Record<string, string> = {
@@ -119,69 +119,6 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 // ─── Subcomponents ─────────────────────────────────────────────────────
-
-function LevelSidebar({
-  currentLevel,
-  path,
-  onLevelClick,
-}: {
-  currentLevel: number;
-  path: { name: string; level: number }[];
-  onLevelClick: (level: number) => void;
-}) {
-  return (
-    <div data-testid="d4-level-sidebar" className="hidden lg:flex flex-col gap-1 w-44 shrink-0">
-      {LEVELS.map((level) => {
-        const Icon = level.icon;
-        const isActive = level.id === currentLevel;
-        const isReachable = level.id <= currentLevel;
-        const pathItem = path.find((p) => p.level === level.id);
-        return (
-          <button
-            data-testid={`d4-level-${level.id}`}
-            key={level.id}
-            type="button"
-            disabled={!isReachable}
-            onClick={() => onLevelClick(level.id)}
-            className={cn(
-              'flex items-start gap-2 rounded-lg border px-3 py-2.5 text-left transition-all',
-              isActive
-                ? 'border-primary bg-primary/10 shadow-sm'
-                : isReachable
-                  ? 'border-border/60 bg-card hover:bg-accent/40 hover:border-border'
-                  : 'border-border/30 bg-muted/20 opacity-50 cursor-not-allowed',
-            )}
-          >
-            <Icon
-              className={cn(
-                'h-4 w-4 mt-0.5 shrink-0',
-                isActive ? 'text-primary' : 'text-muted-foreground',
-              )}
-            />
-            <div className="min-w-0 flex-1">
-              <div
-                className={cn(
-                  'text-[10px] font-bold uppercase tracking-wider',
-                  isActive ? 'text-primary' : 'text-muted-foreground',
-                )}
-              >
-                {level.label}
-              </div>
-              <div
-                className={cn(
-                  'text-xs font-semibold truncate',
-                  isActive ? 'text-foreground' : 'text-muted-foreground',
-                )}
-              >
-                {pathItem?.name ?? level.name}
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function EngineCard({ motor: engine, count, trend }: EngineStat) {
   const color = ENGINE_COLORS[engine] ?? '#6b7280';
@@ -613,16 +550,9 @@ export default function VulnerabilitiesDashboardPage() {
   }, [path]);
 
   return (
-    <div data-testid="d4-page" className="flex flex-col lg:flex-row gap-4 p-4 md:p-6">
-      {/* Left sidebar: niveles */}
-      <LevelSidebar
-        currentLevel={currentLevel}
-        path={path.map((p) => ({ name: p.name, level: p.level }))}
-        onLevelClick={handleLevelClick}
-      />
-
+    <div data-testid="d4-page" className="flex flex-col gap-4 p-4 md:p-6">
       {/* Main content */}
-      <div className="flex-1 min-w-0 space-y-4">
+      <div className="w-full space-y-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>

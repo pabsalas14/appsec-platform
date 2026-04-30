@@ -24,6 +24,7 @@ import {
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -361,7 +362,7 @@ export default function ProgramsDashboardPage() {
         </div>
       </div>
 
-      <div className={cn('grid gap-4', selectedProgram ? 'lg:grid-cols-[1fr_360px]' : 'grid-cols-1')}>
+      <div className="grid gap-4 grid-cols-1">
         <div className="space-y-4 min-w-0">
           {isLoading ? (
             <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -522,16 +523,20 @@ export default function ProgramsDashboardPage() {
           </div>
         </div>
 
-        {selectedProgram && (
-          <div className="lg:max-w-[360px]">
-            <ProgramDetailPanel
-              program={selectedProgram}
-              data={findProgram(selectedProgram)}
-              heatmap={heatmapFor(selectedProgram)}
-              onClose={() => setSelectedProgram(null)}
-            />
-          </div>
-        )}
+        <Sheet open={!!selectedProgram} onOpenChange={(open) => !open && setSelectedProgram(null)}>
+          <SheetContent className="w-full sm:max-w-md overflow-y-auto p-0 border-l border-white/10 bg-slate-950/95 backdrop-blur-xl">
+            {selectedProgram && (
+              <div className="h-full px-4 py-6">
+                <ProgramDetailPanel
+                  program={selectedProgram}
+                  data={findProgram(selectedProgram)}
+                  heatmap={heatmapFor(selectedProgram)}
+                  onClose={() => setSelectedProgram(null)}
+                />
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
