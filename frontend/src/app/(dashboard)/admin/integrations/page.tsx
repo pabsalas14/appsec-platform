@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Loader2, Trash2, Edit2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 import {
   Button,
@@ -54,12 +55,11 @@ export default function AdminIntegrationsPage() {
   const fetchIntegrations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/admin/herramientas-externas');
-      const result = await response.json();
+      const response = await api.get('/admin/herramientas-externas');
 
-      if (result.success) {
+      if (response.data.success) {
         // Filter only GitHub and LLM integrations
-        const filtered = (result.data || []).filter(
+        const filtered = (response.data.data || []).filter(
           (item: ExternalIntegration) => ['GitHub', 'LLM'].includes(item.tipo)
         );
         setIntegrations(filtered);
@@ -90,33 +90,24 @@ export default function AdminIntegrationsPage() {
         api_token: formData.api_token || null,
       };
 
-      let response;
+      let result;
       if (editingId) {
-        response = await fetch(`/api/v1/admin/herramientas-externas/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        result = await api.patch(`/admin/herramientas-externas/${editingId}`, payload);
       } else {
-        response = await fetch('/api/v1/admin/herramientas-externas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        result = await api.post('/admin/herramientas-externas', payload);
       }
 
-      const result = await response.json();
-      if (result.success) {
+      if (result.data.success) {
         toast.success(editingId ? 'Integración actualizada' : 'Integración creada');
         setIsOpen(false);
         setFormData({ nombre: '', tipo: 'GitHub', url_base: '', api_token: '' });
         setEditingId(null);
         fetchIntegrations();
       } else {
-        toast.error(result.error?.message || 'Error al guardar');
+        toast.error(result.data.error?.message || 'Error al guardar');
       }
-    } catch (error) {
-      toast.error('Error saving integration');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Error saving integration');
       console.error(error);
     }
   };
@@ -127,19 +118,16 @@ export default function AdminIntegrationsPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/admin/herramientas-externas/${id}`, {
-        method: 'DELETE',
-      });
+      const result = await api.delete(`/admin/herramientas-externas/${id}`);
 
-      const result = await response.json();
-      if (result.success) {
+      if (result.data.success) {
         toast.success('Integración eliminada');
         fetchIntegrations();
       } else {
         toast.error('Error al eliminar');
       }
-    } catch (error) {
-      toast.error('Error deleting integration');
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Error deleting integration');
       console.error(error);
     }
   };
