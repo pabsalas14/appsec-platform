@@ -6,17 +6,16 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, WebSocketDisconnect, WebSocket
+from fastapi import APIRouter, WebSocketDisconnect, WebSocket, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
-from app.core.logging import get_logger
+from app.core.logging import logger
 from app.models.code_security_review import CodeSecurityReview
 from app.models.code_security_event import CodeSecurityEvent
 from app.services.code_security_review_service import code_security_review_svc
 from sqlalchemy import desc, select
 
-logger = get_logger(__name__)
 router = APIRouter()
 
 # In-memory store of active WebSocket connections by review ID
@@ -30,7 +29,7 @@ async def get_connection_manager() -> dict[str, list[WebSocket]]:
 
 
 @router.websocket("/ws/reviews/{review_id}/progress")
-async def websocket_review_progress(websocket: WebSocket, review_id: str, db: AsyncSession):
+async def websocket_review_progress(websocket: WebSocket, review_id: str, db: AsyncSession = Depends(get_db)):
     """
     WebSocket endpoint for real-time analysis progress updates.
 
@@ -112,7 +111,7 @@ async def websocket_review_progress(websocket: WebSocket, review_id: str, db: As
 
 
 @router.websocket("/ws/reviews/{review_id}/events")
-async def websocket_review_events(websocket: WebSocket, review_id: str, db: AsyncSession):
+async def websocket_review_events(websocket: WebSocket, review_id: str, db: AsyncSession = Depends(get_db)):
     """
     WebSocket endpoint for forensic event streaming.
 
