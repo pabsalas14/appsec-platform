@@ -23,6 +23,7 @@ from app.api.v1 import (
     cierre_conclusion,
     client_logs,
     code_security_review,
+    code_security_websocket,
     control_mitigacion,
     control_seguridad,
     control_source_code,
@@ -241,4 +242,5 @@ api_router.include_router(okr_revision_q.router, prefix="/okr_revision_qs", tags
 api_router.include_router(okr_evidencia.router, prefix="/okr_evidencias", tags=["Okr_evidencia"])
 api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["Okr_cierre_q"])
 api_router.include_router(code_security_review.router, prefix="/code_security_reviews", tags=["Code_security_review"])
+api_router.include_router(code_security_websocket.router, prefix="", tags=["Code_security_websocket"])
 api_router.include_router(scr_github.router, prefix="/code_security", tags=["scr_github"])
