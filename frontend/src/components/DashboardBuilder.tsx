@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import GridLayout from 'react-grid-layout';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';

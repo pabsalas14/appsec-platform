@@ -36,7 +36,12 @@ export default function CodeSecurityReviewsPage() {
   );
 
   if (isLoading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error loading code_security_reviews</div>;
+  if (error) return (
+    <div className="p-6">
+      <div className="text-red-600 mb-2">Error loading code_security_reviews</div>
+      <div className="text-sm text-gray-500">{error.message || 'Please log in to continue'}</div>
+    </div>
+  );
 
   const onCreate = (e: FormEvent) => {
     e.preventDefault();

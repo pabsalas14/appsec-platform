@@ -6,7 +6,13 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Download, FileText, Clock, AlertTriangle } from 'lucide-react';
+import { Download, FileText, Clock, AlertTriangle, FileJson, FileType } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import {
   useCodeSecurityReview,
@@ -19,6 +25,7 @@ import { CodeSecurityFindingsTable } from './CodeSecurityFindingsTable';
 import { ForensicTimeline } from './ForensicTimeline';
 import { ExecutiveReportViewer } from './ExecutiveReportViewer';
 import { RiskScoreGauge } from './RiskScoreGauge';
+import { logger } from '@/lib/logger';
 
 interface CodeSecurityReviewDetailProps {
   reviewId: string;
@@ -26,6 +33,39 @@ interface CodeSecurityReviewDetailProps {
 
 export function CodeSecurityReviewDetail({ reviewId }: CodeSecurityReviewDetailProps) {
   const [activeTab, setActiveTab] = useState('findings');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: 'json' | 'pdf') => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/code_security_reviews/${reviewId}/export?format=${format}`,
+        {
+          credentials: 'include',
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const extension = format === 'pdf' ? 'pdf' : 'json';
+      const timestamp = new Date().toISOString().split('T')[0];
+      a.download = `csr-${reviewId.slice(0, 8)}-${timestamp}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      logger.error('Export error', { error });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const { data: review, isLoading: reviewLoading } = useCodeSecurityReview(reviewId);
   const { data: progress } = useReviewProgress(reviewId);
@@ -83,10 +123,24 @@ export function CodeSecurityReviewDetail({ reviewId }: CodeSecurityReviewDetailP
               <span className="font-medium">Risk: {report.puntuacion_riesgo_global}/100</span>
             </div>
           )}
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isExporting}>
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                <FileJson className="h-4 w-4 mr-2" />
+                Export JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')} disabled={!report}>
+                <FileType className="h-4 w-4 mr-2" />
+                Export PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -177,7 +231,7 @@ export function CodeSecurityReviewDetail({ reviewId }: CodeSecurityReviewDetailP
         </TabsList>
 
         <TabsContent value="findings" className="mt-6">
-          <CodeSecurityFindingsTable findings={findings || []} />
+          <CodeSecurityFindingsTable findings={findings || []} reviewId={reviewId} />
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-6">

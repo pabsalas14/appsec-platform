@@ -1,37 +1,24 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Layers, Loader2, PlayCircle } from 'lucide-react';
-import Link from 'next/link';
+import { AlertTriangle, CheckCircle2, Layers, PlayCircle } from 'lucide-react';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  EmptyState,
-  PageHeader,
-  PageWrapper,
-} from '@/components/ui';
+import { EmptyState } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { useDashboardHierarchyFilters } from '@/hooks/useDashboardHierarchyFilters';
 import { DASHBOARD_FILTER_MODULO } from '@/lib/dashboardHierarchyPresets';
 import {
   useDashboardReleases,
-  useDashboardReleasesKanban,
   useDashboardReleasesTable,
 } from '@/hooks/useAppDashboardPanels';
-import { useMyDashboardVisibility } from '@/hooks/useDashboardConfigs';
 
 export default function ReleasesDashboardPage() {
   const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data: kpi, isLoading: kpiLoading } = useDashboardReleases(filters);
   const { data: tableData, isLoading: tableLoading } = useDashboardReleasesTable(50, filters);
-  const { data: kanbanData, isLoading: kanbanLoading } = useDashboardReleasesKanban(filters);
-  const { data: visibility } = useMyDashboardVisibility('releases');
-  const isVisible = (widgetId: string) =>
-    visibility?.widgets?.[widgetId]?.visible ?? visibility?.default_visible ?? true;
 
+  return (
     <div className="min-h-screen bg-[#0d0f1a] text-[#e2e8f0] p-6 font-sans">
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -138,7 +125,7 @@ export default function ReleasesDashboardPage() {
             )}
           </div>
         </div>
-      </div>
+</div>
     </div>
   );
 }

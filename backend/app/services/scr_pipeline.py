@@ -16,7 +16,7 @@ from app.models.code_security_report import CodeSecurityReport
 from app.models.code_security_review import CodeSecurityReview
 from app.services.scr_agents import fingerprint_for_finding, run_detective_stub, run_fiscal_stub
 from app.services.scr_agents.scr_detective_agent import run_detective_agent, run_detective_real
-from app.services.scr_agents.scr_fiscal_agent import run_fiscal_agent, run_fiscal_real
+from app.services.scr_agents.scr_fiscal_agent import run_fiscal_real
 from app.services.scr_inspector_agent import run_inspector_stub
 
 
@@ -46,6 +46,43 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
     review.progreso = 10
     await db.flush()
 
+    # VALIDACIÓN: Verificar que el proveedor LLM está disponible
+    try:
+        from app.services.ia_provider import AIProviderType, get_ai_provider
+
+        provider_name = review.scr_config.get("llm_provider", "anthropic") if review.scr_config else "anthropic"
+        try:
+            provider_enum = AIProviderType(provider_name)
+        except ValueError:
+            raise ValueError(f"Proveedor LLM inválido: {provider_name}")
+
+        provider_obj = get_ai_provider(provider_enum)
+        is_healthy = await provider_obj.health_check()
+
+        if not is_healthy:
+            review.estado = "FAILED"
+            review.progreso = 0
+            await db.flush()
+            logger.error(
+                "scr.pipeline.provider_unavailable",
+                extra={
+                    "review_id": str(review_id),
+                    "provider": provider_name,
+                    "error": f"Proveedor LLM '{provider_name}' no disponible o sin configuración"
+                },
+            )
+            raise ValueError(f"Proveedor LLM '{provider_name}' no disponible. Verifica configuración y API keys.")
+
+    except Exception as e:
+        review.estado = "FAILED"
+        review.progreso = 0
+        await db.flush()
+        logger.error(
+            "scr.pipeline.provider_check_error",
+            extra={"review_id": str(review_id), "error": str(e)[:200]},
+        )
+        raise
+
     # PASO 1: Obtener código del repo (Git real)
     try:
         from app.services.scr_github_client import clone_and_read_repo, get_commits
@@ -73,6 +110,28 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
         # Get commits for Detective
         try:
             commits = await get_commits(review.url_repositorio, review.rama_analizar or "main", limit=50)
+
+            # Incremental Analysis: Filter out already analyzed commits
+            if review.last_analyzed_commit and commits:
+                new_commits = [c for c in commits if c.get("hash") != review.last_analyzed_commit]
+                was_incremental = len(new_commits) < len(commits)
+                logger.info(
+                    "scr.pipeline.incremental_analysis",
+                    extra={
+                        "review_id": str(review_id),
+                        "total_commits": len(commits),
+                        "new_commits": len(new_commits),
+                        "is_incremental": was_incremental,
+                    },
+                )
+                commits = new_commits
+                if was_incremental:
+                    review.analysis_version = (review.analysis_version or 1) + 1
+                    logger.info(
+                        "scr.pipeline.analysis_version_incremented",
+                        extra={"review_id": str(review_id), "new_version": review.analysis_version},
+                    )
+
         except Exception as e:
             logger.error(
                 "scr.pipeline.commits_error",
@@ -167,6 +226,11 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
         review_title=review.titulo,
         db=db,
     )
+
+    # Update incremental analysis tracking
+    if commits:
+        review.last_analyzed_commit = commits[0].get("hash", "") if commits else None
+        review.last_analyzed_at = datetime.now(UTC)
 
     review.estado = "COMPLETED"
     review.progreso = 100

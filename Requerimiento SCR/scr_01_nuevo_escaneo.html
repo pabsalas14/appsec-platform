@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR — Nuevo Escaneo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .sidebar { background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar-item { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+  .sidebar-item:hover { background: #334155; color: #e2e8f0; }
+  .sidebar-item.active { background: #1d4ed8; color: #fff; }
+  .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; padding: 16px 16px 6px; text-transform: uppercase; }
+  .sidebar-scr { color: #7c3aed; font-weight: 700; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+  .step-indicator { display: flex; align-items: center; gap: 0; }
+  .step { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .step.active .step-num { background: #7c3aed; color: #fff; }
+  .step.done .step-num { background: #16a34a; color: #fff; }
+  .step.pending .step-num { background: #334155; color: #64748b; }
+  .step.active .step-label { color: #e2e8f0; }
+  .step.done .step-label { color: #4ade80; }
+  .step.pending .step-label { color: #475569; }
+  .step-line { width: 60px; height: 2px; background: #334155; margin: 0 8px; }
+  .step-line.done { background: #16a34a; }
+  .modal-card { background: #2d3a4a; border: 1px solid #475569; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .modal-card:hover { border-color: #7c3aed; background: #2d2a4a; }
+  .modal-card.selected { border-color: #7c3aed; background: #2d1f5e; box-shadow: 0 0 0 2px #7c3aed44; }
+  .field-label { font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
+  .field-input { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #e2e8f0; width: 100%; outline: none; transition: border 0.15s; }
+  .field-input:focus { border-color: #7c3aed; }
+  .field-select { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #e2e8f0; width: 100%; outline: none; }
+  .btn-primary { background: #7c3aed; color: #fff; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background 0.15s; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-primary:disabled { background: #334155; color: #475569; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: #94a3b8; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #334155; transition: all 0.15s; }
+  .btn-secondary:hover { border-color: #7c3aed; color: #c4b5fd; }
+  .toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #334155; border-radius: 22px; transition: 0.3s; }
+  .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #64748b; border-radius: 50%; transition: 0.3s; }
+  input:checked + .toggle-slider { background: #7c3aed; }
+  input:checked + .toggle-slider:before { transform: translateX(18px); background: #fff; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-critical { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .chip-high { background: #431407; color: #fb923c; border: 1px solid #7c2d12; }
+  .chip-medium { background: #422006; color: #fbbf24; border: 1px solid #78350f; }
+  .chip-low { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .chip-purple { background: #2e1065; color: #c4b5fd; border: 1px solid #4c1d95; }
+  .repo-item { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.15s; }
+  .repo-item:hover { border-color: #7c3aed; }
+  .repo-item.checked { border-color: #7c3aed; background: #1a1040; }
+  .progress-bar { background: #334155; border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .log-line { font-size: 11px; font-family: monospace; padding: 2px 0; border-bottom: 1px solid #1e293b; }
+  .log-ok { color: #4ade80; }
+  .log-warn { color: #fbbf24; }
+  .log-info { color: #60a5fa; }
+  .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+  .summary-label { color: #64748b; }
+  .summary-value { color: #e2e8f0; font-weight: 500; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-56 flex-shrink-0 flex flex-col overflow-y-auto">
+  <div class="p-4 border-b border-slate-700">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">A</div>
+      <span class="font-semibold text-sm text-slate-200">AppSec Platform</span>
+    </div>
+  </div>
+  <div class="flex-1 p-2 space-y-1">
+    <div class="sidebar-section">Principal</div>
+    <div class="sidebar-item">📊 Dashboard Ejecutivo</div>
+    <div class="sidebar-item">🎯 Score de Madurez</div>
+    <div class="sidebar-section">Organización</div>
+    <div class="sidebar-item">🏛️ Estructura Org.</div>
+    <div class="sidebar-item">📦 Inventario de Activos</div>
+    <div class="sidebar-section">Vulnerabilidades</div>
+    <div class="sidebar-item">🚨 Concentrado de Hallazgos</div>
+    <div class="sidebar-item">📋 Planes de Remediación</div>
+    <div class="sidebar-item">🧩 Threat Modeling</div>
+    <div class="sidebar-section">Operación</div>
+    <div class="sidebar-item">🚀 Liberaciones</div>
+    <div class="sidebar-item">📅 Programas Anuales</div>
+    <div class="sidebar-item">🔍 Temas y Auditorías</div>
+    <div class="sidebar-section">Desempeño OKR</div>
+    <div class="sidebar-item">🎯 Mis Compromisos</div>
+    <div class="sidebar-item">👥 Mi Equipo</div>
+    <div class="sidebar-section sidebar-scr">🔬 SCR</div>
+    <div class="sidebar-item" onclick="showSection('dashboard')">📊 Dashboard SCR</div>
+    <div class="sidebar-item active" onclick="showSection('nuevo')">🔍 Nuevo Escaneo</div>
+    <div class="sidebar-item" onclick="showSection('hallazgos')">🚨 Hallazgos SCR</div>
+    <div class="sidebar-item" onclick="showSection('historial')">📋 Historial de Escaneos</div>
+    <div class="sidebar-item" onclick="showSection('forense')">🕵️ Investigación Forense</div>
+    <div class="sidebar-item" onclick="showSection('agentes')">🤖 Agentes</div>
+    <div class="sidebar-section">Configuración</div>
+    <div class="sidebar-item">⚙️ Administración</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="flex-1 flex flex-col overflow-hidden">
+  <!-- TOP BAR -->
+  <div class="h-12 border-b border-slate-700 bg-slate-800 flex items-center justify-between px-4">
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+      <span>SCR</span><span class="text-slate-600">/</span><span class="text-slate-200">Nuevo Escaneo</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-bold text-white">JG</div>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="flex-1 overflow-y-auto p-6">
+
+    <!-- SECTION: NUEVO ESCANEO WIZARD -->
+    <div id="section-nuevo">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-xl font-bold text-slate-100">Nuevo Escaneo</h1>
+          <p class="text-sm text-slate-400 mt-1">Configura y ejecuta un análisis forense de código</p>
+        </div>
+      </div>
+
+      <!-- STEP INDICATOR -->
+      <div class="card p-4 mb-6">
+        <div class="step-indicator justify-center">
+          <div class="step" id="step-ind-1">
+            <div class="step-num">1</div>
+            <span class="step-label">Configuración</span>
+          </div>
+          <div class="step-line" id="line-1-2"></div>
+          <div class="step" id="step-ind-2">
+            <div class="step-num">2</div>
+            <span class="step-label">Alcance</span>
+          </div>
+          <div class="step-line" id="line-2-3"></div>
+          <div class="step" id="step-ind-3">
+            <div class="step-num">3</div>
+            <span class="step-label">Confirmación</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div id="wizard-step-1">
+        <div class="card p-6 max-w-2xl mx-auto">
+          <h2 class="text-base font-semibold text-slate-100 mb-4">Paso 1 — Configuración del Escaneo</h2>
+          <div class="space-y-4">
+            <div>
+              <div class="field-label">Nombre del Escaneo *</div>
+              <input class="field-input" id="scan-name" type="text" placeholder="Ej: Auditoría Q2 - ios-banking-app" oninput="validateStep1()">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="field-label">Token a Utilizar *</div>
+                <select class="field-select" id="token-select" onchange="validateStep1(); showTokenUser()">
+                  <option value="">Seleccionar token...</option>
+                  <option value="token1">Token Org Banregio (GitHub)</option>
+                  <option value="token2">Token Personal - pabsalas14 (GitHub)</option>
+                  <option value="token3">Token GitLab Regional</option>
+                </select>
+                <div id="token-user-info" class="mt-1 text-xs text-green-400 hidden">✅ Autenticado como: pabsalas14 · 3 orgs · 47 repos</div>
+              </div>
+              <div>
+                <div class="field-label">Prioridad *</div>
+                <select class="field-select" id="priority-select" onchange="validateStep1()">
+                  <option value="">Seleccionar...</option>
+                  <option value="high">🔴 Alta</option>
+                  <option value="medium" selected>🟡 Media</option>
+                  <option value="low">🟢 Baja</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="field-label">Proveedor LLM *</div>
+                <select class="field-select" id="llm-provider" onchange="updateModels(); validateStep1()">
+                  <option value="">Seleccionar...</option>
+                  <option value="anthropic" selected>Anthropic</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="litellm">LiteLLM</option>
+                  <option value="local">Local (LM Studio)</option>
+                </select>
+              </div>
+              <div>
+                <div class="field-label">Modelo *</div>
+                <select class="field-select" id="llm-model" onchange="validateStep1()">
+                  <option value="claude-3-5-sonnet" selected>claude-3-5-sonnet-20241022</option>
+                  <option value="claude-3-haiku">claude-3-haiku-20240307</option>
+                  <option value="claude-3-opus">claude-3-opus-20240229</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-slate-900 rounded-lg border border-slate-700">
+              <div>
+                <div class="text-sm font-medium text-slate-200">Análisis Incremental</div>
+                <div class="text-xs text-slate-400 mt-0.5">Solo analiza commits nuevos desde el último escaneo (ahorra ~70% de tokens)</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" checked id="incremental-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div id="incremental-info" class="p-3 bg-blue-950 border border-blue-800 rounded-lg text-xs text-blue-300">
+              ℹ️ El análisis incremental se activará si el repositorio seleccionado ya tiene escaneos previos.
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button class="btn-primary" id="btn-step1-next" onclick="goToStep(2)" disabled>Siguiente →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="wizard-step-2" class="hidden">
+        <div class="card p-6 max-w-3xl mx-auto">
+          <h2 class="text-base font-semibold text-slate-100 mb-4">Paso 2 — Alcance del Escaneo</h2>
+          <p class="text-sm text-slate-400 mb-4">Selecciona la modalidad de escaneo y configura el alcance:</p>
+
+          <!-- MODALIDAD SELECTOR -->
+          <div class="grid grid-cols-4 gap-3 mb-6">
+            <div class="modal-card p-3 text-center" id="mod-A" onclick="selectModality('A')">
+              <div class="text-2xl mb-1">🌐</div>
+              <div class="text-xs font-semibold text-slate-200">Repo Público</div>
+              <div class="text-xs text-slate-500 mt-1">URL directa</div>
+            </div>
+            <div class="modal-card p-3 text-center" id="mod-B" onclick="selectModality('B')">
+              <div class="text-2xl mb-1">🔒</div>
+              <div class="text-xs font-semibold text-slate-200">Repo Privado</div>
+              <div class="text-xs text-slate-500 mt-1">Desde token</div>
+            </div>
+            <div class="modal-card p-3 text-center" id="mod-C" onclick="selectModality('C')">
+              <div class="text-2xl mb-1">🌿</div>
+              <div class="text-xs font-semibold text-slate-200">Rama Específica</div>
+              <div class="text-xs text-slate-500 mt-1">Feature branch</div>
+            </div>
+            <div class="modal-card p-3 text-center" id="mod-D" onclick="selectModality('D')">
+              <div class="text-2xl mb-1">🏢</div>
+              <div class="text-xs font-semibold text-slate-200">Organización</div>
+              <div class="text-xs text-slate-500 mt-1">1 o N repos</div>
+            </div>
+          </div>
+
+          <!-- FORM A: REPO PÚBLICO -->
+          <div id="form-A" class="hidden space-y-4">
+            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-400">
+              🌐 Analiza cualquier repositorio público sin necesidad de autenticación.
+            </div>
+            <div>
+              <div class="field-label">URL del Repositorio *</div>
+              <div class="flex gap-2">
+                <input class="field-input" id="pub-url" type="text" placeholder="https://github.com/usuario/repositorio" oninput="validateRepoUrl()">
+                <button class="btn-secondary text-xs px-3" onclick="validateRepoUrl(true)">Validar</button>
+              </div>
+              <div id="pub-url-result" class="mt-2 hidden"></div>
+            </div>
+            <div>
+              <div class="field-label">Rama (opcional)</div>
+              <input class="field-input" type="text" placeholder="main (por defecto si se deja vacío)">
+            </div>
+          </div>
+
+          <!-- FORM B: REPO PRIVADO -->
+          <div id="form-B" class="hidden space-y-4">
+            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-400">
+              🔒 Repositorios accesibles con el token seleccionado en el Paso 1.
+            </div>
+            <div>
+              <div class="field-label">Repositorio *</div>
+              <div class="relative">
+                <input class="field-input" id="priv-repo-search" type="text" placeholder="Buscar repositorio..." oninput="filterRepos(this.value)" onfocus="showRepoDropdown()" onblur="setTimeout(()=>hideRepoDropdown(),200)">
+                <div id="repo-dropdown" class="absolute top-full left-0 right-0 bg-slate-800 border border-slate-600 rounded-lg mt-1 z-10 hidden max-h-48 overflow-y-auto">
+                  <div class="repo-dd-item p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="selectRepo('ios-biometric-auth', 'Swift')">📦 ios-biometric-auth <span class="text-slate-500 ml-1">Swift · Privado</span></div>
+                  <div class="repo-dd-item p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="selectRepo('api-gateway-service', 'TypeScript')">📦 api-gateway-service <span class="text-slate-500 ml-1">TypeScript · Privado</span></div>
+                  <div class="repo-dd-item p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="selectRepo('payment-processor', 'Java')">📦 payment-processor <span class="text-slate-500 ml-1">Java · Privado</span></div>
+                  <div class="repo-dd-item p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="selectRepo('auth-service', 'Node.js')">📦 auth-service <span class="text-slate-500 ml-1">Node.js · Privado</span></div>
+                  <div class="repo-dd-item p-2 hover:bg-slate-700 cursor-pointer text-xs" onclick="selectRepo('mobile-banking-android', 'Kotlin')">📦 mobile-banking-android <span class="text-slate-500 ml-1">Kotlin · Privado</span></div>
+                </div>
+              </div>
+            </div>
+            <div id="priv-branch-section" class="hidden">
+              <div class="field-label">Rama *</div>
+              <select class="field-select" id="priv-branch">
+                <option value="main">main</option>
+                <option value="develop">develop</option>
+                <option value="release/2.4">release/2.4</option>
+                <option value="hotfix/auth-bypass">hotfix/auth-bypass</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- FORM C: RAMA ESPECÍFICA -->
+          <div id="form-C" class="hidden space-y-4">
+            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-400">
+              🌿 Analiza solo los commits de una rama específica. Ideal para revisar una feature branch antes de un merge.
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="field-label">Repositorio *</div>
+                <select class="field-select" id="rama-repo" onchange="showBranchSelector()">
+                  <option value="">Seleccionar repositorio...</option>
+                  <option value="ios-biometric-auth">ios-biometric-auth</option>
+                  <option value="api-gateway-service">api-gateway-service</option>
+                  <option value="payment-processor">payment-processor</option>
+                  <option value="auth-service">auth-service</option>
+                </select>
+              </div>
+              <div>
+                <div class="field-label">Rama *</div>
+                <select class="field-select" id="rama-branch">
+                  <option value="">Seleccionar repositorio primero...</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="field-label">Rango de Commits (opcional)</div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <input class="field-input" type="date" placeholder="Desde">
+                </div>
+                <div>
+                  <input class="field-input" type="date" placeholder="Hasta">
+                </div>
+              </div>
+              <div class="text-xs text-slate-500 mt-1">Si se deja vacío, analiza todos los commits de la rama.</div>
+            </div>
+          </div>
+
+          <!-- FORM D: ORGANIZACIÓN -->
+          <div id="form-D" class="hidden space-y-4">
+            <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-400">
+              🏢 Selecciona una organización y elige 1 o más repositorios para un escaneo en lote.
+            </div>
+            <div>
+              <div class="field-label">Organización *</div>
+              <select class="field-select" id="org-select" onchange="loadOrgRepos()">
+                <option value="">Seleccionar organización...</option>
+                <option value="banregio">Banregio</option>
+                <option value="hey-banco">Hey Banco</option>
+                <option value="regional-tech">Regional Tecnología</option>
+              </select>
+            </div>
+            <div id="org-repos-section" class="hidden">
+              <div class="flex items-center justify-between mb-2">
+                <div class="field-label mb-0">Repositorios * <span id="org-selected-count" class="text-violet-400">(0 seleccionados)</span></div>
+                <div class="flex gap-2">
+                  <button class="text-xs text-violet-400 hover:text-violet-300" onclick="selectAllOrgRepos()">Seleccionar todos</button>
+                  <span class="text-slate-600">|</span>
+                  <button class="text-xs text-slate-400 hover:text-slate-300" onclick="deselectAllOrgRepos()">Deseleccionar todos</button>
+                </div>
+              </div>
+              <div id="org-repos-list" class="space-y-2 max-h-52 overflow-y-auto pr-1"></div>
+              <div id="org-cost-estimate" class="mt-3 p-3 bg-violet-950 border border-violet-800 rounded-lg text-xs text-violet-300 hidden">
+                ⚡ Se ejecutarán <strong id="org-repo-count">0</strong> escaneos en paralelo. Costo estimado: ~<strong id="org-cost">$0.00</strong> USD
+              </div>
+            </div>
+            <div id="org-branch-section" class="hidden">
+              <div class="field-label">Rama para todos los repositorios (opcional)</div>
+              <select class="field-select">
+                <option value="">Usar rama por defecto de cada repo</option>
+                <option value="main">main</option>
+                <option value="develop">develop</option>
+                <option value="master">master</option>
+              </select>
+              <div class="text-xs text-slate-500 mt-1">Si se deja vacío, se usa la rama por defecto (main/master) de cada repositorio.</div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-6">
+            <button class="btn-secondary" onclick="goToStep(1)">← Anterior</button>
+            <button class="btn-primary" id="btn-step2-next" onclick="goToStep(3)" disabled>Siguiente →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: CONFIRMACIÓN -->
+      <div id="wizard-step-3" class="hidden">
+        <div class="card p-6 max-w-2xl mx-auto">
+          <h2 class="text-base font-semibold text-slate-100 mb-4">Paso 3 — Confirmación</h2>
+          <p class="text-sm text-slate-400 mb-4">Revisa la configuración antes de iniciar el análisis:</p>
+
+          <div class="space-y-1 mb-6">
+            <div class="summary-row"><span class="summary-label">Nombre del Escaneo</span><span class="summary-value" id="sum-name">—</span></div>
+            <div class="summary-row"><span class="summary-label">Token</span><span class="summary-value">Token Org Banregio (GitHub)</span></div>
+            <div class="summary-row"><span class="summary-label">Proveedor LLM</span><span class="summary-value" id="sum-llm">—</span></div>
+            <div class="summary-row"><span class="summary-label">Modelo</span><span class="summary-value">claude-3-5-sonnet-20241022</span></div>
+            <div class="summary-row"><span class="summary-label">Modalidad</span><span class="summary-value" id="sum-modality">—</span></div>
+            <div class="summary-row"><span class="summary-label">Repositorio(s)</span><span class="summary-value" id="sum-repos">—</span></div>
+            <div class="summary-row"><span class="summary-label">Análisis Incremental</span><span class="summary-value text-green-400">✅ Activo</span></div>
+            <div class="summary-row"><span class="summary-label">Prioridad</span><span class="summary-value">🟡 Media</span></div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-slate-900 rounded-lg p-3 text-center border border-slate-700">
+              <div class="text-lg font-bold text-violet-400">~8 min</div>
+              <div class="text-xs text-slate-500 mt-1">Tiempo estimado</div>
+            </div>
+            <div class="bg-slate-900 rounded-lg p-3 text-center border border-slate-700">
+              <div class="text-lg font-bold text-blue-400">~85K</div>
+              <div class="text-xs text-slate-500 mt-1">Tokens estimados</div>
+            </div>
+            <div class="bg-slate-900 rounded-lg p-3 text-center border border-slate-700">
+              <div class="text-lg font-bold text-green-400">~$0.42</div>
+              <div class="text-xs text-slate-500 mt-1">Costo estimado USD</div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-green-950 border border-green-800 rounded-lg text-xs text-green-300 mb-6">
+            ✅ Análisis Incremental activo: Se analizarán <strong>23 commits nuevos</strong> desde el último escaneo (15 Apr 2026). Ahorro estimado: <strong>68%</strong> vs. escaneo completo.
+          </div>
+
+          <div class="flex justify-between">
+            <button class="btn-secondary" onclick="goToStep(2)">← Anterior</button>
+            <button class="btn-primary" onclick="startScan()">🚀 Iniciar Escaneo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: PROGRESO EN TIEMPO REAL -->
+      <div id="wizard-step-4" class="hidden">
+        <div class="card p-6 max-w-3xl mx-auto">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-slate-100" id="progress-scan-name">Análisis en progreso...</h2>
+              <div class="text-xs text-slate-400 mt-1">Iniciado: <span id="progress-start-time"></span></div>
+            </div>
+            <button class="text-xs text-red-400 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-950" onclick="cancelScan()">Cancelar Escaneo</button>
+          </div>
+
+          <!-- BARRA GENERAL -->
+          <div class="mb-6">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>Progreso General</span>
+              <span id="general-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill bg-violet-500" id="general-bar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- INSPECTOR PANEL -->
+          <div class="card p-4 mb-3 border-slate-600">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🔍</span>
+                <span class="text-sm font-semibold text-slate-200">Inspector Agent</span>
+                <span class="chip chip-purple animate-pulse" id="inspector-status">EN PROCESO</span>
+              </div>
+              <div class="text-xs text-slate-400" id="inspector-findings">0 hallazgos detectados</div>
+            </div>
+            <div class="flex justify-between text-xs text-slate-500 mb-1">
+              <span id="inspector-progress-text">Analizando archivos...</span>
+              <span id="inspector-pct">0%</span>
+            </div>
+            <div class="progress-bar mb-3">
+              <div class="progress-fill bg-blue-500" id="inspector-bar" style="width:0%"></div>
+            </div>
+            <div class="bg-slate-900 rounded p-2 h-28 overflow-y-auto" id="inspector-log">
+              <div class="log-line log-info">→ Clonando repositorio ios-biometric-auth...</div>
+            </div>
+          </div>
+
+          <!-- DETECTIVE PANEL -->
+          <div class="card p-4 mb-3 border-slate-600 opacity-40" id="detective-panel">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">🕵️</span>
+                <span class="text-sm font-semibold text-slate-200">Detective Agent</span>
+                <span class="chip bg-slate-800 text-slate-500 border-slate-600 text-xs px-2 py-0.5" id="detective-status">EN ESPERA</span>
+              </div>
+              <div class="text-xs text-slate-500">Esperando al Inspector...</div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill bg-amber-500" id="detective-bar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- FISCAL PANEL -->
+          <div class="card p-4 border-slate-600 opacity-40" id="fiscal-panel">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">💰</span>
+              <span class="text-sm font-semibold text-slate-200">Fiscal Agent</span>
+              <span class="chip bg-slate-800 text-slate-500 border-slate-600 text-xs px-2 py-0.5" id="fiscal-status">EN ESPERA</span>
+            </div>
+          </div>
+
+          <!-- RESULTADO FINAL -->
+          <div id="scan-result" class="hidden mt-4 p-4 bg-green-950 border border-green-700 rounded-lg">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-green-400 text-lg">✅</span>
+              <span class="font-semibold text-green-300">Análisis completado exitosamente</span>
+            </div>
+            <div class="grid grid-cols-4 gap-3 mb-4">
+              <div class="text-center"><div class="text-xl font-bold text-red-400">3</div><div class="text-xs text-slate-400">CRITICAL</div></div>
+              <div class="text-center"><div class="text-xl font-bold text-orange-400">7</div><div class="text-xs text-slate-400">HIGH</div></div>
+              <div class="text-center"><div class="text-xl font-bold text-yellow-400">4</div><div class="text-xs text-slate-400">MEDIUM</div></div>
+              <div class="text-center"><div class="text-xl font-bold text-green-400">2</div><div class="text-xs text-slate-400">LOW</div></div>
+            </div>
+            <div class="flex gap-3">
+              <button class="btn-primary text-sm" onclick="showSection('hallazgos')">Ver Hallazgos →</button>
+              <button class="btn-secondary text-sm" onclick="openFiscalReport()">📄 Ver Reporte Ejecutivo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER SECTIONS -->
+    <div id="section-dashboard" class="hidden">
+      <div class="text-center py-20 text-slate-500">
+        <div class="text-4xl mb-3">📊</div>
+        <div class="text-lg font-semibold text-slate-400">Dashboard SCR</div>
+        <div class="text-sm mt-1">Ver mockup: scr_02_dashboard.html</div>
+      </div>
+    </div>
+    <div id="section-hallazgos" class="hidden">
+      <div class="text-center py-20 text-slate-500">
+        <div class="text-4xl mb-3">🚨</div>
+        <div class="text-lg font-semibold text-slate-400">Hallazgos SCR</div>
+        <div class="text-sm mt-1">Ver mockup: scr_03_hallazgos.html</div>
+      </div>
+    </div>
+    <div id="section-historial" class="hidden">
+      <div class="text-center py-20 text-slate-500">
+        <div class="text-4xl mb-3">📋</div>
+        <div class="text-lg font-semibold text-slate-400">Historial de Escaneos</div>
+        <div class="text-sm mt-1">Ver mockup: scr_04_historial.html</div>
+      </div>
+    </div>
+    <div id="section-forense" class="hidden">
+      <div class="text-center py-20 text-slate-500">
+        <div class="text-4xl mb-3">🕵️</div>
+        <div class="text-lg font-semibold text-slate-400">Investigación Forense</div>
+        <div class="text-sm mt-1">Ver mockup: scr_05_forense.html</div>
+      </div>
+    </div>
+    <div id="section-agentes" class="hidden">
+      <div class="text-center py-20 text-slate-500">
+        <div class="text-4xl mb-3">🤖</div>
+        <div class="text-lg font-semibold text-slate-400">Agentes SCR</div>
+        <div class="text-sm mt-1">Ver mockup: scr_06_agentes.html</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FISCAL REPORT MODAL -->
+<div id="fiscal-modal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
+  <div class="card w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-bold text-slate-100">📄 Reporte Ejecutivo — Fiscal Agent</h3>
+      <button onclick="closeFiscalReport()" class="text-slate-400 hover:text-white text-lg">×</button>
+    </div>
+    <div class="space-y-4 text-sm">
+      <div class="p-3 bg-red-950 border border-red-800 rounded-lg">
+        <div class="font-bold text-red-300 mb-1">🔴 Evaluación de Riesgo: CRITICAL</div>
+        <div class="text-red-200 text-xs">Se detectaron 3 hallazgos críticos y 7 altos. Se recomienda acción inmediata.</div>
+      </div>
+      <div>
+        <div class="font-semibold text-slate-200 mb-1">Resumen Ejecutivo</div>
+        <div class="text-slate-400 text-xs leading-relaxed">El análisis del repositorio <strong class="text-slate-300">ios-biometric-auth</strong> reveló la presencia de código con características de exfiltración de datos y ejecución dinámica sospechosa. El Inspector Agent identificó 3 patrones CRITICAL: DATA_EXFILTRATION en el módulo de autenticación biométrica, DYNAMIC_CODE_EXECUTION en el servicio de sesiones, y LOGIC_BOMB en el procesador de pagos. El Detective Agent detectó que estos cambios fueron introducidos por un autor nuevo (registrado hace 18 días) en commits realizados fuera del horario laboral.</div>
+      </div>
+      <div>
+        <div class="font-semibold text-slate-200 mb-1">Narrativa de Ataque</div>
+        <div class="text-slate-400 text-xs leading-relaxed">El 23 de abril a las 11:47pm, el usuario <strong class="text-slate-300">dev-contractor-mx</strong> realizó 4 commits consecutivos en la rama <strong class="text-slate-300">hotfix/auth-bypass</strong>. Los cambios incluyen la adición de una función que serializa y envía datos de sesión a un endpoint externo no documentado. El patrón es consistente con un ataque de insider threat o compromiso de credenciales de un contratista.</div>
+      </div>
+      <div>
+        <div class="font-semibold text-slate-200 mb-2">Recomendaciones</div>
+        <div class="space-y-2">
+          <div class="flex gap-2 text-xs"><span class="text-red-400 font-bold">1.</span><span class="text-slate-400">Revocar inmediatamente el acceso del usuario <strong class="text-slate-300">dev-contractor-mx</strong> a todos los repositorios de la organización.</span></div>
+          <div class="flex gap-2 text-xs"><span class="text-red-400 font-bold">2.</span><span class="text-slate-400">Revertir los commits del 23 de abril en la rama hotfix/auth-bypass antes de cualquier merge a main.</span></div>
+          <div class="flex gap-2 text-xs"><span class="text-red-400 font-bold">3.</span><span class="text-slate-400">Auditar los logs de acceso al endpoint externo identificado para determinar si ya hubo exfiltración de datos.</span></div>
+          <div class="flex gap-2 text-xs"><span class="text-orange-400 font-bold">4.</span><span class="text-slate-400">Implementar revisión obligatoria de código (2 aprobadores) para la rama main del repositorio ios-biometric-auth.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-4 pt-4 border-t border-slate-700">
+      <button class="btn-primary text-xs">⬇️ Descargar PDF</button>
+      <button class="btn-secondary text-xs">⬇️ Descargar CSV</button>
+      <button class="btn-secondary text-xs" onclick="closeFiscalReport()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+let selectedModality = null;
+let scanInterval = null;
+let inspectorProgress = 0;
+let detectiveProgress = 0;
+
+function showSection(name) {
+  ['nuevo','dashboard','hallazgos','historial','forense','agentes'].forEach(s => {
+    document.getElementById('section-'+s).classList.add('hidden');
+  });
+  document.getElementById('section-'+name).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const map = {nuevo:'Nuevo Escaneo',dashboard:'Dashboard SCR',hallazgos:'Hallazgos SCR',historial:'Historial de Escaneos',forense:'Investigación Forense',agentes:'Agentes'};
+  document.querySelectorAll('.sidebar-item').forEach(el => { if(el.textContent.trim().includes(map[name])) el.classList.add('active'); });
+}
+
+function updateModels() {
+  const p = document.getElementById('llm-provider').value;
+  const m = document.getElementById('llm-model');
+  const models = {
+    anthropic: ['claude-3-5-sonnet-20241022','claude-3-haiku-20240307','claude-3-opus-20240229'],
+    openrouter: ['openai/gpt-4o','meta-llama/llama-3.1-70b','mistralai/mixtral-8x7b'],
+    litellm: ['gpt-4o','gpt-4o-mini','gemini-pro'],
+    local: ['qwen2.5-coder-7b','codellama-13b','deepseek-coder-6.7b']
+  };
+  m.innerHTML = (models[p]||[]).map(x=>`<option value="${x}">${x}</option>`).join('');
+}
+
+function showTokenUser() {
+  const v = document.getElementById('token-select').value;
+  const el = document.getElementById('token-user-info');
+  if(v) { el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
+}
+
+function validateStep1() {
+  const name = document.getElementById('scan-name').value.trim();
+  const token = document.getElementById('token-select').value;
+  const provider = document.getElementById('llm-provider').value;
+  const model = document.getElementById('llm-model').value;
+  const priority = document.getElementById('priority-select').value;
+  const btn = document.getElementById('btn-step1-next');
+  if(name && token && provider && model && priority) {
+    btn.disabled = false;
+  } else {
+    btn.disabled = true;
+  }
+}
+
+function goToStep(step) {
+  [1,2,3,4].forEach(s => {
+    const el = document.getElementById('wizard-step-'+s);
+    if(el) el.classList.add('hidden');
+  });
+  document.getElementById('wizard-step-'+step).classList.remove('hidden');
+  currentStep = step;
+  updateStepIndicator();
+  if(step === 3) populateSummary();
+}
+
+function updateStepIndicator() {
+  [1,2,3].forEach(s => {
+    const el = document.getElementById('step-ind-'+s);
+    el.className = 'step ' + (s < currentStep ? 'done' : s === currentStep ? 'active' : 'pending');
+  });
+  [1,2].forEach(s => {
+    const el = document.getElementById('line-'+s+'-'+(s+1));
+    el.className = 'step-line ' + (s < currentStep ? 'done' : '');
+  });
+}
+
+function selectModality(m) {
+  selectedModality = m;
+  ['A','B','C','D'].forEach(x => {
+    document.getElementById('mod-'+x).classList.toggle('selected', x===m);
+    document.getElementById('form-'+x).classList.toggle('hidden', x!==m);
+  });
+  document.getElementById('btn-step2-next').disabled = false;
+}
+
+function validateRepoUrl(trigger) {
+  const url = document.getElementById('pub-url').value;
+  const result = document.getElementById('pub-url-result');
+  if(trigger && url.includes('github.com')) {
+    result.className = 'mt-2 p-2 bg-green-950 border border-green-800 rounded text-xs text-green-300';
+    result.innerHTML = '✅ Repositorio válido: <strong>pabsalas14/scr-agent</strong> · TypeScript · 247 commits · Rama por defecto: main';
+    result.classList.remove('hidden');
+  } else if(trigger) {
+    result.className = 'mt-2 p-2 bg-red-950 border border-red-800 rounded text-xs text-red-300';
+    result.innerHTML = '❌ URL no válida o repositorio no encontrado.';
+    result.classList.remove('hidden');
+  }
+}
+
+function showRepoDropdown() { document.getElementById('repo-dropdown').classList.remove('hidden'); }
+function hideRepoDropdown() { document.getElementById('repo-dropdown').classList.add('hidden'); }
+function filterRepos(val) {
+  const items = document.querySelectorAll('.repo-dd-item');
+  items.forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+function selectRepo(name, lang) {
+  document.getElementById('priv-repo-search').value = name;
+  document.getElementById('priv-branch-section').classList.remove('hidden');
+  hideRepoDropdown();
+}
+
+function showBranchSelector() {
+  const repo = document.getElementById('rama-repo').value;
+  const branch = document.getElementById('rama-branch');
+  if(repo) {
+    branch.innerHTML = '<option value="main">main</option><option value="develop">develop</option><option value="feature/biometric-v2">feature/biometric-v2</option><option value="hotfix/auth-bypass">hotfix/auth-bypass</option>';
+  }
+}
+
+const orgRepos = {
+  banregio: [{name:'ios-biometric-auth',lang:'Swift',commits:247},{name:'api-gateway-service',lang:'TypeScript',commits:1203},{name:'payment-processor',lang:'Java',commits:892},{name:'auth-service',lang:'Node.js',commits:445},{name:'mobile-banking-android',lang:'Kotlin',commits:334}],
+  'hey-banco': [{name:'hey-web-app',lang:'React',commits:678},{name:'hey-api',lang:'Python',commits:445},{name:'hey-notifications',lang:'Go',commits:123}],
+  'regional-tech': [{name:'rt-core-platform',lang:'Java',commits:2341},{name:'rt-analytics',lang:'Python',commits:567}]
+};
+
+function loadOrgRepos() {
+  const org = document.getElementById('org-select').value;
+  const section = document.getElementById('org-repos-section');
+  const list = document.getElementById('org-repos-list');
+  const branchSection = document.getElementById('org-branch-section');
+  if(!org) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  branchSection.classList.remove('hidden');
+  const repos = orgRepos[org] || [];
+  list.innerHTML = repos.map(r => `
+    <div class="repo-item" id="org-repo-${r.name}" onclick="toggleOrgRepo('${r.name}', ${r.commits})">
+      <input type="checkbox" class="accent-violet-500" id="chk-${r.name}">
+      <div class="flex-1">
+        <div class="text-xs font-medium text-slate-200">📦 ${r.name}</div>
+        <div class="text-xs text-slate-500">${r.lang} · ${r.commits} commits</div>
+      </div>
+    </div>
+  `).join('');
+  updateOrgCount();
+}
+
+function toggleOrgRepo(name, commits) {
+  const chk = document.getElementById('chk-'+name);
+  const item = document.getElementById('org-repo-'+name);
+  chk.checked = !chk.checked;
+  item.classList.toggle('checked', chk.checked);
+  updateOrgCount();
+}
+
+function selectAllOrgRepos() {
+  document.querySelectorAll('[id^="chk-"]').forEach(chk => {
+    chk.checked = true;
+    document.getElementById('org-repo-'+chk.id.replace('chk-','')).classList.add('checked');
+  });
+  updateOrgCount();
+}
+
+function deselectAllOrgRepos() {
+  document.querySelectorAll('[id^="chk-"]').forEach(chk => {
+    chk.checked = false;
+    document.getElementById('org-repo-'+chk.id.replace('chk-','')).classList.remove('checked');
+  });
+  updateOrgCount();
+}
+
+function updateOrgCount() {
+  const count = document.querySelectorAll('[id^="chk-"]:checked').length;
+  document.getElementById('org-selected-count').textContent = `(${count} seleccionados)`;
+  const costEl = document.getElementById('org-cost-estimate');
+  if(count > 0) {
+    costEl.classList.remove('hidden');
+    document.getElementById('org-repo-count').textContent = count;
+    document.getElementById('org-cost').textContent = (count * 0.42).toFixed(2);
+  } else {
+    costEl.classList.add('hidden');
+  }
+}
+
+function populateSummary() {
+  const name = document.getElementById('scan-name').value || '—';
+  const provider = document.getElementById('llm-provider').value || '—';
+  const modalityMap = {A:'Repositorio Público',B:'Repositorio Privado',C:'Rama Específica',D:'Organización'};
+  document.getElementById('sum-name').textContent = name;
+  document.getElementById('sum-llm').textContent = provider.charAt(0).toUpperCase()+provider.slice(1);
+  document.getElementById('sum-modality').textContent = selectedModality ? modalityMap[selectedModality] : '—';
+  document.getElementById('sum-repos').textContent = selectedModality === 'B' ? (document.getElementById('priv-repo-search').value || '—') : selectedModality === 'D' ? document.getElementById('org-selected-count').textContent.replace(/[()]/g,'') : '—';
+}
+
+function startScan() {
+  goToStep(4);
+  document.getElementById('progress-scan-name').textContent = document.getElementById('scan-name').value || 'Análisis en progreso...';
+  document.getElementById('progress-start-time').textContent = new Date().toLocaleTimeString('es-MX');
+  simulateScan();
+}
+
+function simulateScan() {
+  const inspectorLogs = [
+    {t:300, msg:'→ Clonando repositorio ios-biometric-auth...', cls:'log-info'},
+    {t:800, msg:'✅ Repositorio clonado. 247 archivos encontrados.', cls:'log-ok'},
+    {t:1200, msg:'→ Analizando: src/auth/BiometricManager.swift', cls:'log-info'},
+    {t:1800, msg:'⚠️ HALLAZGO: DATA_EXFILTRATION en BiometricManager.swift:L89', cls:'log-warn'},
+    {t:2400, msg:'→ Analizando: src/session/SessionService.swift', cls:'log-info'},
+    {t:3000, msg:'⚠️ HALLAZGO: DYNAMIC_CODE_EXECUTION en SessionService.swift:L134', cls:'log-warn'},
+    {t:3600, msg:'→ Analizando: src/payment/PaymentProcessor.swift', cls:'log-info'},
+    {t:4200, msg:'⚠️ HALLAZGO CRÍTICO: LOGIC_BOMB en PaymentProcessor.swift:L67', cls:'log-warn'},
+    {t:5000, msg:'✅ Inspector completado. 16 hallazgos detectados.', cls:'log-ok'},
+  ];
+  inspectorLogs.forEach(({t, msg, cls}) => {
+    setTimeout(() => {
+      const log = document.getElementById('inspector-log');
+      log.innerHTML += `<div class="log-line ${cls}">${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }, t);
+  });
+
+  let inspPct = 0;
+  const inspInterval = setInterval(() => {
+    inspPct = Math.min(inspPct + 3, 100);
+    document.getElementById('inspector-bar').style.width = inspPct+'%';
+    document.getElementById('inspector-pct').textContent = inspPct+'%';
+    document.getElementById('general-bar').style.width = Math.round(inspPct*0.45)+'%';
+    document.getElementById('general-pct').textContent = Math.round(inspPct*0.45)+'%';
+    if(inspPct >= 100) {
+      clearInterval(inspInterval);
+      document.getElementById('inspector-status').textContent = 'COMPLETADO';
+      document.getElementById('inspector-status').className = 'chip bg-green-900 text-green-300 border-green-700 text-xs px-2 py-0.5';
+      document.getElementById('inspector-findings').textContent = '16 hallazgos detectados';
+      document.getElementById('inspector-progress-text').textContent = '247 de 247 archivos analizados';
+      startDetective();
+    }
+  }, 60);
+}
+
+function startDetective() {
+  const panel = document.getElementById('detective-panel');
+  panel.classList.remove('opacity-40');
+  document.getElementById('detective-status').textContent = 'EN PROCESO';
+  document.getElementById('detective-status').className = 'chip chip-purple animate-pulse text-xs px-2 py-0.5';
+
+  let detPct = 0;
+  const detInterval = setInterval(() => {
+    detPct = Math.min(detPct + 4, 100);
+    document.getElementById('detective-bar').style.width = detPct+'%';
+    document.getElementById('general-bar').style.width = (45 + Math.round(detPct*0.35))+'%';
+    document.getElementById('general-pct').textContent = (45 + Math.round(detPct*0.35))+'%';
+    if(detPct >= 100) {
+      clearInterval(detInterval);
+      document.getElementById('detective-status').textContent = 'COMPLETADO';
+      document.getElementById('detective-status').className = 'chip bg-green-900 text-green-300 border-green-700 text-xs px-2 py-0.5';
+      startFiscal();
+    }
+  }, 80);
+}
+
+function startFiscal() {
+  const panel = document.getElementById('fiscal-panel');
+  panel.classList.remove('opacity-40');
+  document.getElementById('fiscal-status').textContent = 'GENERANDO REPORTE...';
+  document.getElementById('fiscal-status').className = 'chip chip-purple animate-pulse text-xs px-2 py-0.5';
+
+  let genPct = 80;
+  const fiscalInterval = setInterval(() => {
+    genPct = Math.min(genPct + 2, 100);
+    document.getElementById('general-bar').style.width = genPct+'%';
+    document.getElementById('general-pct').textContent = genPct+'%';
+    if(genPct >= 100) {
+      clearInterval(fiscalInterval);
+      document.getElementById('fiscal-status').textContent = '✅ REPORTE GENERADO';
+      document.getElementById('fiscal-status').className = 'chip bg-green-900 text-green-300 border-green-700 text-xs px-2 py-0.5';
+      document.getElementById('scan-result').classList.remove('hidden');
+    }
+  }, 120);
+}
+
+function cancelScan() {
+  if(confirm('¿Estás seguro de que deseas cancelar el escaneo? Los hallazgos parciales se guardarán.')) {
+    clearInterval(scanInterval);
+    alert('Escaneo cancelado. Los hallazgos parciales han sido guardados con estatus CANCELADO.');
+    goToStep(1);
+  }
+}
+
+function openFiscalReport() { document.getElementById('fiscal-modal').classList.remove('hidden'); }
+function closeFiscalReport() { document.getElementById('fiscal-modal').classList.add('hidden'); }
+
+// Initialize
+updateStepIndicator();
+document.getElementById('wizard-step-1').classList.remove('hidden');
+</script>
+</body>
+</html>

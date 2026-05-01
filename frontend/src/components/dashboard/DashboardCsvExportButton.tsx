@@ -12,19 +12,21 @@ type DashboardCsvExportButtonProps = {
   apiPath: string;
   filename: string;
   label?: string;
+  className?: string;
 };
 
 export function DashboardCsvExportButton({
   apiPath,
   filename,
   label = 'Exportar CSV',
+  className = '',
 }: DashboardCsvExportButtonProps) {
   return (
     <Button
       type="button"
       variant="outline"
       size="sm"
-      className="gap-2"
+      className={`gap-2 ${className}`}
       onClick={async () => {
         try {
           await downloadAuthenticatedExport(apiPath, filename);

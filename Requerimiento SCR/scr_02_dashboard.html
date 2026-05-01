@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR — Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .sidebar { background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar-item { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+  .sidebar-item:hover { background: #334155; color: #e2e8f0; }
+  .sidebar-item.active { background: #7c3aed; color: #fff; }
+  .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; padding: 16px 16px 6px; text-transform: uppercase; }
+  .sidebar-scr { color: #7c3aed; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+  .kpi-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .kpi-card:hover { border-color: #7c3aed; transform: translateY(-1px); }
+  .tab-btn { padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #64748b; }
+  .tab-btn.active { background: #7c3aed; color: #fff; }
+  .tab-btn:hover:not(.active) { color: #e2e8f0; background: #334155; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-critical { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .chip-high { background: #431407; color: #fb923c; border: 1px solid #7c2d12; }
+  .chip-medium { background: #422006; color: #fbbf24; border: 1px solid #78350f; }
+  .chip-low { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .chip-purple { background: #2e1065; color: #c4b5fd; border: 1px solid #4c1d95; }
+  .period-btn { padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; color: #64748b; border: 1px solid transparent; }
+  .period-btn.active { background: #334155; color: #e2e8f0; border-color: #475569; }
+  .period-btn:hover:not(.active) { color: #94a3b8; }
+  .table-row { border-bottom: 1px solid #1e293b; transition: background 0.1s; cursor: pointer; }
+  .table-row:hover { background: #1e293b; }
+  .heatmap-cell { border-radius: 3px; cursor: pointer; transition: all 0.15s; }
+  .heatmap-cell:hover { transform: scale(1.2); }
+  .drawer { position: fixed; top: 0; right: -520px; width: 520px; height: 100vh; background: #1e293b; border-left: 1px solid #334155; z-index: 50; transition: right 0.3s ease; overflow-y: auto; }
+  .drawer.open { right: 0; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+  .overlay.show { display: block; }
+  .trend-up { color: #f87171; }
+  .trend-down { color: #4ade80; }
+  .progress-bar { background: #334155; border-radius: 4px; height: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-56 flex-shrink-0 flex flex-col overflow-y-auto">
+  <div class="p-4 border-b border-slate-700">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">A</div>
+      <span class="font-semibold text-sm text-slate-200">AppSec Platform</span>
+    </div>
+  </div>
+  <div class="flex-1 p-2 space-y-1">
+    <div class="sidebar-section">Principal</div>
+    <div class="sidebar-item">📊 Dashboard Ejecutivo</div>
+    <div class="sidebar-item">🎯 Score de Madurez</div>
+    <div class="sidebar-section">Organización</div>
+    <div class="sidebar-item">🏛️ Estructura Org.</div>
+    <div class="sidebar-item">📦 Inventario de Activos</div>
+    <div class="sidebar-section">Vulnerabilidades</div>
+    <div class="sidebar-item">🚨 Concentrado de Hallazgos</div>
+    <div class="sidebar-item">📋 Planes de Remediación</div>
+    <div class="sidebar-item">🧩 Threat Modeling</div>
+    <div class="sidebar-section">Operación</div>
+    <div class="sidebar-item">🚀 Liberaciones</div>
+    <div class="sidebar-item">📅 Programas Anuales</div>
+    <div class="sidebar-section sidebar-scr">🔬 SCR</div>
+    <div class="sidebar-item active">📊 Dashboard SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_01_nuevo_escaneo.html'">🔍 Nuevo Escaneo</div>
+    <div class="sidebar-item" onclick="window.location='scr_03_hallazgos.html'">🚨 Hallazgos SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_04_historial.html'">📋 Historial de Escaneos</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🕵️ Investigación Forense</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🤖 Agentes</div>
+    <div class="sidebar-section">Configuración</div>
+    <div class="sidebar-item">⚙️ Administración</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col overflow-hidden">
+  <!-- TOP BAR -->
+  <div class="h-12 border-b border-slate-700 bg-slate-800 flex items-center justify-between px-4">
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+      <span>SCR</span><span class="text-slate-600">/</span><span class="text-slate-200">Dashboard</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- PERIOD SELECTOR -->
+      <div class="flex gap-1">
+        <div class="period-btn" onclick="setPeriod(7, this)">7d</div>
+        <div class="period-btn active" onclick="setPeriod(30, this)">30d</div>
+        <div class="period-btn" onclick="setPeriod(90, this)">90d</div>
+        <div class="period-btn" onclick="setPeriod(0, this)">Personalizado</div>
+      </div>
+      <button class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700" onclick="window.location='scr_01_nuevo_escaneo.html'">+ Nuevo Escaneo</button>
+      <div class="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-bold text-white">JG</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="border-b border-slate-700 bg-slate-800 px-4 flex gap-2 py-2">
+    <div class="tab-btn active" id="tab-actividad" onclick="switchTab('actividad')">📈 Actividad y Riesgo</div>
+    <div class="tab-btn" id="tab-costos" onclick="switchTab('costos')">💰 Análisis de Costos</div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="flex-1 overflow-y-auto p-5">
+
+    <!-- TAB: ACTIVIDAD Y RIESGO -->
+    <div id="content-actividad">
+      <!-- KPIs -->
+      <div class="grid grid-cols-5 gap-3 mb-5">
+        <div class="kpi-card" onclick="openDrawer('escaneos')">
+          <div class="text-xs text-slate-400 mb-1">Total Escaneos</div>
+          <div class="text-2xl font-bold text-slate-100">47</div>
+          <div class="text-xs text-green-400 mt-1">↑ 12 vs período anterior</div>
+        </div>
+        <div class="kpi-card" onclick="openDrawer('critical')">
+          <div class="text-xs text-slate-400 mb-1">Hallazgos Críticos</div>
+          <div class="text-2xl font-bold text-red-400">12</div>
+          <div class="text-xs text-red-400 mt-1">↑ 3 nuevos esta semana</div>
+        </div>
+        <div class="kpi-card" onclick="openDrawer('high')">
+          <div class="text-xs text-slate-400 mb-1">Hallazgos Altos</div>
+          <div class="text-2xl font-bold text-orange-400">34</div>
+          <div class="text-xs text-green-400 mt-1">↓ 7 resueltos esta semana</div>
+        </div>
+        <div class="kpi-card" onclick="openDrawer('repos')">
+          <div class="text-xs text-slate-400 mb-1">Repos Escaneados</div>
+          <div class="text-2xl font-bold text-blue-400">18</div>
+          <div class="text-xs text-slate-500 mt-1">de 23 en inventario</div>
+        </div>
+        <div class="kpi-card" onclick="openDrawer('remediation')">
+          <div class="text-xs text-slate-400 mb-1">T. Prom. Remediación</div>
+          <div class="text-2xl font-bold text-violet-400">8.3d</div>
+          <div class="text-xs text-green-400 mt-1">↓ 1.2d vs mes anterior</div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 1 -->
+      <div class="grid grid-cols-5 gap-4 mb-4">
+        <!-- TENDENCIA -->
+        <div class="card p-4 col-span-3">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-sm font-semibold text-slate-200">Tendencia de Hallazgos</div>
+            <div class="text-xs text-slate-500">Haz clic en un punto para ver el detalle</div>
+          </div>
+          <canvas id="trendChart" height="120"></canvas>
+        </div>
+        <!-- DISTRIBUCIÓN POR PATRÓN -->
+        <div class="card p-4 col-span-2">
+          <div class="text-sm font-semibold text-slate-200 mb-3">Distribución por Patrón</div>
+          <canvas id="patternChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 2 -->
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <!-- HEATMAP -->
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-sm font-semibold text-slate-200">Heatmap de Actividad por Repositorio</div>
+            <div class="text-xs text-slate-500">Clic en celda para filtrar</div>
+          </div>
+          <div id="heatmap-container" class="overflow-x-auto"></div>
+          <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
+            <span>Sin hallazgos</span>
+            <div class="flex gap-1">
+              <div class="w-3 h-3 rounded" style="background:#1e3a2f"></div>
+              <div class="w-3 h-3 rounded" style="background:#16a34a"></div>
+              <div class="w-3 h-3 rounded" style="background:#ca8a04"></div>
+              <div class="w-3 h-3 rounded" style="background:#dc2626"></div>
+            </div>
+            <span>Crítico</span>
+          </div>
+        </div>
+        <!-- ANOMALÍAS DETECTIVE -->
+        <div class="card p-4">
+          <div class="text-sm font-semibold text-slate-200 mb-3">Anomalías del Detective por Semana</div>
+          <canvas id="anomalyChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- TOP 5 REPOS -->
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold text-slate-200">Top 5 Repositorios con más Hallazgos Activos</div>
+          <a href="scr_03_hallazgos.html" class="text-xs text-violet-400 hover:text-violet-300">Ver todos →</a>
+        </div>
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-slate-500 border-b border-slate-700">
+              <th class="text-left py-2 font-medium">Repositorio</th>
+              <th class="text-left py-2 font-medium">Organización</th>
+              <th class="text-center py-2 font-medium">🔴 CRITICAL</th>
+              <th class="text-center py-2 font-medium">🟠 HIGH</th>
+              <th class="text-center py-2 font-medium">🟡 MEDIUM</th>
+              <th class="text-center py-2 font-medium">🟢 LOW</th>
+              <th class="text-left py-2 font-medium">Último Escaneo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" onclick="window.location='scr_03_hallazgos.html'">
+              <td class="py-2 text-slate-200 font-medium">ios-biometric-auth</td>
+              <td class="py-2 text-slate-400">Banregio</td>
+              <td class="py-2 text-center"><span class="chip chip-critical">3</span></td>
+              <td class="py-2 text-center"><span class="chip chip-high">7</span></td>
+              <td class="py-2 text-center"><span class="chip chip-medium">4</span></td>
+              <td class="py-2 text-center"><span class="chip chip-low">2</span></td>
+              <td class="py-2 text-slate-400">Hoy, 06:50</td>
+            </tr>
+            <tr class="table-row" onclick="window.location='scr_03_hallazgos.html'">
+              <td class="py-2 text-slate-200 font-medium">payment-processor</td>
+              <td class="py-2 text-slate-400">Banregio</td>
+              <td class="py-2 text-center"><span class="chip chip-critical">2</span></td>
+              <td class="py-2 text-center"><span class="chip chip-high">5</span></td>
+              <td class="py-2 text-center"><span class="chip chip-medium">8</span></td>
+              <td class="py-2 text-center"><span class="chip chip-low">1</span></td>
+              <td class="py-2 text-slate-400">Ayer, 23:15</td>
+            </tr>
+            <tr class="table-row" onclick="window.location='scr_03_hallazgos.html'">
+              <td class="py-2 text-slate-200 font-medium">auth-service</td>
+              <td class="py-2 text-slate-400">Banregio</td>
+              <td class="py-2 text-center"><span class="chip chip-critical">1</span></td>
+              <td class="py-2 text-center"><span class="chip chip-high">9</span></td>
+              <td class="py-2 text-center"><span class="chip chip-medium">3</span></td>
+              <td class="py-2 text-center"><span class="chip chip-low">4</span></td>
+              <td class="py-2 text-slate-400">28 Abr</td>
+            </tr>
+            <tr class="table-row" onclick="window.location='scr_03_hallazgos.html'">
+              <td class="py-2 text-slate-200 font-medium">hey-api</td>
+              <td class="py-2 text-slate-400">Hey Banco</td>
+              <td class="py-2 text-center"><span class="chip chip-critical">0</span></td>
+              <td class="py-2 text-center"><span class="chip chip-high">4</span></td>
+              <td class="py-2 text-center"><span class="chip chip-medium">6</span></td>
+              <td class="py-2 text-center"><span class="chip chip-low">3</span></td>
+              <td class="py-2 text-slate-400">27 Abr</td>
+            </tr>
+            <tr class="table-row" onclick="window.location='scr_03_hallazgos.html'">
+              <td class="py-2 text-slate-200 font-medium">api-gateway-service</td>
+              <td class="py-2 text-slate-400">Banregio</td>
+              <td class="py-2 text-center"><span class="chip chip-critical">0</span></td>
+              <td class="py-2 text-center"><span class="chip chip-high">3</span></td>
+              <td class="py-2 text-center"><span class="chip chip-medium">5</span></td>
+              <td class="py-2 text-center"><span class="chip chip-low">7</span></td>
+              <td class="py-2 text-slate-400">25 Abr</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: COSTOS -->
+    <div id="content-costos" class="hidden">
+      <!-- KPIs COSTOS -->
+      <div class="grid grid-cols-4 gap-3 mb-5">
+        <div class="kpi-card">
+          <div class="text-xs text-slate-400 mb-1">Gasto Total (USD)</div>
+          <div class="text-2xl font-bold text-green-400">$18.74</div>
+          <div class="text-xs text-slate-500 mt-1">Últimos 30 días</div>
+        </div>
+        <div class="kpi-card">
+          <div class="text-xs text-slate-400 mb-1">Tokens Consumidos</div>
+          <div class="text-2xl font-bold text-blue-400">3.8M</div>
+          <div class="text-xs text-slate-500 mt-1">Input + Output</div>
+        </div>
+        <div class="kpi-card">
+          <div class="text-xs text-slate-400 mb-1">Costo por Escaneo</div>
+          <div class="text-2xl font-bold text-violet-400">$0.40</div>
+          <div class="text-xs text-green-400 mt-1">↓ $0.08 vs mes anterior</div>
+        </div>
+        <div class="kpi-card">
+          <div class="text-xs text-slate-400 mb-1">Ahorro Incremental</div>
+          <div class="text-2xl font-bold text-amber-400">$12.3</div>
+          <div class="text-xs text-slate-500 mt-1">vs. escaneo completo</div>
+        </div>
+      </div>
+
+      <!-- CHARTS COSTOS -->
+      <div class="grid grid-cols-5 gap-4 mb-4">
+        <div class="card p-4 col-span-3">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-sm font-semibold text-slate-200">Gasto por Escaneo (USD)</div>
+            <div class="text-xs text-slate-500">Clic en barra para ver desglose</div>
+          </div>
+          <canvas id="costChart" height="120"></canvas>
+        </div>
+        <div class="card p-4 col-span-2">
+          <div class="text-sm font-semibold text-slate-200 mb-3">Tokens por Agente</div>
+          <canvas id="agentTokenChart" height="160"></canvas>
+          <div class="mt-3 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> Inspector</span>
+              <span class="text-slate-400">2.1M tokens (55%)</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Detective</span>
+              <span class="text-slate-400">1.2M tokens (32%)</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Fiscal</span>
+              <span class="text-slate-400">0.5M tokens (13%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA COSTOS -->
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold text-slate-200">Detalle de Costos por Escaneo</div>
+          <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600">⬇️ Exportar CSV</button>
+        </div>
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-slate-500 border-b border-slate-700">
+              <th class="text-left py-2 font-medium">Fecha</th>
+              <th class="text-left py-2 font-medium">Repositorio</th>
+              <th class="text-left py-2 font-medium">Proveedor</th>
+              <th class="text-left py-2 font-medium">Modelo</th>
+              <th class="text-right py-2 font-medium">Tokens Input</th>
+              <th class="text-right py-2 font-medium">Tokens Output</th>
+              <th class="text-right py-2 font-medium">Total</th>
+              <th class="text-right py-2 font-medium">Costo USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" onclick="openDrawer('cost-detail')">
+              <td class="py-2 text-slate-400">01 May 06:50</td>
+              <td class="py-2 text-slate-200">ios-biometric-auth</td>
+              <td class="py-2"><span class="chip chip-purple">Anthropic</span></td>
+              <td class="py-2 text-slate-400">claude-3-5-sonnet</td>
+              <td class="py-2 text-right text-slate-300">62,450</td>
+              <td class="py-2 text-right text-slate-300">22,830</td>
+              <td class="py-2 text-right text-slate-300">85,280</td>
+              <td class="py-2 text-right text-green-400 font-medium">$0.42</td>
+            </tr>
+            <tr class="table-row" onclick="openDrawer('cost-detail')">
+              <td class="py-2 text-slate-400">30 Abr 23:15</td>
+              <td class="py-2 text-slate-200">payment-processor</td>
+              <td class="py-2"><span class="chip chip-purple">Anthropic</span></td>
+              <td class="py-2 text-slate-400">claude-3-5-sonnet</td>
+              <td class="py-2 text-right text-slate-300">89,120</td>
+              <td class="py-2 text-right text-slate-300">31,440</td>
+              <td class="py-2 text-right text-slate-300">120,560</td>
+              <td class="py-2 text-right text-green-400 font-medium">$0.60</td>
+            </tr>
+            <tr class="table-row" onclick="openDrawer('cost-detail')">
+              <td class="py-2 text-slate-400">28 Abr 14:30</td>
+              <td class="py-2 text-slate-200">auth-service</td>
+              <td class="py-2"><span class="chip chip-purple">Anthropic</span></td>
+              <td class="py-2 text-slate-400">claude-3-haiku</td>
+              <td class="py-2 text-right text-slate-300">45,230</td>
+              <td class="py-2 text-right text-slate-300">18,910</td>
+              <td class="py-2 text-right text-slate-300">64,140</td>
+              <td class="py-2 text-right text-green-400 font-medium">$0.08</td>
+            </tr>
+            <tr class="table-row" onclick="openDrawer('cost-detail')">
+              <td class="py-2 text-slate-400">27 Abr 09:15</td>
+              <td class="py-2 text-slate-200">hey-api</td>
+              <td class="py-2"><span class="chip bg-orange-900 text-orange-300 border-orange-700">OpenRouter</span></td>
+              <td class="py-2 text-slate-400">gpt-4o</td>
+              <td class="py-2 text-right text-slate-300">38,780</td>
+              <td class="py-2 text-right text-slate-300">14,220</td>
+              <td class="py-2 text-right text-slate-300">53,000</td>
+              <td class="py-2 text-right text-green-400 font-medium">$0.27</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+    <h3 class="font-semibold text-slate-100 text-sm" id="drawer-title">Detalle</h3>
+    <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div class="p-4" id="drawer-content"></div>
+</div>
+
+<script>
+function switchTab(tab) {
+  ['actividad','costos'].forEach(t => {
+    document.getElementById('content-'+t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+}
+
+function setPeriod(days, el) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function openDrawer(type) {
+  const titles = {
+    escaneos: 'Escaneos del Período',
+    critical: 'Hallazgos Críticos Activos',
+    high: 'Hallazgos Altos Activos',
+    repos: 'Repositorios Escaneados',
+    remediation: 'Hallazgos Certificados',
+    'cost-detail': 'Desglose de Costos del Escaneo'
+  };
+  const contents = {
+    critical: `<div class="space-y-2 text-xs">
+      <div class="p-2 bg-red-950 border border-red-800 rounded flex justify-between items-center"><span class="text-red-300 font-medium">DATA_EXFILTRATION</span><span class="chip chip-critical">CRITICAL</span></div>
+      <div class="p-2 bg-red-950 border border-red-800 rounded flex justify-between items-center"><span class="text-red-300 font-medium">LOGIC_BOMB</span><span class="chip chip-critical">CRITICAL</span></div>
+      <div class="p-2 bg-red-950 border border-red-800 rounded flex justify-between items-center"><span class="text-red-300 font-medium">DYNAMIC_CODE_EXECUTION</span><span class="chip chip-critical">CRITICAL</span></div>
+      <div class="mt-3"><a href="scr_03_hallazgos.html" class="text-violet-400 text-xs hover:underline">Ver todos en Hallazgos SCR →</a></div>
+    </div>`,
+    'cost-detail': `<div class="space-y-3 text-xs">
+      <div class="text-slate-400 mb-2">Escaneo: ios-biometric-auth · 01 May 2026</div>
+      <div class="space-y-2">
+        <div class="flex justify-between p-2 bg-slate-900 rounded"><span class="text-blue-300">Inspector Agent</span><span>42,120 input / 15,430 output = <strong class="text-green-400">$0.28</strong></span></div>
+        <div class="flex justify-between p-2 bg-slate-900 rounded"><span class="text-amber-300">Detective Agent</span><span>18,230 input / 6,890 output = <strong class="text-green-400">$0.11</strong></span></div>
+        <div class="flex justify-between p-2 bg-slate-900 rounded"><span class="text-green-300">Fiscal Agent</span><span>2,100 input / 510 output = <strong class="text-green-400">$0.03</strong></span></div>
+        <div class="flex justify-between p-2 bg-violet-900 rounded border border-violet-700"><span class="text-violet-200 font-semibold">TOTAL</span><span class="font-bold text-green-400">$0.42 USD</span></div>
+      </div>
+    </div>`,
+    escaneos: `<div class="text-xs text-slate-400">47 escaneos ejecutados en los últimos 30 días. <a href="scr_04_historial.html" class="text-violet-400 hover:underline">Ver historial completo →</a></div>`,
+    repos: `<div class="text-xs text-slate-400">18 repositorios únicos escaneados. 5 pendientes de primer escaneo. <a href="scr_04_historial.html" class="text-violet-400 hover:underline">Ver historial →</a></div>`
+  };
+  document.getElementById('drawer-title').textContent = titles[type] || 'Detalle';
+  document.getElementById('drawer-content').innerHTML = contents[type] || '<div class="text-xs text-slate-400">Ver detalle completo en la sección correspondiente.</div>';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// TREND CHART
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+  type: 'line',
+  data: {
+    labels: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6','Sem 7','Sem 8'],
+    datasets: [
+      { label: 'Detectados', data: [8,12,7,15,10,18,14,16], borderColor: '#f87171', backgroundColor: '#f8717122', tension: 0.4, fill: true, pointBackgroundColor: '#f87171', pointRadius: 4, pointHoverRadius: 6 },
+      { label: 'Resueltos', data: [5,9,6,11,8,14,12,10], borderColor: '#4ade80', backgroundColor: '#4ade8022', tension: 0.4, fill: true, pointBackgroundColor: '#4ade80', pointRadius: 4, pointHoverRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+      y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } }
+    },
+    onClick: (e, elements) => { if(elements.length > 0) openDrawer('critical'); }
+  }
+});
+
+// PATTERN CHART
+const patternCtx = document.getElementById('patternChart').getContext('2d');
+new Chart(patternCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['DATA_EXFIL','LOGIC_BOMB','DYNAMIC_CODE','OBFUSCATED','EXEC_ENV','Otros'],
+    datasets: [{ data: [18,14,12,10,8,10], backgroundColor: ['#dc2626','#ea580c','#d97706','#7c3aed','#2563eb','#475569'], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 9 }, padding: 8 } } },
+    onClick: (e, elements) => { if(elements.length > 0) openDrawer('critical'); }
+  }
+});
+
+// HEATMAP
+const repos = ['ios-biometric','payment-proc','auth-service','hey-api','api-gateway'];
+const weeks = ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6'];
+const heatData = [[0,1,3,2,4,3],[1,0,2,1,0,2],[2,3,1,4,2,1],[0,0,1,0,1,0],[1,2,0,1,0,1]];
+const colors = ['#1e3a2f','#16a34a','#ca8a04','#dc2626'];
+const container = document.getElementById('heatmap-container');
+let html = '<table class="text-xs w-full"><thead><tr><td class="w-24"></td>';
+weeks.forEach(w => html += `<td class="text-center text-slate-500 pb-1 px-1">${w}</td>`);
+html += '</tr></thead><tbody>';
+repos.forEach((r, ri) => {
+  html += `<tr><td class="text-slate-400 pr-2 py-0.5 text-right text-xs">${r}</td>`;
+  weeks.forEach((w, wi) => {
+    const val = heatData[ri][wi];
+    const color = val === 0 ? '#1e293b' : val <= 1 ? '#1e3a2f' : val <= 3 ? '#ca8a04' : '#dc2626';
+    html += `<td class="px-1 py-0.5"><div class="heatmap-cell w-full h-5 rounded" style="background:${color}" title="${r} - ${w}: ${val} hallazgos" onclick="openDrawer('critical')"></div></td>`;
+  });
+  html += '</tr>';
+});
+html += '</tbody></table>';
+container.innerHTML = html;
+
+// ANOMALY CHART
+const anomalyCtx = document.getElementById('anomalyChart').getContext('2d');
+new Chart(anomalyCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6','Sem 7','Sem 8'],
+    datasets: [
+      { label: 'TIMING_ANOMALIES', data: [2,3,1,4,2,3,1,2], backgroundColor: '#dc2626' },
+      { label: 'AUTHOR_ANOMALIES', data: [1,0,2,1,0,2,1,0], backgroundColor: '#ea580c' },
+      { label: 'CRITICAL_FILES', data: [3,2,1,3,2,1,2,3], backgroundColor: '#d97706' },
+      { label: 'MASS_CHANGES', data: [1,1,0,2,1,0,1,1], backgroundColor: '#7c3aed' },
+      { label: 'Otros', data: [1,2,1,1,2,1,1,2], backgroundColor: '#475569' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 9 }, padding: 6 } } },
+    scales: {
+      x: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+      y: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } }
+    },
+    onClick: (e, elements) => { if(elements.length > 0) openDrawer('critical'); }
+  }
+});
+
+// COST CHART
+const costCtx = document.getElementById('costChart').getContext('2d');
+new Chart(costCtx, {
+  type: 'bar',
+  data: {
+    labels: ['ios-biometric','payment-proc','auth-service','hey-api','api-gateway','mobile-android','rt-core','hey-web'],
+    datasets: [{ label: 'Costo USD', data: [0.42,0.60,0.08,0.27,0.35,0.51,0.44,0.19], backgroundColor: '#7c3aed', hoverBackgroundColor: '#6d28d9', borderRadius: 4 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+      y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$'+v.toFixed(2) } }
+    },
+    onClick: (e, elements) => { if(elements.length > 0) openDrawer('cost-detail'); }
+  }
+});
+
+// AGENT TOKEN CHART
+const agentTokenCtx = document.getElementById('agentTokenChart').getContext('2d');
+new Chart(agentTokenCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Inspector','Detective','Fiscal'],
+    datasets: [{ data: [55,32,13], backgroundColor: ['#3b82f6','#f59e0b','#22c55e'], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } }
+  }
+});
+</script>
+</body>
+</html>

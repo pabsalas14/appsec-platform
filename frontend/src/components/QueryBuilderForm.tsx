@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface QueryBuilderFormProps {

@@ -85,3 +85,15 @@ class CodeSecurityReportRead(BaseModel):
     puntuacion_riesgo_global: int
     created_at: datetime
     updated_at: datetime
+
+
+class CodeSecurityFalsePositiveRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    review_id: UUID
+    finding_id: UUID
+    user_id: UUID
+    reason: str | None
+    pattern_type: str | None
+    created_at: datetime

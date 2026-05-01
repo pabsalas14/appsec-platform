@@ -29,6 +29,7 @@ from app.api.v1.admin import system_health as admin_system_health
 from app.api.v1.admin import test_data as admin_test_data
 from app.api.v1.admin import users as admin_users
 from app.api.v1.admin import validation_rules as admin_validation_rules
+from app.api.v1.admin import risk_scoring as admin_risk_scoring
 
 admin_router = APIRouter()
 
@@ -99,5 +100,10 @@ admin_router.include_router(
 )
 admin_router.include_router(admin_query_builder.router)
 admin_router.include_router(admin_dashboard_builder.router)
+admin_router.include_router(
+    admin_risk_scoring.router,
+    prefix="/risk-scoring",
+    tags=["Admin · Risk Scoring"],
+)
 # TODO: Fix builders imports - CatalogValue and ModuleViewDuplicate not defined
 # admin_router.include_router(admin_builders.builders_router, tags=["Admin · Builders"])

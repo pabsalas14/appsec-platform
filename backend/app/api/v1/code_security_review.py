@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,6 +43,7 @@ router = APIRouter()
 
 
 @router.get("")
+@router.get("/")  # Compatibilidad con frontend que envía trailing slash
 async def list_code_security_reviews(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
@@ -60,7 +61,8 @@ async def get_code_security_review(
     return success(CodeSecurityReviewRead.model_validate(entity).model_dump(mode="json"))
 
 
-@router.post("", status_code=201)
+@router.post("")
+@router.post("/")  # Compatibilidad con frontend que envía trailing slash
 async def create_code_security_review(
     entity_in: CodeSecurityReviewCreate,
     db: AsyncSession = Depends(get_db),
@@ -207,15 +209,52 @@ async def get_review_report(
 
 @router.get("/{review_id}/export")
 async def export_review_bundle(
-    format: str = Query("json", description="Por ahora solo json (PDF fase 8)."),
+    format: str = Query("json", description="Format: json or pdf"),
+    db: AsyncSession = Depends(get_db),
     review_entity: CodeSecurityReview = Depends(require_ownership(code_security_review_svc, id_param="review_id")),
     _: User = Depends(require_permission(P.CODE_SECURITY.EXPORT)),
 ):
-    """Fase 8 — export JSON bundles; PDF pendiente librería dedicada."""
+    """Fase 8 — export JSON or PDF bundles."""
+    from datetime import datetime
+
+    if format.lower() == "pdf":
+        from app.services.pdf_export_service import generate_pdf_report
+
+        report_stmt = select(CodeSecurityReport).where(CodeSecurityReport.review_id == review_entity.id)
+        report_result = await db.execute(report_stmt)
+        report = report_result.scalar_one_or_none()
+
+        if report is None:
+            from app.core.exceptions import NotFoundException
+
+            raise NotFoundException("Reporte aún no generado.")
+
+        findings_stmt = select(CodeSecurityFinding).where(CodeSecurityFinding.review_id == review_entity.id)
+        findings_result = await db.execute(findings_stmt)
+        findings = findings_result.scalars().all()
+
+        events_stmt = (
+            select(CodeSecurityEvent)
+            .where(CodeSecurityEvent.review_id == review_entity.id)
+            .order_by(CodeSecurityEvent.event_ts.asc())
+        )
+        events_result = await db.execute(events_stmt)
+        events = events_result.scalars().all()
+
+        pdf_bytes = await generate_pdf_report(review_entity, report, list(findings), list(events))
+
+        timestamp = datetime.now().strftime("%Y%m%d")
+        return Response(
+            content=pdf_bytes,
+            headers={"Content-Disposition": f'attachment; filename="csr-{review_entity.id}-{timestamp}.pdf"'},
+            media_type="application/pdf",
+        )
+
     if format.lower() != "json":
         from app.core.exceptions import ConflictException
 
-        raise ConflictException("Por ahora solo está disponible export en JSON.")
+        raise ConflictException("Formato no soportado. Usa 'json' o 'pdf'.")
+
     payload = CodeSecurityReviewRead.model_validate(review_entity).model_dump(mode="json")
     return JSONResponse(
         content={"status": "success", "data": {"review": payload}},
@@ -276,3 +315,140 @@ async def create_org_batch_placeholder(
             status="ANALYZING",
         ).model_dump(mode="json")
     )
+
+
+@router.post("/{review_id}/findings/{finding_id}/false-positive")
+async def mark_finding_as_false_positive(
+    finding_id: uuid.UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.EDIT)),
+    review_entity: CodeSecurityReview = Depends(require_ownership(code_security_review_svc, id_param="review_id")),
+):
+    """Mark a finding as false positive for ML learning."""
+    from app.models.code_security_false_positive import CodeSecurityFalsePositive
+    from pydantic import BaseModel
+
+    class FalsePositiveCreate(BaseModel):
+        reason: str | None = None
+        pattern_type: str | None = None
+
+    validated_body = FalsePositiveCreate(**body)
+
+    existing_fp = await db.execute(
+        select(CodeSecurityFalsePositive).where(
+            CodeSecurityFalsePositive.finding_id == finding_id,
+            CodeSecurityFalsePositive.user_id == current_user.id,
+        )
+    )
+    if existing_fp.scalar_one_or_none():
+        from app.core.exceptions import ConflictException
+
+        raise ConflictException("Este hallazgo ya está marcado como falso positivo.")
+
+    fp = CodeSecurityFalsePositive(
+        review_id=review_entity.id,
+        finding_id=finding_id,
+        user_id=current_user.id,
+        reason=validated_body.reason,
+        pattern_type=validated_body.pattern_type,
+    )
+    db.add(fp)
+
+    finding_stmt = select(CodeSecurityFinding).where(CodeSecurityFinding.id == finding_id)
+    finding_result = await db.execute(finding_stmt)
+    finding = finding_result.scalar_one_or_none()
+
+    if finding:
+        finding.estado = "FALSE_POSITIVE"
+        await db.flush()
+
+    return success(
+        {"marked": True, "finding_id": str(finding_id)}, meta={"message": "Hallazgo marcado como falso positivo"}
+    )
+
+
+@router.delete("/{review_id}/findings/{finding_id}/false-positive")
+async def unmark_finding_as_false_positive(
+    finding_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.EDIT)),
+    review_entity: CodeSecurityReview = Depends(require_ownership(code_security_review_svc, id_param="review_id")),
+):
+    """Remove false positive marking from a finding."""
+    from app.models.code_security_false_positive import CodeSecurityFalsePositive
+
+    fp_stmt = select(CodeSecurityFalsePositive).where(
+        CodeSecurityFalsePositive.finding_id == finding_id,
+        CodeSecurityFalsePositive.user_id == current_user.id,
+    )
+    fp_result = await db.execute(fp_stmt)
+    fp = fp_result.scalar_one_or_none()
+
+    if not fp:
+        from app.core.exceptions import NotFoundException
+
+        raise NotFoundException("Este hallazgo no está marcado como falso positivo.")
+
+    await db.delete(fp)
+    await db.flush()
+
+    finding_stmt = select(CodeSecurityFinding).where(CodeSecurityFinding.id == finding_id)
+    finding_result = await db.execute(finding_stmt)
+    finding = finding_result.scalar_one_or_none()
+
+    if finding:
+        finding.estado = "DETECTED"
+        await db.flush()
+
+    return success(
+        {"unmarked": True, "finding_id": str(finding_id)}, meta={"message": "Marcado de falso positivo eliminado"}
+    )
+
+
+@router.get("/{review_id}/false-positives")
+async def list_false_positives(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
+    review_entity: CodeSecurityReview = Depends(require_ownership(code_security_review_svc, id_param="review_id")),
+):
+    """List all false positive markings for a review."""
+    from app.models.code_security_false_positive import CodeSecurityFalsePositive
+    from app.schemas.code_security_finding import CodeSecurityFalsePositiveRead
+
+    stmt = select(CodeSecurityFalsePositive).where(CodeSecurityFalsePositive.review_id == review_entity.id)
+    result = await db.execute(stmt)
+    fps = result.scalars().all()
+
+    return success([CodeSecurityFalsePositiveRead.model_validate(fp).model_dump(mode="json") for fp in fps])
+
+
+@router.get("/providers/health")
+async def check_providers_health(
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
+):
+    """Check health status of all LLM providers.
+
+    Returns which providers are configured and available for use.
+    This is called before analysis to ensure provider is available.
+    """
+    from app.services.ia_provider import AIProviderType, get_ai_provider
+
+    providers_status = {}
+
+    for provider_type in AIProviderType:
+        try:
+            provider_obj = get_ai_provider(provider_type)
+            is_healthy = await provider_obj.health_check()
+            providers_status[provider_type.value] = {
+                "available": is_healthy,
+                "status": "healthy" if is_healthy else "unavailable",
+            }
+        except Exception as e:
+            providers_status[provider_type.value] = {
+                "available": False,
+                "status": "error",
+                "error": str(e)[:100],
+            }
+
+    return success({"providers": providers_status})

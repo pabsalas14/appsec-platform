@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR — Investigación Forense & Agentes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .sidebar { background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar-item { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+  .sidebar-item:hover { background: #334155; color: #e2e8f0; }
+  .sidebar-item.active { background: #7c3aed; color: #fff; }
+  .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; padding: 16px 16px 6px; text-transform: uppercase; }
+  .sidebar-scr { color: #7c3aed; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-critical { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .chip-high { background: #431407; color: #fb923c; border: 1px solid #7c2d12; }
+  .chip-medium { background: #422006; color: #fbbf24; border: 1px solid #78350f; }
+  .chip-low { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .tab-btn { padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #64748b; }
+  .tab-btn.active { background: #7c3aed; color: #fff; }
+  .tab-btn:hover:not(.active) { color: #e2e8f0; background: #334155; }
+  .filter-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; background: #1e293b; border: 1px solid #334155; color: #94a3b8; transition: all 0.15s; }
+  .filter-btn:hover { border-color: #7c3aed; color: #e2e8f0; }
+  .filter-btn.active { background: #2e1065; border-color: #7c3aed; color: #c4b5fd; }
+  .table-row { border-bottom: 1px solid #1e293b; transition: background 0.1s; cursor: pointer; }
+  .table-row:hover { background: #1e293b; }
+  .drawer { position: fixed; top: 0; right: -580px; width: 580px; height: 100vh; background: #1e293b; border-left: 1px solid #334155; z-index: 50; transition: right 0.3s ease; overflow-y: auto; }
+  .drawer.open { right: 0; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+  .overlay.show { display: block; }
+  .timeline-item { display: flex; gap-12px; padding: 8px 0; }
+  .agent-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .agent-card:hover { border-color: #7c3aed; }
+  .agent-card.selected { border-color: #7c3aed; background: #1e1b4b; }
+  .pattern-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #1e1b4b; color: #a5b4fc; border: 1px solid #3730a3; }
+  .detective-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #2d1b00; color: #fcd34d; border: 1px solid #78350f; }
+  select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+  input[type="text"], input[type="search"], textarea { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 12px; }
+  input:focus, textarea:focus { outline: none; border-color: #7c3aed; }
+  .progress-bar { background: #334155; border-radius: 4px; height: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-56 flex-shrink-0 flex flex-col overflow-y-auto">
+  <div class="p-4 border-b border-slate-700">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">A</div>
+      <span class="font-semibold text-sm text-slate-200">AppSec Platform</span>
+    </div>
+  </div>
+  <div class="flex-1 p-2 space-y-1">
+    <div class="sidebar-section">Principal</div>
+    <div class="sidebar-item">📊 Dashboard Ejecutivo</div>
+    <div class="sidebar-item">🎯 Score de Madurez</div>
+    <div class="sidebar-section">Organización</div>
+    <div class="sidebar-item">🏛️ Estructura Org.</div>
+    <div class="sidebar-item">📦 Inventario de Activos</div>
+    <div class="sidebar-section">Vulnerabilidades</div>
+    <div class="sidebar-item">🚨 Concentrado de Hallazgos</div>
+    <div class="sidebar-item">📋 Planes de Remediación</div>
+    <div class="sidebar-item">🧩 Threat Modeling</div>
+    <div class="sidebar-section">Operación</div>
+    <div class="sidebar-item">🚀 Liberaciones</div>
+    <div class="sidebar-item">📅 Programas Anuales</div>
+    <div class="sidebar-section sidebar-scr">🔬 SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_02_dashboard.html'">📊 Dashboard SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_01_nuevo_escaneo.html'">🔍 Nuevo Escaneo</div>
+    <div class="sidebar-item" onclick="window.location='scr_03_hallazgos.html'">🚨 Hallazgos SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_04_historial.html'">📋 Historial de Escaneos</div>
+    <div class="sidebar-item active" id="nav-forense">🕵️ Investigación Forense</div>
+    <div class="sidebar-item" id="nav-agentes" onclick="switchMainTab('agentes')">🤖 Agentes</div>
+    <div class="sidebar-section">Configuración</div>
+    <div class="sidebar-item">⚙️ Administración</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col overflow-hidden">
+  <!-- TOP BAR -->
+  <div class="h-12 border-b border-slate-700 bg-slate-800 flex items-center justify-between px-4">
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+      <span>SCR</span><span class="text-slate-600">/</span><span class="text-slate-200" id="breadcrumb">Investigación Forense</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600" id="top-action-btn" onclick="exportForense()">⬇️ Exportar resultados</button>
+      <div class="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-bold text-white">JG</div>
+    </div>
+  </div>
+
+  <!-- MAIN TABS -->
+  <div class="border-b border-slate-700 bg-slate-800 px-4 flex gap-2 py-2">
+    <div class="tab-btn active" id="mtab-forense" onclick="switchMainTab('forense')">🕵️ Investigación Forense</div>
+    <div class="tab-btn" id="mtab-agentes" onclick="switchMainTab('agentes')">🤖 Agentes</div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div class="flex-1 overflow-y-auto p-5">
+
+    <!-- ==================== FORENSE ==================== -->
+    <div id="content-forense">
+      <!-- SEARCH BAR FORENSE -->
+      <div class="card p-4 mb-4">
+        <div class="text-sm font-semibold text-slate-200 mb-3">🔍 Búsqueda Forense</div>
+        <div class="text-xs text-slate-400 mb-3">Consulta toda la data histórica de escaneos. Busca por autor, repositorio, patrón, archivo o cualquier combinación.</div>
+        <div class="flex gap-2 flex-wrap">
+          <select id="forense-type" onchange="updateForenseForm()">
+            <option value="author">Por Autor (¿qué hizo un usuario?)</option>
+            <option value="repo">Por Repositorio (¿quién le ha movido a X repo?)</option>
+            <option value="pattern">Por Patrón (¿dónde aparece X patrón?)</option>
+            <option value="file">Por Archivo (¿quién modificó X archivo?)</option>
+            <option value="date">Por Rango de Fechas</option>
+          </select>
+          <div id="forense-input-container" class="flex gap-2 flex-1">
+            <input type="text" id="forense-input" placeholder="Nombre del autor, email o username..." class="flex-1">
+          </div>
+          <select id="forense-repo-filter">
+            <option value="">Todos los repos</option>
+            <option value="ios-biometric-auth">ios-biometric-auth</option>
+            <option value="payment-processor">payment-processor</option>
+            <option value="auth-service">auth-service</option>
+          </select>
+          <select id="forense-date-range">
+            <option value="30">Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+            <option value="180">Últimos 6 meses</option>
+            <option value="365">Último año</option>
+            <option value="all">Todo el historial</option>
+          </select>
+          <button class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-violet-700" onclick="runForenseSearch()">🔍 Buscar</button>
+        </div>
+      </div>
+
+      <!-- FORENSE RESULTS -->
+      <div id="forense-results">
+        <!-- DEFAULT: AUTHOR PROFILE -->
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="card p-4 col-span-1">
+            <div class="text-xs text-slate-400 mb-3 font-medium">Perfil del Autor</div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-red-900 border-2 border-red-500 rounded-full flex items-center justify-center text-sm font-bold text-red-300">DT</div>
+              <div>
+                <div class="text-sm font-semibold text-slate-200">dev-temp-contractor</div>
+                <div class="text-xs text-slate-500">GitHub: @dev-temp-c</div>
+              </div>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-slate-400">Primer commit</span><span class="text-slate-200">2026-03-15</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Último commit</span><span class="text-slate-200">2026-03-15</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Total commits</span><span class="text-slate-200">3</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Repos afectados</span><span class="text-slate-200">2</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Hallazgos generados</span><span class="chip chip-critical">5 CRITICAL</span></div>
+              <div class="mt-2 pt-2 border-t border-slate-700">
+                <div class="text-red-400 font-medium">⚠️ RIESGO ALTO</div>
+                <div class="text-slate-500 mt-1">Nuevo autor en ruta crítica. Solo 1 día de actividad con múltiples hallazgos críticos.</div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4 col-span-2">
+            <div class="text-xs text-slate-400 mb-3 font-medium">Actividad del Autor en el Tiempo</div>
+            <canvas id="authorChart" height="120"></canvas>
+          </div>
+        </div>
+
+        <!-- COMMITS TABLE -->
+        <div class="card p-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-sm font-semibold text-slate-200">Commits del Autor</div>
+            <div class="flex gap-2">
+              <div class="filter-btn active" onclick="toggleFilter(this,'commit','all')" data-filter="commit" data-value="all">Todos</div>
+              <div class="filter-btn" onclick="toggleFilter(this,'commit','critical')" data-filter="commit" data-value="critical">Con hallazgos críticos</div>
+              <div class="filter-btn" onclick="toggleFilter(this,'commit','anomaly')" data-filter="commit" data-value="anomaly">Con anomalías</div>
+            </div>
+          </div>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-slate-700">
+                <th class="text-left py-2 font-medium">Commit Hash</th>
+                <th class="text-left py-2 font-medium">Repositorio</th>
+                <th class="text-left py-2 font-medium">Mensaje</th>
+                <th class="text-left py-2 font-medium">Archivos</th>
+                <th class="text-left py-2 font-medium">Fecha / Hora</th>
+                <th class="text-left py-2 font-medium">Anomalías</th>
+                <th class="text-left py-2 font-medium">Hallazgos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="table-row" onclick="openCommitDetail('a7f3c21')">
+                <td class="py-2 font-mono text-violet-400">a7f3c21</td>
+                <td class="py-2 text-slate-300">ios-biometric-auth</td>
+                <td class="py-2 text-slate-300">"Fix session handling"</td>
+                <td class="py-2 text-slate-400">3 archivos (+47/-3)</td>
+                <td class="py-2"><span class="text-red-400">2026-03-15 02:34 AM</span></td>
+                <td class="py-2">
+                  <span class="detective-tag">TIMING</span>
+                  <span class="detective-tag">AUTHOR</span>
+                  <span class="detective-tag">CRITICAL_FILES</span>
+                </td>
+                <td class="py-2"><span class="chip chip-critical">3 CRITICAL</span></td>
+              </tr>
+              <tr class="table-row" onclick="openCommitDetail('c3d8e45')">
+                <td class="py-2 font-mono text-violet-400">c3d8e45</td>
+                <td class="py-2 text-slate-300">payment-processor</td>
+                <td class="py-2 text-slate-300">"Update config"</td>
+                <td class="py-2 text-slate-400">1 archivo (+12/-0)</td>
+                <td class="py-2"><span class="text-red-400">2026-03-15 03:12 AM</span></td>
+                <td class="py-2">
+                  <span class="detective-tag">TIMING</span>
+                  <span class="detective-tag">RAPID_SUCCESSION</span>
+                </td>
+                <td class="py-2"><span class="chip chip-critical">2 CRITICAL</span></td>
+              </tr>
+              <tr class="table-row" onclick="openCommitDetail('f9a2b67')">
+                <td class="py-2 font-mono text-violet-400">f9a2b67</td>
+                <td class="py-2 text-slate-300">auth-service</td>
+                <td class="py-2 text-slate-300">"Minor fix"</td>
+                <td class="py-2 text-slate-400">2 archivos (+8/-2)</td>
+                <td class="py-2"><span class="text-red-400">2026-03-15 03:45 AM</span></td>
+                <td class="py-2">
+                  <span class="detective-tag">TIMING</span>
+                  <span class="detective-tag">RAPID_SUCCESSION</span>
+                </td>
+                <td class="py-2"><span class="chip chip-high">1 HIGH</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- REPOS AFECTADOS -->
+        <div class="card p-4">
+          <div class="text-sm font-semibold text-slate-200 mb-3">Repositorios Afectados por este Autor</div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-900 rounded p-3 cursor-pointer hover:bg-slate-800" onclick="openDrawer('repo-detail')">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-200 font-medium">ios-biometric-auth</span>
+                <span class="chip chip-critical">CRÍTICO</span>
+              </div>
+              <div class="text-slate-400">2 commits · 3 hallazgos críticos</div>
+              <div class="text-slate-500">Archivos críticos: SessionService.swift, AppConfig.swift</div>
+            </div>
+            <div class="bg-slate-900 rounded p-3 cursor-pointer hover:bg-slate-800" onclick="openDrawer('repo-detail')">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-200 font-medium">payment-processor</span>
+                <span class="chip chip-critical">CRÍTICO</span>
+              </div>
+              <div class="text-slate-400">1 commit · 2 hallazgos críticos</div>
+              <div class="text-slate-500">Archivos críticos: PaymentProcessor.java</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== AGENTES ==================== -->
+    <div id="content-agentes" class="hidden">
+      <!-- AGENT CARDS -->
+      <div class="grid grid-cols-3 gap-4 mb-5">
+        <div class="agent-card selected" id="agent-inspector" onclick="selectAgent('inspector')">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-blue-900 border-2 border-blue-500 rounded-full flex items-center justify-center text-lg">🔍</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-200">Inspector Agent</div>
+              <div class="text-xs text-green-400">● Activo</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-blue-400">47</div><div class="text-slate-500">Escaneos</div></div>
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-red-400">284</div><div class="text-slate-500">Hallazgos</div></div>
+          </div>
+          <div class="text-xs text-slate-400">Precisión promedio: <span class="text-blue-300 font-medium">87.3%</span></div>
+          <div class="text-xs text-slate-400">Tokens consumidos: <span class="text-slate-300">2.1M</span></div>
+        </div>
+        <div class="agent-card" id="agent-detective" onclick="selectAgent('detective')">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-amber-900 border-2 border-amber-500 rounded-full flex items-center justify-center text-lg">🕵️</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-200">Detective Agent</div>
+              <div class="text-xs text-green-400">● Activo</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-amber-400">47</div><div class="text-slate-500">Análisis</div></div>
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-orange-400">156</div><div class="text-slate-500">Anomalías</div></div>
+          </div>
+          <div class="text-xs text-slate-400">Precisión promedio: <span class="text-amber-300 font-medium">91.2%</span></div>
+          <div class="text-xs text-slate-400">Tokens consumidos: <span class="text-slate-300">1.2M</span></div>
+        </div>
+        <div class="agent-card" id="agent-fiscal" onclick="selectAgent('fiscal')">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-green-900 border-2 border-green-500 rounded-full flex items-center justify-center text-lg">💰</div>
+            <div>
+              <div class="text-sm font-semibold text-slate-200">Fiscal Agent</div>
+              <div class="text-xs text-green-400">● Activo</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-green-400">47</div><div class="text-slate-500">Reportes</div></div>
+            <div class="bg-slate-900 rounded p-2 text-center"><div class="text-lg font-bold text-teal-400">4.8</div><div class="text-slate-500">Score prom.</div></div>
+          </div>
+          <div class="text-xs text-slate-400">Precisión promedio: <span class="text-green-300 font-medium">94.1%</span></div>
+          <div class="text-xs text-slate-400">Tokens consumidos: <span class="text-slate-300">0.5M</span></div>
+        </div>
+      </div>
+
+      <!-- AGENT DETAIL -->
+      <div class="card p-5" id="agent-detail">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-sm font-semibold text-slate-200" id="agent-detail-title">🔍 Inspector Agent — Configuración</div>
+          <div class="flex gap-2">
+            <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded hover:bg-slate-600" onclick="resetPrompt()">↩ Restaurar por defecto</button>
+            <button class="text-xs bg-violet-600 text-white px-3 py-1.5 rounded hover:bg-violet-700" onclick="saveAgent()">💾 Guardar cambios</button>
+          </div>
+        </div>
+
+        <!-- TABS AGENTE -->
+        <div class="flex gap-1 mb-4">
+          <div class="tab-btn active text-xs py-1.5 px-3" id="atab-prompt" onclick="switchAgentTab('prompt')">📝 Prompt del Sistema</div>
+          <div class="tab-btn text-xs py-1.5 px-3" id="atab-patrones" onclick="switchAgentTab('patrones')">🔎 Patrones de Detección</div>
+          <div class="tab-btn text-xs py-1.5 px-3" id="atab-stats" onclick="switchAgentTab('stats')">📊 Estadísticas</div>
+        </div>
+
+        <div id="agent-tab-content">
+          <!-- PROMPT TAB (default) -->
+          <div id="atab-content-prompt">
+            <div class="text-xs text-slate-400 mb-2">El prompt del sistema define el comportamiento base del agente. Puedes personalizarlo para ajustar el nivel de sensibilidad, el idioma del reporte, o agregar contexto específico de tu organización.</div>
+            <textarea id="agent-prompt-text" class="w-full h-64 text-xs font-mono resize-none" style="background:#0f172a; border:1px solid #334155; border-radius:6px; padding:12px; color:#94a3b8;">Eres el Inspector Agent del sistema SCR (Source Code Review). Tu función es analizar fragmentos de código fuente en busca de patrones maliciosos intencionales.
+
+CONTEXTO: Estás analizando código de una institución financiera. Los hallazgos de alta confianza (>80%) deben ser marcados como críticos automáticamente.
+
+PATRONES A DETECTAR:
+- EXEC_ENV_BACKDOOR: Ejecución oculta vía variables de entorno no documentadas
+- LOGIC_BOMB: Condiciones temporales o de estado que activan comportamiento dañino
+- OBFUSCATED_CODE: Código deliberadamente ofuscado para ocultar su propósito
+- PRIVILEGE_ESCALATION: Intentos de elevar privilegios sin autorización
+- DATA_EXFILTRATION: Envío de datos sensibles a endpoints externos no autorizados
+- SUPPLY_CHAIN_ATTACK: Dependencias sospechosas o typosquatting
+- TIMING_ATTACK: Side-channels de timing en operaciones criptográficas
+- SUSPICIOUS_PERMISSIONS: Permisos innecesarios para el propósito de la app
+- DEFERRED_EXECUTION: Cron jobs, timers o triggers con comportamiento sospechoso
+- DYNAMIC_CODE_EXECUTION: Uso de eval(), exec() con input no sanitizado
+
+FORMATO DE RESPUESTA: JSON con campos: pattern, file, function, line_start, line_end, code_snippet, severity (CRITICAL/HIGH/MEDIUM/LOW), confidence (0-100), description, remediation_steps.
+
+IMPORTANTE: Solo reporta hallazgos con confianza >= 40%. Para confianza < 60%, marca como LOW. No reportes vulnerabilidades de seguridad estándar (inyección SQL, XSS, etc.) — eso corresponde a SAST.</textarea>
+            <div class="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span id="prompt-chars">1,247 caracteres</span>
+              <span>Última modificación: 01 May 2026, 07:00 AM por jgarcia</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800 z-10">
+    <h3 class="font-semibold text-slate-100 text-sm" id="drawer-title">Detalle</h3>
+    <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div class="p-4" id="drawer-content"></div>
+</div>
+
+<script>
+let currentAgent = 'inspector';
+
+function switchMainTab(tab) {
+  ['forense','agentes'].forEach(t => {
+    document.getElementById('content-'+t).classList.toggle('hidden', t !== tab);
+    document.getElementById('mtab-'+t).classList.toggle('active', t === tab);
+  });
+  document.getElementById('breadcrumb').textContent = tab === 'forense' ? 'Investigación Forense' : 'Agentes';
+  document.getElementById('top-action-btn').textContent = tab === 'forense' ? '⬇️ Exportar resultados' : '📊 Ver métricas completas';
+  // Update sidebar
+  document.getElementById('nav-forense').classList.toggle('active', tab === 'forense');
+  document.getElementById('nav-agentes').classList.toggle('active', tab === 'agentes');
+}
+
+document.getElementById('nav-agentes').onclick = () => switchMainTab('agentes');
+
+function updateForenseForm() {
+  const type = document.getElementById('forense-type').value;
+  const placeholders = {
+    author: 'Nombre del autor, email o username de GitHub...',
+    repo: 'Nombre del repositorio...',
+    pattern: 'Ej: DATA_EXFILTRATION, LOGIC_BOMB...',
+    file: 'Ruta del archivo, ej: src/session/SessionService.swift',
+    date: 'Rango de fechas (se usa el selector de la derecha)'
+  };
+  document.getElementById('forense-input').placeholder = placeholders[type] || '';
+}
+
+function runForenseSearch() {
+  const type = document.getElementById('forense-type').value;
+  const query = document.getElementById('forense-input').value;
+  showToast(`Buscando ${type}: "${query || 'todos'}"...`);
+  // Results already shown as default
+}
+
+function toggleFilter(el, type, value) {
+  document.querySelectorAll(`[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function openCommitDetail(hash) {
+  document.getElementById('drawer-title').textContent = 'Commit ' + hash;
+  document.getElementById('drawer-content').innerHTML = `
+    <div class="space-y-4 text-xs">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-slate-900 rounded p-2"><div class="text-slate-500">Hash</div><div class="font-mono text-violet-400">${hash}</div></div>
+        <div class="bg-slate-900 rounded p-2"><div class="text-slate-500">Fecha</div><div class="text-red-400">2026-03-15 02:34 AM</div></div>
+        <div class="bg-slate-900 rounded p-2"><div class="text-slate-500">Autor</div><div class="text-slate-200">dev-temp-contractor</div></div>
+        <div class="bg-slate-900 rounded p-2"><div class="text-slate-500">Repositorio</div><div class="text-slate-200">ios-biometric-auth</div></div>
+      </div>
+      <div>
+        <div class="text-slate-400 font-medium mb-2">Mensaje del Commit</div>
+        <div class="bg-slate-900 rounded p-2 text-slate-300">"Fix session handling"</div>
+        <div class="text-amber-400 mt-1">⚠️ HIDDEN_COMMITS: Mensaje genérico en archivo crítico</div>
+      </div>
+      <div>
+        <div class="text-slate-400 font-medium mb-2">Archivos Modificados</div>
+        <div class="space-y-1">
+          <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">src/session/SessionService.swift</span><span class="text-green-400">+47</span><span class="text-red-400">-3</span><span class="chip chip-critical">CRITICAL</span></div>
+          <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">src/config/AppConfig.swift</span><span class="text-green-400">+12</span><span class="text-red-400">-0</span><span class="chip chip-high">HIGH</span></div>
+          <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">Info.plist</span><span class="text-green-400">+3</span><span class="text-red-400">-1</span><span class="chip chip-medium">MEDIUM</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="text-slate-400 font-medium mb-2">Anomalías del Detective</div>
+        <div class="space-y-1">
+          <div class="bg-red-950 border border-red-800 rounded p-2"><span class="detective-tag">TIMING_ANOMALIES</span><span class="text-red-300 ml-2">Commit a las 2:34 AM (fuera de horario)</span></div>
+          <div class="bg-red-950 border border-red-800 rounded p-2"><span class="detective-tag">AUTHOR_ANOMALIES</span><span class="text-red-300 ml-2">Primer commit de este autor en repo crítico</span></div>
+          <div class="bg-amber-950 border border-amber-800 rounded p-2"><span class="detective-tag">CRITICAL_FILES</span><span class="text-amber-300 ml-2">Cambios a archivos de autenticación</span></div>
+        </div>
+      </div>
+      <a href="scr_03_hallazgos.html" class="block text-center bg-violet-600 text-white py-2 rounded-lg hover:bg-violet-700">Ver hallazgos de este commit →</a>
+    </div>
+  `;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function openDrawer(type) {
+  document.getElementById('drawer-title').textContent = type === 'repo-detail' ? 'Detalle del Repositorio' : 'Detalle';
+  document.getElementById('drawer-content').innerHTML = `<div class="text-xs text-slate-400">Ver detalle completo en la sección de Hallazgos SCR.</div><a href="scr_03_hallazgos.html" class="block mt-3 text-center bg-violet-600 text-white py-2 rounded-lg hover:bg-violet-700">Ir a Hallazgos SCR →</a>`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function selectAgent(agent) {
+  currentAgent = agent;
+  ['inspector','detective','fiscal'].forEach(a => {
+    document.getElementById('agent-'+a).classList.toggle('selected', a === agent);
+  });
+  const titles = { inspector:'🔍 Inspector Agent — Configuración', detective:'🕵️ Detective Agent — Configuración', fiscal:'💰 Fiscal Agent — Configuración' };
+  document.getElementById('agent-detail-title').textContent = titles[agent];
+  switchAgentTab('prompt');
+}
+
+function switchAgentTab(tab) {
+  ['prompt','patrones','stats'].forEach(t => {
+    document.getElementById('atab-'+t).classList.toggle('active', t === tab);
+  });
+  const contents = {
+    prompt: document.getElementById('atab-content-prompt').outerHTML,
+    patrones: `
+      <div class="space-y-2 text-xs" id="atab-content-patrones">
+        <div class="text-slate-400 mb-3">Patrones activos para el ${currentAgent === 'inspector' ? 'Inspector' : currentAgent === 'detective' ? 'Detective' : 'Fiscal'} Agent. Puedes activar/desactivar y ajustar el umbral de confianza mínimo.</div>
+        ${currentAgent === 'inspector' ? `
+          ${['EXEC_ENV_BACKDOOR','LOGIC_BOMB','OBFUSCATED_CODE','PRIVILEGE_ESCALATION','DATA_EXFILTRATION','SUPPLY_CHAIN_ATTACK','TIMING_ATTACK','SUSPICIOUS_PERMISSIONS','DEFERRED_EXECUTION','DYNAMIC_CODE_EXECUTION'].map((p,i) => `
+            <div class="bg-slate-900 rounded p-3 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" checked class="accent-violet-500">
+                <span class="pattern-tag">${p}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-slate-500">Umbral mín:</span>
+                <input type="number" value="${40 + i*5}" min="0" max="100" class="w-16 text-center" style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:2px 4px;color:#e2e8f0;font-size:11px">
+                <span class="text-slate-500">%</span>
+              </div>
+            </div>
+          `).join('')}
+        ` : currentAgent === 'detective' ? `
+          ${['HIDDEN_COMMITS','TIMING_ANOMALIES','RAPID_SUCCESSION','CRITICAL_FILES','MASS_CHANGES','AUTHOR_ANOMALIES'].map(p => `
+            <div class="bg-slate-900 rounded p-3 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" checked class="accent-violet-500">
+                <span class="detective-tag">${p}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-slate-500">Severidad:</span>
+                <select style="font-size:11px;padding:2px 4px"><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
+              </div>
+            </div>
+          `).join('')}
+        ` : '<div class="text-slate-400">El Fiscal Agent no usa patrones directos — sintetiza los hallazgos del Inspector y Detective.</div>'}
+        <button class="mt-2 bg-violet-600 text-white text-xs px-3 py-1.5 rounded hover:bg-violet-700" onclick="saveAgent()">💾 Guardar patrones</button>
+      </div>`,
+    stats: `
+      <div class="space-y-4 text-xs" id="atab-content-stats">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-slate-900 rounded p-3 text-center"><div class="text-2xl font-bold text-blue-400">47</div><div class="text-slate-400">Ejecuciones</div></div>
+          <div class="bg-slate-900 rounded p-3 text-center"><div class="text-2xl font-bold text-green-400">87.3%</div><div class="text-slate-400">Precisión</div></div>
+          <div class="bg-slate-900 rounded p-3 text-center"><div class="text-2xl font-bold text-amber-400">8.2s</div><div class="text-slate-400">T. prom. por chunk</div></div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">Distribución de Hallazgos por Patrón</div>
+          <div class="space-y-2">
+            ${[['DATA_EXFILTRATION',28],['LOGIC_BOMB',22],['DYNAMIC_CODE_EXECUTION',18],['OBFUSCATED_CODE',15],['EXEC_ENV_BACKDOOR',12]].map(([p,v]) => `
+              <div class="flex items-center gap-2">
+                <span class="w-40 text-slate-400">${p}</span>
+                <div class="flex-1 bg-slate-700 rounded-full h-2"><div class="h-2 rounded-full bg-violet-500" style="width:${v*3}%"></div></div>
+                <span class="text-slate-300 w-6 text-right">${v}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">Falsos Positivos Reportados</div>
+          <div class="bg-slate-900 rounded p-3 flex justify-between"><span class="text-slate-300">Total FP marcados</span><span class="text-slate-200 font-medium">8 de 284 (2.8%)</span></div>
+        </div>
+      </div>`
+  };
+  document.getElementById('agent-tab-content').innerHTML = contents[tab] || '';
+}
+
+function resetPrompt() {
+  showToast('Prompt restaurado al valor por defecto');
+}
+
+function saveAgent() {
+  showToast('Configuración del agente guardada correctamente');
+}
+
+function exportForense() {
+  showToast('Exportando resultados de investigación forense...');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'fixed bottom-4 right-4 bg-violet-700 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// Author activity chart
+const authorCtx = document.getElementById('authorChart').getContext('2d');
+new Chart(authorCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Mar 1','Mar 5','Mar 10','Mar 15','Mar 20','Mar 25','Abr 1','Abr 15','May 1'],
+    datasets: [{ label: 'Commits', data: [0,0,0,3,0,0,0,0,0], backgroundColor: ctx => ctx.raw > 0 ? '#dc2626' : '#334155', borderRadius: 3 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+      y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 }, stepSize: 1 } }
+    }
+  }
+});
+</script>
+</body>
+</html>

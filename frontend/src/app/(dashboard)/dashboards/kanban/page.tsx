@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   DndContext,
   closestCorners,
@@ -13,6 +11,7 @@ import {
   useSensors,
   DragEndEvent,
 } from '@dnd-kit/core';
+import { Layers } from 'lucide-react';
 import {
   SortableContext,
   sortableKeyboardCoordinates,

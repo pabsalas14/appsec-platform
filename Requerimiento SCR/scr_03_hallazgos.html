@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR — Hallazgos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .sidebar { background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar-item { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+  .sidebar-item:hover { background: #334155; color: #e2e8f0; }
+  .sidebar-item.active { background: #7c3aed; color: #fff; }
+  .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; padding: 16px 16px 6px; text-transform: uppercase; }
+  .sidebar-scr { color: #7c3aed; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-critical { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .chip-high { background: #431407; color: #fb923c; border: 1px solid #7c2d12; }
+  .chip-medium { background: #422006; color: #fbbf24; border: 1px solid #78350f; }
+  .chip-low { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .filter-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; background: #1e293b; border: 1px solid #334155; color: #94a3b8; transition: all 0.15s; }
+  .filter-btn:hover { border-color: #7c3aed; color: #e2e8f0; }
+  .filter-btn.active { background: #2e1065; border-color: #7c3aed; color: #c4b5fd; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #2e1065; border: 1px solid #7c3aed; color: #c4b5fd; cursor: pointer; }
+  .filter-chip:hover { background: #3b0764; }
+  .table-row { border-bottom: 1px solid #1e293b; transition: background 0.1s; cursor: pointer; }
+  .table-row:hover { background: #1e293b; }
+  .table-row.selected { background: #1e1b4b; border-left: 2px solid #7c3aed; }
+  .drawer { position: fixed; top: 0; right: -600px; width: 600px; height: 100vh; background: #1e293b; border-left: 1px solid #334155; z-index: 50; transition: right 0.3s ease; overflow-y: auto; }
+  .drawer.open { right: 0; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+  .overlay.show { display: block; }
+  .tab-btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #64748b; }
+  .tab-btn.active { background: #7c3aed; color: #fff; }
+  .tab-btn:hover:not(.active) { color: #e2e8f0; background: #334155; }
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .status-open { background: #1e3a5f; color: #60a5fa; }
+  .status-in-progress { background: #3b2f00; color: #fbbf24; }
+  .status-review { background: #1a1a3e; color: #818cf8; }
+  .status-certified { background: #052e16; color: #4ade80; }
+  .status-exception { background: #2d1b00; color: #f97316; }
+  .status-fp { background: #1e293b; color: #64748b; }
+  .timeline-item { display: flex; gap: 12px; padding: 8px 0; }
+  .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; margin-top: 4px; flex-shrink: 0; }
+  .timeline-line { width: 1px; background: #334155; margin-left: 3px; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; font-family: 'Courier New', monospace; font-size: 11px; color: #94a3b8; overflow-x: auto; }
+  .action-bar { position: sticky; bottom: 0; background: #1e293b; border-top: 1px solid #334155; padding: 10px 16px; display: none; }
+  .action-bar.show { display: flex; }
+  select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+  select:focus { outline: none; border-color: #7c3aed; }
+  input[type="text"], input[type="search"] { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 12px; }
+  input:focus { outline: none; border-color: #7c3aed; }
+  .pattern-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #1e1b4b; color: #a5b4fc; border: 1px solid #3730a3; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-56 flex-shrink-0 flex flex-col overflow-y-auto">
+  <div class="p-4 border-b border-slate-700">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">A</div>
+      <span class="font-semibold text-sm text-slate-200">AppSec Platform</span>
+    </div>
+  </div>
+  <div class="flex-1 p-2 space-y-1">
+    <div class="sidebar-section">Principal</div>
+    <div class="sidebar-item">📊 Dashboard Ejecutivo</div>
+    <div class="sidebar-item">🎯 Score de Madurez</div>
+    <div class="sidebar-section">Organización</div>
+    <div class="sidebar-item">🏛️ Estructura Org.</div>
+    <div class="sidebar-item">📦 Inventario de Activos</div>
+    <div class="sidebar-section">Vulnerabilidades</div>
+    <div class="sidebar-item">🚨 Concentrado de Hallazgos</div>
+    <div class="sidebar-item">📋 Planes de Remediación</div>
+    <div class="sidebar-item">🧩 Threat Modeling</div>
+    <div class="sidebar-section">Operación</div>
+    <div class="sidebar-item">🚀 Liberaciones</div>
+    <div class="sidebar-item">📅 Programas Anuales</div>
+    <div class="sidebar-section sidebar-scr">🔬 SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_02_dashboard.html'">📊 Dashboard SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_01_nuevo_escaneo.html'">🔍 Nuevo Escaneo</div>
+    <div class="sidebar-item active">🚨 Hallazgos SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_04_historial.html'">📋 Historial de Escaneos</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🕵️ Investigación Forense</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🤖 Agentes</div>
+    <div class="sidebar-section">Configuración</div>
+    <div class="sidebar-item">⚙️ Administración</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col overflow-hidden">
+  <!-- TOP BAR -->
+  <div class="h-12 border-b border-slate-700 bg-slate-800 flex items-center justify-between px-4">
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+      <span>SCR</span><span class="text-slate-600">/</span><span class="text-slate-200">Hallazgos</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600" onclick="exportCSV()">⬇️ Exportar CSV</button>
+      <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600" onclick="exportPDF()">📄 Reporte PDF</button>
+      <div class="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-bold text-white">JG</div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="border-b border-slate-700 bg-slate-800 px-4 py-2">
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- SEARCH -->
+      <div class="relative">
+        <span class="absolute left-2 top-1.5 text-slate-500 text-xs">🔍</span>
+        <input type="search" id="search-input" placeholder="Buscar hallazgo, archivo, función..." class="pl-6 w-64" oninput="applyFilters()">
+      </div>
+      <!-- SEVERITY -->
+      <div class="filter-btn active" onclick="toggleFilter(this,'severity','all')" data-filter="severity" data-value="all">Todas</div>
+      <div class="filter-btn" onclick="toggleFilter(this,'severity','critical')" data-filter="severity" data-value="critical">🔴 Critical</div>
+      <div class="filter-btn" onclick="toggleFilter(this,'severity','high')" data-filter="severity" data-value="high">🟠 High</div>
+      <div class="filter-btn" onclick="toggleFilter(this,'severity','medium')" data-filter="severity" data-value="medium">🟡 Medium</div>
+      <div class="filter-btn" onclick="toggleFilter(this,'severity','low')" data-filter="severity" data-value="low">🟢 Low</div>
+      <div class="w-px h-5 bg-slate-600"></div>
+      <!-- STATUS -->
+      <select onchange="applyFilters()" id="status-filter">
+        <option value="">Todos los estatus</option>
+        <option value="open">Abierto</option>
+        <option value="in_progress">En Progreso</option>
+        <option value="review">En Revisión</option>
+        <option value="certified">Certificado</option>
+        <option value="exception">Excepción</option>
+        <option value="fp">Falso Positivo</option>
+      </select>
+      <!-- PATTERN -->
+      <select onchange="applyFilters()" id="pattern-filter">
+        <option value="">Todos los patrones</option>
+        <option value="DATA_EXFILTRATION">DATA_EXFILTRATION</option>
+        <option value="LOGIC_BOMB">LOGIC_BOMB</option>
+        <option value="DYNAMIC_CODE_EXECUTION">DYNAMIC_CODE_EXECUTION</option>
+        <option value="OBFUSCATED_CODE">OBFUSCATED_CODE</option>
+        <option value="EXEC_ENV_BACKDOOR">EXEC_ENV_BACKDOOR</option>
+        <option value="PRIVILEGE_ESCALATION">PRIVILEGE_ESCALATION</option>
+        <option value="SUPPLY_CHAIN_ATTACK">SUPPLY_CHAIN_ATTACK</option>
+        <option value="TIMING_ATTACK">TIMING_ATTACK</option>
+        <option value="SUSPICIOUS_PERMISSIONS">SUSPICIOUS_PERMISSIONS</option>
+        <option value="DEFERRED_EXECUTION">DEFERRED_EXECUTION</option>
+      </select>
+      <!-- REPO -->
+      <select onchange="applyFilters()" id="repo-filter">
+        <option value="">Todos los repos</option>
+        <option value="ios-biometric-auth">ios-biometric-auth</option>
+        <option value="payment-processor">payment-processor</option>
+        <option value="auth-service">auth-service</option>
+        <option value="hey-api">hey-api</option>
+        <option value="api-gateway-service">api-gateway-service</option>
+      </select>
+      <!-- ASSIGNEE -->
+      <select onchange="applyFilters()" id="assignee-filter">
+        <option value="">Todos los analistas</option>
+        <option value="jgarcia">J. García</option>
+        <option value="mnunez">M. Núñez</option>
+        <option value="lperez">L. Pérez</option>
+      </select>
+      <button class="text-xs text-slate-500 hover:text-slate-300" onclick="clearFilters()">✕ Limpiar</button>
+    </div>
+    <!-- ACTIVE FILTER CHIPS -->
+    <div id="active-chips" class="flex gap-2 mt-2 flex-wrap"></div>
+  </div>
+
+  <!-- TABLE AREA -->
+  <div class="flex-1 overflow-y-auto">
+    <!-- SUMMARY BAR -->
+    <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      <div class="flex items-center gap-4">
+        <span id="count-label">Mostrando <strong class="text-slate-200">46</strong> hallazgos</span>
+        <span>🔴 <strong class="text-red-400">12</strong> Critical</span>
+        <span>🟠 <strong class="text-orange-400">18</strong> High</span>
+        <span>🟡 <strong class="text-yellow-400">11</strong> Medium</span>
+        <span>🟢 <strong class="text-green-400">5</strong> Low</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)">
+        <label for="select-all" class="cursor-pointer">Seleccionar todos</label>
+      </div>
+    </div>
+
+    <table class="w-full text-xs" id="findings-table">
+      <thead class="sticky top-0 bg-slate-900 z-10">
+        <tr class="text-slate-500 border-b border-slate-700">
+          <th class="w-8 py-2 px-3"></th>
+          <th class="text-left py-2 px-3 font-medium cursor-pointer hover:text-slate-300" onclick="sortTable('severity')">Severidad ↕</th>
+          <th class="text-left py-2 px-3 font-medium cursor-pointer hover:text-slate-300" onclick="sortTable('pattern')">Patrón ↕</th>
+          <th class="text-left py-2 px-3 font-medium">Repositorio / Archivo</th>
+          <th class="text-left py-2 px-3 font-medium">Función / Línea</th>
+          <th class="text-left py-2 px-3 font-medium">Estatus</th>
+          <th class="text-left py-2 px-3 font-medium">Asignado a</th>
+          <th class="text-left py-2 px-3 font-medium cursor-pointer hover:text-slate-300" onclick="sortTable('date')">Detectado ↕</th>
+          <th class="text-left py-2 px-3 font-medium">Confianza</th>
+        </tr>
+      </thead>
+      <tbody id="findings-body">
+        <!-- Rows generated by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ACTION BAR (sticky, shows when rows selected) -->
+  <div class="action-bar" id="action-bar">
+    <div class="flex items-center gap-3 flex-1">
+      <span class="text-sm text-slate-300"><strong id="selected-count">0</strong> hallazgos seleccionados</span>
+      <button class="text-xs bg-amber-700 text-amber-200 px-3 py-1.5 rounded hover:bg-amber-600" onclick="bulkAction('assign')">👤 Asignar</button>
+      <button class="text-xs bg-blue-800 text-blue-200 px-3 py-1.5 rounded hover:bg-blue-700" onclick="bulkAction('status')">🔄 Cambiar Estatus</button>
+      <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded hover:bg-slate-600" onclick="bulkAction('export')">⬇️ Exportar selección</button>
+      <button class="text-xs bg-red-900 text-red-300 px-3 py-1.5 rounded hover:bg-red-800" onclick="bulkAction('fp')">🚫 Marcar como FP</button>
+    </div>
+    <button class="text-slate-500 hover:text-slate-300 text-sm" onclick="clearSelection()">✕</button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER: HALLAZGO DETALLE -->
+<div class="drawer" id="drawer">
+  <div class="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800 z-10">
+    <div>
+      <h3 class="font-semibold text-slate-100 text-sm" id="drawer-title">DATA_EXFILTRATION</h3>
+      <div class="flex items-center gap-2 mt-1" id="drawer-meta"></div>
+    </div>
+    <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <!-- DRAWER TABS -->
+  <div class="flex gap-1 p-3 border-b border-slate-700 bg-slate-800 sticky top-14 z-10">
+    <div class="tab-btn active" id="dtab-detalle" onclick="switchDrawerTab('detalle')">📋 Detalle Técnico</div>
+    <div class="tab-btn" id="dtab-detective" onclick="switchDrawerTab('detective')">🕵️ Análisis Detective</div>
+    <div class="tab-btn" id="dtab-ia" onclick="switchDrawerTab('ia')">🤖 Análisis IA</div>
+    <div class="tab-btn" id="dtab-bitacora" onclick="switchDrawerTab('bitacora')">📝 Bitácora</div>
+  </div>
+  <div class="p-4" id="drawer-content"></div>
+</div>
+
+<!-- MODAL ACCIONES MASIVAS -->
+<div id="bulk-modal" class="fixed inset-0 z-60 flex items-center justify-center hidden">
+  <div class="bg-slate-800 border border-slate-600 rounded-xl p-5 w-96 shadow-2xl">
+    <h3 class="font-semibold text-slate-100 mb-3" id="bulk-modal-title">Acción Masiva</h3>
+    <div id="bulk-modal-content"></div>
+    <div class="flex gap-2 mt-4">
+      <button class="flex-1 bg-violet-600 text-white text-sm py-2 rounded-lg hover:bg-violet-700" onclick="confirmBulk()">Confirmar</button>
+      <button class="flex-1 bg-slate-700 text-slate-300 text-sm py-2 rounded-lg hover:bg-slate-600" onclick="closeBulkModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT -->
+<div id="export-modal" class="fixed inset-0 z-60 flex items-center justify-center hidden">
+  <div class="bg-slate-800 border border-slate-600 rounded-xl p-5 w-80 shadow-2xl">
+    <h3 class="font-semibold text-slate-100 mb-3">Exportar Hallazgos</h3>
+    <div class="space-y-2 text-sm text-slate-300">
+      <div class="p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 flex items-center gap-2" onclick="doExport('pdf')">📄 <div><div class="font-medium">Reporte Ejecutivo PDF</div><div class="text-xs text-slate-400">Resumen con narrativa y recomendaciones</div></div></div>
+      <div class="p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 flex items-center gap-2" onclick="doExport('csv')">📊 <div><div class="font-medium">Exportar CSV</div><div class="text-xs text-slate-400">Todos los campos para análisis externo</div></div></div>
+      <div class="p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 flex items-center gap-2" onclick="doExport('json')">🔗 <div><div class="font-medium">Exportar JSON</div><div class="text-xs text-slate-400">Para integración con SIEM/SOAR</div></div></div>
+    </div>
+    <button class="mt-3 w-full bg-slate-700 text-slate-300 text-sm py-2 rounded-lg hover:bg-slate-600" onclick="closeExportModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+const findings = [
+  { id:'SCR-001', severity:'critical', pattern:'DATA_EXFILTRATION', repo:'ios-biometric-auth', file:'src/session/SessionService.swift', func:'uploadUserData()', line:134, status:'open', assignee:'jgarcia', assignee_name:'J. García', date:'2026-05-01', confidence:94, description:'La función uploadUserData() envía datos biométricos del usuario a un endpoint externo no documentado (api.external-collect.io) usando URLSession sin cifrado adicional. El endpoint no está en la lista de dominios permitidos del Info.plist.' },
+  { id:'SCR-002', severity:'critical', pattern:'LOGIC_BOMB', repo:'payment-processor', file:'src/payment/PaymentProcessor.java', func:'processTransaction()', line:67, status:'in_progress', assignee:'mnunez', assignee_name:'M. Núñez', date:'2026-04-30', confidence:89, description:'Se detecta una condición oculta que activa un comportamiento diferente cuando la fecha del sistema es posterior al 2026-06-01. En esa condición, las transacciones mayores a $10,000 se redirigen a una cuenta secundaria antes de completar el flujo normal.' },
+  { id:'SCR-003', severity:'critical', pattern:'DYNAMIC_CODE_EXECUTION', repo:'auth-service', file:'src/middleware/AuthMiddleware.js', func:'validateToken()', line:89, status:'review', assignee:'lperez', assignee_name:'L. Pérez', date:'2026-04-28', confidence:97, description:'Se usa eval() para ejecutar código recibido en el payload del JWT. Cualquier token malformado con código JavaScript puede ejecutarse en el contexto del servidor de autenticación.' },
+  { id:'SCR-004', severity:'high', pattern:'EXEC_ENV_BACKDOOR', repo:'ios-biometric-auth', file:'src/config/AppConfig.swift', func:'loadConfiguration()', line:22, status:'open', assignee:'jgarcia', assignee_name:'J. García', date:'2026-05-01', confidence:82, description:'La función lee una variable de entorno DEBUG_BYPASS_AUTH que, cuando está presente, deshabilita completamente la autenticación biométrica. Esta variable no está documentada en ningún README ni en el pipeline de CI/CD.' },
+  { id:'SCR-005', severity:'high', pattern:'OBFUSCATED_CODE', repo:'payment-processor', file:'src/utils/Encoder.java', func:'encodePayload()', line:201, status:'open', assignee:null, assignee_name:'Sin asignar', date:'2026-04-30', confidence:76, description:'El método encodePayload() contiene una secuencia de operaciones XOR y rotaciones de bits que no corresponde a ningún algoritmo de cifrado estándar. El resultado se envía a un endpoint externo.' },
+  { id:'SCR-006', severity:'high', pattern:'SUPPLY_CHAIN_ATTACK', repo:'api-gateway-service', file:'package.json', func:'dependencies', line:14, status:'open', assignee:null, assignee_name:'Sin asignar', date:'2026-04-25', confidence:88, description:'La dependencia "lodash-utils" versión 2.1.4 no existe en el registro oficial de npm. Es un paquete typosquatting de "lodash" que contiene código de exfiltración de variables de entorno.' },
+  { id:'SCR-007', severity:'medium', pattern:'DEFERRED_EXECUTION', repo:'auth-service', file:'src/cron/CleanupJob.js', func:'scheduleCleanup()', line:45, status:'open', assignee:'jgarcia', assignee_name:'J. García', date:'2026-04-28', confidence:71, description:'Se registra un cron job que se ejecuta a las 3:00 AM todos los días. El job accede a la tabla de sesiones activas y exporta los tokens a un archivo de log que no está en el directorio estándar de logs.' },
+  { id:'SCR-008', severity:'medium', pattern:'PRIVILEGE_ESCALATION', repo:'hey-api', file:'src/admin/AdminController.ts', func:'createUser()', line:78, status:'in_progress', assignee:'mnunez', assignee_name:'M. Núñez', date:'2026-04-27', confidence:65, description:'La función createUser() acepta un parámetro "role" sin validación del lado del servidor. Un usuario autenticado puede crear otro usuario con rol "admin" enviando el parámetro directamente en el body.' },
+  { id:'SCR-009', severity:'low', pattern:'TIMING_ATTACK', repo:'auth-service', file:'src/utils/CryptoUtils.js', func:'compareHashes()', line:112, status:'certified', assignee:'lperez', assignee_name:'L. Pérez', date:'2026-04-20', confidence:58, description:'La comparación de hashes usa === en lugar de una función de comparación en tiempo constante. Esto permite ataques de timing para inferir el hash correcto.' },
+  { id:'SCR-010', severity:'low', pattern:'SUSPICIOUS_PERMISSIONS', repo:'mobile-banking-android', file:'AndroidManifest.xml', func:'permissions', line:8, status:'fp', assignee:'jgarcia', assignee_name:'J. García', date:'2026-04-15', confidence:45, description:'La aplicación solicita el permiso PROCESS_OUTGOING_CALLS que no es necesario para una aplicación bancaria. Marcado como falso positivo tras revisión: el permiso es requerido por la librería de detección de fraude de terceros.' }
+];
+
+let selectedRows = new Set();
+let currentFinding = null;
+
+function renderTable(data) {
+  const tbody = document.getElementById('findings-body');
+  tbody.innerHTML = data.map(f => `
+    <tr class="table-row ${selectedRows.has(f.id) ? 'selected' : ''}" id="row-${f.id}" onclick="openFinding('${f.id}')">
+      <td class="py-2 px-3" onclick="event.stopPropagation()">
+        <input type="checkbox" ${selectedRows.has(f.id) ? 'checked' : ''} onchange="toggleRow('${f.id}', this)">
+      </td>
+      <td class="py-2 px-3"><span class="chip chip-${f.severity}">${f.severity.toUpperCase()}</span></td>
+      <td class="py-2 px-3"><span class="pattern-tag">${f.pattern}</span></td>
+      <td class="py-2 px-3">
+        <div class="text-slate-200 font-medium">${f.repo}</div>
+        <div class="text-slate-500 text-xs">${f.file}</div>
+      </td>
+      <td class="py-2 px-3">
+        <div class="text-slate-300">${f.func}</div>
+        <div class="text-slate-500">L.${f.line}</div>
+      </td>
+      <td class="py-2 px-3"><span class="status-badge status-${f.status}">${statusLabel(f.status)}</span></td>
+      <td class="py-2 px-3 text-slate-400">${f.assignee_name}</td>
+      <td class="py-2 px-3 text-slate-400">${f.date}</td>
+      <td class="py-2 px-3">
+        <div class="flex items-center gap-1">
+          <div class="w-16 bg-slate-700 rounded-full h-1.5"><div class="h-1.5 rounded-full ${f.confidence >= 80 ? 'bg-red-500' : f.confidence >= 60 ? 'bg-yellow-500' : 'bg-slate-500'}" style="width:${f.confidence}%"></div></div>
+          <span class="text-slate-400">${f.confidence}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function statusLabel(s) {
+  const labels = { open:'🔵 Abierto', in_progress:'🟡 En Progreso', review:'🔷 En Revisión', certified:'✅ Certificado', exception:'⚠️ Excepción', fp:'⬜ Falso Positivo' };
+  return labels[s] || s;
+}
+
+function toggleFilter(el, type, value) {
+  document.querySelectorAll(`[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const severity = document.querySelector('[data-filter="severity"].active')?.dataset.value || 'all';
+  const status = document.getElementById('status-filter').value;
+  const pattern = document.getElementById('pattern-filter').value;
+  const repo = document.getElementById('repo-filter').value;
+  const assignee = document.getElementById('assignee-filter').value;
+
+  const filtered = findings.filter(f => {
+    if (severity !== 'all' && f.severity !== severity) return false;
+    if (status && f.status !== status) return false;
+    if (pattern && f.pattern !== pattern) return false;
+    if (repo && f.repo !== repo) return false;
+    if (assignee && f.assignee !== assignee) return false;
+    if (search && !f.pattern.toLowerCase().includes(search) && !f.repo.toLowerCase().includes(search) && !f.file.toLowerCase().includes(search) && !f.func.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  renderTable(filtered);
+  document.getElementById('count-label').innerHTML = `Mostrando <strong class="text-slate-200">${filtered.length}</strong> hallazgos`;
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('status-filter').value = '';
+  document.getElementById('pattern-filter').value = '';
+  document.getElementById('repo-filter').value = '';
+  document.getElementById('assignee-filter').value = '';
+  document.querySelectorAll('[data-filter="severity"]').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-value="all"]').classList.add('active');
+  renderTable(findings);
+}
+
+function toggleRow(id, cb) {
+  if (cb.checked) selectedRows.add(id);
+  else selectedRows.delete(id);
+  document.getElementById('row-'+id).classList.toggle('selected', cb.checked);
+  updateActionBar();
+}
+
+function toggleSelectAll(cb) {
+  findings.forEach(f => {
+    if (cb.checked) selectedRows.add(f.id);
+    else selectedRows.delete(f.id);
+  });
+  renderTable(findings);
+  updateActionBar();
+}
+
+function clearSelection() {
+  selectedRows.clear();
+  renderTable(findings);
+  updateActionBar();
+}
+
+function updateActionBar() {
+  const bar = document.getElementById('action-bar');
+  const count = selectedRows.size;
+  document.getElementById('selected-count').textContent = count;
+  bar.classList.toggle('show', count > 0);
+}
+
+function openFinding(id) {
+  currentFinding = findings.find(f => f.id === id);
+  if (!currentFinding) return;
+  document.getElementById('drawer-title').textContent = currentFinding.pattern + ' — ' + currentFinding.id;
+  document.getElementById('drawer-meta').innerHTML = `
+    <span class="chip chip-${currentFinding.severity}">${currentFinding.severity.toUpperCase()}</span>
+    <span class="status-badge status-${currentFinding.status} text-xs">${statusLabel(currentFinding.status)}</span>
+    <span class="text-xs text-slate-500">${currentFinding.repo}</span>
+  `;
+  switchDrawerTab('detalle');
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function switchDrawerTab(tab) {
+  ['detalle','detective','ia','bitacora'].forEach(t => {
+    document.getElementById('dtab-'+t).classList.toggle('active', t === tab);
+  });
+  const f = currentFinding;
+  if (!f) return;
+  const contents = {
+    detalle: `
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Repositorio</div><div class="text-slate-200">${f.repo}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Archivo</div><div class="text-slate-200 break-all">${f.file}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Función</div><div class="text-slate-200">${f.func}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Línea</div><div class="text-slate-200">${f.line}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Confianza Inspector</div><div class="text-slate-200">${f.confidence}%</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Detectado</div><div class="text-slate-200">${f.date}</div></div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 mb-2 font-medium">Descripción del Hallazgo</div>
+          <div class="text-xs text-slate-300 leading-relaxed">${f.description}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 mb-2 font-medium">Fragmento de Código</div>
+          <div class="code-block">
+// ${f.file} — Línea ${f.line}<br>
+func ${f.func} {<br>
+&nbsp;&nbsp;// ⚠️ PATRÓN DETECTADO: ${f.pattern}<br>
+&nbsp;&nbsp;let endpoint = ProcessInfo.processInfo.environment["API_COLLECT"]<br>
+&nbsp;&nbsp;URLSession.shared.dataTask(with: URL(string: endpoint!)!) { data, _, _ in<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// Datos enviados sin cifrado adicional<br>
+&nbsp;&nbsp;}.resume()<br>
+}
+          </div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 mb-2 font-medium">Cambiar Estatus</div>
+          <div class="flex gap-2 flex-wrap">
+            <button class="filter-btn text-xs" onclick="changeStatus('open')">🔵 Abierto</button>
+            <button class="filter-btn text-xs" onclick="changeStatus('in_progress')">🟡 En Progreso</button>
+            <button class="filter-btn text-xs" onclick="changeStatus('review')">🔷 En Revisión</button>
+            <button class="filter-btn text-xs" onclick="changeStatus('certified')">✅ Certificado</button>
+            <button class="filter-btn text-xs" onclick="changeStatus('exception')">⚠️ Excepción</button>
+            <button class="filter-btn text-xs" onclick="changeStatus('fp')">⬜ Falso Positivo</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-400 mb-2 font-medium">Asignar a</div>
+          <select class="w-full text-xs" onchange="assignTo(this.value)">
+            <option value="">Seleccionar analista...</option>
+            <option value="jgarcia">J. García (carga: 12 hallazgos)</option>
+            <option value="mnunez">M. Núñez (carga: 8 hallazgos)</option>
+            <option value="lperez">L. Pérez (carga: 6 hallazgos)</option>
+          </select>
+        </div>
+      </div>`,
+    detective: `
+      <div class="space-y-4 text-xs">
+        <div class="bg-amber-950 border border-amber-700 rounded p-3">
+          <div class="text-amber-300 font-semibold mb-1">⚠️ TIMING_ANOMALIES detectado</div>
+          <div class="text-amber-200">El commit que introdujo este código fue realizado el 2026-03-15 a las 02:34 AM (fuera del horario laboral normal 9am-7pm).</div>
+        </div>
+        <div class="bg-red-950 border border-red-800 rounded p-3">
+          <div class="text-red-300 font-semibold mb-1">🔴 AUTHOR_ANOMALIES detectado</div>
+          <div class="text-red-200">El autor "dev-temp-contractor" realizó su primer commit en este repositorio crítico el mismo día que introdujo este patrón. No hay historial previo en la organización.</div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">📅 Timeline del Commit</div>
+          <div class="space-y-0">
+            <div class="timeline-item">
+              <div><div class="timeline-dot"></div></div>
+              <div>
+                <div class="text-slate-300">2026-03-15 02:34 AM — Commit <span class="font-mono text-violet-400">a7f3c21</span></div>
+                <div class="text-slate-500">Autor: dev-temp-contractor · "Fix session handling"</div>
+                <div class="text-slate-500">+47 líneas / -3 líneas en SessionService.swift</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div><div class="timeline-dot bg-slate-600"></div></div>
+              <div>
+                <div class="text-slate-400">2026-03-14 18:22 PM — Commit <span class="font-mono text-slate-500">b2e1d09</span></div>
+                <div class="text-slate-500">Autor: jgarcia · "Refactor auth flow" (commit normal)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">Archivos modificados en el mismo commit</div>
+          <div class="space-y-1">
+            <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">SessionService.swift</span><span class="chip chip-critical">CRÍTICO</span></div>
+            <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">AppConfig.swift</span><span class="chip chip-high">ALTO</span></div>
+            <div class="bg-slate-900 rounded p-2 flex justify-between"><span class="text-slate-300">Info.plist</span><span class="chip chip-medium">MEDIO</span></div>
+          </div>
+        </div>
+      </div>`,
+    ia: `
+      <div class="space-y-4 text-xs">
+        <div class="bg-violet-950 border border-violet-700 rounded p-3">
+          <div class="text-violet-300 font-semibold mb-2">🤖 Análisis del Inspector Agent (claude-3-5-sonnet)</div>
+          <div class="text-violet-200 leading-relaxed">Este patrón corresponde a una técnica de exfiltración de datos donde el código legítimo de manejo de sesiones fue modificado para incluir una llamada de red secundaria. La URL del endpoint se lee de una variable de entorno para evitar ser detectada en revisiones de código estáticas. El nivel de confianza es 94% basado en: (1) el endpoint no está en la lista de dominios permitidos, (2) no hay logging de esta llamada, (3) el certificado SSL del dominio fue registrado 3 días antes del commit.</div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">Recomendaciones de Remediación</div>
+          <div class="space-y-2">
+            <div class="bg-slate-900 rounded p-2 flex gap-2"><span class="text-green-400">1.</span><span class="text-slate-300">Eliminar inmediatamente la función uploadUserData() y el endpoint hardcodeado.</span></div>
+            <div class="bg-slate-900 rounded p-2 flex gap-2"><span class="text-green-400">2.</span><span class="text-slate-300">Revocar el acceso del autor "dev-temp-contractor" a todos los repositorios de la organización.</span></div>
+            <div class="bg-slate-900 rounded p-2 flex gap-2"><span class="text-green-400">3.</span><span class="text-slate-300">Auditar todos los commits de este autor en los últimos 90 días.</span></div>
+            <div class="bg-slate-900 rounded p-2 flex gap-2"><span class="text-green-400">4.</span><span class="text-slate-300">Implementar una allowlist de dominios en el Info.plist y validarla en el pipeline de CI/CD.</span></div>
+            <div class="bg-slate-900 rounded p-2 flex gap-2"><span class="text-green-400">5.</span><span class="text-slate-300">Notificar al equipo de respuesta a incidentes para evaluar si ya hubo exfiltración de datos.</span></div>
+          </div>
+        </div>
+        <div class="bg-red-950 border border-red-800 rounded p-3">
+          <div class="text-red-300 font-semibold mb-1">Narrativa de Ataque (Fiscal Agent)</div>
+          <div class="text-red-200 leading-relaxed">Se identifica un posible ataque de insider threat o compromiso de credenciales. Un actor con acceso al repositorio introdujo código malicioso disfrazado de "corrección de manejo de sesiones" a las 2:34 AM. El código envía datos biométricos de usuarios a un servidor externo controlado por el atacante. La combinación de horario inusual, autor nuevo en repositorio crítico y endpoint no documentado sugiere un ataque coordinado.</div>
+        </div>
+      </div>`,
+    bitacora: `
+      <div class="space-y-3 text-xs">
+        <div class="timeline-item">
+          <div><div class="timeline-dot bg-green-500"></div></div>
+          <div>
+            <div class="text-slate-300 font-medium">Hallazgo detectado automáticamente</div>
+            <div class="text-slate-500">01 May 2026, 06:50 AM · Inspector Agent</div>
+            <div class="text-slate-400 mt-1">Patrón DATA_EXFILTRATION detectado con confianza 94% en el escaneo "Auditoría Q2 - ios-biometric-auth".</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div><div class="timeline-dot bg-blue-500"></div></div>
+          <div>
+            <div class="text-slate-300 font-medium">Asignado a J. García</div>
+            <div class="text-slate-500">01 May 2026, 07:15 AM · Sistema</div>
+            <div class="text-slate-400 mt-1">Asignación automática por regla: "Hallazgos CRITICAL en ios-biometric-auth → J. García".</div>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-700">
+          <div class="text-slate-400 font-medium mb-2">Agregar nota a la bitácora</div>
+          <textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-300 resize-none" rows="3" placeholder="Escribe una nota o actualización..."></textarea>
+          <button class="mt-2 bg-violet-600 text-white text-xs px-3 py-1.5 rounded hover:bg-violet-700" onclick="addNote()">Agregar nota</button>
+        </div>
+      </div>`
+  };
+  document.getElementById('drawer-content').innerHTML = contents[tab] || '';
+}
+
+function changeStatus(newStatus) {
+  if (!currentFinding) return;
+  currentFinding.status = newStatus;
+  renderTable(findings);
+  switchDrawerTab('detalle');
+  // Show toast
+  showToast(`Estatus actualizado a: ${statusLabel(newStatus)}`);
+}
+
+function assignTo(analista) {
+  showToast(`Hallazgo asignado a ${analista}`);
+}
+
+function addNote() {
+  showToast('Nota agregada a la bitácora');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function bulkAction(type) {
+  const modal = document.getElementById('bulk-modal');
+  const titles = { assign:'Asignar hallazgos seleccionados', status:'Cambiar estatus de hallazgos seleccionados', export:'Exportar hallazgos seleccionados', fp:'Marcar como Falso Positivo' };
+  const contents = {
+    assign: `<select class="w-full text-sm mb-2"><option>Seleccionar analista...</option><option>J. García (carga: 12)</option><option>M. Núñez (carga: 8)</option><option>L. Pérez (carga: 6)</option></select>`,
+    status: `<select class="w-full text-sm mb-2"><option>Seleccionar nuevo estatus...</option><option value="in_progress">En Progreso</option><option value="review">En Revisión</option><option value="certified">Certificado</option><option value="exception">Excepción</option></select>`,
+    fp: `<div class="text-sm text-slate-300 mb-2">¿Confirmas que los ${selectedRows.size} hallazgos seleccionados son falsos positivos?</div><textarea class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-300 resize-none" rows="2" placeholder="Justificación (requerida)..."></textarea>`,
+    export: `<div class="text-sm text-slate-300">Se exportarán ${selectedRows.size} hallazgos seleccionados.</div>`
+  };
+  document.getElementById('bulk-modal-title').textContent = titles[type];
+  document.getElementById('bulk-modal-content').innerHTML = contents[type] || '';
+  modal.classList.remove('hidden');
+}
+
+function confirmBulk() {
+  showToast('Acción aplicada a ' + selectedRows.size + ' hallazgos');
+  closeBulkModal();
+  clearSelection();
+}
+
+function closeBulkModal() {
+  document.getElementById('bulk-modal').classList.add('hidden');
+}
+
+function exportCSV() {
+  document.getElementById('export-modal').classList.remove('hidden');
+}
+
+function exportPDF() {
+  document.getElementById('export-modal').classList.remove('hidden');
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').classList.add('hidden');
+}
+
+function doExport(type) {
+  closeExportModal();
+  showToast(`Exportando hallazgos en formato ${type.toUpperCase()}...`);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'fixed bottom-20 right-4 bg-violet-700 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function sortTable(col) {
+  showToast('Ordenando por ' + col);
+}
+
+// Init
+renderTable(findings);
+</script>
+</body>
+</html>

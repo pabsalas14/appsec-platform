@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -40,6 +40,10 @@ class CodeSecurityReview(SoftDeleteMixin, Base):
     )
     github_org_slug: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    last_analyzed_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    analysis_version: Mapped[int] = mapped_column(Integer(), nullable=False, server_default=text("1"))
+
     scan_batch_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("code_security_scan_batches.id", ondelete="SET NULL"),
@@ -47,9 +51,10 @@ class CodeSecurityReview(SoftDeleteMixin, Base):
         index=True,
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()"), nullable=False
-    )
+    # Configuration (LLM provider, temperature, etc)
+    scr_config: Mapped[dict | None] = mapped_column(JSONB(), nullable=True, server_default=text("'{}'::jsonb"))
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=text("now()"),

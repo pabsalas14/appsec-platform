@@ -11,13 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/radix-select';
-import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CodeSecurityFinding } from '@/types';
-
-interface CodeSecurityFindingsTableProps {
-  findings: CodeSecurityFinding[];
-}
+import api from '@/lib/api';
 
 const SEVERITY_COLORS = {
   CRITICO: 'bg-red-100 text-red-800 border-red-200',
@@ -36,8 +34,31 @@ const STATUS_COLORS = {
   CLOSED: 'bg-gray-100 text-gray-600',
 };
 
-export function CodeSecurityFindingsTable({ findings }: CodeSecurityFindingsTableProps) {
+export function CodeSecurityFindingsTable({ findings, reviewId }: { findings: CodeSecurityFinding[]; reviewId?: string }) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
+
+  const markAsFPMutation = useMutation({
+    mutationFn: async (findingId: string) => {
+      await api.post(`/code_security_reviews/${reviewId}/findings/${findingId}/false-positive`, {
+        reason: 'Marked by user',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['code_security_reviews', reviewId, 'findings'] });
+    },
+  });
+
+  const unmarkAsFPMutation = useMutation({
+    mutationFn: async (findingId: string) => {
+      await api.delete(`/code_security_reviews/${reviewId}/findings/${findingId}/false-positive`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['code_security_reviews', reviewId, 'findings'] });
+    },
+  });
+
+  const isFP = (finding: CodeSecurityFinding) => finding.estado === 'FALSE_POSITIVE';
 
   const _toggleExpanded = (_findingId: string) => {
     setExpandedRows((prev) => {
@@ -111,6 +132,31 @@ export function CodeSecurityFindingsTable({ findings }: CodeSecurityFindingsTabl
               </div>
 
               <div className="flex items-center gap-2">
+                {reviewId && (
+                  <>
+                    {isFP(finding) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => unmarkAsFPMutation.mutate(finding.id)}
+                        disabled={unmarkAsFPMutation.isPending}
+                        title="Unmark as False Positive"
+                      >
+                        <CheckCircle className="h-4 w-4 text-purple-500" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => markAsFPMutation.mutate(finding.id)}
+                        disabled={markAsFPMutation.isPending}
+                        title="Mark as False Positive"
+                      >
+                        <XCircle className="h-4 w-4 text-gray-400 hover:text-purple-500" />
+                      </Button>
+                    )}
+                  </>
+                )}
                 <Badge className={STATUS_COLORS[finding.estado as keyof typeof STATUS_COLORS]}>
                   {finding.estado}
                 </Badge>

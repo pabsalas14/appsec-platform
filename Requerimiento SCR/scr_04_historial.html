@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR — Historial de Escaneos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .sidebar { background: #1e293b; border-right: 1px solid #334155; }
+  .sidebar-item { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+  .sidebar-item:hover { background: #334155; color: #e2e8f0; }
+  .sidebar-item.active { background: #7c3aed; color: #fff; }
+  .sidebar-section { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #475569; padding: 16px 16px 6px; text-transform: uppercase; }
+  .sidebar-scr { color: #7c3aed; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-critical { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .chip-high { background: #431407; color: #fb923c; border: 1px solid #7c2d12; }
+  .chip-medium { background: #422006; color: #fbbf24; border: 1px solid #78350f; }
+  .chip-low { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .table-row { border-bottom: 1px solid #1e293b; transition: background 0.1s; cursor: pointer; }
+  .table-row:hover { background: #1e293b; }
+  .table-row.selected-compare { background: #1e1b4b; border-left: 2px solid #7c3aed; }
+  .drawer { position: fixed; top: 0; right: -680px; width: 680px; height: 100vh; background: #1e293b; border-left: 1px solid #334155; z-index: 50; transition: right 0.3s ease; overflow-y: auto; }
+  .drawer.open { right: 0; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+  .overlay.show { display: block; }
+  .tab-btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #64748b; }
+  .tab-btn.active { background: #7c3aed; color: #fff; }
+  .tab-btn:hover:not(.active) { color: #e2e8f0; background: #334155; }
+  .status-completed { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
+  .status-failed { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .status-running { background: #1e3a5f; color: #60a5fa; border: 1px solid #1d4ed8; }
+  .compare-card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; }
+  .diff-up { color: #f87171; }
+  .diff-down { color: #4ade80; }
+  .diff-same { color: #94a3b8; }
+  select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+  input[type="text"], input[type="search"] { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 12px; }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-56 flex-shrink-0 flex flex-col overflow-y-auto">
+  <div class="p-4 border-b border-slate-700">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">A</div>
+      <span class="font-semibold text-sm text-slate-200">AppSec Platform</span>
+    </div>
+  </div>
+  <div class="flex-1 p-2 space-y-1">
+    <div class="sidebar-section">Principal</div>
+    <div class="sidebar-item">📊 Dashboard Ejecutivo</div>
+    <div class="sidebar-item">🎯 Score de Madurez</div>
+    <div class="sidebar-section">Organización</div>
+    <div class="sidebar-item">🏛️ Estructura Org.</div>
+    <div class="sidebar-item">📦 Inventario de Activos</div>
+    <div class="sidebar-section">Vulnerabilidades</div>
+    <div class="sidebar-item">🚨 Concentrado de Hallazgos</div>
+    <div class="sidebar-item">📋 Planes de Remediación</div>
+    <div class="sidebar-item">🧩 Threat Modeling</div>
+    <div class="sidebar-section">Operación</div>
+    <div class="sidebar-item">🚀 Liberaciones</div>
+    <div class="sidebar-item">📅 Programas Anuales</div>
+    <div class="sidebar-section sidebar-scr">🔬 SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_02_dashboard.html'">📊 Dashboard SCR</div>
+    <div class="sidebar-item" onclick="window.location='scr_01_nuevo_escaneo.html'">🔍 Nuevo Escaneo</div>
+    <div class="sidebar-item" onclick="window.location='scr_03_hallazgos.html'">🚨 Hallazgos SCR</div>
+    <div class="sidebar-item active">📋 Historial de Escaneos</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🕵️ Investigación Forense</div>
+    <div class="sidebar-item" onclick="window.location='scr_05_forense_agentes.html'">🤖 Agentes</div>
+    <div class="sidebar-section">Configuración</div>
+    <div class="sidebar-item">⚙️ Administración</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col overflow-hidden">
+  <!-- TOP BAR -->
+  <div class="h-12 border-b border-slate-700 bg-slate-800 flex items-center justify-between px-4">
+    <div class="flex items-center gap-2 text-sm text-slate-400">
+      <span>SCR</span><span class="text-slate-600">/</span><span class="text-slate-200">Historial de Escaneos</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="btn-compare" class="text-xs bg-violet-700 text-violet-200 px-3 py-1.5 rounded-lg hover:bg-violet-600 hidden" onclick="openCompare()">⚖️ Comparar seleccionados</button>
+      <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600" onclick="exportCSV()">⬇️ Exportar CSV</button>
+      <div class="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-xs font-bold text-white">JG</div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="border-b border-slate-700 bg-slate-800 px-4 py-2 flex items-center gap-2 flex-wrap">
+    <input type="search" placeholder="Buscar por repositorio, nombre..." class="w-56">
+    <select onchange="applyFilters()" id="status-filter">
+      <option value="">Todos los estatus</option>
+      <option value="completed">Completado</option>
+      <option value="failed">Fallido</option>
+      <option value="running">En ejecución</option>
+    </select>
+    <select onchange="applyFilters()" id="repo-filter">
+      <option value="">Todos los repos</option>
+      <option value="ios-biometric-auth">ios-biometric-auth</option>
+      <option value="payment-processor">payment-processor</option>
+      <option value="auth-service">auth-service</option>
+      <option value="hey-api">hey-api</option>
+    </select>
+    <select onchange="applyFilters()" id="provider-filter">
+      <option value="">Todos los proveedores</option>
+      <option value="anthropic">Anthropic</option>
+      <option value="openrouter">OpenRouter</option>
+      <option value="litellm">LiteLLM</option>
+    </select>
+    <div class="text-xs text-slate-500 ml-auto">Selecciona 2 escaneos del mismo repo para comparar</div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="flex-1 overflow-y-auto">
+    <table class="w-full text-xs">
+      <thead class="sticky top-0 bg-slate-900 z-10">
+        <tr class="text-slate-500 border-b border-slate-700">
+          <th class="w-8 py-2 px-3"></th>
+          <th class="text-left py-2 px-3 font-medium">Nombre del Escaneo</th>
+          <th class="text-left py-2 px-3 font-medium">Repositorio(s)</th>
+          <th class="text-left py-2 px-3 font-medium">Modalidad</th>
+          <th class="text-left py-2 px-3 font-medium">Proveedor LLM</th>
+          <th class="text-center py-2 px-3 font-medium">🔴 C</th>
+          <th class="text-center py-2 px-3 font-medium">🟠 H</th>
+          <th class="text-center py-2 px-3 font-medium">🟡 M</th>
+          <th class="text-center py-2 px-3 font-medium">🟢 L</th>
+          <th class="text-left py-2 px-3 font-medium">Duración</th>
+          <th class="text-right py-2 px-3 font-medium">Costo USD</th>
+          <th class="text-left py-2 px-3 font-medium">Estatus</th>
+          <th class="text-left py-2 px-3 font-medium">Fecha</th>
+          <th class="text-left py-2 px-3 font-medium">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- DRAWER: DETALLE DEL ESCANEO -->
+<div class="drawer" id="drawer">
+  <div class="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800 z-10">
+    <div>
+      <h3 class="font-semibold text-slate-100 text-sm" id="drawer-title">Detalle del Escaneo</h3>
+      <div class="text-xs text-slate-500 mt-0.5" id="drawer-subtitle"></div>
+    </div>
+    <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg leading-none">×</button>
+  </div>
+  <div class="flex gap-1 p-3 border-b border-slate-700 bg-slate-800 sticky top-14 z-10">
+    <div class="tab-btn active" id="dtab-resumen" onclick="switchDrawerTab('resumen')">📋 Resumen</div>
+    <div class="tab-btn" id="dtab-hallazgos" onclick="switchDrawerTab('hallazgos')">🚨 Hallazgos</div>
+    <div class="tab-btn" id="dtab-timeline" onclick="switchDrawerTab('timeline')">📅 Timeline</div>
+    <div class="tab-btn" id="dtab-exportar" onclick="switchDrawerTab('exportar')">⬇️ Exportar</div>
+  </div>
+  <div class="p-4" id="drawer-content"></div>
+</div>
+
+<!-- MODAL COMPARACIÓN -->
+<div id="compare-modal" class="fixed inset-0 z-60 flex items-center justify-center hidden">
+  <div class="bg-slate-800 border border-slate-600 rounded-xl p-5 w-3xl max-w-4xl w-full mx-4 shadow-2xl overflow-y-auto max-h-screen">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-slate-100">⚖️ Comparación de Escaneos</h3>
+      <button onclick="closeCompare()" class="text-slate-400 hover:text-white">×</button>
+    </div>
+    <div id="compare-content"></div>
+  </div>
+</div>
+
+<script>
+const scans = [
+  { id:'SCN-047', name:'Auditoría Q2 - ios-biometric-auth', repos:['ios-biometric-auth'], modality:'Repositorio Privado', provider:'Anthropic', model:'claude-3-5-sonnet', critical:3, high:7, medium:4, low:2, duration:'8m 32s', cost:0.42, status:'completed', date:'2026-05-01 06:50', incremental:true, commits_analyzed:23 },
+  { id:'SCN-046', name:'Escaneo Org Banregio - Completo', repos:['ios-biometric-auth','payment-processor','auth-service','api-gateway','mobile-android'], modality:'Organización', provider:'Anthropic', model:'claude-3-5-sonnet', critical:5, high:18, medium:12, low:7, duration:'42m 15s', cost:2.14, status:'completed', date:'2026-04-30 23:15', incremental:false, commits_analyzed:null },
+  { id:'SCN-045', name:'Revisión auth-service - Rama develop', repos:['auth-service'], modality:'Rama Específica', provider:'Anthropic', model:'claude-3-haiku', critical:1, high:9, medium:3, low:4, duration:'5m 18s', cost:0.08, status:'completed', date:'2026-04-28 14:30', incremental:false, commits_analyzed:null },
+  { id:'SCN-044', name:'Escaneo hey-api - PR #234', repos:['hey-api'], modality:'Repositorio Privado', provider:'OpenRouter', model:'gpt-4o', critical:0, high:4, medium:6, low:3, duration:'6m 44s', cost:0.27, status:'completed', date:'2026-04-27 09:15', incremental:false, commits_analyzed:null },
+  { id:'SCN-043', name:'Auditoría Q1 - ios-biometric-auth', repos:['ios-biometric-auth'], modality:'Repositorio Privado', provider:'Anthropic', model:'claude-3-5-sonnet', critical:1, high:5, medium:6, low:3, duration:'12m 04s', cost:0.61, status:'completed', date:'2026-04-15 10:00', incremental:false, commits_analyzed:null },
+  { id:'SCN-042', name:'Escaneo payment-processor - main', repos:['payment-processor'], modality:'Repositorio Privado', provider:'LiteLLM', model:'qwen2.5-coder', critical:0, high:2, medium:4, low:1, duration:'3m 22s', cost:0.00, status:'failed', date:'2026-04-12 16:45', incremental:false, commits_analyzed:null },
+];
+
+let compareSet = new Set();
+let currentScan = null;
+
+function renderHistory(data) {
+  const tbody = document.getElementById('history-body');
+  tbody.innerHTML = data.map(s => `
+    <tr class="table-row ${compareSet.has(s.id) ? 'selected-compare' : ''}" id="row-${s.id}">
+      <td class="py-2 px-3" onclick="event.stopPropagation()">
+        <input type="checkbox" ${compareSet.has(s.id) ? 'checked' : ''} onchange="toggleCompare('${s.id}', this)" title="Seleccionar para comparar">
+      </td>
+      <td class="py-2 px-3 cursor-pointer" onclick="openScan('${s.id}')">
+        <div class="text-slate-200 font-medium">${s.name}</div>
+        <div class="text-slate-500">${s.id} ${s.incremental ? '<span class="chip" style="background:#1e3a2f;color:#4ade80;border:1px solid #14532d;font-size:9px">INCREMENTAL</span>' : ''}</div>
+      </td>
+      <td class="py-2 px-3 cursor-pointer" onclick="openScan('${s.id}')">
+        <div class="text-slate-300">${s.repos.length === 1 ? s.repos[0] : s.repos.length + ' repos'}</div>
+        ${s.repos.length > 1 ? `<div class="text-slate-500 text-xs">${s.repos.slice(0,2).join(', ')}${s.repos.length > 2 ? '...' : ''}</div>` : ''}
+      </td>
+      <td class="py-2 px-3 text-slate-400 cursor-pointer" onclick="openScan('${s.id}')">${s.modality}</td>
+      <td class="py-2 px-3 cursor-pointer" onclick="openScan('${s.id}')">
+        <div class="text-slate-300">${s.provider}</div>
+        <div class="text-slate-500">${s.model}</div>
+      </td>
+      <td class="py-2 px-3 text-center cursor-pointer" onclick="openScan('${s.id}')"><span class="chip chip-critical">${s.critical}</span></td>
+      <td class="py-2 px-3 text-center cursor-pointer" onclick="openScan('${s.id}')"><span class="chip chip-high">${s.high}</span></td>
+      <td class="py-2 px-3 text-center cursor-pointer" onclick="openScan('${s.id}')"><span class="chip chip-medium">${s.medium}</span></td>
+      <td class="py-2 px-3 text-center cursor-pointer" onclick="openScan('${s.id}')"><span class="chip chip-low">${s.low}</span></td>
+      <td class="py-2 px-3 text-slate-400 cursor-pointer" onclick="openScan('${s.id}')">${s.duration}</td>
+      <td class="py-2 px-3 text-right cursor-pointer" onclick="openScan('${s.id}')"><span class="text-green-400 font-medium">$${s.cost.toFixed(2)}</span></td>
+      <td class="py-2 px-3 cursor-pointer" onclick="openScan('${s.id}')">
+        <span class="chip status-${s.status}">${s.status === 'completed' ? '✅ Completado' : s.status === 'failed' ? '❌ Fallido' : '⏳ En ejecución'}</span>
+      </td>
+      <td class="py-2 px-3 text-slate-400 cursor-pointer" onclick="openScan('${s.id}')">${s.date}</td>
+      <td class="py-2 px-3">
+        <div class="flex gap-1">
+          <button class="text-xs text-violet-400 hover:text-violet-300" onclick="event.stopPropagation(); openExport('${s.id}')">PDF</button>
+          <span class="text-slate-600">|</span>
+          <button class="text-xs text-slate-400 hover:text-slate-300" onclick="event.stopPropagation(); openExport('${s.id}')">CSV</button>
+          ${s.status === 'completed' ? `<span class="text-slate-600">|</span><button class="text-xs text-blue-400 hover:text-blue-300" onclick="event.stopPropagation(); rerunScan('${s.id}')">Re-escanear</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleCompare(id, cb) {
+  if (cb.checked) {
+    if (compareSet.size >= 2) {
+      cb.checked = false;
+      showToast('Solo puedes comparar 2 escaneos a la vez. Deselecciona uno primero.');
+      return;
+    }
+    compareSet.add(id);
+  } else {
+    compareSet.delete(id);
+  }
+  document.getElementById('row-'+id).classList.toggle('selected-compare', cb.checked);
+  document.getElementById('btn-compare').classList.toggle('hidden', compareSet.size < 2);
+}
+
+function openScan(id) {
+  currentScan = scans.find(s => s.id === id);
+  if (!currentScan) return;
+  document.getElementById('drawer-title').textContent = currentScan.name;
+  document.getElementById('drawer-subtitle').textContent = currentScan.id + ' · ' + currentScan.date;
+  switchDrawerTab('resumen');
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function switchDrawerTab(tab) {
+  ['resumen','hallazgos','timeline','exportar'].forEach(t => {
+    document.getElementById('dtab-'+t).classList.toggle('active', t === tab);
+  });
+  const s = currentScan;
+  if (!s) return;
+  const total = s.critical + s.high + s.medium + s.low;
+  const contents = {
+    resumen: `
+      <div class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Repositorio(s)</div><div class="text-slate-200">${s.repos.join(', ')}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Modalidad</div><div class="text-slate-200">${s.modality}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Proveedor LLM</div><div class="text-slate-200">${s.provider} · ${s.model}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Duración</div><div class="text-slate-200">${s.duration}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Costo USD</div><div class="text-green-400 font-medium">$${s.cost.toFixed(2)}</div></div>
+          <div class="bg-slate-900 rounded p-2"><div class="text-slate-500 mb-1">Análisis Incremental</div><div class="text-slate-200">${s.incremental ? '✅ Sí (' + s.commits_analyzed + ' commits)' : '❌ No (escaneo completo)'}</div></div>
+        </div>
+        <div>
+          <div class="text-slate-400 font-medium mb-2">Distribución de Hallazgos</div>
+          <div class="grid grid-cols-4 gap-2">
+            <div class="bg-red-950 border border-red-800 rounded p-2 text-center"><div class="text-2xl font-bold text-red-400">${s.critical}</div><div class="text-red-300">Critical</div></div>
+            <div class="bg-orange-950 border border-orange-800 rounded p-2 text-center"><div class="text-2xl font-bold text-orange-400">${s.high}</div><div class="text-orange-300">High</div></div>
+            <div class="bg-yellow-950 border border-yellow-800 rounded p-2 text-center"><div class="text-2xl font-bold text-yellow-400">${s.medium}</div><div class="text-yellow-300">Medium</div></div>
+            <div class="bg-green-950 border border-green-800 rounded p-2 text-center"><div class="text-2xl font-bold text-green-400">${s.low}</div><div class="text-green-300">Low</div></div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="flex-1 bg-violet-600 text-white py-2 rounded-lg hover:bg-violet-700" onclick="window.location='scr_03_hallazgos.html'">Ver Hallazgos →</button>
+          <button class="flex-1 bg-slate-700 text-slate-300 py-2 rounded-lg hover:bg-slate-600" onclick="rerunScan('${s.id}')">🔄 Re-escanear</button>
+        </div>
+      </div>`,
+    hallazgos: `
+      <div class="space-y-2 text-xs">
+        <div class="text-slate-400 mb-2">Top hallazgos de este escaneo:</div>
+        <div class="p-2 bg-red-950 border border-red-800 rounded flex justify-between items-center cursor-pointer hover:bg-red-900" onclick="window.location='scr_03_hallazgos.html'">
+          <div><div class="text-red-300 font-medium">DATA_EXFILTRATION</div><div class="text-red-400">SessionService.swift:134</div></div>
+          <span class="chip chip-critical">CRITICAL</span>
+        </div>
+        <div class="p-2 bg-orange-950 border border-orange-800 rounded flex justify-between items-center cursor-pointer hover:bg-orange-900" onclick="window.location='scr_03_hallazgos.html'">
+          <div><div class="text-orange-300 font-medium">EXEC_ENV_BACKDOOR</div><div class="text-orange-400">AppConfig.swift:22</div></div>
+          <span class="chip chip-high">HIGH</span>
+        </div>
+        <div class="mt-3"><a href="scr_03_hallazgos.html" class="text-violet-400 hover:underline">Ver todos los hallazgos de este escaneo →</a></div>
+      </div>`,
+    timeline: `
+      <div class="space-y-3 text-xs">
+        <div class="flex gap-2"><div class="w-1 bg-violet-600 rounded"></div><div><div class="text-slate-300 font-medium">06:50:09 — Escaneo iniciado</div><div class="text-slate-500">Usuario: jgarcia · Modalidad: Repositorio Privado</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-blue-600 rounded"></div><div><div class="text-slate-300 font-medium">06:50:12 — Repositorio clonado</div><div class="text-slate-500">247 archivos · 23 commits nuevos (incremental)</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-amber-600 rounded"></div><div><div class="text-slate-300 font-medium">06:50:15 — Inspector Agent iniciado</div><div class="text-slate-500">Analizando 247 archivos en 12 chunks</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-amber-600 rounded"></div><div><div class="text-slate-300 font-medium">06:56:22 — Inspector Agent completado</div><div class="text-slate-500">16 hallazgos detectados · 6m 07s</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-orange-600 rounded"></div><div><div class="text-slate-300 font-medium">06:56:23 — Detective Agent iniciado</div><div class="text-slate-500">Analizando historial de commits</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-orange-600 rounded"></div><div><div class="text-slate-300 font-medium">06:58:35 — Detective Agent completado</div><div class="text-slate-500">8 anomalías detectadas · 2m 12s</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-green-600 rounded"></div><div><div class="text-slate-300 font-medium">06:58:36 — Fiscal Agent iniciado</div><div class="text-slate-500">Generando reporte ejecutivo</div></div></div>
+        <div class="flex gap-2"><div class="w-1 bg-green-600 rounded"></div><div><div class="text-slate-300 font-medium">06:58:41 — Escaneo completado</div><div class="text-slate-500">Duración total: 8m 32s · Costo: $0.42</div></div></div>
+      </div>`,
+    exportar: `
+      <div class="space-y-3 text-sm">
+        <div class="p-3 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 flex items-center gap-3" onclick="doExport('pdf')">
+          <span class="text-2xl">📄</span>
+          <div><div class="font-medium text-slate-200">Reporte Ejecutivo PDF</div><div class="text-xs text-slate-400">Resumen con narrativa del Fiscal Agent, hallazgos críticos y recomendaciones. Ideal para presentar a dirección.</div></div>
+        </div>
+        <div class="p-3 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 flex items-center gap-3" onclick="doExport('csv')">
+          <span class="text-2xl">📊</span>
+          <div><div class="font-medium text-slate-200">Exportar Hallazgos CSV</div><div class="text-xs text-slate-400">Todos los hallazgos con sus campos técnicos. Para análisis en Excel o importación a otras herramientas.</div></div>
+        </div>
+        <div class="p-3 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 flex items-center gap-3" onclick="doExport('json')">
+          <span class="text-2xl">🔗</span>
+          <div><div class="font-medium text-slate-200">Exportar JSON</div><div class="text-xs text-slate-400">Estructura completa del escaneo para integración con SIEM, SOAR o herramientas externas.</div></div>
+        </div>
+      </div>`
+  };
+  document.getElementById('drawer-content').innerHTML = contents[tab] || '';
+}
+
+function openCompare() {
+  const ids = [...compareSet];
+  if (ids.length !== 2) return;
+  const s1 = scans.find(s => s.id === ids[0]);
+  const s2 = scans.find(s => s.id === ids[1]);
+  if (!s1 || !s2) return;
+  if (s1.repos[0] !== s2.repos[0] && s1.repos.length === 1 && s2.repos.length === 1) {
+    showToast('⚠️ Los escaneos son de repositorios diferentes. La comparación puede no ser significativa.');
+  }
+  const diff = (a, b) => {
+    const d = a - b;
+    if (d > 0) return `<span class="diff-up">↑ +${d}</span>`;
+    if (d < 0) return `<span class="diff-down">↓ ${d}</span>`;
+    return `<span class="diff-same">= 0</span>`;
+  };
+  document.getElementById('compare-content').innerHTML = `
+    <div class="grid grid-cols-3 gap-4 text-xs">
+      <div class="compare-card">
+        <div class="text-slate-400 mb-2 font-medium">Escaneo A (más reciente)</div>
+        <div class="text-slate-200 font-semibold">${s1.name}</div>
+        <div class="text-slate-500">${s1.date}</div>
+        <div class="mt-3 space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">Critical</span><span class="chip chip-critical">${s1.critical}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">High</span><span class="chip chip-high">${s1.high}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Medium</span><span class="chip chip-medium">${s1.medium}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Low</span><span class="chip chip-low">${s1.low}</span></div>
+          <div class="flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-400">Costo</span><span class="text-green-400">$${s1.cost.toFixed(2)}</span></div>
+        </div>
+      </div>
+      <div class="compare-card bg-slate-900">
+        <div class="text-violet-400 mb-2 font-medium text-center">Diferencia</div>
+        <div class="mt-8 space-y-1 text-center">
+          <div class="py-1">${diff(s1.critical, s2.critical)}</div>
+          <div class="py-1">${diff(s1.high, s2.high)}</div>
+          <div class="py-1">${diff(s1.medium, s2.medium)}</div>
+          <div class="py-1">${diff(s1.low, s2.low)}</div>
+          <div class="py-1 mt-2 pt-2 border-t border-slate-700">${diff(Math.round(s1.cost*100), Math.round(s2.cost*100))} cts</div>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="text-slate-400 mb-2 font-medium">Escaneo B (anterior)</div>
+        <div class="text-slate-200 font-semibold">${s2.name}</div>
+        <div class="text-slate-500">${s2.date}</div>
+        <div class="mt-3 space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">Critical</span><span class="chip chip-critical">${s2.critical}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">High</span><span class="chip chip-high">${s2.high}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Medium</span><span class="chip chip-medium">${s2.medium}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Low</span><span class="chip chip-low">${s2.low}</span></div>
+          <div class="flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-400">Costo</span><span class="text-green-400">$${s2.cost.toFixed(2)}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 p-3 bg-violet-950 border border-violet-700 rounded text-xs text-violet-200">
+      <strong>Interpretación:</strong> Entre el escaneo A y el B, los hallazgos críticos aumentaron en ${s1.critical - s2.critical} y los altos en ${s1.high - s2.high}. Esto sugiere que se introdujeron nuevos patrones maliciosos entre ambas fechas. Se recomienda revisar los commits del período ${s2.date} → ${s1.date}.
+    </div>
+    <div class="mt-3 flex gap-2">
+      <button class="flex-1 bg-violet-600 text-white text-sm py-2 rounded-lg hover:bg-violet-700" onclick="doExport('compare-pdf')">📄 Exportar comparación PDF</button>
+      <button class="flex-1 bg-slate-700 text-slate-300 text-sm py-2 rounded-lg hover:bg-slate-600" onclick="closeCompare()">Cerrar</button>
+    </div>
+  `;
+  document.getElementById('compare-modal').classList.remove('hidden');
+}
+
+function closeCompare() {
+  document.getElementById('compare-modal').classList.add('hidden');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function openExport(id) {
+  showToast('Exportando escaneo ' + id + '...');
+}
+
+function rerunScan(id) {
+  showToast('Iniciando re-escaneo de ' + id + '...');
+  setTimeout(() => window.location = 'scr_01_nuevo_escaneo.html', 1000);
+}
+
+function doExport(type) {
+  showToast('Exportando en formato ' + type.toUpperCase() + '...');
+}
+
+function exportCSV() {
+  showToast('Exportando historial completo en CSV...');
+}
+
+function applyFilters() {
+  renderHistory(scans);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'fixed bottom-4 right-4 bg-violet-700 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+renderHistory(scans);
+</script>
+</body>
+</html>
