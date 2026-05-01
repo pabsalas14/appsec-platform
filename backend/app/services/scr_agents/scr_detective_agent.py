@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import datetime, time
 from typing import Any
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
 from app.models.code_security_event import CodeSecurityEvent
+from app.services.ia_provider import AIProviderType, get_ai_provider
 
 
 # Patrones de riesgo forense
@@ -209,5 +211,209 @@ async def run_detective_agent(
         db.add_all(events)
         await db.flush()
         logger.info("detective.events_created", extra={"review_id": review_id, "events_count": len(events)})
+
+    return events
+
+
+async def run_detective_real(
+    *,
+    review_id: str,
+    inspector_findings: list[dict[str, Any]],
+    commits: list[dict[str, Any]],
+    db: AsyncSession,
+) -> list[CodeSecurityEvent]:
+    """Run Detective Agent with LLM-powered forensic analysis of Git timeline.
+
+    Uses LLM to detect sophisticated patterns that rule-based approaches might miss,
+    with fallback to rule-based analysis when LLM is unavailable.
+
+    Args:
+        review_id: UUID of the code security review
+        inspector_findings: List of findings from Inspector Agent
+        commits: List of commit data from Git
+        db: Database session
+
+    Returns:
+        List of created CodeSecurityEvent instances
+    """
+    logger.info("detective_real.start", extra={"review_id": review_id, "commits_count": len(commits)})
+
+    # Try LLM-powered analysis first
+    try:
+        events = await _run_detective_with_llm(
+            review_id=review_id, inspector_findings=inspector_findings, commits=commits, db=db
+        )
+        logger.info("detective_real.llm_success", extra={"review_id": review_id, "events_count": len(events)})
+        return events
+    except Exception as e:
+        logger.warning("detective_real.llm_failed", extra={"review_id": review_id, "error": str(e)})
+        # Fallback to rule-based analysis
+        logger.info("detective_real.falling_back_to_rules", extra={"review_id": review_id})
+        return await run_detective_agent(
+            review_id=review_id, inspector_findings=inspector_findings, commits=commits, db=db
+        )
+
+
+async def _run_detective_with_llm(
+    *,
+    review_id: str,
+    inspector_findings: list[dict[str, Any]],
+    commits: list[dict[str, Any]],
+    db: AsyncSession,
+) -> list[CodeSecurityEvent]:
+    """Run Detective Agent using LLM for advanced pattern detection."""
+
+    # Prepare commit data for LLM analysis
+    commits_summary = []
+    for commit in commits[:50]:  # Limit to recent 50 commits for token efficiency
+        commits_summary.append(
+            {
+                "hash": commit.get("hash", "")[:12],
+                "author": commit.get("author", "unknown"),
+                "timestamp": commit.get("timestamp", datetime.utcnow()).isoformat()
+                if hasattr(commit.get("timestamp", datetime.utcnow()), "isoformat")
+                else str(commit.get("timestamp", datetime.utcnow())),
+                "message": commit.get("message", ""),
+                "files": commit.get("files", []),
+                "lines_changed": commit.get("lines_changed", 0),
+            }
+        )
+
+    # Get AI provider
+    ai_provider = get_ai_provider(AIProviderType.ANTHROPIC)
+
+    # Build system prompt for forensic analysis
+    system_prompt = """Eres un experto en análisis forense de código especializado en detectar patrones maliciosos en el historial de Git.
+Tu rol es analizar el timeline de commits para identificar indicadores de compromiso, incluyendo:
+
+PATRONES DE RIESGO FORENSE:
+1. Commits con mensajes genéricos en archivos críticos (auth, crypto, payment, etc.)
+2. Commits fuera de horario laboral (22:00-06:00) o en fines de semana
+3. Múltiples commits en corto período (< 4 horas)
+4. Cambios masivos (> 500 líneas) que podrían ocultar modificaciones maliciosas
+5. Primer autor tocando rutas críticas
+6. Patrones de force push, rebase, amend
+7. Cambios inusuales en dependencias
+8. Merges de fuentes externas raras o no verificadas
+9. Correlación con hallazgos técnicos del Inspector Agent
+10. Escalation patterns en el ataque
+
+INSTRUCCIONES:
+- Analiza cada commit y asigna nivel de riesgo (LOW/MEDIUM/HIGH/CRITICAL)
+- Identifica indicadores específicos para cada commit
+- Proporciona descripción detallada de por qué cada commit es sospechoso
+- Si no hay actividad sospechosa, retorna array vacío
+- Sé específico y técnico en tus análisis
+- Responde SOLO en JSON válido
+
+FORMATO DE RESPUESTA (JSON array):
+[
+  {
+    "commit_hash": "abc123def456",
+    "author": "juan.perez@company.com",
+    "timestamp": "2024-01-15T02:30:00Z",
+    "files_affected": ["src/auth/login.js", "src/config/database.yml"],
+    "risk_level": "HIGH",
+    "indicators": ["OFF_HOURS", "CRITICAL_FILES", "GENERIC_MESSAGE"],
+    "description": "Commit en horario fuera de laboral modificando archivos de autenticación con mensaje genérico 'fix bug'"
+  }
+]"""
+
+    # Build user prompt with commit data and inspector findings context
+    findings_summary = []
+    for finding in inspector_findings[:10]:  # Limit findings for context
+        findings_summary.append(
+            {
+                "file": finding.get("archivo", ""),
+                "type": finding.get("tipo_malicia", ""),
+                "severity": finding.get("severidad", ""),
+                "description": finding.get("descripcion", "")[:200],
+            }
+        )
+
+    user_prompt = f"""ANÁLISIS FORENSE DE GIT TIMELINE
+
+REPOSITORY COMMITS ({len(commits_summary)} commits analizados):
+{json.dumps(commits_summary, indent=2, ensure_ascii=False)}
+
+HALLAZGOS TÉCNICOS DEL INSPECTOR ({len(findings_summary)} hallazgos):
+{json.dumps(findings_summary, indent=2, ensure_ascii=False)}
+
+INSTRUCCIONES:
+Analiza los commits anteriores en busca de patrones forenses indicativos de actividad maliciosa.
+Considera tanto los commits individuales como patrones temporales y de autoría.
+Correla con los hallazgos técnicos cuando sea relevante.
+Responde con un array JSON de eventos forenses detectados."""
+
+    # Call LLM for analysis
+    response = await ai_provider.generate(
+        prompt=user_prompt,
+        system=system_prompt,
+        temperature=0.3,
+        max_tokens=2000,
+    )
+
+    # Parse LLM response
+    try:
+        llm_result = json.loads(response.content.strip())
+        if not isinstance(llm_result, list):
+            llm_result = []
+    except json.JSONDecodeError as e:
+        logger.error(
+            "detective_real.json_parse_error",
+            extra={"review_id": review_id, "error": str(e), "content": response.content[:200]},
+        )
+        llm_result = []
+
+    # Convert LLM results to CodeSecurityEvent objects
+    events = []
+    for event_data in llm_result:
+        try:
+            # Validate required fields
+            commit_hash = event_data.get("commit_hash", "")
+            author = event_data.get("author", "unknown")
+            timestamp_str = event_data.get("timestamp", "")
+            files_affected = event_data.get("files_affected", [])
+            risk_level = event_data.get("risk_level", "MEDIUM")
+            indicators = event_data.get("indicators", [])
+            description = event_data.get("description", "")
+
+            # Skip if missing essential data
+            if not commit_hash or not author or not files_affected:
+                continue
+
+            # Parse timestamp
+            try:
+                if isinstance(timestamp_str, str):
+                    event_ts = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                else:
+                    event_ts = datetime.utcnow()
+            except:
+                event_ts = datetime.utcnow()
+
+            # Create event for each affected file
+            for file_path in files_affected:
+                event = CodeSecurityEvent(
+                    review_id=review_id,
+                    event_ts=event_ts,
+                    commit_hash=commit_hash[:64],  # Limit length
+                    autor=author[:512],
+                    archivo=file_path[:1024],
+                    accion="modified",
+                    mensaje_commit=event_data.get("message", "")[:200] if event_data.get("message") else None,
+                    nivel_riesgo=risk_level,
+                    indicadores=indicators,
+                    descripcion=description,
+                )
+                events.append(event)
+
+        except Exception as e:
+            logger.warning(
+                "detective_real.event_process_error",
+                extra={"review_id": review_id, "error": str(e), "event_data": str(event_data)[:100]},
+            )
+            continue
+
+    logger.info("detective_real.llm_analysis_complete", extra={"review_id": review_id, "events_from_llm": len(events)})
 
     return events

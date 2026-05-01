@@ -15,8 +15,8 @@ from app.models.code_security_finding import CodeSecurityFinding
 from app.models.code_security_report import CodeSecurityReport
 from app.models.code_security_review import CodeSecurityReview
 from app.services.scr_agents import fingerprint_for_finding, run_detective_stub, run_fiscal_stub
-from app.services.scr_agents.scr_detective_agent import run_detective_agent
-from app.services.scr_agents.scr_fiscal_agent import run_fiscal_agent
+from app.services.scr_agents.scr_detective_agent import run_detective_agent, run_detective_real
+from app.services.scr_agents.scr_fiscal_agent import run_fiscal_agent, run_fiscal_real
 from app.services.scr_inspector_agent import run_inspector_stub
 
 
@@ -92,6 +92,7 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
     # PASO 2: Inspector (LLM real o fallback a stub)
     try:
         from app.services.scr_inspector_agent import run_inspector_real
+
         inspector_out = await run_inspector_real(
             rutas_fuente=source_files,
             db=db,
@@ -132,7 +133,7 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
 
     # PASO 3: Detective (real analysis with commits)
     if commits:
-        await run_detective_agent(
+        await run_detective_real(
             review_id=str(review.id),
             inspector_findings=inspector_out,
             commits=commits,
@@ -161,7 +162,7 @@ async def execute_scr_analysis(db: AsyncSession, review_id: uuid.UUID) -> None:
     await db.flush()
 
     # PASO 4: Fiscal (real report generation)
-    await run_fiscal_agent(
+    await run_fiscal_real(
         review_id=str(review.id),
         review_title=review.titulo,
         db=db,
