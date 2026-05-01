@@ -452,3 +452,43 @@ async def check_providers_health(
             }
 
     return success({"providers": providers_status})
+
+
+@router.get("/github/repos")
+async def list_github_repositories(
+    username: str = Query(..., description="GitHub username or org slug"),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
+):
+    """List repositories for a GitHub user or organization.
+
+    Frontend calls this when creating a new scan to browse repositories.
+    """
+    from app.services.scr_github_client import list_github_user_repos
+
+    try:
+        repos = await list_github_user_repos(username)
+        return success(repos)
+    except Exception as e:
+        from app.core.exceptions import BadRequestException
+
+        raise BadRequestException(f"Failed to fetch repositories: {str(e)[:200]}")
+
+
+@router.get("/github/branches")
+async def list_repository_branches(
+    repo_url: str = Query(..., description="GitHub repository URL"),
+    current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
+):
+    """List branches for a repository.
+
+    Frontend calls this when selecting a branch for analysis.
+    """
+    from app.services.scr_github_client import list_repository_branches as gh_list_branches
+
+    try:
+        branches = await gh_list_branches(repo_url)
+        return success(branches)
+    except Exception as e:
+        from app.core.exceptions import BadRequestException
+
+        raise BadRequestException(f"Failed to fetch branches: {str(e)[:200]}")

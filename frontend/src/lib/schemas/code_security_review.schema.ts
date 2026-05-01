@@ -19,15 +19,21 @@ created_at: z.string(),
 
 export const CodeSecurityReviewCreateSchema = z.object({
   titulo: z.string().min(3),
-  estado: z.string().default('PENDING'),
+  estado: z.string().default('PENDING').optional(),
   descripcion: z.string().nullable().optional(),
-  progreso: z.number().int().min(0).max(100).default(0),
+  progreso: z.number().int().min(0).max(100).default(0).optional(),
   rama_analizar: z.string().default('main'),
-  url_repositorio: z.string().url().nullable().optional(),
-  scan_mode: z.enum(['PUBLIC_URL', 'REPO_TOKEN', 'BRANCH_TARGET', 'ORG_BATCH']),
+  url_repositorio: z.string().nullable().optional(),
+  scan_mode: z.enum(['PUBLIC_URL', 'REPO_TOKEN', 'BRANCH_TARGET', 'ORG_BATCH']).default('PUBLIC_URL'),
   repositorio_id: z.string().uuid().nullable().optional(),
   github_org_slug: z.string().nullable().optional(),
   scan_batch_id: z.string().uuid().nullable().optional(),
+  scr_config: z.object({
+    llm_provider: z.string().default('anthropic'),
+    temperature: z.number().default(0.3),
+    max_tokens: z.number().default(4096),
+  }).optional(),
+  repo_token: z.string().nullable().optional(),
 });
 
 export const CodeSecurityReviewUpdateSchema = CodeSecurityReviewCreateSchema.partial();

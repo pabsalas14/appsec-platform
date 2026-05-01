@@ -206,3 +206,100 @@ async def get_file_raw(repo_url: str, file_path: str, branch: str = "main") -> s
         if data.get("encoding") == "base64":
             return base64.b64decode(data.get("content", "")).decode("utf-8", errors="ignore")
         return data.get("content", "")
+
+
+async def list_github_user_repos(username_or_org: str, limit: int = 100) -> list[dict[str, Any]]:
+    """Lista repos de un usuario o organizacion por username.
+
+    Usado en frontend para que usuarios elijan repo a analizar.
+    Intenta primero como usuario, si no existe intenta como org.
+    """
+    params = {"per_page": min(max(limit, 1), 100), "sort": "updated", "direction": "desc"}
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # Primero intenta como org
+        resp = await client.get(
+            f"{_GITHUB_API}/orgs/{username_or_org}/repos",
+            headers=_auth_headers(),
+            params=params,
+        )
+
+        # Si no es org, intenta como usuario
+        if resp.status_code == 404:
+            resp = await client.get(
+                f"{_GITHUB_API}/users/{username_or_org}/repos",
+                headers=_auth_headers(),
+                params=params,
+            )
+
+        if resp.status_code >= 400:
+            raise BadRequestException(
+                f"No se encontró usuario u org '{username_or_org}' o sin acceso a repos."
+            )
+
+        rows = resp.json()
+
+    return [
+        {
+            "name": r.get("name"),
+            "full_name": r.get("full_name"),
+            "owner": r.get("owner", {}).get("login"),
+            "url": r.get("html_url"),
+            "description": r.get("description"),
+            "stars": r.get("stargazers_count", 0),
+            "default_branch": r.get("default_branch") or "main",
+            "visibility": "private" if r.get("private") else "public",
+            "archived": bool(r.get("archived")),
+            "updated_at": r.get("updated_at"),
+        }
+        for r in rows
+    ]
+
+
+async def list_repository_branches(repo_url: str, limit: int = 100) -> list[dict[str, Any]]:
+    """Lista branches de un repositorio.
+
+    Usado en frontend para que usuarios elijan rama a analizar.
+    """
+    if "github.com/" not in repo_url:
+        raise BadRequestException(f"URL no es de GitHub: {repo_url}")
+
+    parts = repo_url.rstrip("/").split("/")
+    owner = parts[-2]
+    repo = parts[-1].replace(".git", "")
+
+    params = {"per_page": min(max(limit, 1), 100)}
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(
+            f"{_GITHUB_API}/repos/{owner}/{repo}/branches",
+            headers=_auth_headers(),
+            params=params,
+        )
+
+        if resp.status_code == 404:
+            raise BadRequestException(f"Repositorio no encontrado: {owner}/{repo}")
+        if resp.status_code >= 400:
+            raise BadRequestException(f"Error obteniendo branches: {resp.status_code}")
+
+        rows = resp.json()
+
+    # También traer último commit de cada rama para mostrar en UI
+    result = []
+    for branch_data in rows:
+        branch_name = branch_data.get("name")
+        commit_data = branch_data.get("commit", {})
+
+        result.append(
+            {
+                "name": branch_name,
+                "is_default": branch_data.get("protected", False),  # Aproximación: ramas protegidas suelen ser main/master
+                "last_commit": {
+                    "sha": commit_data.get("sha", "")[:40],
+                    "date": commit_data.get("commit", {}).get("author", {}).get("date", ""),
+                    "message": commit_data.get("commit", {}).get("message", "")[:100],
+                },
+            }
+        )
+
+    return result
