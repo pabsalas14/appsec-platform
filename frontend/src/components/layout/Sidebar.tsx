@@ -64,7 +64,6 @@ const SECTIONS: NavSection[] = [
       { href: '/kanban', label: 'Kanban', icon: Layers },
       { href: '/uploads', label: 'Uploads', icon: Upload },
       { href: '/vulnerabilidads', label: 'Vulnerabilidades', icon: Bug },
-      { href: '/code_security_reviews', label: 'Code Security Reviews', icon: ShieldCheck },
       { href: '/dashboards', label: 'Dashboards', icon: LayoutDashboard },
       { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart },
       { href: '/dashboards/executive', label: '1. Dashboard Ejecutivo', icon: LayoutDashboard },
@@ -77,6 +76,14 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/emerging-themes', label: '8. Temas y Auditorías', icon: FileSearch },
       { href: '/dashboards/okr', label: '9. Compromisos OKR', icon: Target },
       { href: '/dashboards/plataforma', label: '10. Release Plataforma', icon: Server },
+    ],
+  },
+  {
+    title: 'Code Security (SCR)',
+    items: [
+      { href: '/code_security_reviews', label: 'Reviews', icon: ShieldCheck },
+      { href: '/code_security_reviews/new', label: 'New Review', icon: FileSearch },
+      { href: '/code_security_reviews/history', label: 'History & Search', icon: ScrollText },
     ],
   },
   {
