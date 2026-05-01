@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release de Plataforma AppSec</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:100;}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;}
+.breadcrumb span{cursor:pointer;}.breadcrumb span:hover{color:#58a6ff;}
+.breadcrumb .sep{color:#30363d;cursor:default;}.breadcrumb .active{color:#e6edf3;font-weight:600;cursor:default;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 12px;font-size:12px;color:#8b949e;cursor:pointer;}
+.btn:hover{border-color:#58a6ff;color:#e6edf3;}
+.content{padding:20px;}
+.section-title{font-size:11px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #21262d;}
+/* Version banner */
+.version-banner{background:linear-gradient(135deg,#1c2333,#161b22);border:1px solid #30363d;border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.version-info{display:flex;align-items:center;gap:16px;}
+.version-badge{background:#238636;border:1px solid #2ea043;border-radius:8px;padding:8px 16px;font-size:20px;font-weight:800;color:#fff;}
+.version-meta{display:flex;flex-direction:column;gap:4px;}
+.version-name{font-size:16px;font-weight:700;}
+.version-date{font-size:12px;color:#8b949e;}
+.version-stats{display:flex;gap:20px;}
+.vstat{text-align:center;}
+.vstat-val{font-size:18px;font-weight:700;}
+.vstat-label{font-size:10px;color:#8b949e;}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.2s;}
+.kpi-card:hover{border-color:#58a6ff;transform:translateY(-1px);}
+.kpi-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.kpi-value{font-size:24px;font-weight:700;margin-bottom:3px;}
+.kpi-sub{font-size:10px;color:#8b949e;}
+/* Changelog */
+.changelog{display:flex;flex-direction:column;gap:0;}
+.release-item{border:1px solid #30363d;border-radius:10px;margin-bottom:12px;overflow:hidden;}
+.release-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#161b22;cursor:pointer;}
+.release-hdr:hover{background:#1c2333;}
+.release-hdr-left{display:flex;align-items:center;gap:12px;}
+.release-ver{font-size:13px;font-weight:700;font-family:monospace;}
+.release-name{font-size:12px;color:#8b949e;}
+.release-date{font-size:11px;color:#484f58;}
+.release-badges{display:flex;gap:6px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-green{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.badge-blue{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+.badge-yellow{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.badge-red{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.badge-purple{background:rgba(188,140,255,0.15);color:#bc8cff;border:1px solid rgba(188,140,255,0.3);}
+.release-body{display:none;padding:16px;background:#0d1117;border-top:1px solid #21262d;}
+.release-body.open{display:block;}
+.change-group{margin-bottom:14px;}
+.change-group-title{font-size:11px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.change-list{display:flex;flex-direction:column;gap:6px;}
+.change-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:#161b22;border:1px solid #21262d;border-radius:6px;font-size:12px;}
+.change-icon{font-size:14px;flex-shrink:0;}
+.change-text{flex:1;}
+.change-module{font-size:10px;color:#484f58;margin-top:2px;}
+/* Roadmap */
+.roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.roadmap-col{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden;}
+.roadmap-hdr{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #30363d;}
+.roadmap-hdr-planned{background:rgba(88,166,255,0.1);color:#58a6ff;}
+.roadmap-hdr-dev{background:rgba(210,153,34,0.1);color:#d29922;}
+.roadmap-hdr-testing{background:rgba(188,140,255,0.1);color:#bc8cff;}
+.roadmap-hdr-done{background:rgba(63,185,80,0.1);color:#3fb950;}
+.roadmap-items{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.roadmap-item{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:8px 10px;cursor:pointer;}
+.roadmap-item:hover{border-color:#58a6ff;}
+.ri-title{font-size:12px;font-weight:600;margin-bottom:3px;}
+.ri-meta{font-size:10px;color:#484f58;}
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-box{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px;}
+.chart-title{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;}
+.timeline-chart{display:flex;flex-direction:column;gap:10px;}
+.tc-row{display:flex;align-items:center;gap:10px;}
+.tc-ver{font-size:11px;font-family:monospace;color:#58a6ff;width:60px;flex-shrink:0;}
+.tc-bar-track{flex:1;background:#21262d;border-radius:4px;height:20px;overflow:hidden;position:relative;}
+.tc-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:600;color:#fff;}
+.tc-date{font-size:10px;color:#484f58;width:70px;text-align:right;}
+.mini-stats{display:flex;flex-direction:column;gap:8px;}
+.ms-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #21262d;}
+.ms-label{font-size:12px;color:#8b949e;}.ms-val{font-size:14px;font-weight:700;}
+/* Drawer */
+.drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;}
+.drawer-bg.open{display:block;}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:520px;background:#161b22;border-left:1px solid #30363d;overflow-y:auto;z-index:201;transform:translateX(100%);transition:transform 0.3s;}
+.drawer.open{transform:translateX(0);}
+.drawer-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #30363d;position:sticky;top:0;background:#161b22;}
+.drawer-title{font-size:14px;font-weight:700;font-family:monospace;}.drawer-sub{font-size:11px;color:#8b949e;margin-top:2px;}
+.drawer-close{background:none;border:none;color:#8b949e;cursor:pointer;font-size:18px;}
+.drawer-body{padding:16px 18px;}
+.d-section{font-size:10px;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 8px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="breadcrumb"><span>Inicio</span><span class="sep">›</span><span class="active">Release de Plataforma</span></div>
+  <div class="topbar-right">
+    <div class="btn">📋 Changelog Completo</div>
+    <div class="btn">⬇ Exportar</div>
+  </div>
+</div>
+
+<div class="content">
+  <!-- Version actual -->
+  <div class="version-banner">
+    <div class="version-info">
+      <div class="version-badge">v2.4.1</div>
+      <div class="version-meta">
+        <div class="version-name">Plataforma AppSec — Versión Actual</div>
+        <div class="version-date">Liberada el 28 Nov 2025 · Ambiente: Producción</div>
+      </div>
+    </div>
+    <div class="version-stats">
+      <div class="vstat"><div class="vstat-val" style="color:#3fb950;">12</div><div class="vstat-label">Nuevas Funciones</div></div>
+      <div class="vstat"><div class="vstat-val" style="color:#58a6ff;">8</div><div class="vstat-label">Mejoras</div></div>
+      <div class="vstat"><div class="vstat-val" style="color:#d29922;">5</div><div class="vstat-label">Correcciones</div></div>
+      <div class="vstat"><div class="vstat-val" style="color:#f85149;">0</div><div class="vstat-label">Bugs Críticos</div></div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="alert('Drill-down: Total Releases')"><div class="kpi-label">Total Releases</div><div class="kpi-value" style="color:#58a6ff;">18</div><div class="kpi-sub">Año 2025</div></div>
+    <div class="kpi-card" onclick="alert('Drill-down: Funcionalidades')"><div class="kpi-label">Funcionalidades</div><div class="kpi-value" style="color:#3fb950;">87</div><div class="kpi-sub">Entregadas en 2025</div></div>
+    <div class="kpi-card" onclick="alert('Drill-down: Correcciones')"><div class="kpi-label">Correcciones</div><div class="kpi-value" style="color:#d29922;">34</div><div class="kpi-sub">Bug fixes</div></div>
+    <div class="kpi-card" onclick="alert('Drill-down: Próximo Release')"><div class="kpi-label">Próximo Release</div><div class="kpi-value" style="color:#bc8cff;">v2.5.0</div><div class="kpi-sub">15 Dic 2025</div></div>
+    <div class="kpi-card" onclick="alert('Drill-down: En Desarrollo')"><div class="kpi-label">En Desarrollo</div><div class="kpi-value" style="color:#e3b341;">23</div><div class="kpi-sub">Features en progreso</div></div>
+  </div>
+
+  <!-- Roadmap -->
+  <div class="section-title">Roadmap — Sprint Actual</div>
+  <div class="roadmap" style="margin-bottom:20px;">
+    <div class="roadmap-col">
+      <div class="roadmap-hdr roadmap-hdr-planned">Planificado</div>
+      <div class="roadmap-items">
+        <div class="roadmap-item" onclick="openDrawer('Dashboard Builder v2','Agregar soporte para widgets de tipo Heatmap y configuración de alertas visuales','Mejora','v2.5.0')"><div class="ri-title">Dashboard Builder v2</div><div class="ri-meta">Mejora · v2.5.0</div></div>
+        <div class="roadmap-item" onclick="openDrawer('Exportación Masiva','Exportar múltiples módulos en un solo ZIP desde el panel de Administración','Nueva Función','v2.5.0')"><div class="ri-title">Exportación Masiva</div><div class="ri-meta">Nueva Función · v2.5.0</div></div>
+        <div class="roadmap-item" onclick="openDrawer('Notificaciones por Email','Configuración de plantillas de email para notificaciones de SLA vencido','Nueva Función','v2.5.0')"><div class="ri-title">Notificaciones Email</div><div class="ri-meta">Nueva Función · v2.5.0</div></div>
+      </div>
+    </div>
+    <div class="roadmap-col">
+      <div class="roadmap-hdr roadmap-hdr-dev">En Desarrollo</div>
+      <div class="roadmap-items">
+        <div class="roadmap-item" onclick="openDrawer('AI Builder — Editor de Prompts','Interfaz visual para editar los prompts de los casos de uso de IA sin tocar código','Nueva Función','v2.5.0')"><div class="ri-title">AI Builder — Prompts</div><div class="ri-meta">Nueva Función · v2.5.0</div></div>
+        <div class="roadmap-item" onclick="openDrawer('Acciones Masivas en Tablas','Selección múltiple y ejecución de acciones en lote en todos los módulos','Mejora','v2.5.0')"><div class="ri-title">Acciones Masivas</div><div class="ri-meta">Mejora · v2.5.0</div></div>
+      </div>
+    </div>
+    <div class="roadmap-col">
+      <div class="roadmap-hdr roadmap-hdr-testing">En QA / Testing</div>
+      <div class="roadmap-items">
+        <div class="roadmap-item" onclick="openDrawer('Drill-down Universal','Cualquier número o gráfica en todos los dashboards abre el panel de detalle de registros','Mejora','v2.4.2')"><div class="ri-title">Drill-down Universal</div><div class="ri-meta">Mejora · v2.4.2</div></div>
+        <div class="roadmap-item" onclick="openDrawer('Módulo Pentest','Flujo completo de gestión de solicitudes de Pentest con checklist de insumos','Nueva Función','v2.4.2')"><div class="ri-title">Módulo Pentest</div><div class="ri-meta">Nueva Función · v2.4.2</div></div>
+      </div>
+    </div>
+    <div class="roadmap-col">
+      <div class="roadmap-hdr roadmap-hdr-done">Listo para Liberar</div>
+      <div class="roadmap-items">
+        <div class="roadmap-item" onclick="openDrawer('Búsqueda Global (Ctrl+K)','Omnisearch que cruza todos los módulos y muestra resultados agrupados','Nueva Función','v2.4.2')"><div class="ri-title">Búsqueda Global</div><div class="ri-meta">Nueva Función · v2.4.2</div></div>
+        <div class="roadmap-item" onclick="openDrawer('Cierre de Período','Bloqueo automático de registros históricos el día 5 de cada mes','Nueva Función','v2.4.2')"><div class="ri-title">Cierre de Período</div><div class="ri-meta">Nueva Función · v2.4.2</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-title">Historial de Releases 2025</div>
+      <div class="timeline-chart">
+        <div class="tc-row"><span class="tc-ver">v2.4.1</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:100%;background:#3fb950;">12 func · 8 mejoras · 5 fixes</div></div><span class="tc-date">28 Nov</span></div>
+        <div class="tc-row"><span class="tc-ver">v2.4.0</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:90%;background:#58a6ff;">10 func · 6 mejoras · 3 fixes</div></div><span class="tc-date">01 Nov</span></div>
+        <div class="tc-row"><span class="tc-ver">v2.3.2</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:50%;background:#d29922;">0 func · 2 mejoras · 8 fixes</div></div><span class="tc-date">15 Oct</span></div>
+        <div class="tc-row"><span class="tc-ver">v2.3.1</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:40%;background:#d29922;">0 func · 1 mejora · 6 fixes</div></div><span class="tc-date">01 Oct</span></div>
+        <div class="tc-row"><span class="tc-ver">v2.3.0</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:85%;background:#58a6ff;">9 func · 5 mejoras · 2 fixes</div></div><span class="tc-date">01 Sep</span></div>
+        <div class="tc-row"><span class="tc-ver">v2.2.0</span><div class="tc-bar-track"><div class="tc-bar-fill" style="width:70%;background:#58a6ff;">7 func · 4 mejoras · 4 fixes</div></div><span class="tc-date">01 Ago</span></div>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Estadísticas del Año</div>
+      <div class="mini-stats">
+        <div class="ms-row"><span class="ms-label">Total Releases</span><span class="ms-val" style="color:#58a6ff;">18</span></div>
+        <div class="ms-row"><span class="ms-label">Funcionalidades entregadas</span><span class="ms-val" style="color:#3fb950;">87</span></div>
+        <div class="ms-row"><span class="ms-label">Bug fixes</span><span class="ms-val" style="color:#d29922;">34</span></div>
+        <div class="ms-row"><span class="ms-label">Incidentes en prod.</span><span class="ms-val" style="color:#f85149;">2</span></div>
+        <div class="ms-row"><span class="ms-label">Tiempo prom. entre releases</span><span class="ms-val">18 días</span></div>
+        <div class="ms-row"><span class="ms-label">Uptime plataforma</span><span class="ms-val" style="color:#3fb950;">99.8%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changelog -->
+  <div class="section-title">Changelog Detallado</div>
+  <div class="changelog">
+    <div class="release-item">
+      <div class="release-hdr" onclick="toggleRelease(this)">
+        <div class="release-hdr-left">
+          <span class="release-ver">v2.4.1</span>
+          <span class="release-name">Dashboard de Indicadores + Drill-down</span>
+          <span class="release-date">28 Nov 2025</span>
+        </div>
+        <div class="release-badges"><span class="badge badge-green">12 Nuevas</span><span class="badge badge-blue">8 Mejoras</span><span class="badge badge-yellow">5 Fixes</span></div>
+      </div>
+      <div class="release-body">
+        <div class="change-group">
+          <div class="change-group-title" style="color:#3fb950;">✨ Nuevas Funcionalidades</div>
+          <div class="change-list">
+            <div class="change-item"><span class="change-icon">📊</span><div><div class="change-text">Dashboard de Indicadores con tarjetas por motor (SAST, DAST, SCA, CDS, MDA, MAST) y desglose de 5 KPIs por motor</div><div class="change-module">Módulo: Indicadores</div></div></div>
+            <div class="change-item"><span class="change-icon">📈</span><div><div class="change-text">Indicadores de Pipeline SAST y DAST con desglose por célula y subdirección</div><div class="change-module">Módulo: Indicadores › Pipeline</div></div></div>
+            <div class="change-item"><span class="change-icon">🔍</span><div><div class="change-text">Drill-down universal: cualquier KPI card, barra de gráfica o segmento de donut abre el panel de registros filtrados</div><div class="change-module">Módulo: Todos los Dashboards</div></div></div>
+            <div class="change-item"><span class="change-icon">📅</span><div><div class="change-text">Desglose mes a mes en Programas Anuales: al hacer clic en un mes del timeline se despliegan las actividades de ese mes</div><div class="change-module">Módulo: Programas Anuales</div></div></div>
+          </div>
+        </div>
+        <div class="change-group">
+          <div class="change-group-title" style="color:#58a6ff;">🔧 Mejoras</div>
+          <div class="change-list">
+            <div class="change-item"><span class="change-icon">⚡</span><div><div class="change-text">Optimización de carga del Dashboard de Vulnerabilidades: tiempo de carga reducido de 4.2s a 0.8s</div><div class="change-module">Módulo: Vulnerabilidades</div></div></div>
+            <div class="change-item"><span class="change-icon">🎨</span><div><div class="change-text">Semáforo general del Dashboard de Vulnerabilidades aparece solo en los niveles 1 y 2, eliminando duplicación visual</div><div class="change-module">Módulo: Vulnerabilidades</div></div></div>
+          </div>
+        </div>
+        <div class="change-group">
+          <div class="change-group-title" style="color:#d29922;">🐛 Correcciones</div>
+          <div class="change-list">
+            <div class="change-item"><span class="change-icon">🔴</span><div><div class="change-text">Corregido: el filtro de Motor en el Concentrado de Vulnerabilidades no persistía al navegar entre páginas</div><div class="change-module">Módulo: Vulnerabilidades</div></div></div>
+            <div class="change-item"><span class="change-icon">🔴</span><div><div class="change-text">Corregido: el Score de Madurez se calculaba incorrectamente cuando un repositorio no tenía escaneos en el mes</div><div class="change-module">Módulo: Vulnerabilidades › Repositorios</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="release-item">
+      <div class="release-hdr" onclick="toggleRelease(this)">
+        <div class="release-hdr-left">
+          <span class="release-ver">v2.4.0</span>
+          <span class="release-name">OKR Mi Equipo + Compromisos Hijos</span>
+          <span class="release-date">01 Nov 2025</span>
+        </div>
+        <div class="release-badges"><span class="badge badge-green">10 Nuevas</span><span class="badge badge-blue">6 Mejoras</span><span class="badge badge-yellow">3 Fixes</span></div>
+      </div>
+      <div class="release-body">
+        <div class="change-group">
+          <div class="change-group-title" style="color:#3fb950;">✨ Nuevas Funcionalidades</div>
+          <div class="change-list">
+            <div class="change-item"><span class="change-icon">👥</span><div><div class="change-text">Dashboard OKR: pestaña "Mi Equipo" con tarjetas por miembro, avance y desglose Verde/Amarillo/Rojo</div><div class="change-module">Módulo: Compromisos OKR</div></div></div>
+            <div class="change-item"><span class="change-icon">🌐</span><div><div class="change-text">Dashboard OKR: pestaña "Vista Global" con KPIs de toda la organización y tabla por jefatura</div><div class="change-module">Módulo: Compromisos OKR</div></div></div>
+            <div class="change-item"><span class="change-icon">📝</span><div><div class="change-text">Modal de calificación de compromisos con pestañas: Calificar, Histórico Q y Compromisos Hijos</div><div class="change-module">Módulo: Compromisos OKR</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div><div class="drawer-title" id="d-title">Feature</div><div class="drawer-sub" id="d-sub">Detalle</div></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="d-section">Descripción</div>
+    <div id="d-desc" style="font-size:12px;color:#8b949e;line-height:1.6;margin-bottom:12px;"></div>
+    <div class="d-section">Detalles</div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #21262d;font-size:12px;"><span style="color:#8b949e;">Tipo</span><span id="d-tipo" style="font-weight:600;"></span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #21262d;font-size:12px;"><span style="color:#8b949e;">Versión Target</span><span id="d-ver" style="font-weight:600;font-family:monospace;color:#58a6ff;"></span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;"><span style="color:#8b949e;">Estatus</span><span style="color:#d29922;font-weight:600;">En Roadmap</span></div>
+  </div>
+</div>
+
+<script>
+function toggleRelease(hdr){
+  var body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+}
+function openDrawer(title,desc,tipo,ver){
+  document.getElementById('d-title').textContent = title;
+  document.getElementById('d-sub').textContent = tipo + ' · ' + ver;
+  document.getElementById('d-desc').textContent = desc;
+  document.getElementById('d-tipo').textContent = tipo;
+  document.getElementById('d-ver').textContent = ver;
+  document.getElementById('drawer-bg').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer-bg').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+</script>
+</body>
+</html>

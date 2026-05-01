@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concentrado de Vulnerabilidades — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+            --drawer-w: 500px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Topbar & Toolbar */
+        .topbar {
+            padding: 20px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px 8px 35px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .search-input:focus { border-color: var(--accent); }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+
+        .active-filters {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .filter-chip {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-chip span { cursor: pointer; }
+        .filter-chip span:hover { color: var(--text-main); }
+
+        /* Main Table */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-panel);
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            z-index: 1;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        tr:hover td {
+            background-color: rgba(255,255,255,0.02);
+            cursor: pointer;
+        }
+
+        tr.selected td {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-motor { background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); }
+        .badge-sast { border-left: 3px solid #8b5cf6; }
+        .badge-dast { border-left: 3px solid #3b82f6; }
+        .badge-sca { border-left: 3px solid #10b981; }
+
+        .badge-crit { background-color: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-high { background-color: rgba(245, 158, 11, 0.1); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .badge-med { background-color: rgba(59, 130, 246, 0.1); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-active { background-color: var(--danger); }
+        .status-rem { background-color: var(--warning); }
+        .status-fp { background-color: var(--text-muted); }
+
+        /* Mass Actions Bar */
+        .mass-actions-bar {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--accent);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        .mass-actions-bar.visible {
+            bottom: 30px;
+        }
+
+        .mass-btn {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .mass-btn:hover { background-color: rgba(255,255,255,0.3); }
+
+        /* Drawer (Detail Panel) */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0; right: -var(--drawer-w);
+            width: var(--drawer-w);
+            height: 100vh;
+            background-color: var(--bg-panel);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+            z-index: 201;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open { right: 0; }
+        .drawer-overlay.open { display: block; }
+
+        .drawer-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .drawer-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .close-drawer {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.5rem; cursor: pointer;
+        }
+
+        .drawer-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+        }
+
+        .drawer-tab {
+            padding: 12px 15px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .drawer-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .drawer-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* AI Analysis Card */
+        .ai-card {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #a78bfa;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .code-snippet {
+            background-color: #000;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            margin: 15px 0;
+            border: 1px solid var(--border);
+        }
+
+        /* Modal (Import Wizard) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background-color: var(--bg-panel);
+            width: 600px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal.open { display: flex; }
+        .modal-overlay.open { display: flex; }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 30px; right: 30px;
+            height: 2px;
+            background-color: var(--border);
+            z-index: 1;
+        }
+
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .step-circle {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background-color: var(--bg-dark);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step.active { color: var(--accent); }
+        .step.active .step-circle {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover { border-color: var(--accent); }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Topbar & Toolbar -->
+    <div class="topbar">
+        <div class="page-title">Concentrado de Vulnerabilidades</div>
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Buscar por ID, Regla o Repositorio...">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline">⚙️ Filtros (2)</button>
+                <button class="btn btn-outline">↓ Exportar</button>
+                <button class="btn" onclick="openModal()">+ Importar Escaneo</button>
+            </div>
+        </div>
+        <div class="active-filters">
+            <div class="filter-chip">Estatus: Activa, En Remediación <span>✕</span></div>
+            <div class="filter-chip">SLA: Vencido <span>✕</span></div>
+            <span style="color: var(--text-muted); font-size: 0.8rem; cursor: pointer; margin-top: 5px;">Limpiar filtros</span>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox" id="check-all" onclick="toggleAll(this)"></th>
+                    <th>ID</th>
+                    <th>Motor</th>
+                    <th>Severidad</th>
+                    <th>Vulnerabilidad (Regla)</th>
+                    <th>Activo / Repositorio</th>
+                    <th>Estatus</th>
+                    <th>SLA</th>
+                    <th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr onclick="openDrawer(event)">
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" onclick="checkRow()"></td>
+                    <td style="font-family: monospace; color: var(--text-muted);">SAST-0042</td>
+                    <td><span class="badge badge-motor badge-sast">SAST</span></td>
+                    <td><span class="badge badge-crit">Crítica</span></td>
+                    <td style="font-weight: 500;">SQL Injection (CWE-89)</td>
+                    <td>core-bancario-api</td>
+                    <td><span class="status-dot status-active"></span>Activa</td>
+                    <td style="color: var(--danger); font-weight: 500;">-3 días</td>
+                    <td>Ana García</td>
+                </tr>
+                <tr onclick="openDrawer(event)">
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" onclick="checkRow()"></td>
+                    <td style="font-family: monospace; color: var(--text-muted);">SCA-0128</td>
+                    <td><span class="badge badge-motor badge-sca">SCA</span></td>
+                    <td><span class="badge badge-high">Alta</span></td>
+                    <td style="font-weight: 500;">log4j 2.14.1 (CVE-2021-44228)</td>
+                    <td>portal-clientes-backend</td>
+                    <td><span class="status-dot status-rem"></span>En Remediación</td>
+                    <td style="color: var(--warning);">+5 días</td>
+                    <td>Carlos López</td>
+                </tr>
+                <tr onclick="openDrawer(event)">
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" onclick="checkRow()"></td>
+                    <td style="font-family: monospace; color: var(--text-muted);">DAST-0015</td>
+                    <td><span class="badge badge-motor badge-dast">DAST</span></td>
+                    <td><span class="badge badge-med">Media</span></td>
+                    <td style="font-weight: 500;">Reflected XSS</td>
+                    <td>https://clientes.banregio.com</td>
+                    <td><span class="status-dot status-active"></span>Activa</td>
+                    <td style="color: var(--success);">+12 días</td>
+                    <td>María Torres</td>
+                </tr>
+                <tr onclick="openDrawer(event)">
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" onclick="checkRow()"></td>
+                    <td style="font-family: monospace; color: var(--text-muted);">SAST-0089</td>
+                    <td><span class="badge badge-motor badge-sast">SAST</span></td>
+                    <td><span class="badge badge-high">Alta</span></td>
+                    <td style="font-weight: 500;">Hardcoded Credentials</td>
+                    <td>auth-service-v2</td>
+                    <td><span class="status-dot status-fp"></span>Falso Positivo</td>
+                    <td style="color: var(--text-muted);">N/A</td>
+                    <td>Pedro Núñez</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mass Actions Bar -->
+    <div class="mass-actions-bar" id="mass-bar">
+        <span style="font-weight: 600;"><span id="sel-count">0</span> vulnerabilidades seleccionadas</span>
+        <div style="width: 1px; height: 20px; background-color: rgba(255,255,255,0.3);"></div>
+        <button class="mass-btn">🔄 Reasignar</button>
+        <button class="mass-btn">📝 Cambiar Estatus</button>
+        <button class="mass-btn">📋 Agrupar en Plan</button>
+        <button class="mass-btn" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.5);" onclick="clearSelection()">✕ Cancelar</button>
+    </div>
+
+    <!-- Drawer (Detail Panel) -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <span>SAST-0042</span>
+                <button class="close-drawer" onclick="closeDrawer()">✕</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <span class="badge badge-motor badge-sast">SAST</span>
+                <span class="badge badge-crit">Crítica</span>
+                <span class="badge" style="background-color: var(--bg-dark); border: 1px solid var(--border);">Activa</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="flex: 1;">Cambiar Estatus ▾</button>
+                <button class="btn btn-outline" style="flex: 1;">Solicitar Excepción</button>
+            </div>
+        </div>
+        
+        <div class="drawer-tabs">
+            <div class="drawer-tab active" onclick="switchDrawerTab('tecnico')">Detalle Técnico</div>
+            <div class="drawer-tab" onclick="switchDrawerTab('ia')">Análisis IA ✨</div>
+            <div class="drawer-tab" onclick="switchDrawerTab('log')">Bitácora</div>
+        </div>
+
+        <div class="drawer-body" id="tab-tecnico">
+            <h3 style="font-size: 1rem; margin-bottom: 10px;">SQL Injection (CWE-89)</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+                El software construye toda o parte de una sentencia SQL utilizando entrada de componentes externos, pero no neutraliza o neutraliza incorrectamente los elementos especiales que podrían modificar la sentencia SQL prevista.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 0.85rem;">
+                <div>
+                    <div style="color: var(--text-muted); margin-bottom: 3px;">Repositorio</div>
+                    <div style="font-weight: 500; color: var(--accent); cursor: pointer;">core-bancario-api ↗</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); margin-bottom: 3px;">Archivo</div>
+                    <div style="font-family: monospace;">src/controllers/UserController.java</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); margin-bottom: 3px;">Fecha Detección</div>
+                    <div>15 Oct 2025</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); margin-bottom: 3px;">Vencimiento SLA</div>
+                    <div style="color: var(--danger); font-weight: 500;">14 Dic 2025 (-3 días)</div>
+                </div>
+            </div>
+
+            <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-muted);">Snippet de Código (Línea 42)</h4>
+            <div class="code-snippet">
+<span style="color: #569cd6;">String</span> query = <span style="color: #ce9178;">"SELECT * FROM users WHERE username = '"</span> + req.getParameter(<span style="color: #ce9178;">"user"</span>) + <span style="color: #ce9178;">"'"</span>;
+<span style="color: #4ec9b0;">Statement</span> stmt = connection.createStatement();
+<span style="color: #4ec9b0;">ResultSet</span> rs = stmt.executeQuery(query);
+            </div>
+        </div>
+
+        <div class="drawer-body" id="tab-ia" style="display: none;">
+            <div class="ai-card">
+                <div class="ai-header">
+                    <span>✨ Triaje Automático (AppSec AI)</span>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Clasificación Sugerida:</span><br>
+                    <span class="badge badge-crit" style="margin-top: 5px;">Vulnerabilidad Confirmada</span>
+                </div>
+                <p style="font-size: 0.9rem; line-height: 1.5; color: #e2e8f0;">
+                    El snippet de código muestra una concatenación directa de la variable <code>req.getParameter("user")</code> dentro de la consulta SQL en la línea 42. Al no utilizar <code>PreparedStatement</code> ni sanitizar la entrada, el código es altamente vulnerable a inyección SQL. No se detectan controles compensatorios en el framework Spring Boot para este patrón específico de uso de <code>Statement</code> nativo.
+                </p>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn" style="background-color: #8b5cf6;">Aceptar y Confirmar</button>
+                    <button class="btn btn-outline" style="border-color: #8b5cf6; color: #a78bfa;">Rechazar (Marcar FP)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="drawer-body" id="tab-log" style="display: none;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); text-align: center; margin-top: 20px;">
+                Historial de cambios y comentarios aparecerá aquí.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Importación -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                Importar Escaneo
+                <button class="close-drawer" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="wizard-steps">
+                    <div class="step active">
+                        <div class="step-circle">1</div>
+                        <span>Cargar Archivo</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <span>Validación</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <span>Confirmación</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; display: block;">Motor de Origen</label>
+                    <select class="search-input" style="width: 100%; padding-left: 12px;">
+                        <option>Checkmarx SAST</option>
+                        <option>Checkmarx SCA</option>
+                        <option>Veracode DAST</option>
+                    </select>
+                </div>
+
+                <div class="upload-area">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                    <div style="font-weight: 500; margin-bottom: 5px;">Arrastra tu archivo CSV o Excel aquí</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">o haz clic para examinar (Max 50MB)</div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" style="color: var(--accent); font-size: 0.85rem; text-decoration: none;">↓ Descargar Template CSV para Checkmarx SAST</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                <button class="btn">Siguiente: Validar Datos →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Drawer Logic
+        function openDrawer(e) {
+            document.getElementById('drawer').classList.add('open');
+            document.getElementById('drawer-overlay').classList.add('open');
+            
+            // Highlight row
+            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawer-overlay').classList.remove('open');
+            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected'));
+        }
+
+        function switchDrawerTab(tabId) {
+            document.querySelectorAll('.drawer-tab').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            document.getElementById('tab-tecnico').style.display = tabId === 'tecnico' ? 'block' : 'none';
+            document.getElementById('tab-ia').style.display = tabId === 'ia' ? 'block' : 'none';
+            document.getElementById('tab-log').style.display = tabId === 'log' ? 'block' : 'none';
+        }
+
+        // Mass Actions Logic
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('.row-check');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            updateMassBar();
+        }
+
+        function checkRow() {
+            updateMassBar();
+        }
+
+        function updateMassBar() {
+            const checkedCount = document.querySelectorAll('.row-check:checked').length;
+            const bar = document.getElementById('mass-bar');
+            const countSpan = document.getElementById('sel-count');
+            
+            if (checkedCount > 0) {
+                countSpan.innerText = checkedCount;
+                bar.classList.add('visible');
+            } else {
+                bar.classList.remove('visible');
+                document.getElementById('check-all').checked = false;
+            }
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+            document.getElementById('check-all').checked = false;
+            updateMassBar();
+        }
+
+        // Modal Logic
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+        }
+    </script>
+</body>
+</html>

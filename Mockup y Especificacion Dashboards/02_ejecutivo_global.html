@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ejecutivo Global — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d1117; color:#e6edf3; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:#161b22; border-bottom:1px solid #30363d; }
+  .breadcrumb { display:flex; align-items:center; gap:6px; font-size:12px; color:#8b949e; }
+  .breadcrumb .current { color:#e6edf3; font-weight:600; }
+  .breadcrumb .sep { color:#30363d; }
+  .topbar-right { display:flex; align-items:center; gap:10px; }
+  .date-pill { background:#21262d; border:1px solid #30363d; border-radius:6px; padding:5px 12px; font-size:12px; color:#8b949e; cursor:pointer; }
+  .date-pill:hover { border-color:#58a6ff; color:#e6edf3; }
+  .btn-filter { background:#21262d; border:1px solid #30363d; border-radius:6px; padding:5px 12px; font-size:12px; color:#8b949e; cursor:pointer; }
+  .btn-filter:hover { border-color:#58a6ff; color:#e6edf3; }
+  .btn-export { background:#238636; border:1px solid #2ea043; border-radius:6px; padding:5px 12px; font-size:12px; color:#fff; cursor:pointer; }
+  .main { padding:20px; }
+  .section-label { font-size:11px; font-weight:600; color:#8b949e; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; }
+
+  /* SEMAFORO HERO */
+  .hero-row { display:grid; grid-template-columns:1fr 220px; gap:16px; margin-bottom:20px; }
+  .semaforo-hero { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:20px; display:flex; align-items:center; gap:20px; }
+  .semaforo-circle { width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .semaforo-circle.rojo { background:radial-gradient(circle at 35% 35%, #ff6b6b, #c0392b); box-shadow:0 0 30px rgba(248,81,73,0.5); }
+  .semaforo-circle.amarillo { background:radial-gradient(circle at 35% 35%, #f9ca24, #d29922); box-shadow:0 0 30px rgba(210,153,34,0.5); }
+  .semaforo-circle.verde { background:radial-gradient(circle at 35% 35%, #6bcb77, #2ea043); box-shadow:0 0 30px rgba(63,185,80,0.5); }
+  .semaforo-circle .dot { width:16px; height:16px; background:rgba(255,255,255,0.4); border-radius:50%; }
+  .semaforo-info h1 { font-size:28px; font-weight:700; }
+  .semaforo-info .label { font-size:12px; color:#8b949e; margin-bottom:4px; }
+  .semaforo-info .trend { font-size:12px; color:#f85149; margin-top:4px; }
+  .semaforo-info .estado { font-size:22px; font-weight:800; color:#f85149; }
+  .semaforo-info .sub { font-size:11px; color:#8b949e; margin-top:2px; }
+  .score-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:20px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  .score-card .score-label { font-size:11px; color:#8b949e; margin-bottom:8px; }
+  .score-card .score-value { font-size:48px; font-weight:800; color:#d29922; line-height:1; }
+  .score-card .score-sub { font-size:11px; color:#8b949e; margin-top:6px; }
+  .score-card .score-bar { width:100%; background:#21262d; border-radius:4px; height:6px; margin-top:10px; overflow:hidden; }
+  .score-card .score-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#f85149,#d29922,#3fb950); }
+
+  /* MOTOR SUMMARY ROW */
+  .motors-row { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:20px; }
+  .motor-mini { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:12px; cursor:pointer; transition:all 0.2s; }
+  .motor-mini:hover { border-color:#58a6ff; transform:translateY(-2px); }
+  .motor-mini-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .motor-tag { font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px; }
+  .tag-sast { background:rgba(88,166,255,0.15); color:#58a6ff; }
+  .tag-dast { background:rgba(247,129,102,0.15); color:#f78166; }
+  .tag-sca { background:rgba(63,185,80,0.15); color:#3fb950; }
+  .tag-cds { background:rgba(210,153,34,0.15); color:#d29922; }
+  .tag-mda { background:rgba(188,140,255,0.15); color:#bc8cff; }
+  .tag-mast { background:rgba(57,211,83,0.15); color:#39d353; }
+  .sem-dot { width:8px; height:8px; border-radius:50%; }
+  .sem-rojo { background:#f85149; box-shadow:0 0 5px rgba(248,81,73,0.6); }
+  .sem-amarillo { background:#d29922; box-shadow:0 0 5px rgba(210,153,34,0.6); }
+  .sem-verde { background:#3fb950; box-shadow:0 0 5px rgba(63,185,80,0.6); }
+  .motor-mini-value { font-size:20px; font-weight:700; color:#e6edf3; }
+  .motor-mini-label { font-size:10px; color:#8b949e; }
+  .motor-mini-trend { font-size:10px; margin-top:3px; }
+  .trend-up { color:#f85149; }
+  .trend-down { color:#3fb950; }
+
+  /* CHARTS ROW */
+  .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:20px; }
+  .chart-box { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; }
+  .chart-box-title { font-size:11px; font-weight:600; color:#8b949e; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; }
+  .chart-container { position:relative; height:200px; }
+
+  /* PIPELINE + TOP ROW */
+  .pipeline-top-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .pipeline-summary { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; }
+  .pipeline-kpis-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+  .p-kpi { text-align:center; }
+  .p-kpi .label { font-size:10px; color:#8b949e; margin-bottom:3px; }
+  .p-kpi .value { font-size:18px; font-weight:700; }
+  .p-kpi .value.blue { color:#58a6ff; }
+  .p-kpi .value.green { color:#3fb950; }
+  .p-kpi .value.red { color:#f85149; }
+  .gauge-row { display:flex; align-items:center; gap:12px; margin-top:8px; border-top:1px solid #21262d; padding-top:10px; }
+  .gauge-mini { position:relative; height:50px; width:80px; }
+  .gauge-label { font-size:11px; color:#8b949e; }
+  .gauge-value { font-size:18px; font-weight:700; color:#3fb950; }
+
+  .top-vulns { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; }
+  .vuln-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid #21262d; }
+  .vuln-row:last-child { border-bottom:none; }
+  .vuln-name { font-size:12px; color:#e6edf3; flex:1; }
+  .vuln-count { font-size:13px; font-weight:700; color:#f85149; margin-left:10px; }
+
+  /* SUBDIRECCIONES */
+  .subdir-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .subdir-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.2s; }
+  .subdir-card:hover { border-color:#58a6ff; transform:translateY(-2px); }
+  .subdir-name { font-size:12px; font-weight:700; color:#e6edf3; margin-bottom:6px; }
+  .subdir-total { font-size:22px; font-weight:700; color:#e6edf3; }
+  .subdir-label { font-size:10px; color:#8b949e; margin-bottom:8px; }
+  .subdir-motors { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+  .subdir-motor-chip { font-size:10px; padding:1px 6px; border-radius:3px; }
+  .subdir-pipeline { display:flex; justify-content:space-between; font-size:11px; color:#8b949e; margin-top:8px; border-top:1px solid #21262d; padding-top:8px; }
+  .subdir-pipeline span strong { color:#e6edf3; }
+
+  /* AI PANEL */
+  .ai-panel { background:#161b22; border:1px solid #388bfd44; border-radius:10px; padding:16px; margin-bottom:20px; }
+  .ai-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .ai-badge { background:rgba(88,166,255,0.1); border:1px solid #388bfd44; border-radius:6px; padding:3px 8px; font-size:11px; color:#58a6ff; }
+  .ai-text { font-size:13px; color:#e6edf3; line-height:1.6; }
+  .ai-rec { font-size:12px; color:#8b949e; margin-top:8px; }
+  .ai-rec strong { color:#58a6ff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="breadcrumb">
+    <span style="color:#8b949e">Inicio</span>
+    <span class="sep">›</span>
+    <span class="current">Dashboard Ejecutivo Global</span>
+  </div>
+  <div class="topbar-right">
+    <div class="date-pill">📅 01 Ene 2025 — 31 Dic 2025 ▾</div>
+    <div class="btn-filter">▼ Filtros</div>
+    <div class="btn-export">↓ Exportar PDF</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HERO: SEMAFORO + SCORE -->
+  <div class="hero-row" style="margin-bottom:20px;">
+    <div class="semaforo-hero">
+      <div class="semaforo-circle rojo"><div class="dot"></div></div>
+      <div class="semaforo-info">
+        <div class="label">Semáforo de Riesgo Global</div>
+        <div class="estado">ALTO</div>
+        <div class="h1" style="font-size:28px;font-weight:700;">15,186</div>
+        <div class="sub">Vulnerabilidades activas totales (Altas + Críticas)</div>
+        <div class="trend">▲ +7% vs mes anterior</div>
+      </div>
+      <div style="margin-left:auto; display:flex; flex-direction:column; gap:8px; min-width:200px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#8b949e">Críticas activas</span><span style="color:#f85149; font-weight:700;">3,842</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#8b949e">Altas activas</span><span style="color:#d29922; font-weight:700;">11,344</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#8b949e">SLA Vencido</span><span style="color:#f85149; font-weight:700;">2,180 (14%)</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#8b949e">Remediadas este mes</span><span style="color:#3fb950; font-weight:700;">748</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#8b949e">Identificadas este mes</span><span style="color:#e6edf3; font-weight:700;">1,118</span></div>
+      </div>
+    </div>
+    <div class="score-card">
+      <div class="score-label">Score de Madurez Global</div>
+      <div class="score-value">62</div>
+      <div class="score-sub">/ 100 puntos</div>
+      <div class="score-bar"><div class="score-fill" style="width:62%"></div></div>
+      <div style="font-size:10px; color:#d29922; margin-top:8px;">▼ -3 pts vs trimestre anterior</div>
+    </div>
+  </div>
+
+  <!-- MOTORES -->
+  <div class="section-label">Vulnerabilidades Activas por Motor</div>
+  <div class="motors-row">
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-sast">SAST</span><div class="sem-dot sem-rojo"></div></div>
+      <div class="motor-mini-value">2,432</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-up">▲ 12%</div>
+    </div>
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-sca">SCA</span><div class="sem-dot sem-rojo"></div></div>
+      <div class="motor-mini-value">1,842</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-down">▼ 8%</div>
+    </div>
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-cds">CDS</span><div class="sem-dot sem-amarillo"></div></div>
+      <div class="motor-mini-value">1,156</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-up">▲ 5%</div>
+    </div>
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-dast">DAST</span><div class="sem-dot sem-amarillo"></div></div>
+      <div class="motor-mini-value">982</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-up">▲ 18%</div>
+    </div>
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-mda">MDA</span><div class="sem-dot sem-verde"></div></div>
+      <div class="motor-mini-value">417</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-down">▼ 3%</div>
+    </div>
+    <div class="motor-mini">
+      <div class="motor-mini-header"><span class="motor-tag tag-mast">MAST</span><div class="sem-dot sem-verde"></div></div>
+      <div class="motor-mini-value">357</div>
+      <div class="motor-mini-label">Activas Altas/Críticas</div>
+      <div class="motor-mini-trend trend-down">▼ 3%</div>
+    </div>
+  </div>
+
+  <!-- TENDENCIA + TOP VULNS -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-box-title">Tendencia Global de Vulnerabilidades Activas (Anual)</div>
+      <div class="chart-container"><canvas id="chart-tendencia"></canvas></div>
+    </div>
+    <div class="top-vulns">
+      <div class="chart-box-title">Top 5 Vulnerabilidades Más Recurrentes en Pipeline</div>
+      <div class="vuln-row"><span class="vuln-name">SQL Injection</span><span class="vuln-count">1,248</span></div>
+      <div class="vuln-row"><span class="vuln-name">Cross-Site Scripting (XSS)</span><span class="vuln-count">987</span></div>
+      <div class="vuln-row"><span class="vuln-name">Insecure Deserialization</span><span class="vuln-count">642</span></div>
+      <div class="vuln-row"><span class="vuln-name">Using Components with Known Vulns</span><span class="vuln-count">498</span></div>
+      <div class="vuln-row"><span class="vuln-name">Security Misconfiguration</span><span class="vuln-count">467</span></div>
+    </div>
+  </div>
+
+  <!-- PIPELINE GLOBAL -->
+  <div class="pipeline-top-row">
+    <div class="pipeline-summary">
+      <div class="chart-box-title">Indicadores de Pipeline Global (Todas las Subdirecciones)</div>
+      <div class="pipeline-kpis-row">
+        <div class="p-kpi"><div class="label">Total Escaneos del Mes</div><div class="value blue">3,842</div></div>
+        <div class="p-kpi"><div class="label">Escaneos Aprobados</div><div class="value green">2,812 <span style="font-size:12px">(73%)</span></div></div>
+        <div class="p-kpi"><div class="label">Escaneos Rechazados</div><div class="value red">1,030 <span style="font-size:12px">(27%)</span></div></div>
+        <div class="p-kpi"><div class="label">% Aprobación Global</div><div style="font-size:28px;font-weight:700;color:#3fb950;">73%</div></div>
+      </div>
+      <div class="chart-container" style="height:100px;"><canvas id="chart-pipeline-mini"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Distribución de Vulnerabilidades por Severidad</div>
+      <div class="chart-container"><canvas id="chart-severidad"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ANÁLISIS IA -->
+  <div class="ai-panel">
+    <div class="ai-header">
+      <span style="font-size:16px;">🤖</span>
+      <span class="ai-badge">Análisis IA — Diciembre 2025</span>
+    </div>
+    <div class="ai-text">
+      Se observa un incremento del <strong>7%</strong> en vulnerabilidades activas globales respecto al mes anterior, impulsado principalmente por nuevas detecciones en <strong>DAST (+18%)</strong> y <strong>SAST (+12%)</strong>. El motor <strong>SCA</strong> muestra una tendencia positiva con reducción del 8%, lo que indica que el programa de actualización de dependencias está siendo efectivo. El <strong>14% del backlog</strong> tiene SLA vencido, concentrado principalmente en las subdirecciones <strong>CORE-BANCARIO</strong> y <strong>ARQUITECTURA TI</strong>.
+    </div>
+    <div class="ai-rec"><strong>Recomendación:</strong> Priorizar la remediación de SQL Injection y SSRF en CORE-BANCARIO. Revisar el proceso de aprobación de excepciones en DAST, ya que 47 liberaciones se realizaron con vulnerabilidades activas este mes.</div>
+  </div>
+
+  <!-- SUBDIRECCIONES -->
+  <div class="section-label">Subdirecciones — Haz clic para ver el detalle</div>
+  <div class="subdir-grid">
+    <div class="subdir-card" onclick="alert('Navega al Dashboard de Vulnerabilidades Organizacional → Nivel Subdirección: CORE-BANCARIO')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div class="subdir-name">CORE-BANCARIO</div>
+        <div class="sem-dot sem-rojo"></div>
+      </div>
+      <div class="subdir-total">4,125</div>
+      <div class="subdir-label">Vulnerabilidades activas</div>
+      <div class="subdir-motors">
+        <span class="subdir-motor-chip tag-sast">SAST 1,280</span>
+        <span class="subdir-motor-chip tag-sca">SCA 980</span>
+        <span class="subdir-motor-chip tag-cds">CDS 730</span>
+        <span class="subdir-motor-chip tag-dast">DAST 690</span>
+        <span class="subdir-motor-chip tag-mda">MDA 265</span>
+        <span class="subdir-motor-chip tag-mast">MAST 180</span>
+      </div>
+      <div class="subdir-pipeline">
+        <span>Aprobados: <strong>812 (72%)</strong></span>
+        <span>Rechazados: <strong>318 (28%)</strong></span>
+      </div>
+    </div>
+    <div class="subdir-card" onclick="alert('Navega al Dashboard de Vulnerabilidades Organizacional → Nivel Subdirección: ARQUITECTURA TI')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div class="subdir-name">ARQUITECTURA TI</div>
+        <div class="sem-dot sem-rojo"></div>
+      </div>
+      <div class="subdir-total">2,842</div>
+      <div class="subdir-label">Vulnerabilidades activas</div>
+      <div class="subdir-motors">
+        <span class="subdir-motor-chip tag-sast">SAST 910</span>
+        <span class="subdir-motor-chip tag-sca">SCA 620</span>
+        <span class="subdir-motor-chip tag-cds">CDS 480</span>
+        <span class="subdir-motor-chip tag-dast">DAST 420</span>
+        <span class="subdir-motor-chip tag-mda">MDA 250</span>
+        <span class="subdir-motor-chip tag-mast">MAST 162</span>
+      </div>
+      <div class="subdir-pipeline">
+        <span>Aprobados: <strong>612 (75%)</strong></span>
+        <span>Rechazados: <strong>203 (25%)</strong></span>
+      </div>
+    </div>
+    <div class="subdir-card" onclick="alert('Navega al Dashboard de Vulnerabilidades Organizacional → Nivel Subdirección: PLATAFORMAS DIGITALES')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div class="subdir-name">PLATAFORMAS DIGITALES</div>
+        <div class="sem-dot sem-amarillo"></div>
+      </div>
+      <div class="subdir-total">2,398</div>
+      <div class="subdir-label">Vulnerabilidades activas</div>
+      <div class="subdir-motors">
+        <span class="subdir-motor-chip tag-sast">SAST 780</span>
+        <span class="subdir-motor-chip tag-sca">SCA 540</span>
+        <span class="subdir-motor-chip tag-cds">CDS 430</span>
+        <span class="subdir-motor-chip tag-dast">DAST 380</span>
+        <span class="subdir-motor-chip tag-mda">MDA 170</span>
+        <span class="subdir-motor-chip tag-mast">MAST 98</span>
+      </div>
+      <div class="subdir-pipeline">
+        <span>Aprobados: <strong>548 (71%)</strong></span>
+        <span>Rechazados: <strong>225 (29%)</strong></span>
+      </div>
+    </div>
+    <div class="subdir-card" onclick="alert('Navega al Dashboard de Vulnerabilidades Organizacional → Nivel Subdirección: EXPERIENCIA DIGITAL')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div class="subdir-name">EXPERIENCIA DIGITAL</div>
+        <div class="sem-dot sem-verde"></div>
+      </div>
+      <div class="subdir-total">1,200</div>
+      <div class="subdir-label">Vulnerabilidades activas</div>
+      <div class="subdir-motors">
+        <span class="subdir-motor-chip tag-sast">SAST 280</span>
+        <span class="subdir-motor-chip tag-sca">SCA 210</span>
+        <span class="subdir-motor-chip tag-cds">CDS 160</span>
+        <span class="subdir-motor-chip tag-dast">DAST 150</span>
+        <span class="subdir-motor-chip tag-mda">MDA 80</span>
+        <span class="subdir-motor-chip tag-mast">MAST 60</span>
+      </div>
+      <div class="subdir-pipeline">
+        <span>Aprobados: <strong>540 (74%)</strong></span>
+        <span>Rechazados: <strong>192 (26%)</strong></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+new Chart(document.getElementById('chart-tendencia'), {
+  type:'line',
+  data:{
+    labels:MONTHS,
+    datasets:[
+      {label:'Activas',data:[12000,12400,12800,13200,13600,13900,14200,14500,14700,14900,15000,15186],borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.05)',tension:0.4,fill:true,pointRadius:3},
+      {label:'Solventadas',data:[800,820,850,900,880,860,900,920,880,860,900,748],borderColor:'#3fb950',backgroundColor:'transparent',tension:0.4,pointRadius:3},
+      {label:'Nuevas',data:[1100,1050,1080,1120,1050,980,1020,1050,980,960,1000,1118],borderColor:'#f85149',backgroundColor:'transparent',tension:0.4,pointRadius:3},
+      {label:'Críticas+Altas',data:[2800,2900,3000,3100,3150,3200,3300,3400,3500,3600,3700,3842],borderColor:'#d29922',backgroundColor:'transparent',tension:0.4,pointRadius:3,borderDash:[4,2]},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}}}}
+});
+new Chart(document.getElementById('chart-pipeline-mini'), {
+  type:'bar',
+  data:{
+    labels:MONTHS,
+    datasets:[
+      {label:'Aprobados',data:[210,230,250,240,220,230,245,255,240,235,245,212],backgroundColor:'rgba(63,185,80,0.6)',borderRadius:2},
+      {label:'Rechazados',data:[90,80,85,90,95,88,82,78,85,90,88,85],backgroundColor:'rgba(248,81,73,0.6)',borderRadius:2},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:9}}}},scales:{x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#21262d'}}}}
+});
+new Chart(document.getElementById('chart-severidad'), {
+  type:'doughnut',
+  data:{
+    labels:['Críticas','Altas','Medias','Bajas'],
+    datasets:[{data:[3842,11344,8200,4100],backgroundColor:['#f85149','#d29922','#58a6ff','#3fb950'],borderWidth:0}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8b949e',font:{size:11},boxWidth:12}}},cutout:'60%'}
+});
+</script>
+</body>
+</html>

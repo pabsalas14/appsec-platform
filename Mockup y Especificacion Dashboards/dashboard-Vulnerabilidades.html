@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Vulnerabilidades — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --card: #141728;
+    --card2: #1c2035;
+    --border: #252a45;
+    --accent: #e8365d;
+    --text: #e2e8f0;
+    --muted: #6b7280;
+    --sast: #7c3aed;
+    --sca: #10b981;
+    --cds: #f59e0b;
+    --dast: #3b82f6;
+    --mda: #ec4899;
+    --mast: #06b6d4;
+    --crit: #ef4444;
+    --high: #f97316;
+    --med: #eab308;
+    --low: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,15,26,0.95); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; gap: 12px;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; flex: 1; }
+  .breadcrumb span { color: var(--muted); font-size: 12px; cursor: pointer; transition: color .2s; }
+  .breadcrumb span:hover { color: var(--text); }
+  .breadcrumb span.active { color: var(--text); font-weight: 600; cursor: default; }
+  .breadcrumb .sep { color: var(--border); font-size: 14px; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .btn-top {
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 6px;
+    cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px;
+    transition: border-color .2s;
+  }
+  .btn-top:hover { border-color: var(--accent); }
+  .level-badge {
+    background: rgba(232,54,93,0.15); border: 1px solid rgba(232,54,93,0.3);
+    color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 20px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .chip { background: rgba(232,54,93,0.1); border: 1px solid rgba(232,54,93,0.3); color: var(--accent); padding: 3px 8px; border-radius: 12px; font-size: 10px; display: flex; align-items: center; gap: 4px; }
+  .chip .remove { cursor: pointer; opacity: .7; }
+  .chip .remove:hover { opacity: 1; }
+
+  /* CONTENT */
+  .content { padding: 20px; max-width: 1600px; margin: 0 auto; }
+  .section-title { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+
+  /* GRID LAYOUTS */
+  .grid-7 { display: grid; grid-template-columns: repeat(6, 1fr) 1.2fr; gap: 12px; margin-bottom: 16px; }
+  .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .grid-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .grid-6-kpi { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+  .grid-3-1 { display: grid; grid-template-columns: 3fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  /* CARD */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px;
+  }
+  .card.clickable { cursor: pointer; transition: border-color .2s, transform .15s, box-shadow .15s; }
+  .card.clickable:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(232,54,93,0.15); }
+
+  /* MOTOR CARD */
+  .motor-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .motor-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .motor-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .motor-name { font-size: 11px; font-weight: 700; }
+  .motor-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .metric-item { text-align: center; }
+  .metric-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .metric-value { font-size: 13px; font-weight: 700; }
+  .motor-trend { font-size: 9px; margin-top: 8px; }
+  .trend-up { color: var(--crit); }
+  .trend-down { color: var(--low); }
+
+  /* SEMAFORO */
+  .semaforo-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .semaforo-circle { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 8px auto; }
+  .semaforo-circle.alto { background: rgba(239,68,68,0.15); border: 2px solid #ef4444; box-shadow: 0 0 16px rgba(239,68,68,0.4); }
+  .semaforo-circle.medio { background: rgba(234,179,8,0.15); border: 2px solid #eab308; box-shadow: 0 0 16px rgba(234,179,8,0.4); }
+  .semaforo-circle.bajo { background: rgba(34,197,94,0.15); border: 2px solid #22c55e; box-shadow: 0 0 16px rgba(34,197,94,0.4); }
+  .semaforo-dot { width: 16px; height: 16px; border-radius: 50%; }
+  .semaforo-dot.alto { background: #ef4444; }
+  .semaforo-dot.medio { background: #eab308; }
+  .semaforo-dot.bajo { background: #22c55e; }
+  .semaforo-label { font-size: 14px; font-weight: 800; letter-spacing: 1px; }
+  .semaforo-label.alto { color: #ef4444; }
+  .semaforo-label.medio { color: #eab308; }
+  .semaforo-label.bajo { color: #22c55e; }
+  .semaforo-count { font-size: 20px; font-weight: 800; }
+  .semaforo-sub { font-size: 9px; color: var(--muted); }
+  .semaforo-trend { font-size: 9px; color: var(--crit); margin-top: 4px; }
+
+  /* CHARTS */
+  .chart-container { position: relative; }
+
+  /* PIPELINE CARD */
+  .pipeline-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-items: center; }
+  .pipeline-metric { text-align: center; }
+  .pipeline-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .pipeline-value { font-size: 20px; font-weight: 800; }
+  .pipeline-value.green { color: var(--low); }
+  .pipeline-value.red { color: var(--crit); }
+  .pipeline-value.white { color: var(--text); }
+  .pipeline-pct { font-size: 11px; color: var(--muted); }
+
+  /* TOP VULNS */
+  .top-vuln-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .top-vuln-item:last-child { border-bottom: none; }
+  .top-vuln-pos { color: var(--muted); font-size: 11px; margin-right: 8px; }
+  .top-vuln-name { font-size: 11px; flex: 1; }
+  .top-vuln-count { color: var(--accent); font-weight: 700; font-size: 12px; }
+
+  /* ENTITY CARDS */
+  .entity-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: border-color .2s, transform .15s, box-shadow .15s; }
+  .entity-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(232,54,93,0.15); }
+  .entity-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .entity-count { font-size: 22px; font-weight: 800; }
+  .entity-label { font-size: 9px; color: var(--muted); margin-bottom: 10px; }
+  .motor-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .motor-chip { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+  .motor-chip.sast { background: rgba(124,58,237,0.2); color: #a78bfa; }
+  .motor-chip.sca { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .motor-chip.cds { background: rgba(245,158,11,0.2); color: #fcd34d; }
+  .motor-chip.dast { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  .motor-chip.mda { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+  .motor-chip.mast { background: rgba(6,182,212,0.2); color: #67e8f9; }
+  .entity-pipeline { display: flex; gap: 12px; font-size: 9px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+  .entity-pipeline .aprobados { color: var(--low); }
+  .entity-pipeline .rechazados { color: var(--crit); }
+
+  /* KPI SEVERITY CARDS */
+  .kpi-sev { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .kpi-sev.crit { border-top: 3px solid var(--crit); }
+  .kpi-sev.high { border-top: 3px solid var(--high); }
+  .kpi-sev.med { border-top: 3px solid var(--med); }
+  .kpi-sev.low { border-top: 3px solid var(--low); }
+  .kpi-sev.sla { border-top: 3px solid var(--sast); }
+  .kpi-sev-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .kpi-sev-value { font-size: 28px; font-weight: 800; }
+  .kpi-sev-value.crit { color: var(--crit); }
+  .kpi-sev-value.high { color: var(--high); }
+  .kpi-sev-value.med { color: var(--med); }
+  .kpi-sev-value.low { color: var(--low); }
+  .kpi-sev-sub { font-size: 9px; color: var(--crit); margin-top: 4px; }
+
+  /* REPO INFO */
+  .repo-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .repo-info-item .ri-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+  .repo-info-item .ri-value { font-size: 12px; font-family: monospace; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; cursor: pointer; white-space: nowrap; }
+  thead th:hover { color: var(--text); }
+  tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+  tbody tr:hover { background: var(--card2); }
+  tbody td { padding: 10px 12px; font-size: 11px; white-space: nowrap; }
+  .td-mono { font-family: monospace; color: var(--muted); font-size: 10px; }
+  .sev-chip { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .sev-chip.crit { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .sev-chip.high { background: rgba(249,115,22,0.15); color: #f97316; }
+  .sev-chip.med { background: rgba(234,179,8,0.15); color: #eab308; }
+  .sev-chip.low { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .sla-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.red { background: var(--crit); box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+  .dot.yellow { background: var(--med); box-shadow: 0 0 6px rgba(234,179,8,0.6); }
+  .dot.green { background: var(--low); box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+  .row-arrow { color: var(--muted); font-size: 14px; }
+
+  /* FILTER BAR */
+  .filter-bar { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-bar select, .filter-bar input { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 6px; font-size: 11px; outline: none; }
+  .filter-bar select:focus, .filter-bar input:focus { border-color: var(--accent); }
+  .filter-bar input { flex: 1; min-width: 180px; }
+
+  /* TABLE HEADER */
+  .table-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .table-header-left .th-title { font-size: 13px; font-weight: 700; }
+  .table-header-left .th-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .table-header-right { display: flex; gap: 8px; }
+  .btn-action { background: var(--card2); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: border-color .2s; }
+  .btn-action:hover { border-color: var(--accent); }
+  .btn-action.primary { background: rgba(232,54,93,0.1); border-color: rgba(232,54,93,0.3); color: var(--accent); }
+  .btn-action.primary:hover { background: rgba(232,54,93,0.2); }
+
+  /* AI PANEL */
+  .ai-panel { background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(232,54,93,0.08)); border: 1px solid rgba(124,58,237,0.25); border-radius: 10px; padding: 14px; }
+  .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ai-icon { font-size: 16px; }
+  .ai-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+  .ai-badge { background: rgba(124,58,237,0.2); color: #a78bfa; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+  .ai-text { font-size: 11px; line-height: 1.7; color: #cbd5e1; margin-bottom: 10px; }
+  .ai-rec { border-left: 3px solid var(--accent); background: rgba(232,54,93,0.06); padding: 8px 10px; border-radius: 0 6px 6px 0; font-size: 10px; color: #fca5a5; line-height: 1.6; }
+  .ai-rec strong { color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+  .progress-fill.green { background: var(--low); }
+  .progress-fill.yellow { background: var(--med); }
+  .progress-fill.red { background: var(--crit); }
+
+  /* DRAWER */
+  .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; }
+  .drawer-overlay.open { display: block; }
+  .drawer { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; background: var(--card); border-left: 1px solid var(--border); z-index: 201; overflow-y: auto; transition: right .3s ease; padding: 20px; }
+  .drawer.open { right: 0; }
+  .drawer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .drawer-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .drawer-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+  .drawer-path { font-family: monospace; font-size: 10px; color: var(--muted); }
+  .drawer-section { margin-bottom: 16px; }
+  .drawer-section-title { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .drawer-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .drawer-metric { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .dm-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .dm-value { font-size: 16px; font-weight: 700; }
+  .code-block { background: #0d0f1a; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 10px; color: #a78bfa; line-height: 1.6; overflow-x: auto; }
+  .rec-block { border-left: 3px solid var(--accent); background: rgba(232,54,93,0.06); padding: 10px; border-radius: 0 6px 6px 0; font-size: 11px; color: #fca5a5; line-height: 1.6; }
+  .drawer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .bitacora-item { display: flex; gap: 10px; margin-bottom: 12px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(232,54,93,0.2); border: 1px solid rgba(232,54,93,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .bita-content { flex: 1; }
+  .bita-meta { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .bita-text { font-size: 11px; line-height: 1.5; }
+  .comment-input { width: 100%; background: var(--card2); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 6px; font-size: 11px; resize: vertical; min-height: 60px; outline: none; margin-bottom: 8px; }
+  .comment-input:focus { border-color: var(--accent); }
+
+  /* FILTER DRAWER */
+  .filter-drawer { position: fixed; top: 0; right: -340px; width: 320px; height: 100vh; background: var(--card); border-left: 1px solid var(--border); z-index: 201; overflow-y: auto; transition: right .3s ease; padding: 20px; }
+  .filter-drawer.open { right: 0; }
+  .filter-group { margin-bottom: 16px; }
+  .filter-group-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .filter-check { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; cursor: pointer; }
+  .filter-check input { accent-color: var(--accent); }
+  .filter-radio { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; cursor: pointer; }
+  .filter-radio input { accent-color: var(--accent); }
+
+  /* GAUGE */
+  .gauge-wrap { display: flex; flex-direction: column; align-items: center; }
+  .gauge-value { font-size: 18px; font-weight: 800; margin-top: -10px; }
+  .gauge-label { font-size: 9px; color: var(--muted); }
+
+  /* MASS ACTION BAR */
+  .mass-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; z-index: 150; box-shadow: 0 8px 32px rgba(0,0,0,0.4); display: none; }
+  .mass-bar.visible { display: flex; }
+  .mass-count { font-size: 12px; font-weight: 700; color: var(--accent); }
+
+  /* REPO TABLE SPECIFIC */
+  .score-cell { display: flex; align-items: center; gap: 8px; }
+  .score-bar-wrap { width: 60px; }
+
+  /* NIVEL INDICATOR */
+  .nivel-indicator { display: flex; gap: 4px; align-items: center; }
+  .nivel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .nivel-dot.active { background: var(--accent); }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="breadcrumb" id="breadcrumb">
+    <span class="active" data-level="0" onclick="goToLevel(0)">Global</span>
+  </div>
+  <div class="topbar-right">
+    <div class="nivel-indicator" id="nivelDots"></div>
+    <button class="btn-top" onclick="toggleFilterDrawer()">▼ Filtros Globales</button>
+    <button class="btn-top" onclick="exportDashboard()">⋯</button>
+    <div class="level-badge" id="levelBadge">Nivel 1 / 7 — Global</div>
+  </div>
+</div>
+
+<!-- FILTER CHIPS -->
+<div class="filter-chips" id="filterChips" style="display:none;">
+  <div class="chip">Motor: SAST <span class="remove" onclick="removeChip(this)">✕</span></div>
+</div>
+
+<!-- CONTENT AREA -->
+<div class="content" id="dashContent"></div>
+
+<!-- FILTER DRAWER -->
+<div class="drawer-overlay" id="filterOverlay" onclick="toggleFilterDrawer()"></div>
+<div class="filter-drawer" id="filterDrawer">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <span style="font-size:14px;font-weight:700;">Filtros Globales</span>
+    <button class="btn-action" onclick="toggleFilterDrawer()">✕</button>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Motor</div>
+    <label class="filter-check"><input type="checkbox"> SAST</label>
+    <label class="filter-check"><input type="checkbox"> SCA</label>
+    <label class="filter-check"><input type="checkbox"> CDS</label>
+    <label class="filter-check"><input type="checkbox"> DAST</label>
+    <label class="filter-check"><input type="checkbox"> MDA</label>
+    <label class="filter-check"><input type="checkbox"> MAST</label>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Severidad</div>
+    <label class="filter-check"><input type="checkbox"> Crítica</label>
+    <label class="filter-check"><input type="checkbox"> Alta</label>
+    <label class="filter-check"><input type="checkbox"> Media</label>
+    <label class="filter-check"><input type="checkbox"> Baja</label>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">Estatus</div>
+    <label class="filter-check"><input type="checkbox"> Activa</label>
+    <label class="filter-check"><input type="checkbox"> En Remediación</label>
+    <label class="filter-check"><input type="checkbox"> En Revisión</label>
+    <label class="filter-check"><input type="checkbox"> Solventada</label>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-title">SLA</div>
+    <label class="filter-radio"><input type="radio" name="sla"> Todos</label>
+    <label class="filter-radio"><input type="radio" name="sla"> Vencido</label>
+    <label class="filter-radio"><input type="radio" name="sla"> En tiempo</label>
+    <label class="filter-radio"><input type="radio" name="sla"> Por vencer (≤7 días)</label>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:20px;">
+    <button class="btn-action primary" style="flex:1;" onclick="applyFilters()">Aplicar Filtros</button>
+    <button class="btn-action" onclick="clearFilters()">Limpiar</button>
+  </div>
+</div>
+
+<!-- HALLAZGO DRAWER -->
+<div class="drawer-overlay" id="hallazgoOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="hallazgoDrawer">
+  <div class="drawer-header">
+    <div></div>
+    <button class="btn-action" onclick="closeDrawer()">✕ Cerrar</button>
+  </div>
+  <div class="drawer-chips" id="drawerChips"></div>
+  <div class="drawer-title" id="drawerTitle"></div>
+  <div class="drawer-path" id="drawerPath"></div>
+  <hr style="border-color:var(--border);margin:14px 0;">
+  <div class="drawer-section">
+    <div class="drawer-section-title">Métricas Clave</div>
+    <div class="drawer-metrics">
+      <div class="drawer-metric"><div class="dm-label">CVSS Score</div><div class="dm-value" id="drawerCvss"></div></div>
+      <div class="drawer-metric"><div class="dm-label">SLA</div><div class="dm-value" id="drawerSla"></div></div>
+    </div>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Evidencia de Código</div>
+    <div class="code-block" id="drawerCode"></div>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Recomendación</div>
+    <div class="rec-block" id="drawerRec"></div>
+  </div>
+  <div class="drawer-actions">
+    <button class="btn-action primary">✓ Cambiar Estatus</button>
+    <button class="btn-action">🤖 Analizar con IA</button>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-section-title">Bitácora de Actividad</div>
+    <div id="drawerBitacora"></div>
+    <textarea class="comment-input" placeholder="Agregar comentario..."></textarea>
+    <button class="btn-action primary" style="width:100%;">Enviar Comentario</button>
+  </div>
+</div>
+
+<!-- MASS ACTION BAR -->
+<div class="mass-bar" id="massBar">
+  <span class="mass-count" id="massCount">0 seleccionados</span>
+  <button class="btn-action">Cambiar Estatus</button>
+  <button class="btn-action">Reasignar Responsable</button>
+  <button class="btn-action">Exportar Selección</button>
+  <button class="btn-action" onclick="clearSelection()">✕</button>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const DATA = {
+  global: {
+    semaforo: { estado: 'alto', total: 15186, tendencia: '+7%' },
+    motores: [
+      { id:'sast', nombre:'SAST', anterior:2200, actual:2432, solventadas:180, nuevas:412, tendencia:'+12%', up:true },
+      { id:'sca', nombre:'SCA', anterior:2010, actual:1842, solventadas:320, nuevas:152, tendencia:'-8%', up:false },
+      { id:'cds', nombre:'CDS', anterior:1101, actual:1156, solventadas:90, nuevas:145, tendencia:'+5%', up:true },
+      { id:'dast', nombre:'DAST', anterior:835, actual:982, solventadas:60, nuevas:207, tendencia:'+18%', up:true },
+      { id:'mda', nombre:'MDA', anterior:430, actual:417, solventadas:45, nuevas:32, tendencia:'-3%', up:false },
+      { id:'mast', nombre:'MAST', anterior:368, actual:357, solventadas:72, nuevas:61, tendencia:'-3%', up:false },
+    ],
+    pipeline: { total:3842, aprobados:2812, rechazados:1030, pct:73 },
+    topVulns: [
+      { nombre:'SQL Injection', count:1248 },
+      { nombre:'Cross-Site Scripting (XSS)', count:987 },
+      { nombre:'Insecure Deserialization', count:642 },
+      { nombre:'Using Components with Known Vulnerabilities', count:498 },
+      { nombre:'Security Misconfiguration', count:467 },
+    ],
+    tendencia: {
+      labels:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+      activas:[8200,8900,9800,10200,11000,11800,12400,13100,13800,14200,14700,15186],
+      solventadas:[600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700],
+      nuevas:[800,900,1100,900,1000,1100,900,1000,1100,900,1000,1100],
+      critAltas:[2100,2300,2500,2600,2800,3000,3100,3300,3500,3600,3700,3800],
+    },
+    hijos: [
+      { nombre:'CORE-BANCARIO', count:4125, sast:1280,sca:980,cds:730,dast:690,mda:265,mast:180, aprobados:'812 (72%)', rechazados:'318 (28%)' },
+      { nombre:'ARQUITECTURA TI', count:2842, sast:910,sca:620,cds:480,dast:420,mda:250,mast:162, aprobados:'612 (75%)', rechazados:'203 (25%)' },
+      { nombre:'PLATAFORMAS DIGITALES', count:2398, sast:780,sca:540,cds:430,dast:380,mda:170,mast:98, aprobados:'548 (71%)', rechazados:'225 (29%)' },
+      { nombre:'EXPERIENCIA DIGITAL', count:1200, sast:280,sca:210,cds:150,dast:150,mda:80,mast:60, aprobados:'540 (74%)', rechazados:'190 (26%)' },
+    ],
+    tipoHijo: 'Dirección'
+  },
+};
+
+// Generar datos para niveles 2-6 dinámicamente
+function genHijos(nombres, tipo, baseCount) {
+  return nombres.map((n,i) => ({
+    nombre: n,
+    count: Math.round(baseCount * (0.6 + Math.random()*0.8)),
+    sast: Math.round(baseCount*0.3*(0.7+Math.random()*0.6)),
+    sca: Math.round(baseCount*0.22*(0.7+Math.random()*0.6)),
+    cds: Math.round(baseCount*0.18*(0.7+Math.random()*0.6)),
+    dast: Math.round(baseCount*0.16*(0.7+Math.random()*0.6)),
+    mda: Math.round(baseCount*0.08*(0.7+Math.random()*0.6)),
+    mast: Math.round(baseCount*0.06*(0.7+Math.random()*0.6)),
+    aprobados: `${Math.round(200+Math.random()*300)} (${Math.round(65+Math.random()*20)}%)`,
+    rechazados: `${Math.round(50+Math.random()*150)} (${Math.round(15+Math.random()*20)}%)`,
+  }));
+}
+
+const NIVEL_CONFIG = [
+  { label:'Global', tipo:'Dirección' },
+  { label:'Dirección', tipo:'Subdirección' },
+  { label:'Subdirección', tipo:'Gerencia' },
+  { label:'Gerencia', tipo:'Organización' },
+  { label:'Organización', tipo:'Célula' },
+  { label:'Célula', tipo:'Repositorio' },
+  { label:'Repositorio', tipo:null },
+];
+
+const HIJOS_NAMES = {
+  1: ['CORE-BANCARIO','ARQUITECTURA TI','PLATAFORMAS DIGITALES','EXPERIENCIA DIGITAL'],
+  2: ['Pagos y Transferencias','Cuentas y Ahorros','Tarjetas','Créditos'],
+  3: ['Banca Digital','Servicios Core','Infraestructura','Seguridad'],
+  4: ['Célula Pagos API','Célula Frontend','Célula Backend','Célula DevOps'],
+  5: ['Célula Pagos API','Célula Frontend','Célula Backend','Célula DevOps'],
+};
+
+const REPOS = [
+  { nombre:'pagos-transferencias-api', criticas:18, altas:62, medias:14, bajas:5, score:75, slaVencido:true, ultimoScan:'Hace 2 horas' },
+  { nombre:'pagos-transferencias-web', criticas:12, altas:45, medias:20, bajas:8, score:68, slaVencido:false, ultimoScan:'Hace 3 horas' },
+  { nombre:'transferencias-batch', criticas:8, altas:28, medias:11, bajas:3, score:62, slaVencido:true, ultimoScan:'Hace 5 horas' },
+  { nombre:'notificaciones-servicio', criticas:3, altas:15, medias:7, bajas:2, score:80, slaVencido:false, ultimoScan:'Hace 1 hora' },
+  { nombre:'conciliacion-servicio', criticas:2, altas:10, medias:5, bajas:1, score:70, slaVencido:false, ultimoScan:'Hace 6 horas' },
+  { nombre:'integracion-bancos', criticas:1, altas:7, medias:3, bajas:0, score:65, slaVencido:false, ultimoScan:'Hace 8 horas' },
+];
+
+const HALLAZGOS = [
+  { id:'SAST-0042', motor:'SAST', sev:'Crítica', nombre:'SQL Injection en /api/transferencias', archivo:'TransferenciaController.java:142', sla:'-3 días', slaType:'red', estatus:'Activa', cvss:'9.8', code:`// Línea 142\nString query = "SELECT * FROM transfers WHERE id=" + userId;\nResultSet rs = stmt.executeQuery(query);`, rec:'Usar PreparedStatement con parámetros vinculados. Nunca concatenar input del usuario directamente en queries SQL.' },
+  { id:'SCA-0018', motor:'SCA', sev:'Crítica', nombre:'Log4Shell — log4j-core:2.14.1', archivo:'pom.xml', sla:'-10 días', slaType:'red', estatus:'Activa', cvss:'10.0', code:`<dependency>\n  <groupId>org.apache.logging.log4j</groupId>\n  <artifactId>log4j-core</artifactId>\n  <version>2.14.1</version>\n</dependency>`, rec:'Actualizar log4j-core a versión 2.17.1 o superior. Versión 2.14.1 es vulnerable a RCE remoto (CVE-2021-44228).' },
+  { id:'SAST-0043', motor:'SAST', sev:'Alta', nombre:'Broken Access Control en /admin/pagos', archivo:'AdminController.java:87', sla:'4 días', slaType:'yellow', estatus:'En Remediación', cvss:'8.1', code:`@GetMapping("/admin/pagos")\npublic List<Payment> getAllPayments() {\n  // Sin validación de rol\n  return paymentService.findAll();\n}`, rec:'Agregar anotación @PreAuthorize("hasRole(\'ADMIN\')") y validar el rol del usuario autenticado antes de retornar datos sensibles.' },
+  { id:'SCA-0019', motor:'SCA', sev:'Alta', nombre:'Prototype Pollution — lodash:4.17.15', archivo:'package.json', sla:'2 días', slaType:'yellow', estatus:'Activa', cvss:'7.4', code:`"dependencies": {\n  "lodash": "4.17.15"\n}`, rec:'Actualizar lodash a versión 4.17.21 o superior. CVE-2021-23337 permite contaminación del prototipo de Object.' },
+  { id:'DAST-0011', motor:'DAST', sev:'Alta', nombre:'Missing HSTS Header', archivo:'/api/v1/login', sla:'6 días', slaType:'green', estatus:'Activa', cvss:'6.5', code:`HTTP/1.1 200 OK\nContent-Type: application/json\n// Falta: Strict-Transport-Security header`, rec:'Agregar header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload en todas las respuestas HTTPS.' },
+  { id:'CDS-0005', motor:'CDS', sev:'Alta', nombre:'Secreto expuesto en .env.production', archivo:'.env.production', sla:'5 días', slaType:'yellow', estatus:'En Revisión', cvss:'7.2', code:`DB_PASSWORD=Banregio2024!\nAPI_SECRET_KEY=sk-prod-abc123xyz\nJWT_SECRET=mysupersecret`, rec:'Rotar inmediatamente las credenciales expuestas. Usar variables de entorno del sistema o un vault de secretos (HashiCorp Vault, AWS Secrets Manager).' },
+  { id:'DAST-0012', motor:'DAST', sev:'Media', nombre:'Insecure Cookie (no HttpOnly)', archivo:'/api/v1/session', sla:'18 días', slaType:'green', estatus:'Activa', cvss:'4.3', code:`Set-Cookie: session=abc123; Path=/\n// Falta: HttpOnly; Secure; SameSite=Strict`, rec:'Configurar cookies de sesión con flags HttpOnly, Secure y SameSite=Strict para prevenir acceso desde JavaScript y ataques CSRF.' },
+  { id:'SAST-0044', motor:'SAST', sev:'Baja', nombre:'Uso de MD5 para hashing', archivo:'CryptoUtil.java:23', sla:'30 días', slaType:'green', estatus:'Activa', cvss:'3.1', code:`MessageDigest md = MessageDigest.getInstance("MD5");\nbyte[] hash = md.digest(password.getBytes());`, rec:'Reemplazar MD5 con BCrypt, Argon2 o PBKDF2 para hashing de contraseñas. MD5 es criptográficamente débil.' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let navStack = []; // [{nivel, nombre, data}]
+let currentLevel = 0;
+let currentData = DATA.global;
+let selectedRows = new Set();
+let charts = {};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goToLevel(level) {
+  if (level < 0 || level > currentLevel) return;
+  if (level === currentLevel) return;
+  navStack = navStack.slice(0, level);
+  currentLevel = level;
+  if (level === 0) {
+    currentData = DATA.global;
+  } else {
+    currentData = navStack[level-1].data;
+  }
+  renderDashboard();
+}
+
+function drillDown(nombreHijo) {
+  const newData = buildLevelData(currentLevel + 1, nombreHijo);
+  navStack.push({ nivel: currentLevel, nombre: nombreHijo, data: newData });
+  currentLevel++;
+  currentData = newData;
+  renderDashboard();
+}
+
+function buildLevelData(nivel, nombre) {
+  const baseCount = Math.round(800 + Math.random()*3000);
+  const motores = [
+    { id:'sast', nombre:'SAST', anterior:Math.round(baseCount*0.3), actual:Math.round(baseCount*0.32), solventadas:Math.round(baseCount*0.05), nuevas:Math.round(baseCount*0.07), tendencia:'+7%', up:true },
+    { id:'sca', nombre:'SCA', anterior:Math.round(baseCount*0.22), actual:Math.round(baseCount*0.20), solventadas:Math.round(baseCount*0.04), nuevas:Math.round(baseCount*0.02), tendencia:'-8%', up:false },
+    { id:'cds', nombre:'CDS', anterior:Math.round(baseCount*0.18), actual:Math.round(baseCount*0.19), solventadas:Math.round(baseCount*0.02), nuevas:Math.round(baseCount*0.03), tendencia:'+5%', up:true },
+    { id:'dast', nombre:'DAST', anterior:Math.round(baseCount*0.16), actual:Math.round(baseCount*0.18), solventadas:Math.round(baseCount*0.02), nuevas:Math.round(baseCount*0.04), tendencia:'+12%', up:true },
+    { id:'mda', nombre:'MDA', anterior:Math.round(baseCount*0.08), actual:Math.round(baseCount*0.07), solventadas:Math.round(baseCount*0.01), nuevas:Math.round(baseCount*0.005), tendencia:'-3%', up:false },
+    { id:'mast', nombre:'MAST', anterior:Math.round(baseCount*0.06), actual:Math.round(baseCount*0.055), solventadas:Math.round(baseCount*0.008), nuevas:Math.round(baseCount*0.004), tendencia:'-2%', up:false },
+  ];
+  const pct = Math.round(65 + Math.random()*20);
+  const total = Math.round(200 + Math.random()*400);
+  const hijosNames = HIJOS_NAMES[nivel] || ['Equipo Alpha','Equipo Beta','Equipo Gamma','Equipo Delta'];
+  return {
+    nombre,
+    semaforo: { estado: baseCount > 2000 ? 'alto' : baseCount > 800 ? 'medio' : 'bajo', total: baseCount, tendencia: '+5%' },
+    motores,
+    pipeline: { total, aprobados: Math.round(total*pct/100), rechazados: Math.round(total*(100-pct)/100), pct },
+    topVulns: [
+      { nombre:'SQL Injection', count: Math.round(100+Math.random()*400) },
+      { nombre:'XSS Reflected', count: Math.round(80+Math.random()*300) },
+      { nombre:'Insecure Dependencies', count: Math.round(60+Math.random()*200) },
+    ],
+    tendencia: {
+      labels:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+      activas: Array.from({length:12},(_,i)=>Math.round(baseCount*(0.6+i*0.04))),
+      solventadas: Array.from({length:12},()=>Math.round(50+Math.random()*200)),
+      nuevas: Array.from({length:12},()=>Math.round(80+Math.random()*300)),
+      critAltas: Array.from({length:12},(_,i)=>Math.round(baseCount*0.25*(0.6+i*0.04))),
+    },
+    hijos: genHijos(hijosNames, NIVEL_CONFIG[nivel]?.tipo || 'Entidad', baseCount/4),
+    tipoHijo: NIVEL_CONFIG[nivel]?.tipo || 'Entidad',
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderDashboard() {
+  updateBreadcrumb();
+  updateLevelBadge();
+  updateNivelDots();
+  destroyCharts();
+  selectedRows.clear();
+  updateMassBar();
+
+  const content = document.getElementById('dashContent');
+  content.innerHTML = '';
+
+  if (currentLevel === 6) {
+    renderNivel7(content);
+  } else if (currentLevel === 5) {
+    renderNivel6(content);
+  } else if (currentLevel >= 3) {
+    renderNivel4_5(content);
+  } else if (currentLevel === 2) {
+    renderNivel3(content);
+  } else if (currentLevel === 1) {
+    renderNivel2(content);
+  } else {
+    renderNivel1(content);
+  }
+}
+
+function updateBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  let html = `<span class="${currentLevel===0?'active':''}" onclick="goToLevel(0)">Global</span>`;
+  navStack.forEach((item, i) => {
+    html += `<span class="sep">›</span>`;
+    html += `<span class="${i+1===currentLevel?'active':''}" onclick="goToLevel(${i+1})">${item.nombre}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+function updateLevelBadge() {
+  const badge = document.getElementById('levelBadge');
+  const config = NIVEL_CONFIG[currentLevel];
+  badge.textContent = `Nivel ${currentLevel+1} / 7 — ${config.label}`;
+}
+
+function updateNivelDots() {
+  const dots = document.getElementById('nivelDots');
+  dots.innerHTML = Array.from({length:7},(_,i)=>`<div class="nivel-dot ${i===currentLevel?'active':''}"></div>`).join('');
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+}
+
+// ============================================================
+// NIVEL 1 — GLOBAL
+// ============================================================
+function renderNivel1(container) {
+  const d = currentData;
+  container.innerHTML = `
+    <div class="section-title" style="margin-bottom:8px;">VULNERABILIDADES ACTIVAS POR MOTOR (vs mes anterior)</div>
+    <div class="grid-7" id="motorGrid">
+      ${d.motores.map(m => motorCardHTML(m)).join('')}
+      ${semaforoCardHTML(d.semaforo)}
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:12px;">TENDENCIA GLOBAL DE VULNERABILIDADES ACTIVAS (Anual)</div>
+      <div class="chart-container" style="height:180px;"><canvas id="chartTendencia"></canvas></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">INDICADORES DE PIPELINE GLOBAL (Todas las subdirecciones)</div>
+        <div class="pipeline-metrics">
+          <div class="pipeline-metric">
+            <div class="pipeline-label">Total escaneos del mes</div>
+            <div class="pipeline-value white">${d.pipeline.total.toLocaleString()}</div>
+          </div>
+          <div class="pipeline-metric">
+            <div class="pipeline-label">Escaneos aprobados</div>
+            <div class="pipeline-value green">${d.pipeline.aprobados.toLocaleString()} <span class="pipeline-pct">(${d.pipeline.pct}%)</span></div>
+          </div>
+          <div class="pipeline-metric">
+            <div class="pipeline-label">Escaneos rechazados</div>
+            <div class="pipeline-value red">${d.pipeline.rechazados.toLocaleString()} <span class="pipeline-pct">(${100-d.pipeline.pct}%)</span></div>
+          </div>
+          <div class="pipeline-metric">
+            <div class="pipeline-label">% de aprobación global</div>
+            <div class="gauge-wrap">
+              <canvas id="chartGauge" width="80" height="50"></canvas>
+              <div class="gauge-value" style="color:${d.pipeline.pct>=70?'var(--low)':d.pipeline.pct>=50?'var(--med)':'var(--crit)'}">${d.pipeline.pct}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">TOP 5 VULNERABILIDADES MÁS RECURRENTES EN PIPELINE</div>
+        ${d.topVulns.map((v,i)=>`<div class="top-vuln-item"><span class="top-vuln-pos">${i+1}.</span><span class="top-vuln-name">${v.nombre}</span><span class="top-vuln-count">${v.count.toLocaleString()}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:10px;">SUBDIRECCIONES</div>
+    <div class="grid-4">
+      ${d.hijos.map(h => entityCardHTML(h, d.tipoHijo)).join('')}
+    </div>
+  `;
+  setTimeout(() => {
+    renderTendenciaChart('chartTendencia', d.tendencia, true);
+    renderGaugeChart('chartGauge', d.pipeline.pct);
+  }, 50);
+}
+
+// ============================================================
+// NIVEL 2 — DIRECCIÓN
+// ============================================================
+function renderNivel2(container) {
+  const d = currentData;
+  container.innerHTML = `
+    <div class="section-title" style="margin-bottom:8px;">INDICADORES POR MOTOR (${d.nombre})</div>
+    <div class="grid-7">
+      ${d.motores.map(m => motorCardHTML(m)).join('')}
+      ${semaforoCardHTML(d.semaforo)}
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">TENDENCIA MENSUAL (${d.nombre})</div>
+        <div class="chart-container" style="height:160px;"><canvas id="chartTendencia"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">TOP 3 VULNERABILIDADES MÁS RECURRENTES</div>
+        ${d.topVulns.slice(0,3).map((v,i)=>`<div class="top-vuln-item"><span class="top-vuln-pos">${i+1}.</span><span class="top-vuln-name">${v.nombre}</span><span class="top-vuln-count">${v.count.toLocaleString()}</span></div>`).join('')}
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          <div class="section-title" style="margin-bottom:8px;">PIPELINE (${d.nombre})</div>
+          <div style="display:flex;gap:16px;font-size:11px;">
+            <span>Total: <strong>${d.pipeline.total}</strong></span>
+            <span style="color:var(--low);">Aprobados: <strong>${d.pipeline.aprobados} (${d.pipeline.pct}%)</strong></span>
+            <span style="color:var(--crit);">Rechazados: <strong>${d.pipeline.rechazados}</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:10px;">SUBDIRECCIONES</div>
+    <div class="grid-4">
+      ${d.hijos.map(h => entityCardHTML(h, d.tipoHijo)).join('')}
+    </div>
+  `;
+  setTimeout(() => renderTendenciaChart('chartTendencia', d.tendencia, false), 50);
+}
+
+// ============================================================
+// NIVEL 3 — SUBDIRECCIÓN (con IA)
+// ============================================================
+function renderNivel3(container) {
+  const d = currentData;
+  container.innerHTML = `
+    <div class="section-title" style="margin-bottom:8px;">INDICADORES POR MOTOR (${d.nombre})</div>
+    <div class="grid-6">
+      ${d.motores.map(m => motorCardHTML(m)).join('')}
+    </div>
+
+    <div class="grid-2-eq" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">INDICADORES DE PIPELINE (${d.nombre})</div>
+        <div class="pipeline-metrics">
+          <div class="pipeline-metric"><div class="pipeline-label">Total escaneos</div><div class="pipeline-value white">${d.pipeline.total}</div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">Aprobados</div><div class="pipeline-value green">${d.pipeline.aprobados} <span class="pipeline-pct">(${d.pipeline.pct}%)</span></div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">Rechazados</div><div class="pipeline-value red">${d.pipeline.rechazados} <span class="pipeline-pct">(${100-d.pipeline.pct}%)</span></div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">% Aprobación</div><div class="gauge-wrap"><canvas id="chartGauge" width="80" height="50"></canvas><div class="gauge-value" style="color:var(--low);">${d.pipeline.pct}%</div></div></div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-header"><span class="ai-icon">🤖</span><span class="ai-title">Análisis IA</span><span class="ai-badge">GPT-4</span></div>
+        <div class="ai-text">En <strong>${d.nombre}</strong> se observa una reducción del 8% en vulnerabilidades activas respecto al mes anterior, impulsada principalmente por solventadas en SAST y SCA. Las vulnerabilidades de SQL Injection representan el 63% de los rechazos en pipeline.</div>
+        <div class="ai-rec"><strong>Recomendación:</strong> Priorizar la remediación de SQL Injection y reforzar controles de entrada de datos en servicios críticos. Considerar capacitación en OWASP Top 10 para el equipo de ${d.nombre}.</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">TENDENCIA MENSUAL (${d.nombre})</div>
+        <div class="chart-container" style="height:160px;"><canvas id="chartTendencia"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px;">TOP 3 VULNERABILIDADES MÁS RECURRENTES</div>
+        ${d.topVulns.slice(0,3).map((v,i)=>`<div class="top-vuln-item"><span class="top-vuln-pos">${i+1}.</span><span class="top-vuln-name">${v.nombre}</span><span class="top-vuln-count">${v.count.toLocaleString()}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:10px;">GERENCIAS</div>
+    <div class="grid-4">
+      ${d.hijos.map(h => entityCardHTML(h, d.tipoHijo)).join('')}
+    </div>
+  `;
+  setTimeout(() => { renderTendenciaChart('chartTendencia', d.tendencia, false); renderGaugeChart('chartGauge', d.pipeline.pct); }, 50);
+}
+
+// ============================================================
+// NIVEL 4 & 5 — GERENCIA / ORGANIZACIÓN
+// ============================================================
+function renderNivel4_5(container) {
+  const d = currentData;
+  const levelName = NIVEL_CONFIG[currentLevel].label;
+  container.innerHTML = `
+    <div class="section-title" style="margin-bottom:8px;">INDICADORES POR MOTOR (${d.nombre})</div>
+    <div class="grid-6">
+      ${d.motores.map(m => motorCardHTML(m)).join('')}
+    </div>
+
+    <div class="grid-2-eq" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">INDICADORES DE PIPELINE (${d.nombre})</div>
+        <div class="pipeline-metrics">
+          <div class="pipeline-metric"><div class="pipeline-label">Total escaneos</div><div class="pipeline-value white">${d.pipeline.total}</div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">Aprobados</div><div class="pipeline-value green">${d.pipeline.aprobados} <span class="pipeline-pct">(${d.pipeline.pct}%)</span></div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">Rechazados</div><div class="pipeline-value red">${d.pipeline.rechazados} <span class="pipeline-pct">(${100-d.pipeline.pct}%)</span></div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">% Aprobación</div><div class="gauge-wrap"><canvas id="chartGauge" width="80" height="50"></canvas><div class="gauge-value" style="color:var(--low);">${d.pipeline.pct}%</div></div></div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-header"><span class="ai-icon">🤖</span><span class="ai-title">Análisis IA</span><span class="ai-badge">GPT-4</span></div>
+        <div class="ai-text">En <strong>${d.nombre}</strong> se detectan ${d.motores[0].actual.toLocaleString()} vulnerabilidades SAST activas. El pipeline muestra una tasa de aprobación del ${d.pipeline.pct}%, ${d.pipeline.pct>=70?'dentro del umbral aceptable':'por debajo del umbral mínimo del 70%'}.</div>
+        <div class="ai-rec"><strong>Recomendación:</strong> Revisar las reglas de calidad del pipeline para ${d.nombre} y priorizar la remediación de hallazgos críticos antes del próximo ciclo de liberación.</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:10px;">${d.tipoHijo?.toUpperCase()}S</div>
+    <div class="grid-4">
+      ${d.hijos.map(h => entityCardHTML(h, d.tipoHijo)).join('')}
+    </div>
+  `;
+  setTimeout(() => renderGaugeChart('chartGauge', d.pipeline.pct), 50);
+}
+
+// ============================================================
+// NIVEL 6 — CÉLULA
+// ============================================================
+function renderNivel6(container) {
+  const d = currentData;
+  const pct = d.pipeline.pct;
+  const rechPct = 100 - pct;
+  container.innerHTML = `
+    <div class="grid-2-eq" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">RESUMEN DEL PIPELINE (${d.nombre})</div>
+        <div class="pipeline-metrics">
+          <div class="pipeline-metric">
+            <div class="pipeline-label">Escaneos aprobados</div>
+            <div class="gauge-wrap"><canvas id="chartGaugeAp" width="80" height="50"></canvas><div class="gauge-value green">${d.pipeline.aprobados}</div><div class="gauge-label">(${pct}%)</div></div>
+          </div>
+          <div class="pipeline-metric">
+            <div class="pipeline-label">Escaneos rechazados</div>
+            <div class="gauge-wrap"><canvas id="chartGaugeRe" width="80" height="50"></canvas><div class="gauge-value red">${d.pipeline.rechazados}</div><div class="gauge-label">(${rechPct}%)</div></div>
+          </div>
+          <div class="pipeline-metric"><div class="pipeline-label">Total escaneos del mes</div><div class="pipeline-value white" style="font-size:26px;">${d.pipeline.total}</div></div>
+          <div class="pipeline-metric"><div class="pipeline-label">Vulns detectadas en pipeline</div><div class="pipeline-value" style="color:var(--accent);font-size:26px;">${Math.round(d.pipeline.total*0.8)}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">TENDENCIA DE ESCANEOS (Mensual)</div>
+        <div class="chart-container" style="height:130px;"><canvas id="chartBarScan"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-header">
+        <div class="table-header-left">
+          <div class="th-title">REPOSITORIOS</div>
+          <div class="th-sub">Haz clic en un repositorio para ver sus hallazgos</div>
+        </div>
+        <div class="table-header-right">
+          <button class="btn-action">⬆ Importar Escaneo</button>
+          <button class="btn-action">⬇ Exportar</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Repositorio</th>
+              <th>Vulns Críticas</th>
+              <th>Vulns Altas</th>
+              <th>Score de Madurez</th>
+              <th>SLA Vencido</th>
+              <th>Último Escaneo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${REPOS.map(r => `
+              <tr onclick="drillDown('${r.nombre}')">
+                <td class="td-mono">${r.nombre}</td>
+                <td style="color:var(--crit);font-weight:700;">${r.criticas}</td>
+                <td style="color:var(--high);font-weight:700;">${r.altas}</td>
+                <td>
+                  <div class="score-cell">
+                    <div class="score-bar-wrap"><div class="progress-bar"><div class="progress-fill ${r.score>=75?'green':r.score>=60?'yellow':'red'}" style="width:${r.score}%"></div></div></div>
+                    <span style="font-size:11px;">${r.score}%</span>
+                  </div>
+                </td>
+                <td><span class="sla-dot"><span class="dot ${r.slaVencido?'red':'green'}"></span>${r.slaVencido?'Sí':'No'}</span></td>
+                <td style="color:var(--muted);">${r.ultimoScan}</td>
+                <td class="row-arrow">›</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  setTimeout(() => {
+    renderGaugeChart('chartGaugeAp', pct, '#22c55e');
+    renderGaugeChart('chartGaugeRe', rechPct, '#ef4444');
+    renderBarScanChart('chartBarScan', d.tendencia);
+  }, 50);
+}
+
+// ============================================================
+// NIVEL 7 — REPOSITORIO
+// ============================================================
+function renderNivel7(container) {
+  const repoName = navStack[navStack.length-1].nombre;
+  const repo = REPOS.find(r=>r.nombre===repoName) || REPOS[0];
+  const totalH = repo.criticas+repo.altas+repo.medias+repo.bajas;
+
+  container.innerHTML = `
+    <div class="grid-6-kpi" style="margin-bottom:16px;">
+      <div class="kpi-sev"><div class="kpi-sev-label">Total Hallazgos</div><div class="kpi-sev-value">${totalH}</div><div class="kpi-sev-sub">Último escaneo: ${repo.ultimoScan}</div></div>
+      <div class="kpi-sev crit"><div class="kpi-sev-label">Críticas</div><div class="kpi-sev-value crit">${repo.criticas}</div><div class="kpi-sev-sub">Acción inmediata</div></div>
+      <div class="kpi-sev high"><div class="kpi-sev-label">Altas</div><div class="kpi-sev-value high">${repo.altas}</div></div>
+      <div class="kpi-sev med"><div class="kpi-sev-label">Medias</div><div class="kpi-sev-value med">${repo.medias}</div></div>
+      <div class="kpi-sev low"><div class="kpi-sev-label">Bajas</div><div class="kpi-sev-value low">${repo.bajas}</div></div>
+      <div class="kpi-sev sla"><div class="kpi-sev-label">SLA Vencido</div><div class="kpi-sev-value crit">${repo.slaVencido?3:0}</div><div class="kpi-sev-sub">${repo.slaVencido?'Urgente':''}</div></div>
+    </div>
+
+    <div class="grid-2-eq" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">INFORMACIÓN DEL REPOSITORIO</div>
+        <div class="repo-info-grid">
+          <div class="repo-info-item"><div class="ri-label">Nombre</div><div class="ri-value">${repoName}</div></div>
+          <div class="repo-info-item"><div class="ri-label">Tecnología</div><div class="ri-value">Java / Spring Boot</div></div>
+          <div class="repo-info-item"><div class="ri-label">Último Escaneo</div><div class="ri-value">${repo.ultimoScan}</div></div>
+          <div class="repo-info-item"><div class="ri-label">Branch</div><div class="ri-value">main</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:12px;">DISTRIBUCIÓN POR MOTOR</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="width:100px;height:100px;"><canvas id="chartDonut"></canvas></div>
+          <div style="flex:1;">
+            ${[['SAST',42,'#7c3aed'],['SCA',28,'#10b981'],['DAST',10,'#3b82f6'],['CDS',5,'#f59e0b'],['MAST',2,'#06b6d4']].map(([m,c,col])=>`
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+                <span style="font-size:10px;color:var(--muted);width:32px;">${m}</span>
+                <div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${Math.round(c/87*100)}%;background:${col};"></div></div>
+                <span style="font-size:10px;font-weight:700;">${c}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-header">
+        <div class="table-header-left">
+          <div class="th-title">HALLAZGOS DEL REPOSITORIO</div>
+          <div class="th-sub">Haz clic en un hallazgo para ver su detalle técnico</div>
+        </div>
+        <div class="table-header-right">
+          <button class="btn-action primary">🤖 Analizar con IA</button>
+          <button class="btn-action">⬇ Exportar</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select onchange="filterTable()"><option>Todos los Motores</option><option>SAST</option><option>SCA</option><option>DAST</option><option>CDS</option><option>MAST</option></select>
+        <select onchange="filterTable()"><option>Todas las Severidades</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+        <select onchange="filterTable()"><option>Todos los Estatus</option><option>Activa</option><option>En Remediación</option><option>En Revisión</option><option>Solventada</option></select>
+        <select onchange="filterTable()"><option>SLA: Todos</option><option>Vencido</option><option>En tiempo</option></select>
+        <input type="text" placeholder="Buscar por ID, nombre o archivo..." oninput="filterTable()">
+      </div>
+      <div class="table-wrap">
+        <table id="hallazgosTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" onchange="toggleAllRows(this)"></th>
+              <th>ID</th>
+              <th>Motor</th>
+              <th>Severidad</th>
+              <th>Hallazgo</th>
+              <th>Archivo / Endpoint</th>
+              <th>SLA</th>
+              <th>Estatus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="hallazgosBody">
+            ${HALLAZGOS.map(h => hallazgoRowHTML(h)).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  setTimeout(() => renderDonutChart('chartDonut'), 50);
+}
+
+function hallazgoRowHTML(h) {
+  const sevClass = h.sev==='Crítica'?'crit':h.sev==='Alta'?'high':h.sev==='Media'?'med':'low';
+  const motorClass = h.motor.toLowerCase();
+  return `
+    <tr onclick="openDrawer('${h.id}')" id="row-${h.id}">
+      <td onclick="event.stopPropagation()"><input type="checkbox" onchange="toggleRow('${h.id}',this)"></td>
+      <td class="td-mono">${h.id}</td>
+      <td><span class="motor-chip ${motorClass}">${h.motor}</span></td>
+      <td><span class="sev-chip ${sevClass}">${h.sev}</span></td>
+      <td style="font-weight:600;max-width:220px;white-space:normal;">${h.nombre}</td>
+      <td class="td-mono">${h.archivo}</td>
+      <td><span class="sla-dot"><span class="dot ${h.slaType}"></span>${h.sla}</span></td>
+      <td style="color:var(--muted);">${h.estatus}</td>
+      <td class="row-arrow">›</td>
+    </tr>
+  `;
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderTendenciaChart(id, data, isAnual) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  charts[id] = new Chart(el, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label:'Activas', data:data.activas, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.05)', tension:.4, pointRadius:2, borderWidth:2 },
+        { label:'Solventadas', data:data.solventadas, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,0.05)', tension:.4, pointRadius:2, borderWidth:2 },
+        { label:'Nuevas', data:data.nuevas, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.05)', tension:.4, pointRadius:2, borderWidth:2 },
+        { label:'Críticas + Altas', data:data.critAltas, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,0.05)', tension:.4, pointRadius:2, borderWidth:2, borderDash:[4,4] },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'top', labels:{ color:'#6b7280', font:{size:10}, boxWidth:12, padding:12 } } },
+      scales:{
+        x:{ grid:{color:'rgba(37,42,69,0.5)'}, ticks:{color:'#6b7280',font:{size:9}} },
+        y:{ grid:{color:'rgba(37,42,69,0.5)'}, ticks:{color:'#6b7280',font:{size:9}} }
+      }
+    }
+  });
+}
+
+function renderGaugeChart(id, pct, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const c = color || (pct>=70?'#22c55e':pct>=50?'#eab308':'#ef4444');
+  charts[id] = new Chart(el, {
+    type:'doughnut',
+    data:{ datasets:[{ data:[pct,100-pct], backgroundColor:[c,'rgba(37,42,69,0.5)'], borderWidth:0, circumference:180, rotation:-90 }] },
+    options:{ responsive:false, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}} }
+  });
+}
+
+function renderBarScanChart(id, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const aprobados = data.labels.map(()=>Math.round(20+Math.random()*80));
+  const rechazados = data.labels.map(()=>Math.round(5+Math.random()*30));
+  charts[id] = new Chart(el, {
+    type:'bar',
+    data:{
+      labels:data.labels,
+      datasets:[
+        { label:'Aprobados', data:aprobados, backgroundColor:'rgba(34,197,94,0.7)', borderRadius:3 },
+        { label:'Rechazados', data:rechazados, backgroundColor:'rgba(239,68,68,0.7)', borderRadius:3 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'top', labels:{color:'#6b7280',font:{size:9},boxWidth:10,padding:8} } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#6b7280',font:{size:9}} },
+        y:{ grid:{color:'rgba(37,42,69,0.5)'}, ticks:{color:'#6b7280',font:{size:9}} }
+      }
+    }
+  });
+}
+
+function renderDonutChart(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  charts[id] = new Chart(el, {
+    type:'doughnut',
+    data:{
+      labels:['SAST','SCA','DAST','CDS','MAST'],
+      datasets:[{ data:[42,28,10,5,2], backgroundColor:['#7c3aed','#10b981','#3b82f6','#f59e0b','#06b6d4'], borderWidth:0, hoverOffset:4 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`}}} }
+  });
+}
+
+// ============================================================
+// HTML HELPERS
+// ============================================================
+function motorCardHTML(m) {
+  return `
+    <div class="motor-card">
+      <div class="motor-header">
+        <div class="motor-icon" style="background:var(--${m.id});">${m.nombre.slice(0,2)}</div>
+        <span class="motor-name">${m.nombre}</span>
+      </div>
+      <div class="motor-metrics">
+        <div class="metric-item"><div class="metric-label">Anterior</div><div class="metric-value" style="color:var(--muted);">${m.anterior.toLocaleString()}</div></div>
+        <div class="metric-item"><div class="metric-label">Actual</div><div class="metric-value">${m.actual.toLocaleString()}</div></div>
+        <div class="metric-item"><div class="metric-label">Solventadas</div><div class="metric-value" style="color:var(--low);">${m.solventadas.toLocaleString()}</div></div>
+        <div class="metric-item"><div class="metric-label">Nuevas</div><div class="metric-value" style="color:var(--crit);">${m.nuevas.toLocaleString()}</div></div>
+      </div>
+      <div class="motor-trend ${m.up?'trend-up':'trend-down'}">${m.up?'▲':'▼'} ${m.tendencia} vs mes anterior</div>
+    </div>
+  `;
+}
+
+function semaforoCardHTML(s) {
+  return `
+    <div class="semaforo-card">
+      <div class="section-title" style="margin-bottom:4px;">SEMÁFORO GENERAL</div>
+      <div class="semaforo-circle ${s.estado}"><div class="semaforo-dot ${s.estado}"></div></div>
+      <div class="semaforo-label ${s.estado}">${s.estado.toUpperCase()}</div>
+      <div class="semaforo-count">${s.total.toLocaleString()}</div>
+      <div class="semaforo-sub">Vulnerabilidades activas</div>
+      <div class="semaforo-trend">▲ ${s.tendencia} vs mes anterior</div>
+    </div>
+  `;
+}
+
+function entityCardHTML(h, tipo) {
+  const nombre = navStack.length > 0 ? navStack[navStack.length-1].nombre : 'Global';
+  return `
+    <div class="entity-card" onclick="drillDown('${h.nombre}')">
+      <div class="entity-name">${h.nombre}</div>
+      <div class="entity-count">${h.count.toLocaleString()}</div>
+      <div class="entity-label">Vulnerabilidades activas</div>
+      <div class="motor-chips">
+        <span class="motor-chip sast">SAST ${h.sast.toLocaleString()}</span>
+        <span class="motor-chip sca">SCA ${h.sca.toLocaleString()}</span>
+        <span class="motor-chip cds">CDS ${h.cds.toLocaleString()}</span>
+        <span class="motor-chip dast">DAST ${h.dast.toLocaleString()}</span>
+        <span class="motor-chip mda">MDA ${h.mda.toLocaleString()}</span>
+        <span class="motor-chip mast">MAST ${h.mast.toLocaleString()}</span>
+      </div>
+      <div class="entity-pipeline">
+        <span class="aprobados">✓ Aprobados: ${h.aprobados}</span>
+        <span class="rechazados">✗ Rechazados: ${h.rechazados}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// DRAWER
+// ============================================================
+function openDrawer(id) {
+  const h = HALLAZGOS.find(x=>x.id===id);
+  if (!h) return;
+  const sevClass = h.sev==='Crítica'?'crit':h.sev==='Alta'?'high':h.sev==='Media'?'med':'low';
+  const motorClass = h.motor.toLowerCase();
+  document.getElementById('drawerChips').innerHTML = `
+    <span class="sev-chip ${sevClass}">${h.sev}</span>
+    <span class="motor-chip ${motorClass}">${h.motor}</span>
+    <span style="background:rgba(107,114,128,0.15);color:#9ca3af;padding:2px 8px;border-radius:4px;font-size:10px;">${h.estatus}</span>
+  `;
+  document.getElementById('drawerTitle').textContent = h.nombre;
+  document.getElementById('drawerPath').textContent = h.archivo;
+  document.getElementById('drawerCvss').innerHTML = `<span style="color:${h.sev==='Crítica'?'var(--crit)':'var(--high)'};">${h.cvss}</span> <span style="font-size:11px;color:var(--muted);">${h.sev}</span>`;
+  document.getElementById('drawerSla').innerHTML = `<span class="sla-dot"><span class="dot ${h.slaType}"></span>${h.sla}</span>`;
+  document.getElementById('drawerCode').textContent = h.code;
+  document.getElementById('drawerRec').textContent = h.rec;
+  document.getElementById('drawerBitacora').innerHTML = `
+    <div class="bitacora-item"><div class="avatar">JR</div><div class="bita-content"><div class="bita-meta">Juan Ramírez · Hace 2 horas</div><div class="bita-text">Se asignó al equipo de backend para remediación. Prioridad alta.</div></div></div>
+    <div class="bitacora-item"><div class="avatar">ML</div><div class="bita-content"><div class="bita-meta">María López · Hace 1 día</div><div class="bita-text">Hallazgo detectado en el último escaneo de pipeline. Se notificó al responsable del repositorio.</div></div></div>
+  `;
+  document.getElementById('hallazgoOverlay').classList.add('open');
+  document.getElementById('hallazgoDrawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('hallazgoOverlay').classList.remove('open');
+  document.getElementById('hallazgoDrawer').classList.remove('open');
+}
+
+// ============================================================
+// FILTER DRAWER
+// ============================================================
+function toggleFilterDrawer() {
+  document.getElementById('filterOverlay').classList.toggle('open');
+  document.getElementById('filterDrawer').classList.toggle('open');
+}
+function applyFilters() { toggleFilterDrawer(); }
+function clearFilters() { document.querySelectorAll('#filterDrawer input').forEach(i=>{ if(i.type==='checkbox')i.checked=false; if(i.type==='radio')i.checked=false; }); }
+function removeChip(el) { el.parentElement.remove(); }
+function filterTable() { /* reactive filter placeholder */ }
+function exportDashboard() { alert('Opciones: Exportar PDF | Compartir Enlace | Configurar Dashboard'); }
+
+// ============================================================
+// MASS ACTIONS
+// ============================================================
+function toggleRow(id, cb) {
+  if (cb.checked) selectedRows.add(id); else selectedRows.delete(id);
+  updateMassBar();
+}
+function toggleAllRows(cb) {
+  document.querySelectorAll('#hallazgosBody input[type=checkbox]').forEach(c => {
+    c.checked = cb.checked;
+    const id = c.closest('tr').id.replace('row-','');
+    if (cb.checked) selectedRows.add(id); else selectedRows.delete(id);
+  });
+  updateMassBar();
+}
+function clearSelection() {
+  selectedRows.clear();
+  document.querySelectorAll('#hallazgosBody input[type=checkbox]').forEach(c=>c.checked=false);
+  updateMassBar();
+}
+function updateMassBar() {
+  const bar = document.getElementById('massBar');
+  const count = document.getElementById('massCount');
+  if (selectedRows.size > 0) { bar.classList.add('visible'); count.textContent = `${selectedRows.size} seleccionado${selectedRows.size>1?'s':''}`; }
+  else { bar.classList.remove('visible'); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderDashboard();
+</script>
+</body>
+</html>
+

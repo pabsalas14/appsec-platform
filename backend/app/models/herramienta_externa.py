@@ -38,7 +38,7 @@ class HerramientaExterna(Base, SoftDeleteMixin):
 
     __table_args__ = (
         CheckConstraint(
-            tipo.in_(["SAST", "DAST", "SCA", "TM", "MAST", "Terceros", "CI/CD", "BugBounty", "VulnerabilityManager"]),
+            tipo.in_(["SAST", "DAST", "SCA", "TM", "MAST", "Terceros", "CI/CD", "BugBounty", "VulnerabilityManager", "GitHub", "LLM"]),
             name="chk_herramienta_externa_tipo_valido",
         ),
     )

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Builder — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+            --sidebar-w: 250px;
+            --config-w: 320px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Topbar */
+        .topbar {
+            height: 60px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .dashboard-title {
+            background: transparent;
+            border: 1px dashed transparent;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 4px;
+            outline: none;
+            width: 300px;
+        }
+
+        .dashboard-title:hover, .dashboard-title:focus {
+            border-color: var(--border);
+            background-color: var(--bg-dark);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+
+        /* Main Layout */
+        .builder-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar (Widgets) */
+        .widgets-sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .widget-list {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .widget-item {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: grab;
+            transition: border-color 0.2s;
+        }
+
+        .widget-item:hover {
+            border-color: var(--accent);
+        }
+
+        .widget-icon {
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            background-color: var(--bg-dark);
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            pointer-events: none;
+            opacity: 0.05;
+        }
+
+        .grid-col {
+            background-color: white;
+            height: 100%;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+            grid-auto-rows: minmax(100px, auto);
+        }
+
+        /* Placed Widgets */
+        .placed-widget {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .placed-widget:hover {
+            border-color: var(--text-muted);
+        }
+
+        .placed-widget.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+
+        .widget-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+            gap: 5px;
+        }
+
+        .placed-widget.selected .widget-controls {
+            display: flex;
+        }
+
+        .control-btn {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .control-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            cursor: se-resize;
+            display: none;
+        }
+
+        .resize-handle::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            right: 3px;
+            width: 6px;
+            height: 6px;
+            border-right: 2px solid var(--text-muted);
+            border-bottom: 2px solid var(--text-muted);
+        }
+
+        .placed-widget.selected .resize-handle {
+            display: block;
+        }
+
+        /* Widget Content Mocks */
+        .w-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .w-value { font-size: 2rem; font-weight: 600; color: var(--text-main); }
+        .w-sub { font-size: 0.8rem; color: var(--success); margin-top: 5px; }
+        
+        .mock-chart {
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding-top: 20px;
+        }
+        .mock-bar {
+            flex: 1;
+            background-color: var(--accent);
+            border-radius: 4px 4px 0 0;
+            opacity: 0.8;
+        }
+
+        /* Right Sidebar (Configuration) */
+        .config-sidebar {
+            width: var(--config-w);
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .config-tab {
+            flex: 1;
+            padding: 15px 0;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+
+        .config-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .config-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background-color: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .filter-chip span { cursor: pointer; color: var(--text-muted); }
+        .filter-chip span:hover { color: var(--danger); }
+
+        /* Empty State */
+        .empty-config {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="color: var(--text-muted); cursor: pointer;">← Volver</span>
+            <input type="text" class="dashboard-title" value="Dashboard Vulnerabilidades">
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select class="form-control" style="width: auto;">
+                <option>Visibilidad: Todos</option>
+                <option>Solo Administradores</option>
+            </select>
+            <button class="btn btn-outline">Vista Previa</button>
+            <button class="btn">Guardar Dashboard</button>
+        </div>
+    </div>
+
+    <div class="builder-container">
+        
+        <!-- Left Sidebar: Widgets -->
+        <div class="widgets-sidebar">
+            <div class="sidebar-header">Componentes</div>
+            <div class="widget-list">
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">123</div>
+                    <span style="font-size: 0.9rem;">KPI Card</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">📊</div>
+                    <span style="font-size: 0.9rem;">Gráfica de Barras</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">📈</div>
+                    <span style="font-size: 0.9rem;">Gráfica de Líneas</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">🍩</div>
+                    <span style="font-size: 0.9rem;">Gráfica Circular</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">⏱️</div>
+                    <span style="font-size: 0.9rem;">Medidor (Gauge)</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">📋</div>
+                    <span style="font-size: 0.9rem;">Tabla de Datos</span>
+                </div>
+                <div class="widget-item" draggable="true">
+                    <div class="widget-icon">🔍</div>
+                    <span style="font-size: 0.9rem;">Filtro Global</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Canvas -->
+        <div class="canvas-area">
+            <div class="grid-overlay">
+                <!-- 12 columns visual guide -->
+                <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+                <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+                <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+                <div class="grid-col"></div><div class="grid-col"></div><div class="grid-col"></div>
+            </div>
+
+            <div class="dashboard-grid">
+                
+                <!-- KPI 1 -->
+                <div class="placed-widget" style="grid-column: span 3;" onclick="selectWidget(this, 'kpi')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">Total Vulnerabilidades</div>
+                    <div class="w-value">1,245</div>
+                    <div class="w-sub">▲ +5% vs mes anterior</div>
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- KPI 2 -->
+                <div class="placed-widget" style="grid-column: span 3;" onclick="selectWidget(this, 'kpi')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">Críticas Activas</div>
+                    <div class="w-value" style="color: var(--danger);">84</div>
+                    <div class="w-sub" style="color: var(--danger);">▼ -2% vs mes anterior</div>
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- KPI 3 -->
+                <div class="placed-widget" style="grid-column: span 3;" onclick="selectWidget(this, 'kpi')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">SLA Vencido</div>
+                    <div class="w-value" style="color: var(--warning);">32</div>
+                    <div class="w-sub" style="color: var(--text-muted);">Sin cambios</div>
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- KPI 4 -->
+                <div class="placed-widget" style="grid-column: span 3;" onclick="selectWidget(this, 'kpi')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">Remediadas (Mes)</div>
+                    <div class="w-value" style="color: var(--success);">412</div>
+                    <div class="w-sub">▲ +12% vs mes anterior</div>
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- Bar Chart (Selected by default) -->
+                <div class="placed-widget selected" style="grid-column: span 8; grid-row: span 2;" onclick="selectWidget(this, 'bar')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">Vulnerabilidades por Motor</div>
+                    <div class="mock-chart">
+                        <div class="mock-bar" style="height: 80%;"></div>
+                        <div class="mock-bar" style="height: 40%; background-color: #8b5cf6;"></div>
+                        <div class="mock-bar" style="height: 60%; background-color: #10b981;"></div>
+                        <div class="mock-bar" style="height: 20%; background-color: #f59e0b;"></div>
+                        <div class="mock-bar" style="height: 10%; background-color: #ef4444;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+                        <span>SAST</span><span>DAST</span><span>SCA</span><span>CDS</span><span>MDA</span>
+                    </div>
+                    <div class="resize-handle"></div>
+                </div>
+
+                <!-- Donut Chart -->
+                <div class="placed-widget" style="grid-column: span 4; grid-row: span 2;" onclick="selectWidget(this, 'donut')">
+                    <div class="widget-controls">
+                        <div class="control-btn">⚙️</div>
+                        <div class="control-btn" style="color: var(--danger);">🗑️</div>
+                    </div>
+                    <div class="w-title">Distribución por Severidad</div>
+                    <div style="height: 150px; display: flex; align-items: center; justify-content: center; margin-top: 20px;">
+                        <div style="width: 120px; height: 120px; border-radius: 50%; border: 20px solid var(--border); border-top-color: var(--danger); border-right-color: var(--warning); border-bottom-color: var(--accent); position: relative;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; font-weight: bold;">100%</div>
+                        </div>
+                    </div>
+                    <div class="resize-handle"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Configuration -->
+        <div class="config-sidebar">
+            
+            <!-- Empty State (Hidden when widget selected) -->
+            <div class="empty-config" id="config-empty" style="display: none;">
+                <div style="font-size: 2rem; margin-bottom: 10px;">🖱️</div>
+                <p>Selecciona un widget en el lienzo para configurar sus propiedades.</p>
+            </div>
+
+            <!-- Config Content -->
+            <div id="config-content">
+                <div class="config-tabs">
+                    <div class="config-tab active" onclick="switchTab('datos')">Datos</div>
+                    <div class="config-tab" onclick="switchTab('interaccion')">Interacción</div>
+                </div>
+
+                <!-- Tab: Datos -->
+                <div class="config-body" id="tab-datos">
+                    <div class="form-group">
+                        <label>Título del Widget</label>
+                        <input type="text" class="form-control" value="Vulnerabilidades por Motor">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fuente de Datos (Entidad)</label>
+                        <select class="form-control">
+                            <option selected>Vulnerabilidades</option>
+                            <option>Liberaciones</option>
+                            <option>Temas Emergentes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Métrica (Agregación)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select class="form-control" style="flex: 1;">
+                                <option selected>Conteo (Count)</option>
+                                <option>Suma (Sum)</option>
+                                <option>Promedio (Avg)</option>
+                            </select>
+                            <select class="form-control" style="flex: 1;">
+                                <option selected>ID</option>
+                                <option>Score</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dimensión (Agrupar por)</label>
+                        <select class="form-control">
+                            <option selected>Motor de Escaneo</option>
+                            <option>Severidad</option>
+                            <option>Estatus</option>
+                            <option>Célula</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Filtros Base (Fijos)</label>
+                        <div class="filter-chip">Estatus != Cerrado <span>✕</span></div>
+                        <button class="btn btn-outline" style="margin-top: 10px; font-size: 0.8rem; padding: 4px 8px;">+ Agregar Filtro</button>
+                    </div>
+                </div>
+
+                <!-- Tab: Interacción -->
+                <div class="config-body" id="tab-interaccion" style="display: none;">
+                    <div class="form-group">
+                        <label>Acción al hacer clic en un dato</label>
+                        <select class="form-control" id="action-select" onchange="toggleActionConfig()">
+                            <option>Ninguna (Solo lectura)</option>
+                            <option>Filtrar Dashboard</option>
+                            <option selected>Abrir Panel de Detalle (Drill-down)</option>
+                            <option>Navegar a URL</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="drilldown-config" style="margin-top: 15px; padding: 15px; background-color: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid var(--border);">
+                        <label style="color: var(--text-main); margin-bottom: 10px;">Configuración de Drill-down</label>
+                        
+                        <label style="margin-top: 10px;">Vista a mostrar</label>
+                        <select class="form-control">
+                            <option selected>Tabla de Vulnerabilidades</option>
+                            <option>Tabla de Liberaciones</option>
+                        </select>
+
+                        <label style="margin-top: 10px;">Columnas visibles en el panel</label>
+                        <select class="form-control" multiple style="height: 80px;">
+                            <option selected>ID</option>
+                            <option selected>Motor</option>
+                            <option selected>Severidad</option>
+                            <option selected>Estatus</option>
+                            <option>Fecha Detección</option>
+                        </select>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Mantén presionado Ctrl/Cmd para seleccionar múltiples.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function selectWidget(element, type) {
+            // Remove selected class from all
+            document.querySelectorAll('.placed-widget').forEach(el => el.classList.remove('selected'));
+            // Add to clicked
+            element.classList.add('selected');
+            
+            // Show config content, hide empty state
+            document.getElementById('config-empty').style.display = 'none';
+            document.getElementById('config-content').style.display = 'block';
+        }
+
+        function switchTab(tabId) {
+            // Update tab styles
+            document.querySelectorAll('.config-tab').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Show/hide content
+            document.getElementById('tab-datos').style.display = tabId === 'datos' ? 'flex' : 'none';
+            document.getElementById('tab-interaccion').style.display = tabId === 'interaccion' ? 'flex' : 'none';
+        }
+
+        function toggleActionConfig() {
+            const select = document.getElementById('action-select');
+            const config = document.getElementById('drilldown-config');
+            
+            if (select.value === 'Abrir Panel de Detalle (Drill-down)') {
+                config.style.display = 'block';
+            } else {
+                config.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

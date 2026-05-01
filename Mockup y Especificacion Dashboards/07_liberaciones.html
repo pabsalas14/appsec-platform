@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Liberaciones — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:50;}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;}
+.breadcrumb span{cursor:pointer;}.breadcrumb span:hover{color:#58a6ff;}
+.breadcrumb .sep{color:#30363d;cursor:default;}.breadcrumb .active{color:#e6edf3;font-weight:600;cursor:default;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 12px;font-size:12px;color:#8b949e;cursor:pointer;}
+.btn:hover{border-color:#58a6ff;color:#e6edf3;}.btn-primary{background:#238636;border:1px solid #2ea043;color:#fff;}
+.filter-bar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:#161b22;border-bottom:1px solid #21262d;flex-wrap:wrap;}
+.filter-chip{background:#21262d;border:1px solid #30363d;border-radius:20px;padding:4px 12px;font-size:11px;color:#8b949e;cursor:pointer;}
+.filter-chip.active{background:#1c2333;border-color:#58a6ff;color:#58a6ff;}
+.filter-chip:hover{border-color:#58a6ff;color:#e6edf3;}
+.filter-select{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:12px;color:#8b949e;cursor:pointer;}
+.main{padding:20px;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s;}
+.kpi-card:hover{border-color:#58a6ff;transform:translateY(-2px);}
+.kpi-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.kpi-value{font-size:26px;font-weight:700;line-height:1;}.kpi-sub{font-size:11px;color:#8b949e;margin-top:4px;}
+.green{color:#3fb950;}.yellow{color:#d29922;}.red{color:#f85149;}.blue{color:#58a6ff;}.orange{color:#e3b341;}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;}
+.charts-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.chart-box{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px;}
+.chart-title{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;}
+.chart-container{position:relative;height:200px;}
+.section-label{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;}
+.table-box{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px;margin-bottom:20px;}
+.table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.search-input{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:5px 12px;font-size:12px;color:#e6edf3;width:200px;}
+.search-input:focus{outline:none;border-color:#58a6ff;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;border-bottom:1px solid #21262d;}
+.data-table td{padding:9px 10px;border-bottom:1px solid #161b22;font-size:12px;vertical-align:middle;}
+.data-table tr:hover td{background:#21262d;cursor:pointer;}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;}
+.badge-green{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.badge-yellow{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.badge-red{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.badge-blue{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+.badge-gray{background:rgba(139,148,158,0.15);color:#8b949e;border:1px solid rgba(139,148,158,0.3);}
+.badge-orange{background:rgba(227,179,65,0.15);color:#e3b341;border:1px solid rgba(227,179,65,0.3);}
+.sla-bar{display:flex;align-items:center;gap:6px;}
+.sla-bar .bar{width:60px;background:#21262d;border-radius:3px;height:5px;overflow:hidden;}
+.sla-bar .fill{height:100%;border-radius:3px;}
+.vuln-flag{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#f85149;font-weight:600;}
+/* DRAWER */
+.drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;}
+.drawer-bg.open{display:block;}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:560px;background:#161b22;border-left:1px solid #30363d;padding:0;overflow-y:auto;z-index:201;transform:translateX(100%);transition:transform 0.3s;}
+.drawer.open{transform:translateX(0);}
+.drawer-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #30363d;position:sticky;top:0;background:#161b22;z-index:5;}
+.drawer-title{font-size:14px;font-weight:700;}.drawer-sub{font-size:11px;color:#8b949e;margin-top:3px;}
+.drawer-close{background:none;border:none;color:#8b949e;cursor:pointer;font-size:18px;}.drawer-close:hover{color:#e6edf3;}
+.drawer-body{padding:18px 20px;}
+.d-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.dkpi{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px;}
+.dkpi .dl{font-size:10px;color:#484f58;margin-bottom:4px;}.dkpi .dv{font-size:18px;font-weight:700;}
+.d-section{font-size:10px;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:0.6px;margin:14px 0 8px;}
+.d-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #21262d;font-size:12px;}
+.d-label{color:#8b949e;}.d-val{font-weight:600;}
+.timeline{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.tl-item{display:flex;gap:12px;align-items:flex-start;}
+.tl-dot{width:10px;height:10px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.tl-dot-g{background:#3fb950;}.tl-dot-y{background:#d29922;}.tl-dot-r{background:#f85149;}.tl-dot-b{background:#58a6ff;}
+.tl-content{flex:1;}.tl-date{font-size:10px;color:#484f58;}.tl-text{font-size:12px;}
+/* DRILL PANEL */
+.drill-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;}
+.drill-bg.open{display:block;}
+.drill-panel{position:fixed;right:0;top:0;bottom:0;width:480px;background:#161b22;border-left:1px solid #30363d;padding:20px;overflow-y:auto;z-index:301;transform:translateX(100%);transition:transform 0.3s;}
+.drill-panel.open{transform:translateX(0);}
+.drill-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.drill-title{font-size:14px;font-weight:700;}.drill-close{background:none;border:none;color:#8b949e;cursor:pointer;font-size:18px;}
+.drill-close:hover{color:#e6edf3;}.drill-count{font-size:12px;color:#8b949e;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="breadcrumb"><span>Inicio</span><span class="sep">›</span><span class="active">Liberaciones</span></div>
+  <div class="topbar-right">
+    <div class="btn">📅 Ene–Dic 2025 ▾</div>
+    <div class="btn">▼ Filtros</div>
+    <div class="btn btn-primary">↓ Exportar</div>
+  </div>
+</div>
+<div class="filter-bar">
+  <span style="font-size:11px;color:#8b949e;">Estatus:</span>
+  <div class="filter-chip active" onclick="toggleChip(this)">Todos</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Aprobado</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Rechazado</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Pendiente</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Con Vulns Activas</div>
+  <span style="font-size:11px;color:#8b949e;margin-left:10px;">Motor:</span>
+  <select class="filter-select"><option>Todos</option><option>SAST</option><option>DAST</option><option>SCA</option><option>CDS</option></select>
+  <select class="filter-select"><option>Todas las Células</option><option>Core-Bancario</option><option>Pagos y Transferencias</option><option>Tarjetas</option></select>
+</div>
+<div class="main">
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="openDrill('Total Liberaciones',248)"><div class="kpi-label">Total Liberaciones</div><div class="kpi-value blue">248</div><div class="kpi-sub">Ene–Dic 2025</div></div>
+    <div class="kpi-card" onclick="openDrill('Aprobadas',186)"><div class="kpi-label">Aprobadas</div><div class="kpi-value green">186</div><div class="kpi-sub">75% del total</div></div>
+    <div class="kpi-card" onclick="openDrill('Rechazadas',42)"><div class="kpi-label">Rechazadas</div><div class="kpi-value red">42</div><div class="kpi-sub">17% del total</div></div>
+    <div class="kpi-card" onclick="openDrill('Pendientes de Revisión',20)"><div class="kpi-label">Pendientes</div><div class="kpi-value yellow">20</div><div class="kpi-sub">8% del total</div></div>
+    <div class="kpi-card" onclick="openDrill('Liberadas con Vulns Activas',18)"><div class="kpi-label">Con Vulns Activas</div><div class="kpi-value red">18</div><div class="kpi-sub">⚠ Riesgo aceptado</div></div>
+    <div class="kpi-card" onclick="openDrill('Tiempo Promedio de Revisión','2.4 días')"><div class="kpi-label">Tiempo Prom. Revisión</div><div class="kpi-value blue">2.4d</div><div class="kpi-sub">▼ -0.6d vs mes ant.</div></div>
+  </div>
+
+  <!-- Gráficas fila 1 -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-title">Liberaciones Mensuales — Aprobadas vs Rechazadas vs Pendientes</div>
+      <div class="chart-container"><canvas id="c-monthly"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Distribución por Estatus</div>
+      <div class="chart-container"><canvas id="c-dist"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Gráficas fila 2 -->
+  <div class="charts-row-3">
+    <div class="chart-box">
+      <div class="chart-title">Liberaciones por Motor</div>
+      <div class="chart-container"><canvas id="c-motor"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Top 5 Células con Más Rechazos</div>
+      <div class="chart-container"><canvas id="c-celulas"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Tendencia de Aprobación Mensual</div>
+      <div class="chart-container"><canvas id="c-trend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tabla de liberaciones -->
+  <div class="table-box">
+    <div class="table-header">
+      <div class="section-label">Liberaciones Recientes</div>
+      <div style="display:flex;gap:8px;">
+        <input class="search-input" type="text" placeholder="🔍 Buscar liberación...">
+        <div class="btn">Columnas ▾</div>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Servicio / Repositorio</th><th>Célula</th><th>Motor</th><th>Estatus</th>
+          <th>Vulns Críticas</th><th>Vulns Altas</th><th>Con Vulns Activas</th><th>Fecha</th><th>Responsable</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="lib-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DRAWER DETALLE LIBERACIÓN -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div>
+      <div class="drawer-title" id="d-title">Liberación</div>
+      <div class="drawer-sub" id="d-sub"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="d-kpis">
+      <div class="dkpi"><div class="dl">Estatus</div><div class="dv green" id="d-status">Aprobado</div></div>
+      <div class="dkpi"><div class="dl">Vulns Críticas</div><div class="dv red" id="d-crit">3</div></div>
+      <div class="dkpi"><div class="dl">Vulns Altas</div><div class="dv orange" id="d-high">12</div></div>
+    </div>
+    <div class="d-section">Información de la Liberación</div>
+    <div class="d-row"><span class="d-label">Servicio</span><span class="d-val" id="d-svc">pagos-api</span></div>
+    <div class="d-row"><span class="d-label">Branch</span><span class="d-val" id="d-branch">main</span></div>
+    <div class="d-row"><span class="d-label">Motor</span><span class="d-val" id="d-motor">SAST + SCA</span></div>
+    <div class="d-row"><span class="d-label">Célula</span><span class="d-val" id="d-celula">Pagos y Transferencias</span></div>
+    <div class="d-row"><span class="d-label">Responsable</span><span class="d-val" id="d-resp">Ana García</span></div>
+    <div class="d-row"><span class="d-label">Fecha de Solicitud</span><span class="d-val" id="d-fecha">15 Nov 2025</span></div>
+    <div class="d-row"><span class="d-label">Fecha de Resolución</span><span class="d-val" id="d-fres">17 Nov 2025</span></div>
+    <div class="d-row"><span class="d-label">Liberado con Vulns Activas</span><span class="d-val red" id="d-vuln">No</span></div>
+    <div class="d-section">Historial de Estatus</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot tl-dot-b"></div><div class="tl-content"><div class="tl-date">15 Nov 2025 09:00</div><div class="tl-text">Solicitud de liberación creada por Ana García</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div class="tl-content"><div class="tl-date">15 Nov 2025 09:05</div><div class="tl-text">Escaneo SAST iniciado automáticamente — Scan ID: SAST-2025-1142</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div class="tl-content"><div class="tl-date">15 Nov 2025 09:48</div><div class="tl-text">Escaneo SAST completado — 3 críticas, 12 altas detectadas</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div class="tl-content"><div class="tl-date">15 Nov 2025 10:00</div><div class="tl-text">Revisión manual iniciada por Carlos López</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-g"></div><div class="tl-content"><div class="tl-date">17 Nov 2025 14:30</div><div class="tl-text">Liberación APROBADA — Vulnerabilidades remediadas confirmadas</div></div></div>
+    </div>
+    <div class="d-section">Vulnerabilidades Detectadas en esta Liberación</div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Motor</th><th>Severidad</th><th>Hallazgo</th><th>Estatus</th></tr></thead>
+      <tbody>
+        <tr><td>SAST-0042</td><td><span class="badge badge-blue">SAST</span></td><td><span class="badge badge-red">Crítica</span></td><td>SQL Injection en /api/pagos</td><td><span class="badge badge-green">Remediada</span></td></tr>
+        <tr><td>SAST-0043</td><td><span class="badge badge-blue">SAST</span></td><td><span class="badge badge-red">Crítica</span></td><td>SSRF en /api/transferencias</td><td><span class="badge badge-green">Remediada</span></td></tr>
+        <tr><td>SCA-0018</td><td><span class="badge badge-orange">SCA</span></td><td><span class="badge badge-orange">Alta</span></td><td>Log4Shell — log4j-core:2.14.1</td><td><span class="badge badge-green">Remediada</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DRILL PANEL -->
+<div class="drill-bg" id="drill-bg" onclick="closeDrill()"></div>
+<div class="drill-panel" id="drill-panel">
+  <div class="drill-hdr"><div class="drill-title" id="drill-title">Detalle</div><button class="drill-close" onclick="closeDrill()">✕</button></div>
+  <div class="drill-count" id="drill-count"></div>
+  <div id="drill-content"></div>
+</div>
+
+<script>
+var libData = [
+  {id:"LIB-2025-248",svc:"pagos-transferencias-api",celula:"Pagos y Transferencias",motor:"SAST+SCA",status:"Aprobado",crit:0,high:2,vuln:false,fecha:"28 Nov 2025",resp:"Ana García"},
+  {id:"LIB-2025-247",svc:"tarjetas-core-service",celula:"Tarjetas",motor:"SAST",status:"Rechazado",crit:4,high:8,vuln:false,fecha:"27 Nov 2025",resp:"Carlos López"},
+  {id:"LIB-2025-246",svc:"creditos-api",celula:"Créditos",motor:"DAST",status:"Aprobado",crit:0,high:1,vuln:false,fecha:"26 Nov 2025",resp:"María Torres"},
+  {id:"LIB-2025-245",svc:"canales-web-frontend",celula:"Canales Digitales",motor:"SAST+DAST",status:"Con Vulns Activas",crit:2,high:5,vuln:true,fecha:"25 Nov 2025",resp:"Pedro Núñez"},
+  {id:"LIB-2025-244",svc:"notificaciones-service",celula:"Core-Bancario",motor:"SCA",status:"Aprobado",crit:0,high:0,vuln:false,fecha:"24 Nov 2025",resp:"Laura Vega"},
+  {id:"LIB-2025-243",svc:"fraude-detection-ml",celula:"Fraude y Seguridad",motor:"SAST",status:"Pendiente",crit:1,high:3,vuln:false,fecha:"23 Nov 2025",resp:"Roberto Díaz"},
+  {id:"LIB-2025-242",svc:"conciliacion-service",celula:"Pagos y Transferencias",motor:"CDS",status:"Aprobado",crit:0,high:0,vuln:false,fecha:"22 Nov 2025",resp:"Ana García"},
+  {id:"LIB-2025-241",svc:"ahorros-api",celula:"Cuentas y Ahorros",motor:"SAST+SCA",status:"Rechazado",crit:3,high:7,vuln:false,fecha:"21 Nov 2025",resp:"Carlos López"},
+];
+
+var statusColors = {"Aprobado":"badge-green","Rechazado":"badge-red","Pendiente":"badge-yellow","Con Vulns Activas":"badge-orange"};
+
+function buildTable(){
+  var tb = document.getElementById("lib-tbody");
+  tb.innerHTML = libData.map(function(d){
+    return '<tr onclick="openDrawer(\''+d.id+'\',\''+d.svc+'\',\''+d.status+'\','+d.crit+','+d.high+','+d.vuln+')">'+
+      '<td style="color:#8b949e;font-size:11px;">'+d.id+'</td>'+
+      '<td style="font-weight:600;">'+d.svc+'</td>'+
+      '<td style="color:#8b949e;">'+d.celula+'</td>'+
+      '<td><span class="badge badge-blue">'+d.motor+'</span></td>'+
+      '<td><span class="badge '+statusColors[d.status]+'">'+d.status+'</span></td>'+
+      '<td style="color:'+(d.crit>0?'#f85149':'#3fb950')+';font-weight:600;">'+d.crit+'</td>'+
+      '<td style="color:'+(d.high>0?'#e3b341':'#3fb950')+';font-weight:600;">'+d.high+'</td>'+
+      '<td>'+(d.vuln?'<span class="vuln-flag">⚠ Sí</span>':'<span style="color:#3fb950;">No</span>')+'</td>'+
+      '<td style="color:#8b949e;">'+d.fecha+'</td>'+
+      '<td style="color:#8b949e;">'+d.resp+'</td>'+
+      '<td><span style="color:#8b949e;font-size:16px;">›</span></td>'+
+      '</tr>';
+  }).join("");
+}
+
+function toggleChip(el){
+  document.querySelectorAll(".filter-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");
+}
+
+function openDrawer(id,svc,status,crit,high,vuln){
+  document.getElementById("d-title").textContent = id;
+  document.getElementById("d-sub").textContent = svc;
+  document.getElementById("d-status").textContent = status;
+  document.getElementById("d-status").style.color = status==="Aprobado"?"#3fb950":status==="Rechazado"?"#f85149":"#d29922";
+  document.getElementById("d-crit").textContent = crit;
+  document.getElementById("d-high").textContent = high;
+  document.getElementById("d-svc").textContent = svc;
+  document.getElementById("d-vuln").textContent = vuln?"⚠ Sí — Riesgo Aceptado":"No";
+  document.getElementById("d-vuln").style.color = vuln?"#f85149":"#3fb950";
+  document.getElementById("drawer-bg").classList.add("open");
+  document.getElementById("drawer").classList.add("open");
+}
+function closeDrawer(){
+  document.getElementById("drawer-bg").classList.remove("open");
+  document.getElementById("drawer").classList.remove("open");
+}
+
+function openDrill(title,count){
+  document.getElementById("drill-title").textContent = title;
+  document.getElementById("drill-count").textContent = (typeof count==="number"?count+" liberaciones":count);
+  document.getElementById("drill-content").innerHTML =
+    '<table class="data-table"><thead><tr><th>ID</th><th>Servicio</th><th>Estatus</th><th>Fecha</th></tr></thead><tbody>'+
+    libData.map(function(d){
+      return '<tr onclick="openDrawer(\''+d.id+'\',\''+d.svc+'\',\''+d.status+'\','+d.crit+','+d.high+','+d.vuln+')">'+
+        '<td style="color:#8b949e;font-size:11px;">'+d.id+'</td>'+
+        '<td style="font-weight:600;">'+d.svc+'</td>'+
+        '<td><span class="badge '+statusColors[d.status]+'">'+d.status+'</span></td>'+
+        '<td style="color:#8b949e;">'+d.fecha+'</td>'+
+        '</tr>';
+    }).join("")+'</tbody></table>';
+  document.getElementById("drill-bg").classList.add("open");
+  document.getElementById("drill-panel").classList.add("open");
+}
+function closeDrill(){
+  document.getElementById("drill-bg").classList.remove("open");
+  document.getElementById("drill-panel").classList.remove("open");
+}
+
+window.addEventListener("load",function(){
+  buildTable();
+  new Chart(document.getElementById("c-monthly"),{
+    type:"bar",
+    data:{
+      labels:["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+      datasets:[
+        {label:"Aprobadas",data:[14,16,15,18,17,16,15,17,18,16,15,14],backgroundColor:"#3fb950",borderRadius:3,stack:"s"},
+        {label:"Rechazadas",data:[3,4,3,5,4,3,4,3,4,4,3,4],backgroundColor:"#f85149",borderRadius:3,stack:"s"},
+        {label:"Pendientes",data:[1,2,1,2,1,2,1,2,1,2,2,1],backgroundColor:"#d29922",borderRadius:3,stack:"s"}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b949e",font:{size:10}}}},scales:{x:{stacked:true,ticks:{color:"#8b949e",font:{size:10}},grid:{display:false}},y:{stacked:true,ticks:{color:"#8b949e",font:{size:10}},grid:{color:"#21262d"}}},onClick:function(e,els){if(els.length){var m=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];openDrill("Liberaciones "+m[els[0].index],18);}}}
+  });
+  new Chart(document.getElementById("c-dist"),{
+    type:"doughnut",
+    data:{labels:["Aprobadas","Rechazadas","Pendientes","Con Vulns"],datasets:[{data:[186,42,20,18],backgroundColor:["#3fb950","#f85149","#d29922","#e3b341"],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{color:"#8b949e",font:{size:11},padding:10}}},onClick:function(e,els){if(els.length){var l=["Aprobadas","Rechazadas","Pendientes","Con Vulns"],c=[186,42,20,18];openDrill(l[els[0].index],c[els[0].index]);}}}
+  });
+  new Chart(document.getElementById("c-motor"),{
+    type:"bar",
+    data:{labels:["SAST","DAST","SCA","CDS","SAST+SCA","SAST+DAST"],datasets:[{label:"Liberaciones",data:[98,42,38,28,26,16],backgroundColor:"#58a6ff",borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b949e",font:{size:10}},grid:{color:"#21262d"}},y:{ticks:{color:"#8b949e",font:{size:10}},grid:{display:false}}},onClick:function(e,els){if(els.length){var l=["SAST","DAST","SCA","CDS","SAST+SCA","SAST+DAST"],c=[98,42,38,28,26,16];openDrill("Motor: "+l[els[0].index],c[els[0].index]);}}}
+  });
+  new Chart(document.getElementById("c-celulas"),{
+    type:"bar",
+    data:{labels:["Tarjetas","Plataformas","Créditos","Core-Banc.","Canales"],datasets:[{label:"Rechazos",data:[12,9,7,6,5],backgroundColor:"#f85149",borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b949e",font:{size:10}},grid:{color:"#21262d"}},y:{ticks:{color:"#8b949e",font:{size:10}},grid:{display:false}}},onClick:function(e,els){if(els.length){var l=["Tarjetas","Plataformas","Créditos","Core-Bancario","Canales"],c=[12,9,7,6,5];openDrill("Rechazos: "+l[els[0].index],c[els[0].index]);}}}
+  });
+  new Chart(document.getElementById("c-trend"),{
+    type:"line",
+    data:{labels:["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],datasets:[{label:"% Aprobación",data:[78,76,79,72,77,76,75,79,78,76,75,74],borderColor:"#3fb950",fill:true,backgroundColor:"rgba(63,185,80,0.08)",tension:0.4,pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b949e",font:{size:10}},grid:{color:"#21262d"}},y:{min:60,max:100,ticks:{color:"#8b949e",font:{size:10},callback:function(v){return v+"%";}},grid:{color:"#21262d"}}}}
+  });
+});
+</script>
+</body>
+</html>

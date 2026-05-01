@@ -30,6 +30,7 @@ import {
   Upload,
   UserCircle,
   Users,
+  Plug,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -146,6 +147,7 @@ const SECTIONS: NavSection[] = [
       { href: '/admin/catalogs', label: 'Catalogs', icon: ScrollText, adminOnly: true },
       { href: '/admin/ai-rules', label: 'AI Builder', icon: ShieldCheck, adminOnly: true },
       { href: '/admin/ia-config', label: 'IA Config', icon: Settings, adminOnly: true },
+      { href: '/admin/integrations', label: 'Integrations', icon: Plug, adminOnly: true },
       { href: '/admin/risk-scoring', label: 'Risk Scoring', icon: ShieldCheck, adminOnly: true },
       { href: '/dashboards/builder', label: 'Dashboard Builder', icon: LayoutDashboard, adminOnly: true },
       { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },

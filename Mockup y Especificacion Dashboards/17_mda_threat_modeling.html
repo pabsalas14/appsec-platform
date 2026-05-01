@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelado de Amenazas (MDA) — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+            --drawer-w: 450px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Topbar & Header */
+        .topbar {
+            padding: 20px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb span { color: var(--accent); cursor: pointer; }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+        }
+
+        .tab {
+            padding: 15px 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { color: var(--text-main); }
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-input {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px 8px 35px;
+            border-radius: 6px;
+            outline: none;
+            width: 300px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 10px center;
+        }
+
+        .search-input:focus { border-color: var(--accent); }
+
+        /* Threats Table */
+        .table-container {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-dark);
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            vertical-align: top;
+        }
+
+        tr:hover td { background-color: rgba(255,255,255,0.02); }
+
+        /* STRIDE Badges */
+        .stride-badges {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .s-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+        }
+
+        .s-badge.active {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: #a78bfa;
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        /* DREAD Score */
+        .dread-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .dread-score:hover { transform: scale(1.05); }
+
+        .score-crit { background-color: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .score-high { background-color: rgba(245, 158, 11, 0.1); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .score-med { background-color: rgba(59, 130, 246, 0.1); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        /* Status */
+        .status-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-open { background-color: var(--danger); }
+        .status-mitigated { background-color: var(--success); }
+        .status-accepted { background-color: var(--text-muted); }
+
+        /* Modal DREAD Calculator */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background-color: var(--bg-panel);
+            width: 500px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal.open { display: flex; }
+        .modal-overlay.open { display: flex; }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Sliders */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .slider-val { font-weight: bold; color: var(--text-main); }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--bg-dark);
+            border-radius: 2px;
+        }
+
+        /* AI Drawer */
+        .drawer {
+            position: fixed;
+            top: 0; right: -var(--drawer-w);
+            width: var(--drawer-w);
+            height: 100vh;
+            background-color: var(--bg-panel);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+            z-index: 201;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open { right: 0; }
+
+        .ai-card {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .ai-card:hover { border-color: rgba(139, 92, 246, 0.5); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="breadcrumb">
+            <span>Programas de Modelado</span> › Portal Clientes V2
+        </div>
+        <div class="header-content">
+            <div>
+                <div class="page-title">
+                    Portal Clientes V2
+                    <span class="badge">En Progreso</span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;">
+                    Arquitecto: Carlos López | Última sesión: 15 Oct 2025
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline">↓ Exportar Reporte</button>
+                <button class="btn" style="background-color: #8b5cf6;" onclick="openDrawer()">✨ Sugerencias IA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <div class="tab">Resumen y DFD</div>
+        <div class="tab">Sesiones (2)</div>
+        <div class="tab active">Matriz de Amenazas (12)</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Buscar amenaza, componente...">
+            <button class="btn">+ Agregar Amenaza Manual</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 25%;">Amenaza Identificada</th>
+                        <th style="width: 15%;">Clasificación STRIDE</th>
+                        <th style="width: 15%;">Score DREAD</th>
+                        <th style="width: 25%;">Estrategia de Mitigación</th>
+                        <th style="width: 10%;">Estatus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Row 1 -->
+                    <tr>
+                        <td style="font-family: monospace; color: var(--text-muted);">T-001</td>
+                        <td>
+                            <div style="font-weight: 500; margin-bottom: 5px;">Intercepción de credenciales en tránsito</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Componente: API Gateway</div>
+                        </td>
+                        <td>
+                            <div class="stride-badges">
+                                <span class="s-badge">S</span>
+                                <span class="s-badge">T</span>
+                                <span class="s-badge">R</span>
+                                <span class="s-badge active" title="Information Disclosure">I</span>
+                                <span class="s-badge">D</span>
+                                <span class="s-badge">E</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dread-score score-crit" onclick="openModal('T-001', 8.4)">
+                                8.4 Crítica
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                Implementar TLS 1.3 estricto en el API Gateway y deshabilitar suites de cifrado débiles.
+                            </div>
+                            <a href="#" style="font-size: 0.8rem; color: var(--accent); display: inline-block; margin-top: 5px;">JIRA-4521 ↗</a>
+                        </td>
+                        <td>
+                            <span class="status-dot status-open"></span>Abierta
+                        </td>
+                    </tr>
+
+                    <!-- Row 2 -->
+                    <tr>
+                        <td style="font-family: monospace; color: var(--text-muted);">T-002</td>
+                        <td>
+                            <div style="font-weight: 500; margin-bottom: 5px;">Fuerza bruta en endpoint de Login</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Componente: Auth Service</div>
+                        </td>
+                        <td>
+                            <div class="stride-badges">
+                                <span class="s-badge active" title="Spoofing">S</span>
+                                <span class="s-badge">T</span>
+                                <span class="s-badge">R</span>
+                                <span class="s-badge">I</span>
+                                <span class="s-badge active" title="Denial of Service">D</span>
+                                <span class="s-badge">E</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dread-score score-high" onclick="openModal('T-002', 7.2)">
+                                7.2 Alta
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                Implementar Rate Limiting por IP y bloqueo de cuenta tras 5 intentos fallidos.
+                            </div>
+                            <a href="#" style="font-size: 0.8rem; color: var(--accent); display: inline-block; margin-top: 5px;">JIRA-4522 ↗</a>
+                        </td>
+                        <td>
+                            <span class="status-dot status-mitigated"></span>Mitigada
+                        </td>
+                    </tr>
+
+                    <!-- Row 3 -->
+                    <tr>
+                        <td style="font-family: monospace; color: var(--text-muted);">T-003</td>
+                        <td>
+                            <div style="font-weight: 500; margin-bottom: 5px;">Manipulación de parámetros de precio en carrito</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Componente: Checkout Service</div>
+                        </td>
+                        <td>
+                            <div class="stride-badges">
+                                <span class="s-badge">S</span>
+                                <span class="s-badge active" title="Tampering">T</span>
+                                <span class="s-badge">R</span>
+                                <span class="s-badge">I</span>
+                                <span class="s-badge">D</span>
+                                <span class="s-badge active" title="Elevation of Privilege">E</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dread-score score-crit" onclick="openModal('T-003', 9.0)">
+                                9.0 Crítica
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                Validar siempre el precio del producto contra la base de datos en el backend, ignorando el precio enviado por el cliente.
+                            </div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: inline-block; margin-top: 5px;">Sin ticket asignado</span>
+                        </td>
+                        <td>
+                            <span class="status-dot status-open"></span>Abierta
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal DREAD Calculator -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                Calculadora DREAD (T-001)
+                <button style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- D -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span><strong>D</strong>amage (Daño Potencial)</span>
+                        <span class="slider-val" id="val-d">9</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="9" id="slider-d" oninput="updateDread()">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>1 (Mínimo)</span><span>10 (Catastrófico)</span>
+                    </div>
+                </div>
+
+                <!-- R -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span><strong>R</strong>eproducibility (Reproducibilidad)</span>
+                        <span class="slider-val" id="val-r">8</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="8" id="slider-r" oninput="updateDread()">
+                </div>
+
+                <!-- E -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span><strong>E</strong>xploitability (Explotabilidad)</span>
+                        <span class="slider-val" id="val-e">7</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="7" id="slider-e" oninput="updateDread()">
+                </div>
+
+                <!-- A -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span><strong>A</strong>ffected Users (Usuarios Afectados)</span>
+                        <span class="slider-val" id="val-a">10</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="10" id="slider-a" oninput="updateDread()">
+                </div>
+
+                <!-- D -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span><strong>D</strong>iscoverability (Descubribilidad)</span>
+                        <span class="slider-val" id="val-d2">8</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="8" id="slider-d2" oninput="updateDread()">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Score Final:</span>
+                    <div class="dread-score score-crit" id="final-score" style="font-size: 1.2rem; padding: 6px 15px;">
+                        8.4 Crítica
+                    </div>
+                </div>
+                <button class="btn" onclick="closeModal()">Guardar Score</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Drawer -->
+    <div class="modal-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 10px; color: #a78bfa;">
+                ✨ AI Threat Finder
+            </div>
+            <button style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;" onclick="closeDrawer()">✕</button>
+        </div>
+        
+        <div style="padding: 20px; flex: 1; overflow-y: auto;">
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+                Basado en el análisis del DFD y la descripción de la arquitectura, he identificado 3 amenazas potenciales que no están en tu matriz:
+            </p>
+
+            <!-- AI Suggestion 1 -->
+            <div class="ai-card">
+                <div style="font-weight: 600; margin-bottom: 5px; color: var(--text-main);">Inyección NoSQL en base de datos de perfiles</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Componente: Profile Service (MongoDB)</div>
+                
+                <div class="stride-badges" style="margin-bottom: 10px;">
+                    <span class="s-badge active" title="Tampering">T</span>
+                    <span class="s-badge active" title="Information Disclosure">I</span>
+                </div>
+                
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px;">
+                    El servicio de perfiles utiliza MongoDB. Si las consultas no están parametrizadas correctamente, un atacante podría inyectar operadores NoSQL ($gt, $ne) para extraer datos de otros usuarios.
+                </p>
+                
+                <button class="btn btn-outline btn-sm" style="width: 100%; border-color: #8b5cf6; color: #a78bfa;">+ Agregar a la Matriz</button>
+            </div>
+
+            <!-- AI Suggestion 2 -->
+            <div class="ai-card">
+                <div style="font-weight: 600; margin-bottom: 5px; color: var(--text-main);">Falta de invalidación de token JWT al hacer logout</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Componente: Auth Service</div>
+                
+                <div class="stride-badges" style="margin-bottom: 10px;">
+                    <span class="s-badge active" title="Spoofing">S</span>
+                    <span class="s-badge active" title="Elevation of Privilege">E</span>
+                </div>
+                
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px;">
+                    Si los tokens JWT son stateless y no existe una lista de revocación (blacklist), un token robado seguirá siendo válido hasta su expiración, incluso si el usuario cierra sesión.
+                </p>
+                
+                <button class="btn btn-outline btn-sm" style="width: 100%; border-color: #8b5cf6; color: #a78bfa;">+ Agregar a la Matriz</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Modal Logic
+        function openModal(id, score) {
+            document.getElementById('modal-overlay').classList.add('open');
+            // In a real app, we would load the specific values for the ID
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+        }
+
+        // Drawer Logic
+        function openDrawer() {
+            document.getElementById('drawer').classList.add('open');
+            document.getElementById('drawer-overlay').classList.add('open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawer-overlay').classList.remove('open');
+        }
+
+        // DREAD Calculator Logic
+        function updateDread() {
+            const d = parseInt(document.getElementById('slider-d').value);
+            const r = parseInt(document.getElementById('slider-r').value);
+            const e = parseInt(document.getElementById('slider-e').value);
+            const a = parseInt(document.getElementById('slider-a').value);
+            const d2 = parseInt(document.getElementById('slider-d2').value);
+
+            // Update labels
+            document.getElementById('val-d').innerText = d;
+            document.getElementById('val-r').innerText = r;
+            document.getElementById('val-e').innerText = e;
+            document.getElementById('val-a').innerText = a;
+            document.getElementById('val-d2').innerText = d2;
+
+            // Calculate average
+            const avg = ((d + r + e + a + d2) / 5).toFixed(1);
+            
+            // Determine severity
+            const scoreEl = document.getElementById('final-score');
+            scoreEl.className = 'dread-score'; // reset
+            
+            if (avg >= 8.0) {
+                scoreEl.classList.add('score-crit');
+                scoreEl.innerText = avg + ' Crítica';
+            } else if (avg >= 6.0) {
+                scoreEl.classList.add('score-high');
+                scoreEl.innerText = avg + ' Alta';
+            } else if (avg >= 4.0) {
+                scoreEl.classList.add('score-med');
+                scoreEl.innerText = avg + ' Media';
+            } else {
+                scoreEl.style.backgroundColor = 'rgba(148, 163, 184, 0.1)';
+                scoreEl.style.color = 'var(--text-muted)';
+                scoreEl.style.border = '1px solid rgba(148, 163, 184, 0.2)';
+                scoreEl.innerText = avg + ' Baja';
+            }
+        }
+    </script>
+</body>
+</html>

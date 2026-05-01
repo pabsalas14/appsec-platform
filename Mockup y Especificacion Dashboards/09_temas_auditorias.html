@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temas Emergentes & Auditorías — AppSec</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:100;}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;}
+.breadcrumb span{cursor:pointer;}.breadcrumb span:hover{color:#58a6ff;}
+.breadcrumb .sep{color:#30363d;cursor:default;}.breadcrumb .active{color:#e6edf3;font-weight:600;cursor:default;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 12px;font-size:12px;color:#8b949e;cursor:pointer;}
+.btn:hover{border-color:#58a6ff;color:#e6edf3;}.btn-primary{background:#238636;border:1px solid #2ea043;color:#fff;}
+.tabs{display:flex;gap:0;padding:0 20px;background:#161b22;border-bottom:1px solid #30363d;}
+.tab{padding:10px 18px;font-size:13px;color:#8b949e;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab:hover{color:#e6edf3;}.tab.active{color:#58a6ff;border-bottom-color:#58a6ff;}
+.filter-bar{display:flex;align-items:center;gap:10px;padding:8px 20px;background:#161b22;border-bottom:1px solid #21262d;flex-wrap:wrap;}
+.filter-chip{background:#21262d;border:1px solid #30363d;border-radius:20px;padding:3px 10px;font-size:11px;color:#8b949e;cursor:pointer;}
+.filter-chip.active{background:#1c2333;border-color:#58a6ff;color:#58a6ff;}
+.filter-select{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:3px 8px;font-size:11px;color:#8b949e;cursor:pointer;}
+.search-input{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:12px;color:#e6edf3;width:200px;}
+.search-input:focus{outline:none;border-color:#58a6ff;}
+.content{padding:20px;display:none;}
+.content.active{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.2s;}
+.kpi-card:hover{border-color:#58a6ff;transform:translateY(-1px);}
+.kpi-label{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.kpi-value{font-size:24px;font-weight:700;margin-bottom:3px;}
+.kpi-sub{font-size:10px;color:#8b949e;}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-box{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px;}
+.chart-title{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;}
+.charts-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.table-box{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;}
+.table-title{font-size:12px;font-weight:600;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;font-size:10px;color:#8b949e;text-transform:uppercase;padding:8px 14px;border-bottom:1px solid #21262d;background:#0d1117;}
+.data-table td{padding:10px 14px;border-bottom:1px solid #161b22;font-size:12px;}
+.data-table tr:hover td{background:#1c2333;cursor:pointer;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-crit{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.badge-high{background:rgba(227,179,65,0.15);color:#e3b341;border:1px solid rgba(227,179,65,0.3);}
+.badge-med{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+.badge-green{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.badge-gray{background:rgba(139,148,158,0.15);color:#8b949e;border:1px solid rgba(139,148,158,0.3);}
+.badge-yellow{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.badge-blue{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+/* Charts */
+.bar-chart{display:flex;flex-direction:column;gap:8px;}
+.bar-item{display:flex;align-items:center;gap:10px;}
+.bar-label{font-size:11px;color:#8b949e;width:140px;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;background:#21262d;border-radius:4px;height:16px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.5s;}
+.bar-val{font-size:11px;font-weight:600;width:30px;text-align:right;}
+.donut-container{display:flex;align-items:center;justify-content:center;gap:20px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:11px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.mini-stat{display:flex;flex-direction:column;gap:4px;}
+.mini-stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #21262d;font-size:11px;}
+.mini-stat-label{color:#8b949e;}.mini-stat-val{font-weight:600;}
+/* Drawer */
+.drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;}
+.drawer-bg.open{display:block;}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:560px;background:#161b22;border-left:1px solid #30363d;overflow-y:auto;z-index:201;transform:translateX(100%);transition:transform 0.3s;}
+.drawer.open{transform:translateX(0);}
+.drawer-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #30363d;position:sticky;top:0;background:#161b22;z-index:5;}
+.drawer-title{font-size:14px;font-weight:700;}.drawer-sub{font-size:11px;color:#8b949e;margin-top:2px;}
+.drawer-close{background:none;border:none;color:#8b949e;cursor:pointer;font-size:18px;}.drawer-close:hover{color:#e6edf3;}
+.drawer-body{padding:16px 18px;}
+.d-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.dkpi{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px;}
+.dkpi .dl{font-size:10px;color:#484f58;margin-bottom:3px;}.dkpi .dv{font-size:15px;font-weight:700;}
+.d-section{font-size:10px;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 8px;}
+.d-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #21262d;font-size:12px;}
+.d-label{color:#8b949e;}.d-val{font-weight:600;}
+.timeline{display:flex;flex-direction:column;gap:8px;}
+.tl-item{display:flex;gap:10px;align-items:flex-start;}
+.tl-dot{width:9px;height:9px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.tl-dot-g{background:#3fb950;}.tl-dot-y{background:#d29922;}.tl-dot-r{background:#f85149;}.tl-dot-b{background:#58a6ff;}
+.tl-date{font-size:10px;color:#484f58;}.tl-text{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="breadcrumb"><span>Inicio</span><span class="sep">›</span><span class="active">Temas Emergentes & Auditorías</span></div>
+  <div class="topbar-right">
+    <div class="btn">📅 2025 ▾</div>
+    <div class="btn">⬇ Exportar</div>
+    <div class="btn btn-primary">+ Nuevo Tema</div>
+  </div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('temas',this)">Temas Emergentes</div>
+  <div class="tab" onclick="switchTab('auditorias',this)">Auditorías</div>
+</div>
+<div class="filter-bar">
+  <input class="search-input" type="text" placeholder="🔍 Buscar tema, hallazgo...">
+  <span style="font-size:11px;color:#8b949e;">Estatus:</span>
+  <div class="filter-chip active" onclick="toggleChip(this)">Todos</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Abierto</div>
+  <div class="filter-chip" onclick="toggleChip(this)">En Proceso</div>
+  <div class="filter-chip" onclick="toggleChip(this)">Cerrado</div>
+  <select class="filter-select"><option>Todas las Células</option><option>Pagos y Transferencias</option><option>Tarjetas</option><option>Core-Bancario</option></select>
+  <select class="filter-select"><option>Todos los Tipos</option><option>Vulnerabilidad 0-Day</option><option>Amenaza APT</option><option>Incidente</option><option>Alerta Regulatoria</option></select>
+</div>
+
+<!-- TEMAS EMERGENTES -->
+<div class="content active" id="tab-temas">
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="openDrilldown('Todos los Temas','24')"><div class="kpi-label">Total Temas</div><div class="kpi-value" style="color:#58a6ff;">24</div><div class="kpi-sub">Año 2025</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Temas Abiertos','8')"><div class="kpi-label">Abiertos</div><div class="kpi-value" style="color:#f85149;">8</div><div class="kpi-sub">Requieren atención</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Temas en Proceso','10')"><div class="kpi-label">En Proceso</div><div class="kpi-value" style="color:#d29922;">10</div><div class="kpi-sub">Con plan activo</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Temas Cerrados','6')"><div class="kpi-label">Cerrados</div><div class="kpi-value" style="color:#3fb950;">6</div><div class="kpi-sub">Resueltos</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Críticos','3')"><div class="kpi-label">Críticos Activos</div><div class="kpi-value" style="color:#f85149;">3</div><div class="kpi-sub">⚠ Acción inmediata</div></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-title">Temas por Tipo (Acumulado 2025)</div>
+      <div class="bar-chart">
+        <div class="bar-item"><span class="bar-label">Vulnerabilidad 0-Day</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#f85149;"></div></div><span class="bar-val" style="color:#f85149;">9</span></div>
+        <div class="bar-item"><span class="bar-label">Alerta Regulatoria</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#d29922;"></div></div><span class="bar-val" style="color:#d29922;">6</span></div>
+        <div class="bar-item"><span class="bar-label">Incidente de Seguridad</span><div class="bar-track"><div class="bar-fill" style="width:33%;background:#e3b341;"></div></div><span class="bar-val" style="color:#e3b341;">4</span></div>
+        <div class="bar-item"><span class="bar-label">Amenaza APT</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#bc8cff;"></div></div><span class="bar-val" style="color:#bc8cff;">3</span></div>
+        <div class="bar-item"><span class="bar-label">Otro</span><div class="bar-track"><div class="bar-fill" style="width:17%;background:#8b949e;"></div></div><span class="bar-val" style="color:#8b949e;">2</span></div>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Por Estatus</div>
+      <div class="donut-container">
+        <svg class="donut-svg" width="100" height="100" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#21262d" stroke-width="3"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f85149" stroke-width="3" stroke-dasharray="33 67" stroke-dashoffset="25"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#d29922" stroke-width="3" stroke-dasharray="42 58" stroke-dashoffset="-8"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="25 75" stroke-dashoffset="-50"/>
+          <text x="18" y="20" text-anchor="middle" fill="#e6edf3" font-size="6" font-weight="bold">24</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#f85149;"></div>Abierto: 8</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#d29922;"></div>En Proceso: 10</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#3fb950;"></div>Cerrado: 6</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="table-box">
+    <div class="table-header">
+      <span class="table-title">Temas Emergentes</span>
+      <div style="display:flex;gap:8px;"><div class="btn">Columnas ▾</div><div class="btn">⬇ Exportar</div></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Tema</th><th>Tipo</th><th>Severidad</th><th>Célula Afectada</th><th>Responsable</th><th>Estatus</th><th>Fecha</th><th>SLA</th></tr></thead>
+      <tbody>
+        <tr onclick="openDrawer('TE-2025-024','Log4Shell v2 — Reincidencia en servicios legacy','Vulnerabilidad 0-Day','Crítica','Core-Bancario','Ana García','Abierto','15 Nov 2025','⚠ Vencido')">
+          <td style="font-size:10px;color:#484f58;">TE-2025-024</td><td style="font-weight:600;">Log4Shell v2 — Reincidencia</td><td><span class="badge badge-crit">0-Day</span></td><td><span class="badge badge-crit">Crítica</span></td><td>Core-Bancario</td><td>Ana García</td><td><span class="badge badge-crit">Abierto</span></td><td>15 Nov</td><td style="color:#f85149;font-weight:600;">⚠ Vencido</td>
+        </tr>
+        <tr onclick="openDrawer('TE-2025-023','Alerta CNBV — Controles de Autenticación','Alerta Regulatoria','Alta','Todas','Carlos López','En Proceso','12 Nov 2025','3 días')">
+          <td style="font-size:10px;color:#484f58;">TE-2025-023</td><td style="font-weight:600;">Alerta CNBV — Autenticación</td><td><span class="badge badge-yellow">Regulatoria</span></td><td><span class="badge badge-high">Alta</span></td><td>Todas</td><td>Carlos López</td><td><span class="badge badge-yellow">En Proceso</span></td><td>12 Nov</td><td style="color:#d29922;font-weight:600;">3 días</td>
+        </tr>
+        <tr onclick="openDrawer('TE-2025-022','Campaña Phishing dirigida a Banca','Amenaza APT','Alta','Canales Digitales','María Torres','En Proceso','10 Nov 2025','5 días')">
+          <td style="font-size:10px;color:#484f58;">TE-2025-022</td><td style="font-weight:600;">Campaña Phishing — Banca</td><td><span class="badge" style="background:rgba(188,140,255,0.15);color:#bc8cff;border:1px solid rgba(188,140,255,0.3);">APT</span></td><td><span class="badge badge-high">Alta</span></td><td>Canales Digitales</td><td>María Torres</td><td><span class="badge badge-yellow">En Proceso</span></td><td>10 Nov</td><td style="color:#d29922;font-weight:600;">5 días</td>
+        </tr>
+        <tr onclick="openDrawer('TE-2025-021','CVE-2025-1234 — Apache Struts RCE','Vulnerabilidad 0-Day','Crítica','Pagos y Transferencias','Ana García','Cerrado','05 Nov 2025','—')">
+          <td style="font-size:10px;color:#484f58;">TE-2025-021</td><td style="font-weight:600;">CVE-2025-1234 — Apache Struts</td><td><span class="badge badge-crit">0-Day</span></td><td><span class="badge badge-crit">Crítica</span></td><td>Pagos y Transf.</td><td>Ana García</td><td><span class="badge badge-green">Cerrado</span></td><td>05 Nov</td><td style="color:#3fb950;">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- AUDITORÍAS -->
+<div class="content" id="tab-auditorias">
+  <div class="kpi-row">
+    <div class="kpi-card" onclick="openDrilldown('Total Auditorías','18')"><div class="kpi-label">Total Auditorías</div><div class="kpi-value" style="color:#58a6ff;">18</div><div class="kpi-sub">Año 2025</div></div>
+    <div class="kpi-card" onclick="openDrilldown('En Proceso','5')"><div class="kpi-label">En Proceso</div><div class="kpi-value" style="color:#d29922;">5</div><div class="kpi-sub">Activas</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Hallazgos Abiertos','42')"><div class="kpi-label">Hallazgos Abiertos</div><div class="kpi-value" style="color:#f85149;">42</div><div class="kpi-sub">Pendientes de remediar</div></div>
+    <div class="kpi-card" onclick="openDrilldown('Hallazgos Cerrados','87')"><div class="kpi-label">Hallazgos Cerrados</div><div class="kpi-value" style="color:#3fb950;">87</div><div class="kpi-sub">Remediados</div></div>
+    <div class="kpi-card" onclick="openDrilldown('SLA Vencido','7')"><div class="kpi-label">SLA Vencido</div><div class="kpi-value" style="color:#f85149;">7</div><div class="kpi-sub">Hallazgos vencidos</div></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-title">Hallazgos por Auditor (Acumulado)</div>
+      <div class="bar-chart">
+        <div class="bar-item"><span class="bar-label">CNBV</span><div class="bar-track"><div class="bar-fill" style="width:80%;background:#58a6ff;"></div></div><span class="bar-val" style="color:#58a6ff;">38</span></div>
+        <div class="bar-item"><span class="bar-label">Auditoría Interna</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:#bc8cff;"></div></div><span class="bar-val" style="color:#bc8cff;">26</span></div>
+        <div class="bar-item"><span class="bar-label">Deloitte</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#3fb950;"></div></div><span class="bar-val" style="color:#3fb950;">19</span></div>
+        <div class="bar-item"><span class="bar-label">PwC</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#d29922;"></div></div><span class="bar-val" style="color:#d29922;">12</span></div>
+        <div class="bar-item"><span class="bar-label">Otro</span><div class="bar-track"><div class="bar-fill" style="width:15%;background:#8b949e;"></div></div><span class="bar-val" style="color:#8b949e;">7</span></div>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Hallazgos por Estatus</div>
+      <div class="donut-container">
+        <svg class="donut-svg" width="100" height="100" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#21262d" stroke-width="3"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f85149" stroke-width="3" stroke-dasharray="32 68" stroke-dashoffset="25"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="68 32" stroke-dashoffset="-7"/>
+          <text x="18" y="20" text-anchor="middle" fill="#e6edf3" font-size="6" font-weight="bold">129</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#f85149;"></div>Abiertos: 42</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#3fb950;"></div>Cerrados: 87</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="table-box">
+    <div class="table-header">
+      <span class="table-title">Auditorías</span>
+      <div style="display:flex;gap:8px;"><div class="btn">⬇ Exportar</div></div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Nombre</th><th>Auditor</th><th>Tipo</th><th>Hallazgos</th><th>Abiertos</th><th>Estatus</th><th>Fecha Inicio</th><th>Fecha Cierre</th></tr></thead>
+      <tbody>
+        <tr onclick="openDrawer('AUD-2025-008','Auditoría CNBV — Seguridad Aplicativa 2025','CNBV','Regulatoria','38','12','En Proceso','01 Oct 2025','31 Dic 2025')">
+          <td style="font-size:10px;color:#484f58;">AUD-2025-008</td><td style="font-weight:600;">CNBV — Seguridad Aplicativa</td><td>CNBV</td><td><span class="badge badge-crit">Regulatoria</span></td><td>38</td><td style="color:#f85149;font-weight:600;">12</td><td><span class="badge badge-yellow">En Proceso</span></td><td>01 Oct</td><td>31 Dic</td>
+        </tr>
+        <tr onclick="openDrawer('AUD-2025-007','Auditoría Interna — Gestión de Vulnerabilidades','Auditoría Interna','Interna','26','8','En Proceso','15 Sep 2025','15 Dic 2025')">
+          <td style="font-size:10px;color:#484f58;">AUD-2025-007</td><td style="font-weight:600;">Interna — Gestión de Vulns</td><td>Auditoría Interna</td><td><span class="badge badge-blue">Interna</span></td><td>26</td><td style="color:#f85149;font-weight:600;">8</td><td><span class="badge badge-yellow">En Proceso</span></td><td>15 Sep</td><td>15 Dic</td>
+        </tr>
+        <tr onclick="openDrawer('AUD-2025-006','Deloitte — Revisión de Controles AppSec','Deloitte','Externa','19','0','Cerrada','01 Ago 2025','30 Sep 2025')">
+          <td style="font-size:10px;color:#484f58;">AUD-2025-006</td><td style="font-weight:600;">Deloitte — Controles AppSec</td><td>Deloitte</td><td><span class="badge badge-med">Externa</span></td><td>19</td><td style="color:#3fb950;font-weight:600;">0</td><td><span class="badge badge-green">Cerrada</span></td><td>01 Ago</td><td>30 Sep</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div><div class="drawer-title" id="d-title">TE-2025-024</div><div class="drawer-sub" id="d-sub">Detalle</div></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="d-kpis">
+      <div class="dkpi"><div class="dl">Estatus</div><div class="dv" id="d-status" style="color:#f85149;">Abierto</div></div>
+      <div class="dkpi"><div class="dl">Severidad</div><div class="dv" id="d-sev" style="color:#f85149;">Crítica</div></div>
+      <div class="dkpi"><div class="dl">SLA</div><div class="dv" id="d-sla" style="color:#f85149;">Vencido</div></div>
+    </div>
+    <div class="d-section">Información</div>
+    <div class="d-row"><span class="d-label">Tipo</span><span class="d-val" id="d-tipo">Vulnerabilidad 0-Day</span></div>
+    <div class="d-row"><span class="d-label">Célula Afectada</span><span class="d-val" id="d-celula">Core-Bancario</span></div>
+    <div class="d-row"><span class="d-label">Responsable</span><span class="d-val" id="d-resp">Ana García</span></div>
+    <div class="d-row"><span class="d-label">Fecha Detección</span><span class="d-val" id="d-fecha">15 Nov 2025</span></div>
+    <div class="d-section">Plan de Acción</div>
+    <div style="background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px;font-size:12px;color:#8b949e;margin-bottom:12px;">Aplicar parche de seguridad en todos los servicios que usan Log4j versión 2.x. Verificar con SAST que no existan instancias adicionales.</div>
+    <div class="d-section">Historial</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot tl-dot-r"></div><div><div class="tl-date">15 Nov 09:00</div><div class="tl-text">Tema detectado y registrado por Ana García</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div><div class="tl-date">15 Nov 10:30</div><div class="tl-text">Asignado a Core-Bancario para remediación</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-r"></div><div><div class="tl-date">22 Nov 00:00</div><div class="tl-text">SLA vencido — sin actualización de avance</div></div></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <button style="flex:1;background:#238636;border:1px solid #2ea043;border-radius:6px;padding:7px;color:#fff;cursor:pointer;font-size:12px;">Actualizar Avance</button>
+      <button style="flex:1;background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.4);border-radius:6px;padding:7px;color:#f85149;cursor:pointer;font-size:12px;">Escalar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+function toggleChip(el){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function openDrawer(id,sub,tipo,sev,celula,resp,status,fecha,sla){
+  document.getElementById('d-title').textContent = id;
+  document.getElementById('d-sub').textContent = sub;
+  document.getElementById('d-tipo').textContent = tipo;
+  document.getElementById('d-sev').textContent = sev;
+  document.getElementById('d-celula').textContent = celula;
+  document.getElementById('d-resp').textContent = resp;
+  document.getElementById('d-status').textContent = status;
+  document.getElementById('d-fecha').textContent = fecha;
+  document.getElementById('d-sla').textContent = sla;
+  var colors = {'Crítica':'#f85149','Alta':'#e3b341','Media':'#58a6ff'};
+  document.getElementById('d-sev').style.color = colors[sev]||'#8b949e';
+  document.getElementById('drawer-bg').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer-bg').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+function openDrilldown(label,val){
+  alert('Drill-down: '+label+' ('+val+' registros)\n\nEn la implementación real, este panel muestra la tabla filtrada de registros.');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Compromisos OKR — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Topbar & Header */
+        .topbar {
+            padding: 20px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .badge.review {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        /* Role Toggle */
+        .role-toggle {
+            display: flex;
+            background-color: var(--bg-dark);
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .role-btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .role-btn.active {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Left Column (OKRs) */
+        .okr-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Objective Card */
+        .obj-card {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .obj-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .obj-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .obj-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 15px;
+        }
+
+        .obj-progress {
+            width: 200px;
+            text-align: right;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: var(--bg-dark);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Key Results List */
+        .kr-list {
+            padding: 0;
+            list-style: none;
+        }
+
+        .kr-item {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .kr-item:last-child { border-bottom: none; }
+
+        .kr-info { flex: 1; }
+        
+        .kr-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+
+        .kr-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .kr-metrics {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: 350px;
+        }
+
+        .metric-box {
+            background-color: var(--bg-dark);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            text-align: center;
+            flex: 1;
+        }
+
+        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .metric-value { font-size: 1.2rem; font-weight: bold; color: var(--text-main); }
+        
+        .metric-target { color: var(--text-muted); font-size: 0.9rem; font-weight: normal; }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+
+        /* Leader Evaluation View (Hidden by default) */
+        .leader-eval {
+            display: none;
+            background-color: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .leader-eval.active { display: block; }
+
+        .eval-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .form-control {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+
+        .form-control:focus { border-color: var(--warning); }
+
+        /* Right Column (Summary) */
+        .summary-panel {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .summary-card {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid var(--bg-dark);
+            border-top-color: var(--accent);
+            border-right-color: var(--accent);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .score-circle.review {
+            border-top-color: var(--warning);
+            border-right-color: var(--warning);
+            border-bottom-color: var(--warning);
+        }
+
+        /* Modal Update KR */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background-color: var(--bg-panel);
+            width: 500px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal.open { display: flex; }
+        .modal-overlay.open { display: flex; }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .file-upload {
+            border: 1px dashed var(--border);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            background-color: rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .file-upload:hover { border-color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="page-title">
+            Mis Compromisos OKR
+            <span class="badge" id="status-badge">Q1 2025 • En Progreso</span>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                Simulador de Vista:
+            </div>
+            <div class="role-toggle">
+                <div class="role-btn active" id="btn-analista" onclick="switchRole('analista')">Analista (Captura)</div>
+                <div class="role-btn" id="btn-lider" onclick="switchRole('lider')">Líder (Q-Review)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Left Column: OKRs -->
+        <div class="okr-list">
+            
+            <!-- Objective 1 -->
+            <div class="obj-card">
+                <div class="obj-header">
+                    <div>
+                        <div class="obj-title">O1: Mejorar la cobertura de escaneo DAST en aplicaciones Core</div>
+                        <div class="obj-meta">
+                            <span>Peso del Objetivo: <strong>60%</strong></span>
+                            <span>•</span>
+                            <span>Dueño: <strong>Ana García</strong></span>
+                        </div>
+                    </div>
+                    <div class="obj-progress">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                            <span>Avance Global</span>
+                            <span id="o1-progress-text">75%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="o1-progress-bar" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="kr-list">
+                    <!-- KR 1.1 -->
+                    <li class="kr-item">
+                        <div class="kr-info">
+                            <div class="kr-title">KR 1.1: Integrar 10 aplicaciones críticas al pipeline DAST</div>
+                            <div class="kr-desc">Configurar escaneos automatizados en Jenkins para el top 10 de apps.</div>
+                            <div style="margin-top: 10px;">
+                                <span style="font-size: 0.8rem; color: var(--accent); background-color: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px;">Última act: Hace 2 días</span>
+                                <a href="#" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 10px;">📎 Ver Evidencia (PDF)</a>
+                            </div>
+                        </div>
+                        <div class="kr-metrics">
+                            <div class="metric-box">
+                                <div class="metric-label">Reportado</div>
+                                <div class="metric-value">8 <span class="metric-target">/ 10 apps</span></div>
+                            </div>
+                            <div class="metric-box leader-view" style="display: none; background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+                                <div class="metric-label" style="color: var(--warning);">Validado (Líder)</div>
+                                <div class="metric-value" style="color: var(--warning);">8 <span class="metric-target">/ 10</span></div>
+                            </div>
+                            <button class="btn btn-outline btn-sm analista-view" onclick="openModal()">Actualizar</button>
+                        </div>
+                    </li>
+                    
+                    <!-- Leader Eval Form (Hidden by default) -->
+                    <div class="leader-eval" id="eval-kr1">
+                        <div class="eval-grid">
+                            <div>
+                                <label style="font-size: 0.8rem; color: var(--text-muted);">Ajustar Valor Validado</label>
+                                <input type="number" class="form-control" value="8" style="margin-top: 5px;" onchange="updateScore()">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.8rem; color: var(--text-muted);">Feedback / Justificación (Requerido si se ajusta)</label>
+                                <input type="text" class="form-control" placeholder="Ej. La app #8 no tiene el pipeline completo..." style="margin-top: 5px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KR 1.2 -->
+                    <li class="kr-item">
+                        <div class="kr-info">
+                            <div class="kr-title">KR 1.2: Reducir el tiempo de remediación DAST a menos de 15 días</div>
+                            <div class="kr-desc">Promedio actual: 22 días. Meta: <= 15 días.</div>
+                        </div>
+                        <div class="kr-metrics">
+                            <div class="metric-box">
+                                <div class="metric-label">Reportado</div>
+                                <div class="metric-value">18 <span class="metric-target">días</span></div>
+                            </div>
+                            <div class="metric-box leader-view" style="display: none; background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+                                <div class="metric-label" style="color: var(--warning);">Validado (Líder)</div>
+                                <div class="metric-value" style="color: var(--warning);">18 <span class="metric-target">días</span></div>
+                            </div>
+                            <button class="btn btn-outline btn-sm analista-view" onclick="openModal()">Actualizar</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Objective 2 -->
+            <div class="obj-card">
+                <div class="obj-header">
+                    <div>
+                        <div class="obj-title">O2: Capacitación en Desarrollo Seguro</div>
+                        <div class="obj-meta">
+                            <span>Peso del Objetivo: <strong>40%</strong></span>
+                        </div>
+                    </div>
+                    <div class="obj-progress">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                            <span>Avance Global</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%; background-color: var(--success);"></div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="kr-list">
+                    <li class="kr-item">
+                        <div class="kr-info">
+                            <div class="kr-title">KR 2.1: Impartir 4 talleres de OWASP Top 10 a células ágiles</div>
+                        </div>
+                        <div class="kr-metrics">
+                            <div class="metric-box">
+                                <div class="metric-label">Reportado</div>
+                                <div class="metric-value" style="color: var(--success);">4 <span class="metric-target">/ 4 talleres</span></div>
+                            </div>
+                            <div class="metric-box leader-view" style="display: none; background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+                                <div class="metric-label" style="color: var(--warning);">Validado (Líder)</div>
+                                <div class="metric-value" style="color: var(--success);">4 <span class="metric-target">/ 4</span></div>
+                            </div>
+                            <button class="btn btn-outline btn-sm analista-view" disabled style="opacity: 0.5;">Completado</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Summary -->
+        <div class="summary-panel">
+            <div class="summary-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-muted);" id="score-title">Score Proyectado (Q1)</h3>
+                <div class="score-circle" id="score-circle">
+                    85
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;" id="score-desc">
+                    Basado en tu avance reportado actual. Este score formará parte de tu evaluación de desempeño trimestral.
+                </p>
+                
+                <button class="btn" style="width: 100%; margin-top: 20px; display: none; background-color: var(--warning);" id="btn-cerrar-qreview">
+                    Aprobar y Cerrar Q-Review
+                </button>
+            </div>
+
+            <div class="summary-card" style="text-align: left;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted); text-transform: uppercase;">Detalle de Pesos</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem;">
+                    <span>O1: Cobertura DAST</span>
+                    <strong>60%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem;">
+                    <span>O2: Capacitación</span>
+                    <strong>40%</strong>
+                </div>
+                <div style="border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--success);">
+                    <span>Total Trimestre</span>
+                    <span>100%</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Update KR -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                Actualizar Avance (KR 1.1)
+                <button style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    Integrar 10 aplicaciones críticas al pipeline DAST
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; color: var(--text-muted);">Valor Actual</label>
+                        <input type="number" class="form-control" value="8" style="margin-top: 5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; color: var(--text-muted);">Meta</label>
+                        <input type="number" class="form-control" value="10" disabled style="margin-top: 5px; opacity: 0.7;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">Comentarios de la actualización</label>
+                    <textarea class="form-control" rows="3" style="margin-top: 5px;" placeholder="Ej. Se integraron las apps de portal clientes y admin..."></textarea>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">Evidencia (Requerida)</label>
+                    <div class="file-upload" style="margin-top: 5px;">
+                        <span style="font-size: 1.2rem;">📎</span><br>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Sube un reporte, captura o pega una URL de Jira/Confluence</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                <button class="btn" onclick="closeModal()">Guardar Avance</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchRole(role) {
+            // Toggle buttons
+            document.getElementById('btn-analista').classList.remove('active');
+            document.getElementById('btn-lider').classList.remove('active');
+            document.getElementById('btn-' + role).classList.add('active');
+
+            const isLeader = role === 'lider';
+
+            // Toggle Views
+            document.querySelectorAll('.analista-view').forEach(el => el.style.display = isLeader ? 'none' : 'inline-block');
+            document.querySelectorAll('.leader-view').forEach(el => el.style.display = isLeader ? 'block' : 'none');
+            document.querySelectorAll('.leader-eval').forEach(el => el.classList.toggle('active', isLeader));
+
+            // Update Header & Summary
+            const badge = document.getElementById('status-badge');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreCircle = document.getElementById('score-circle');
+            const scoreDesc = document.getElementById('score-desc');
+            const btnCerrar = document.getElementById('btn-cerrar-qreview');
+
+            if (isLeader) {
+                badge.className = 'badge review';
+                badge.innerText = 'Q1 2025 • En Revisión (Q-Review)';
+                
+                scoreTitle.innerText = 'Score Validado (Líder)';
+                scoreCircle.classList.add('review');
+                scoreDesc.innerText = 'Revisa las evidencias y ajusta los valores si es necesario. El score se recalculará automáticamente.';
+                btnCerrar.style.display = 'block';
+            } else {
+                badge.className = 'badge';
+                badge.innerText = 'Q1 2025 • En Progreso';
+                
+                scoreTitle.innerText = 'Score Proyectado (Q1)';
+                scoreCircle.classList.remove('review');
+                scoreCircle.innerText = '85';
+                scoreDesc.innerText = 'Basado en tu avance reportado actual. Este score formará parte de tu evaluación de desempeño trimestral.';
+                btnCerrar.style.display = 'none';
+            }
+        }
+
+        function updateScore() {
+            // Simulate score recalculation when leader changes a value
+            const circle = document.getElementById('score-circle');
+            circle.innerText = '82'; // Simulated drop from 85 to 82
+            circle.style.color = 'var(--warning)';
+            setTimeout(() => circle.style.color = 'var(--text-main)', 500);
+        }
+
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+        }
+    </script>
+</body>
+</html>

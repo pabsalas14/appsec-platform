@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Vulnerabilidades por Motor — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d1117; color:#e6edf3; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background:#161b22; border-bottom:1px solid #30363d; }
+  .breadcrumb { display:flex; align-items:center; gap:6px; font-size:12px; color:#8b949e; }
+  .breadcrumb .sep { color:#30363d; }
+  .breadcrumb .active { color:#e6edf3; font-weight:600; }
+  .topbar-right { display:flex; align-items:center; gap:10px; }
+  .btn { background:#21262d; border:1px solid #30363d; border-radius:6px; padding:5px 12px; font-size:12px; color:#8b949e; cursor:pointer; }
+  .btn:hover { border-color:#58a6ff; color:#e6edf3; }
+  .btn-primary { background:#238636; border:1px solid #2ea043; color:#fff; }
+  .main { padding:20px; }
+
+  /* MOTOR SELECTOR */
+  .motor-selector { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .motor-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#8b949e; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s; }
+  .motor-btn:hover { border-color:#58a6ff; color:#e6edf3; }
+  .motor-btn.active { color:#e6edf3; }
+  .motor-btn .dot { width:8px; height:8px; border-radius:50%; }
+  .sast-active { border-color:#58a6ff; background:#1c2333; }
+  .dast-active { border-color:#f0883e; background:#1c2333; }
+  .sca-active { border-color:#3fb950; background:#1c2333; }
+  .cds-active { border-color:#d29922; background:#1c2333; }
+  .mda-active { border-color:#bc8cff; background:#1c2333; }
+  .mast-active { border-color:#f85149; background:#1c2333; }
+
+  /* KPI ROW */
+  .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:20px; }
+  .kpi-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:14px; }
+  .kpi-label { font-size:10px; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .kpi-value { font-size:22px; font-weight:700; line-height:1; }
+  .kpi-sub { font-size:11px; color:#8b949e; margin-top:4px; }
+  .kpi-trend { font-size:11px; margin-top:4px; }
+  .green { color:#3fb950; } .yellow { color:#d29922; } .red { color:#f85149; } .blue { color:#58a6ff; } .orange { color:#f0883e; } .purple { color:#bc8cff; }
+
+  /* CHARTS ROW */
+  .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:20px; }
+  .chart-box { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; }
+  .chart-title { font-size:11px; font-weight:600; color:#8b949e; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; }
+  .chart-container { position:relative; height:200px; }
+
+  /* CHARTS ROW 2 */
+  .charts-row2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+
+  /* TOP VULNS */
+  .top-vulns { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; margin-bottom:20px; }
+  .vuln-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #21262d; cursor:pointer; }
+  .vuln-item:last-child { border-bottom:none; }
+  .vuln-item:hover { background:#21262d; margin:0 -16px; padding:8px 16px; border-radius:4px; }
+  .vuln-rank { font-size:12px; color:#484f58; width:20px; flex-shrink:0; }
+  .vuln-name { flex:1; font-size:12px; color:#e6edf3; }
+  .vuln-count { font-size:12px; font-weight:700; width:50px; text-align:right; }
+  .vuln-bar-wrap { width:120px; }
+  .vuln-bar-track { background:#21262d; border-radius:3px; height:5px; overflow:hidden; }
+  .vuln-bar-fill { height:100%; border-radius:3px; }
+  .badge { font-size:10px; padding:2px 7px; border-radius:4px; font-weight:600; }
+  .badge-crit { background:rgba(248,81,73,0.15); color:#f85149; }
+  .badge-high { background:rgba(240,136,62,0.15); color:#f0883e; }
+  .badge-med { background:rgba(210,153,34,0.15); color:#d29922; }
+
+  /* VENCIDAS TABLE */
+  .table-box { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; }
+  .data-table { width:100%; border-collapse:collapse; }
+  .data-table th { text-align:left; font-size:10px; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; padding:8px 10px; border-bottom:1px solid #21262d; }
+  .data-table td { padding:8px 10px; border-bottom:1px solid #161b22; font-size:12px; }
+  .data-table tr:hover td { background:#21262d; cursor:pointer; }
+
+  /* DRAWER */
+  .drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; }
+  .drawer-overlay.visible { display:block; }
+  .drawer { position:fixed; right:0; top:0; bottom:0; width:460px; background:#161b22; border-left:1px solid #30363d; padding:20px; overflow-y:auto; z-index:101; transform:translateX(100%); transition:transform 0.3s; }
+  .drawer.open { transform:translateX(0); }
+  .drawer-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .drawer-title { font-size:14px; font-weight:700; }
+  .drawer-close { background:none; border:none; color:#8b949e; cursor:pointer; font-size:18px; }
+  .drawer-close:hover { color:#e6edf3; }
+  .detail-row { display:flex; gap:10px; margin-bottom:12px; }
+  .detail-item { flex:1; background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:10px; }
+  .detail-item .dl { font-size:10px; color:#484f58; margin-bottom:3px; }
+  .detail-item .dv { font-size:13px; color:#e6edf3; font-weight:600; }
+  .code-block { background:#0d1117; border:1px solid #21262d; border-radius:6px; padding:12px; font-family:monospace; font-size:11px; color:#3fb950; margin-bottom:12px; overflow-x:auto; }
+  .section-sub { font-size:11px; font-weight:600; color:#8b949e; text-transform:uppercase; letter-spacing:0.5px; margin:14px 0 8px; }
+  .rec-box { background:#0d1117; border-left:3px solid #58a6ff; padding:10px 12px; border-radius:0 6px 6px 0; font-size:12px; color:#e6edf3; line-height:1.6; margin-bottom:12px; }
+  .log-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #21262d; font-size:11px; }
+  .log-item:last-child { border-bottom:none; }
+  .log-date { color:#484f58; width:80px; flex-shrink:0; }
+  .log-user { color:#58a6ff; width:90px; flex-shrink:0; }
+  .log-action { color:#8b949e; flex:1; }
+  .action-row { display:flex; gap:8px; margin-top:16px; }
+  .btn-action { flex:1; padding:7px; border-radius:6px; border:1px solid #30363d; background:#21262d; color:#8b949e; cursor:pointer; font-size:11px; text-align:center; }
+  .btn-action:hover { border-color:#58a6ff; color:#e6edf3; }
+  .btn-action.primary { background:#238636; border-color:#2ea043; color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="breadcrumb">
+    <span style="cursor:pointer;color:#8b949e;">Inicio</span>
+    <span class="sep">›</span>
+    <span class="active" id="bc-motor">Vulnerabilidades — SAST</span>
+  </div>
+  <div class="topbar-right">
+    <div class="btn">📅 01 Ene 2025 — 31 Dic 2025 ▾</div>
+    <div class="btn">▼ Filtros</div>
+    <div class="btn btn-primary">↓ Exportar</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- MOTOR SELECTOR -->
+  <div class="motor-selector">
+    <div class="motor-btn sast-active active" onclick="selectMotor(this,'SAST','#58a6ff')"><div class="dot" style="background:#58a6ff;"></div>SAST</div>
+    <div class="motor-btn" onclick="selectMotor(this,'DAST','#f0883e')"><div class="dot" style="background:#f0883e;"></div>DAST</div>
+    <div class="motor-btn" onclick="selectMotor(this,'SCA','#3fb950')"><div class="dot" style="background:#3fb950;"></div>SCA</div>
+    <div class="motor-btn" onclick="selectMotor(this,'CDS','#d29922')"><div class="dot" style="background:#d29922;"></div>CDS / Secretos</div>
+    <div class="motor-btn" onclick="selectMotor(this,'MDA','#bc8cff')"><div class="dot" style="background:#bc8cff;"></div>MDA / Threat Modeling</div>
+    <div class="motor-btn" onclick="selectMotor(this,'MAST','#f85149')"><div class="dot" style="background:#f85149;"></div>MAST</div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Activas (A+C)</div><div class="kpi-value red" id="kpi-activas">2,432</div><div class="kpi-trend red">▲ +12% vs mes ant.</div></div>
+    <div class="kpi-card"><div class="kpi-label">Críticas</div><div class="kpi-value red" id="kpi-criticas">318</div><div class="kpi-sub">Acción inmediata</div></div>
+    <div class="kpi-card"><div class="kpi-label">Altas</div><div class="kpi-value orange" id="kpi-altas">892</div><div class="kpi-sub">SLA 30 días</div></div>
+    <div class="kpi-card"><div class="kpi-label">Remediadas (mes)</div><div class="kpi-value green" id="kpi-rem">245</div><div class="kpi-trend green">▲ +8% vs mes ant.</div></div>
+    <div class="kpi-card"><div class="kpi-label">SLA Vencido</div><div class="kpi-value red" id="kpi-sla">187</div><div class="kpi-sub">7.7% del backlog</div></div>
+    <div class="kpi-card"><div class="kpi-label">Falsos Positivos</div><div class="kpi-value blue" id="kpi-fp">4.2%</div><div class="kpi-trend green">▼ -1.1% vs mes ant.</div></div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="charts-row">
+    <div class="chart-box">
+      <div class="chart-title" id="trend-title">Tendencia Mensual SAST — Activas vs Remediadas vs Nuevas</div>
+      <div class="chart-container"><canvas id="chart-trend"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Distribución por Severidad</div>
+      <div class="chart-container"><canvas id="chart-sev"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="charts-row2">
+    <div class="chart-box">
+      <div class="chart-title" id="sla-title">SLA — Días Promedio de Remediación por Severidad</div>
+      <div class="chart-container"><canvas id="chart-sla"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Reincidencias vs Nuevas (últimos 6 meses)</div>
+      <div class="chart-container"><canvas id="chart-reinc"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TOP VULNS -->
+  <div class="top-vulns">
+    <div class="chart-title" id="top-title">Top 10 Vulnerabilidades más Frecuentes — SAST</div>
+    <div id="top-list">
+      <div class="vuln-item" onclick="openDrawer('SQL Injection','Crítica')">
+        <div class="vuln-rank">1</div>
+        <div class="vuln-name">SQL Injection</div>
+        <span class="badge badge-crit">Crítica</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:100%;background:#f85149;"></div></div></div>
+        <div class="vuln-count red">412</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('SSRF','Crítica')">
+        <div class="vuln-rank">2</div>
+        <div class="vuln-name">Server-Side Request Forgery (SSRF)</div>
+        <span class="badge badge-crit">Crítica</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:72%;background:#f85149;"></div></div></div>
+        <div class="vuln-count red">298</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('XSS','Alta')">
+        <div class="vuln-rank">3</div>
+        <div class="vuln-name">Cross-Site Scripting (XSS)</div>
+        <span class="badge badge-high">Alta</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:62%;background:#f0883e;"></div></div></div>
+        <div class="vuln-count orange">256</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('Insecure Deserialization','Alta')">
+        <div class="vuln-rank">4</div>
+        <div class="vuln-name">Insecure Deserialization</div>
+        <span class="badge badge-high">Alta</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:48%;background:#f0883e;"></div></div></div>
+        <div class="vuln-count orange">198</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('Security Misconfiguration','Alta')">
+        <div class="vuln-rank">5</div>
+        <div class="vuln-name">Security Misconfiguration</div>
+        <span class="badge badge-high">Alta</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:43%;background:#f0883e;"></div></div></div>
+        <div class="vuln-count orange">176</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('Broken Access Control','Alta')">
+        <div class="vuln-rank">6</div>
+        <div class="vuln-name">Broken Access Control</div>
+        <span class="badge badge-high">Alta</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:38%;background:#f0883e;"></div></div></div>
+        <div class="vuln-count orange">158</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('Hardcoded Credentials','Crítica')">
+        <div class="vuln-rank">7</div>
+        <div class="vuln-name">Hardcoded Credentials</div>
+        <span class="badge badge-crit">Crítica</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:34%;background:#f85149;"></div></div></div>
+        <div class="vuln-count red">142</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('Path Traversal','Alta')">
+        <div class="vuln-rank">8</div>
+        <div class="vuln-name">Path Traversal</div>
+        <span class="badge badge-high">Alta</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:30%;background:#f0883e;"></div></div></div>
+        <div class="vuln-count orange">124</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('XXE Injection','Media')">
+        <div class="vuln-rank">9</div>
+        <div class="vuln-name">XXE Injection</div>
+        <span class="badge badge-med">Media</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:25%;background:#d29922;"></div></div></div>
+        <div class="vuln-count yellow">102</div>
+      </div>
+      <div class="vuln-item" onclick="openDrawer('LDAP Injection','Media')">
+        <div class="vuln-rank">10</div>
+        <div class="vuln-name">LDAP Injection</div>
+        <span class="badge badge-med">Media</span>
+        <div class="vuln-bar-wrap"><div class="vuln-bar-track"><div class="vuln-bar-fill" style="width:21%;background:#d29922;"></div></div></div>
+        <div class="vuln-count yellow">88</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENCIDAS TABLE -->
+  <div class="table-box">
+    <div class="chart-title" style="margin-bottom:12px;">Vulnerabilidades con SLA Vencido — Acción Requerida</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Hallazgo</th><th>Repositorio / Activo</th><th>Severidad</th><th>SLA Vencido</th><th>Responsable</th><th>Estatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="openDrawer('SQL Injection','Crítica')">
+          <td style="color:#8b949e;">SAST-0042</td>
+          <td>SQL Injection en /api/transferencias</td>
+          <td style="font-family:monospace;font-size:11px;">pagos-api</td>
+          <td><span class="badge badge-crit">Crítica</span></td>
+          <td class="red">-18 días</td>
+          <td>Ana García</td>
+          <td><span class="badge" style="background:rgba(248,81,73,0.1);color:#f85149;">Activa</span></td>
+        </tr>
+        <tr onclick="openDrawer('SSRF','Crítica')">
+          <td style="color:#8b949e;">SAST-0038</td>
+          <td>SSRF en servicio de notificaciones</td>
+          <td style="font-family:monospace;font-size:11px;">notif-service</td>
+          <td><span class="badge badge-crit">Crítica</span></td>
+          <td class="red">-12 días</td>
+          <td>Carlos López</td>
+          <td><span class="badge" style="background:rgba(248,81,73,0.1);color:#f85149;">Activa</span></td>
+        </tr>
+        <tr onclick="openDrawer('Hardcoded Credentials','Crítica')">
+          <td style="color:#8b949e;">SAST-0051</td>
+          <td>Hardcoded DB credentials en config</td>
+          <td style="font-family:monospace;font-size:11px;">core-bancario-api</td>
+          <td><span class="badge badge-crit">Crítica</span></td>
+          <td class="red">-8 días</td>
+          <td>Pedro Núñez</td>
+          <td><span class="badge" style="background:rgba(210,153,34,0.1);color:#d29922;">En Remediación</span></td>
+        </tr>
+        <tr onclick="openDrawer('Broken Access Control','Alta')">
+          <td style="color:#8b949e;">SAST-0047</td>
+          <td>Broken Access Control en /admin/users</td>
+          <td style="font-family:monospace;font-size:11px;">admin-portal</td>
+          <td><span class="badge badge-high">Alta</span></td>
+          <td class="orange">-5 días</td>
+          <td>María Torres</td>
+          <td><span class="badge" style="background:rgba(248,81,73,0.1);color:#f85149;">Activa</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="vuln-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawer-title">SQL Injection</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="detail-row">
+    <div class="detail-item"><div class="dl">Motor</div><div class="dv blue">SAST</div></div>
+    <div class="detail-item"><div class="dl">Severidad</div><div class="dv red" id="drawer-sev">Crítica</div></div>
+    <div class="detail-item"><div class="dl">SLA</div><div class="dv red">-18 días</div></div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-item"><div class="dl">Repositorio</div><div class="dv" style="font-family:monospace;font-size:12px;">pagos-transferencias-api</div></div>
+    <div class="detail-item"><div class="dl">Archivo</div><div class="dv" style="font-family:monospace;font-size:12px;">TransferenciaController.java:142</div></div>
+  </div>
+  <div class="section-sub">Evidencia de Código</div>
+  <div class="code-block">String query = "SELECT * FROM cuentas WHERE id = " + userId;<br>// ⚠ Concatenación directa sin parametrizar<br>ResultSet rs = stmt.executeQuery(query);</div>
+  <div class="section-sub">Recomendación IA</div>
+  <div class="rec-box">Utilizar PreparedStatement con parámetros posicionales para evitar la inyección SQL. Reemplazar la concatenación directa por: <br><br><code style="color:#58a6ff;">PreparedStatement ps = conn.prepareStatement("SELECT * FROM cuentas WHERE id = ?");<br>ps.setString(1, userId);</code></div>
+  <div class="section-sub">Bitácora de Actividad</div>
+  <div class="log-item"><div class="log-date">Oct 28, 2025</div><div class="log-user">a.garcia</div><div class="log-action">Cambió estatus a "En Remediación"</div></div>
+  <div class="log-item"><div class="log-date">Oct 15, 2025</div><div class="log-user">sistema</div><div class="log-action">SLA vencido — notificación enviada al responsable</div></div>
+  <div class="log-item"><div class="log-date">Sep 28, 2025</div><div class="log-user">c.lopez</div><div class="log-action">Asignó responsable a a.garcia</div></div>
+  <div class="log-item"><div class="log-date">Sep 27, 2025</div><div class="log-user">sistema</div><div class="log-action">Importado desde escaneo SAST-2025-09-27</div></div>
+  <div class="action-row">
+    <div class="btn-action">Cambiar Estatus</div>
+    <div class="btn-action">Solicitar Excepción</div>
+    <div class="btn-action primary">Marcar Remediada</div>
+  </div>
+</div>
+
+<script>
+const MOTOR_DATA = {
+  SAST: { activas:'2,432', criticas:'318', altas:'892', rem:'245', sla:'187', fp:'4.2%', color:'#58a6ff' },
+  DAST: { activas:'982', criticas:'124', altas:'358', rem:'98', sla:'62', fp:'6.1%', color:'#f0883e' },
+  SCA:  { activas:'1,842', criticas:'256', altas:'620', rem:'180', sla:'145', fp:'2.8%', color:'#3fb950' },
+  CDS:  { activas:'417', criticas:'89', altas:'178', rem:'72', sla:'34', fp:'1.2%', color:'#d29922' },
+  MDA:  { activas:'265', criticas:'45', altas:'120', rem:'38', sla:'22', fp:'3.5%', color:'#bc8cff' },
+  MAST: { activas:'357', criticas:'68', altas:'142', rem:'72', sla:'28', fp:'5.0%', color:'#f85149' },
+};
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+let trendChart, sevChart, slaChart, reincChart;
+
+function selectMotor(el, motor, color) {
+  document.querySelectorAll('.motor-btn').forEach(b => { b.classList.remove('active','sast-active','dast-active','sca-active','cds-active','mda-active','mast-active'); });
+  el.classList.add('active', motor.toLowerCase()+'-active');
+  document.getElementById('bc-motor').textContent = 'Vulnerabilidades — ' + motor;
+  document.getElementById('trend-title').textContent = `Tendencia Mensual ${motor} — Activas vs Remediadas vs Nuevas`;
+  document.getElementById('top-title').textContent = `Top 10 Vulnerabilidades más Frecuentes — ${motor}`;
+  const d = MOTOR_DATA[motor];
+  document.getElementById('kpi-activas').textContent = d.activas;
+  document.getElementById('kpi-criticas').textContent = d.criticas;
+  document.getElementById('kpi-altas').textContent = d.altas;
+  document.getElementById('kpi-rem').textContent = d.rem;
+  document.getElementById('kpi-sla').textContent = d.sla;
+  document.getElementById('kpi-fp').textContent = d.fp;
+  updateCharts(motor, color);
+}
+
+function updateCharts(motor, color) {
+  const base = motor === 'SAST' ? 2200 : motor === 'SCA' ? 1600 : motor === 'DAST' ? 850 : motor === 'CDS' ? 380 : motor === 'MDA' ? 240 : 310;
+  const activas = MONTHS.map((m,i) => Math.round(base + (i*30) - Math.random()*60));
+  const rem = MONTHS.map((m,i) => Math.round(180 + i*8 + Math.random()*40));
+  const nuevas = MONTHS.map((m,i) => Math.round(200 + Math.random()*80));
+
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('chart-trend'), {
+    type:'line',
+    data:{ labels:MONTHS, datasets:[
+      {label:'Activas',data:activas,borderColor:color,backgroundColor:color+'22',fill:true,tension:0.4,pointRadius:3},
+      {label:'Remediadas',data:rem,borderColor:'#3fb950',fill:false,tension:0.4,pointRadius:3},
+      {label:'Nuevas',data:nuevas,borderColor:'#f85149',fill:false,tension:0.4,pointRadius:3,borderDash:[4,4]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}}}}
+  });
+
+  if(sevChart) sevChart.destroy();
+  sevChart = new Chart(document.getElementById('chart-sev'), {
+    type:'doughnut',
+    data:{ labels:['Críticas','Altas','Medias','Bajas'],
+      datasets:[{data:[parseInt(MOTOR_DATA[motor].criticas),parseInt(MOTOR_DATA[motor].altas),Math.round(parseInt(MOTOR_DATA[motor].activas)*0.3),Math.round(parseInt(MOTOR_DATA[motor].activas)*0.15)],backgroundColor:['#f85149','#f0883e','#d29922','#3fb950'],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8b949e',font:{size:11},padding:10}}}}
+  });
+
+  if(slaChart) slaChart.destroy();
+  slaChart = new Chart(document.getElementById('chart-sla'), {
+    type:'bar',
+    data:{ labels:['Crítica (SLA 7d)','Alta (SLA 30d)','Media (SLA 60d)','Baja (SLA 90d)'],
+      datasets:[
+        {label:'Días promedio real',data:[22,38,55,72],backgroundColor:['#f85149','#f0883e','#d29922','#3fb950'],borderRadius:4},
+        {label:'SLA objetivo',data:[7,30,60,90],backgroundColor:'#30363d',borderRadius:4},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},scales:{x:{ticks:{color:'#8b949e',font:{size:9}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}}}}
+  });
+
+  if(reincChart) reincChart.destroy();
+  reincChart = new Chart(document.getElementById('chart-reinc'), {
+    type:'bar',
+    data:{ labels:['May','Jun','Jul','Ago','Sep','Oct'],
+      datasets:[
+        {label:'Nuevas',data:[210,195,220,205,198,215],backgroundColor:color,borderRadius:3,stack:'s'},
+        {label:'Reincidentes',data:[42,38,45,40,36,48],backgroundColor:'#f85149',borderRadius:3,stack:'s'},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10}}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'#21262d'}},stacked:true}}
+  });
+}
+
+function openDrawer(name, sev) {
+  document.getElementById('drawer-title').textContent = name;
+  document.getElementById('drawer-sev').textContent = sev;
+  document.getElementById('drawer-overlay').classList.add('visible');
+  document.getElementById('vuln-drawer').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('visible');
+  document.getElementById('vuln-drawer').classList.remove('open');
+}
+
+// Init
+selectMotor(document.querySelector('.motor-btn'), 'SAST', '#58a6ff');
+</script>
+</body>
+</html>

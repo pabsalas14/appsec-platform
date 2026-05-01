@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Liberaciones — AppSec</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0;}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#8b949e;}
+.breadcrumb span{cursor:pointer;}.breadcrumb span:hover{color:#58a6ff;}
+.breadcrumb .sep{color:#30363d;cursor:default;}.breadcrumb .active{color:#e6edf3;font-weight:600;cursor:default;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 12px;font-size:12px;color:#8b949e;cursor:pointer;}
+.btn:hover{border-color:#58a6ff;color:#e6edf3;}.btn-primary{background:#238636;border:1px solid #2ea043;color:#fff;}
+.filter-bar{display:flex;align-items:center;gap:10px;padding:8px 20px;background:#161b22;border-bottom:1px solid #21262d;flex-shrink:0;flex-wrap:wrap;}
+.filter-chip{background:#21262d;border:1px solid #30363d;border-radius:20px;padding:3px 10px;font-size:11px;color:#8b949e;cursor:pointer;}
+.filter-chip.active{background:#1c2333;border-color:#58a6ff;color:#58a6ff;}
+.filter-select{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:3px 8px;font-size:11px;color:#8b949e;cursor:pointer;}
+.search-input{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:12px;color:#e6edf3;width:180px;}
+.search-input:focus{outline:none;border-color:#58a6ff;}
+.kanban-container{flex:1;overflow-x:auto;padding:16px 20px;display:flex;gap:14px;min-height:0;}
+.column{flex-shrink:0;width:280px;display:flex;flex-direction:column;gap:0;}
+.col-header{background:#161b22;border:1px solid #30363d;border-radius:10px 10px 0 0;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:none;}
+.col-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.col-count{background:#21262d;border-radius:10px;padding:2px 8px;font-size:11px;color:#8b949e;}
+.col-body{background:#0d1117;border:1px solid #30363d;border-top:none;border-radius:0 0 10px 10px;padding:10px;flex:1;overflow-y:auto;min-height:400px;max-height:calc(100vh - 200px);}
+.col-body::-webkit-scrollbar{width:4px;}.col-body::-webkit-scrollbar-track{background:#0d1117;}.col-body::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px;}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;position:relative;}
+.card:hover{border-color:#58a6ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.card-id{font-size:10px;color:#484f58;margin-bottom:5px;font-family:monospace;}
+.card-title{font-size:12px;font-weight:600;margin-bottom:6px;line-height:1.3;}
+.card-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+.badge-sast{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+.badge-dast{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.badge-sca{background:rgba(188,140,255,0.15);color:#bc8cff;border:1px solid rgba(188,140,255,0.3);}
+.badge-cds{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.badge-crit{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.badge-high{background:rgba(227,179,65,0.15);color:#e3b341;border:1px solid rgba(227,179,65,0.3);}
+.badge-vuln{background:rgba(248,81,73,0.2);color:#f85149;border:1px solid rgba(248,81,73,0.4);}
+.card-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #21262d;padding-top:8px;margin-top:4px;}
+.card-date{font-size:10px;color:#484f58;}
+.card-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#238636,#58a6ff);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+.card-sla{font-size:10px;font-weight:600;}
+.sla-ok{color:#3fb950;}.sla-warn{color:#d29922;}.sla-over{color:#f85149;}
+.col-pending .col-header{border-top:3px solid #8b949e;}
+.col-review .col-header{border-top:3px solid #58a6ff;}
+.col-approved .col-header{border-top:3px solid #3fb950;}
+.col-rejected .col-header{border-top:3px solid #f85149;}
+.col-vulns .col-header{border-top:3px solid #e3b341;}
+/* DRAWER */
+.drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;}
+.drawer-bg.open{display:block;}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:540px;background:#161b22;border-left:1px solid #30363d;overflow-y:auto;z-index:201;transform:translateX(100%);transition:transform 0.3s;}
+.drawer.open{transform:translateX(0);}
+.drawer-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #30363d;position:sticky;top:0;background:#161b22;z-index:5;}
+.drawer-title{font-size:14px;font-weight:700;}.drawer-sub{font-size:11px;color:#8b949e;margin-top:2px;}
+.drawer-close{background:none;border:none;color:#8b949e;cursor:pointer;font-size:18px;}.drawer-close:hover{color:#e6edf3;}
+.drawer-body{padding:16px 18px;}
+.d-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.dkpi{background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px;}
+.dkpi .dl{font-size:10px;color:#484f58;margin-bottom:3px;}.dkpi .dv{font-size:16px;font-weight:700;}
+.d-section{font-size:10px;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 8px;}
+.d-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #21262d;font-size:12px;}
+.d-label{color:#8b949e;}.d-val{font-weight:600;}
+.timeline{display:flex;flex-direction:column;gap:8px;}
+.tl-item{display:flex;gap:10px;align-items:flex-start;}
+.tl-dot{width:9px;height:9px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.tl-dot-g{background:#3fb950;}.tl-dot-y{background:#d29922;}.tl-dot-r{background:#f85149;}.tl-dot-b{background:#58a6ff;}
+.tl-date{font-size:10px;color:#484f58;}.tl-text{font-size:12px;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;font-size:10px;color:#8b949e;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid #21262d;}
+.data-table td{padding:7px 8px;border-bottom:1px solid #161b22;font-size:12px;}
+.status-actions{display:flex;gap:6px;margin-top:14px;}
+.btn-approve{background:#238636;border:1px solid #2ea043;border-radius:6px;padding:6px 14px;color:#fff;cursor:pointer;font-size:12px;flex:1;}
+.btn-reject{background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.4);border-radius:6px;padding:6px 14px;color:#f85149;cursor:pointer;font-size:12px;flex:1;}
+.btn-vuln{background:rgba(227,179,65,0.15);border:1px solid rgba(227,179,65,0.4);border-radius:6px;padding:6px 14px;color:#e3b341;cursor:pointer;font-size:12px;flex:1;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="breadcrumb"><span>Inicio</span><span class="sep">›</span><span>Liberaciones</span><span class="sep">›</span><span class="active">Kanban</span></div>
+  <div class="topbar-right">
+    <div class="btn">📅 Nov 2025 ▾</div>
+    <div class="btn">Vista Lista</div>
+    <div class="btn btn-primary">+ Nueva Liberación</div>
+  </div>
+</div>
+<div class="filter-bar">
+  <input class="search-input" type="text" placeholder="🔍 Buscar servicio, ID...">
+  <span style="font-size:11px;color:#8b949e;">Motor:</span>
+  <div class="filter-chip active" onclick="toggleChip(this)">Todos</div>
+  <div class="filter-chip" onclick="toggleChip(this)">SAST</div>
+  <div class="filter-chip" onclick="toggleChip(this)">DAST</div>
+  <div class="filter-chip" onclick="toggleChip(this)">SCA</div>
+  <div class="filter-chip" onclick="toggleChip(this)">CDS</div>
+  <select class="filter-select"><option>Todas las Células</option><option>Pagos y Transferencias</option><option>Tarjetas</option><option>Créditos</option><option>Core-Bancario</option></select>
+  <select class="filter-select"><option>Todos los Responsables</option><option>Ana García</option><option>Carlos López</option><option>María Torres</option></select>
+</div>
+
+<div class="kanban-container">
+  <!-- PENDIENTE -->
+  <div class="column col-pending">
+    <div class="col-header">
+      <div class="col-title"><span style="color:#8b949e;">●</span> Pendiente</div>
+      <span class="col-count" id="cnt-pending">0</span>
+    </div>
+    <div class="col-body" id="col-pending"></div>
+  </div>
+  <!-- EN REVISIÓN -->
+  <div class="column col-review">
+    <div class="col-header">
+      <div class="col-title"><span style="color:#58a6ff;">●</span> En Revisión</div>
+      <span class="col-count" id="cnt-review">0</span>
+    </div>
+    <div class="col-body" id="col-review"></div>
+  </div>
+  <!-- APROBADO -->
+  <div class="column col-approved">
+    <div class="col-header">
+      <div class="col-title"><span style="color:#3fb950;">●</span> Aprobado</div>
+      <span class="col-count" id="cnt-approved">0</span>
+    </div>
+    <div class="col-body" id="col-approved"></div>
+  </div>
+  <!-- RECHAZADO -->
+  <div class="column col-rejected">
+    <div class="col-header">
+      <div class="col-title"><span style="color:#f85149;">●</span> Rechazado</div>
+      <span class="col-count" id="cnt-rejected">0</span>
+    </div>
+    <div class="col-body" id="col-rejected"></div>
+  </div>
+  <!-- CON VULNS ACTIVAS -->
+  <div class="column col-vulns">
+    <div class="col-header">
+      <div class="col-title"><span style="color:#e3b341;">⚠</span> Con Vulns Activas</div>
+      <span class="col-count" id="cnt-vulns">0</span>
+    </div>
+    <div class="col-body" id="col-vulns"></div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div><div class="drawer-title" id="d-title">LIB-2025-248</div><div class="drawer-sub" id="d-sub">servicio</div></div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="d-kpis">
+      <div class="dkpi"><div class="dl">Estatus</div><div class="dv" id="d-status" style="color:#58a6ff;">En Revisión</div></div>
+      <div class="dkpi"><div class="dl">Vulns Críticas</div><div class="dv" id="d-crit" style="color:#f85149;">3</div></div>
+      <div class="dkpi"><div class="dl">Vulns Altas</div><div class="dv" id="d-high" style="color:#e3b341;">8</div></div>
+    </div>
+    <div class="d-section">Información</div>
+    <div class="d-row"><span class="d-label">Motor</span><span class="d-val" id="d-motor">SAST</span></div>
+    <div class="d-row"><span class="d-label">Célula</span><span class="d-val" id="d-celula">Pagos y Transferencias</span></div>
+    <div class="d-row"><span class="d-label">Responsable</span><span class="d-val" id="d-resp">Ana García</span></div>
+    <div class="d-row"><span class="d-label">Fecha Solicitud</span><span class="d-val" id="d-fecha">28 Nov 2025</span></div>
+    <div class="d-row"><span class="d-label">SLA Vence</span><span class="d-val" id="d-sla-date">30 Nov 2025</span></div>
+    <div class="d-section">Historial</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot tl-dot-b"></div><div><div class="tl-date">28 Nov 09:00</div><div class="tl-text">Solicitud creada por Ana García</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div><div class="tl-date">28 Nov 09:05</div><div class="tl-text">Escaneo SAST iniciado — Scan ID: SAST-2025-1148</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-y"></div><div><div class="tl-date">28 Nov 09:52</div><div class="tl-text">Escaneo completado — 3 críticas, 8 altas</div></div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-b"></div><div><div class="tl-date">28 Nov 10:00</div><div class="tl-text">Revisión manual iniciada por Carlos López</div></div></div>
+    </div>
+    <div class="d-section">Vulnerabilidades Detectadas</div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Severidad</th><th>Hallazgo</th><th>Estatus</th></tr></thead>
+      <tbody>
+        <tr><td style="font-size:10px;color:#484f58;">SAST-0050</td><td><span class="badge badge-crit">Crítica</span></td><td>SQL Injection</td><td><span class="badge badge-crit">Activa</span></td></tr>
+        <tr><td style="font-size:10px;color:#484f58;">SAST-0051</td><td><span class="badge badge-crit">Crítica</span></td><td>SSRF en /api/ext</td><td><span class="badge badge-crit">Activa</span></td></tr>
+        <tr><td style="font-size:10px;color:#484f58;">SAST-0052</td><td><span class="badge badge-high">Alta</span></td><td>Path Traversal</td><td><span class="badge" style="background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);">Remediada</span></td></tr>
+      </tbody>
+    </table>
+    <div class="status-actions">
+      <button class="btn-approve" onclick="alert('Liberación aprobada')">✓ Aprobar</button>
+      <button class="btn-reject" onclick="alert('Liberación rechazada')">✕ Rechazar</button>
+      <button class="btn-vuln" onclick="alert('Aprobar con vulns activas — requiere justificación')">⚠ Liberar con Vulns</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var cards = [
+  {id:"LIB-2025-253",svc:"fraude-detection-ml",celula:"Fraude y Seguridad",motor:"SAST",status:"pending",crit:1,high:3,sla:"ok",fecha:"29 Nov",resp:"RD"},
+  {id:"LIB-2025-252",svc:"notif-service",celula:"Core-Bancario",motor:"SCA",status:"pending",crit:0,high:2,sla:"warn",fecha:"28 Nov",resp:"LV"},
+  {id:"LIB-2025-251",svc:"ahorros-api",celula:"Cuentas y Ahorros",motor:"SAST+SCA",status:"pending",crit:0,high:0,sla:"ok",fecha:"28 Nov",resp:"AG"},
+  {id:"LIB-2025-250",svc:"tarjetas-core",celula:"Tarjetas",motor:"SAST",status:"review",crit:4,high:8,sla:"warn",fecha:"27 Nov",resp:"CL"},
+  {id:"LIB-2025-249",svc:"creditos-api",celula:"Créditos",motor:"DAST",status:"review",crit:0,high:1,sla:"ok",fecha:"26 Nov",resp:"MT"},
+  {id:"LIB-2025-248",svc:"pagos-api",celula:"Pagos y Transferencias",motor:"SAST+SCA",status:"review",crit:3,high:8,sla:"over",fecha:"25 Nov",resp:"AG"},
+  {id:"LIB-2025-247",svc:"conciliacion-svc",celula:"Pagos y Transferencias",motor:"CDS",status:"approved",crit:0,high:0,sla:"ok",fecha:"24 Nov",resp:"AG"},
+  {id:"LIB-2025-246",svc:"experiencia-web",celula:"Experiencia Digital",motor:"DAST",status:"approved",crit:0,high:2,sla:"ok",fecha:"23 Nov",resp:"PN"},
+  {id:"LIB-2025-245",svc:"arquitectura-gw",celula:"Arquitectura TI",motor:"SAST",status:"approved",crit:0,high:0,sla:"ok",fecha:"22 Nov",resp:"CL"},
+  {id:"LIB-2025-244",svc:"plataformas-core",celula:"Plataformas Digitales",motor:"SAST+DAST",status:"rejected",crit:5,high:12,sla:"over",fecha:"21 Nov",resp:"MT"},
+  {id:"LIB-2025-243",svc:"inversiones-api",celula:"Inversiones",motor:"SAST",status:"rejected",crit:2,high:6,sla:"warn",fecha:"20 Nov",resp:"RD"},
+  {id:"LIB-2025-242",svc:"canales-web",celula:"Canales Digitales",motor:"SAST+DAST",status:"vulns",crit:2,high:5,sla:"ok",fecha:"19 Nov",resp:"PN"},
+];
+
+var motorBadge = {
+  "SAST":"badge-sast","DAST":"badge-dast","SCA":"badge-sca","CDS":"badge-cds",
+  "SAST+SCA":"badge-sast","SAST+DAST":"badge-sast"
+};
+var slaColors = {"ok":"sla-ok","warn":"sla-warn","over":"sla-over"};
+var slaLabels = {"ok":"SLA OK","warn":"SLA: 1 día","over":"SLA VENCIDO"};
+var statusLabels = {"pending":"Pendiente","review":"En Revisión","approved":"Aprobado","rejected":"Rechazado","vulns":"Con Vulns Activas"};
+var statusColors = {"pending":"#8b949e","review":"#58a6ff","approved":"#3fb950","rejected":"#f85149","vulns":"#e3b341"};
+
+function buildKanban(){
+  var cols = {pending:[],review:[],approved:[],rejected:[],vulns:[]};
+  cards.forEach(function(c){cols[c.status].push(c);});
+  Object.keys(cols).forEach(function(s){
+    var el = document.getElementById("col-"+s);
+    var cnt = document.getElementById("cnt-"+s);
+    cnt.textContent = cols[s].length;
+    el.innerHTML = cols[s].map(function(c){
+      return '<div class="card" onclick="openDrawer(\''+c.id+'\',\''+c.svc+'\',\''+c.status+'\','+c.crit+','+c.high+',\''+c.motor+'\',\''+c.celula+'\',\''+c.resp+'\',\''+c.fecha+'\')">' +
+        '<div class="card-id">'+c.id+'</div>'+
+        '<div class="card-title">'+c.svc+'</div>'+
+        '<div class="card-meta">'+
+          '<span class="badge '+motorBadge[c.motor]+'">'+c.motor+'</span>'+
+          (c.crit>0?'<span class="badge badge-crit">'+c.crit+' Críticas</span>':'')+
+          (c.high>0?'<span class="badge badge-high">'+c.high+' Altas</span>':'')+
+          (s==="vulns"?'<span class="badge badge-vuln">⚠ Vulns Activas</span>':'')+
+        '</div>'+
+        '<div class="card-footer">'+
+          '<span class="card-date">'+c.celula+' · '+c.fecha+'</span>'+
+          '<div style="display:flex;align-items:center;gap:6px;">'+
+            '<span class="card-sla '+slaColors[c.sla]+'">'+slaLabels[c.sla]+'</span>'+
+            '<div class="card-avatar">'+c.resp+'</div>'+
+          '</div>'+
+        '</div>'+
+        '</div>';
+    }).join("");
+  });
+}
+
+function toggleChip(el){
+  document.querySelectorAll(".filter-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");
+}
+
+function openDrawer(id,svc,status,crit,high,motor,celula,resp,fecha){
+  document.getElementById("d-title").textContent = id;
+  document.getElementById("d-sub").textContent = svc;
+  document.getElementById("d-status").textContent = statusLabels[status];
+  document.getElementById("d-status").style.color = statusColors[status];
+  document.getElementById("d-crit").textContent = crit;
+  document.getElementById("d-high").textContent = high;
+  document.getElementById("d-motor").textContent = motor;
+  document.getElementById("d-celula").textContent = celula;
+  document.getElementById("d-resp").textContent = resp;
+  document.getElementById("d-fecha").textContent = fecha+" 2025";
+  document.getElementById("drawer-bg").classList.add("open");
+  document.getElementById("drawer").classList.add("open");
+}
+function closeDrawer(){
+  document.getElementById("drawer-bg").classList.remove("open");
+  document.getElementById("drawer").classList.remove("open");
+}
+
+window.addEventListener("load", buildKanban);
+</script>
+</body>
+</html>

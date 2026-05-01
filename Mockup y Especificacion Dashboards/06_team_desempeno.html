@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Team / Desempeño — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0d0f1a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:13px; }
+
+/* TOPBAR */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 24px; background:#141728; border-bottom:1px solid #252a45; position:sticky; top:0; z-index:100; }
+.topbar-left { display:flex; align-items:center; gap:8px; font-size:12px; color:#6b7280; }
+.topbar-left .current { color:#e2e8f0; font-weight:700; }
+.topbar-right { display:flex; align-items:center; gap:8px; }
+.btn { background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:5px 12px; font-size:12px; color:#9ca3af; cursor:pointer; transition:all 0.15s; }
+.btn:hover { border-color:#e8365d; color:#e2e8f0; }
+.btn-primary { background:rgba(232,54,93,0.15); border:1px solid rgba(232,54,93,0.4); color:#e8365d; }
+.btn-primary:hover { background:rgba(232,54,93,0.25); }
+
+/* MAIN */
+.main { padding:20px 24px; }
+
+/* TABS */
+.tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid #252a45; }
+.tab { padding:8px 18px; font-size:12px; color:#6b7280; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
+.tab:hover { color:#e2e8f0; }
+.tab.active { color:#e8365d; border-bottom-color:#e8365d; font-weight:600; }
+
+/* KPI ROW */
+.kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+.kpi-card { background:#141728; border:1px solid #252a45; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.15s; }
+.kpi-card:hover { border-color:#e8365d; transform:translateY(-1px); }
+.kpi-label { font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px; }
+.kpi-value { font-size:26px; font-weight:700; line-height:1; }
+.kpi-sub { font-size:11px; color:#6b7280; margin-top:4px; }
+.c-green { color:#22c55e; } .c-yellow { color:#eab308; } .c-red { color:#ef4444; } .c-blue { color:#3b82f6; } .c-white { color:#e2e8f0; }
+
+/* MEMBER CARDS */
+.section-label { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; }
+.members-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.member-card { background:#141728; border:1px solid #252a45; border-radius:10px; padding:16px; cursor:pointer; transition:all 0.2s; }
+.member-card:hover { border-color:#e8365d; transform:translateY(-2px); box-shadow:0 4px 20px rgba(232,54,93,0.15); }
+.member-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.avatar { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+.member-name { font-size:13px; font-weight:700; color:#e2e8f0; }
+.member-role { font-size:11px; color:#6b7280; margin-top:2px; }
+.member-score-num { font-size:22px; font-weight:700; }
+.member-score-lbl { font-size:10px; color:#6b7280; }
+.score-bar { margin:10px 0; }
+.score-bar-track { background:#252a45; border-radius:4px; height:6px; overflow:hidden; margin-top:4px; }
+.score-bar-fill { height:100%; border-radius:4px; }
+.member-metrics { display:grid; grid-template-columns:1fr 1fr; gap:8px; border-top:1px solid #252a45; padding-top:12px; }
+.metric-item .ml { font-size:10px; color:#6b7280; }
+.metric-item .mv { font-size:13px; font-weight:600; margin-top:2px; }
+.badge { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+.badge-verde { background:rgba(34,197,94,0.15); color:#22c55e; }
+.badge-amarillo { background:rgba(234,179,8,0.15); color:#eab308; }
+.badge-rojo { background:rgba(239,68,68,0.15); color:#ef4444; }
+
+/* CHARTS */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.chart-box { background:#141728; border:1px solid #252a45; border-radius:10px; padding:16px; }
+.chart-title { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; }
+.chart-container { position:relative; height:200px; }
+
+/* WORKLOAD TABLE */
+.table-box { background:#141728; border:1px solid #252a45; border-radius:10px; padding:16px; margin-bottom:20px; }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { text-align:left; font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:8px 10px; border-bottom:1px solid #252a45; }
+.data-table td { padding:9px 10px; border-bottom:1px solid #1c2035; font-size:12px; }
+.data-table tr:hover td { background:#1c2035; cursor:pointer; }
+.progress-inline { display:flex; align-items:center; gap:8px; }
+.progress-inline .bar { flex:1; background:#252a45; border-radius:3px; height:5px; overflow:hidden; }
+.progress-inline .fill { height:100%; border-radius:3px; }
+.progress-inline .pct { font-size:11px; font-weight:600; width:32px; text-align:right; }
+
+/* ===== DRILL-DOWN PANEL ===== */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; }
+.overlay.open { display:block; }
+.drill-panel { position:fixed; top:0; right:-520px; width:520px; height:100vh; background:#141728; border-left:1px solid #252a45; z-index:201; overflow-y:auto; transition:right 0.3s ease; display:flex; flex-direction:column; }
+.drill-panel.open { right:0; }
+.drill-header { padding:16px 20px; border-bottom:1px solid #252a45; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.drill-title { font-size:13px; font-weight:700; color:#e2e8f0; }
+.drill-subtitle { font-size:11px; color:#6b7280; margin-top:2px; }
+.drill-close { background:none; border:none; color:#6b7280; font-size:18px; cursor:pointer; padding:4px 8px; border-radius:4px; }
+.drill-close:hover { background:#252a45; color:#e2e8f0; }
+.drill-body { padding:16px 20px; flex:1; }
+.drill-table { width:100%; border-collapse:collapse; }
+.drill-table th { text-align:left; font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:7px 8px; border-bottom:1px solid #252a45; }
+.drill-table td { padding:8px 8px; border-bottom:1px solid #1c2035; font-size:12px; }
+.drill-table tr:hover td { background:#1c2035; }
+.drill-summary { display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.drill-kpi { background:#1c2035; border:1px solid #252a45; border-radius:8px; padding:10px 14px; min-width:100px; }
+.drill-kpi .dk-label { font-size:10px; color:#6b7280; margin-bottom:4px; }
+.drill-kpi .dk-value { font-size:18px; font-weight:700; }
+
+/* ===== DETALLE ANALISTA (FULL PAGE) ===== */
+.detail-page { display:none; position:fixed; inset:0; background:#0d0f1a; z-index:300; overflow-y:auto; }
+.detail-page.open { display:block; }
+.detail-topbar { display:flex; align-items:center; gap:12px; padding:12px 24px; background:#141728; border-bottom:1px solid #252a45; position:sticky; top:0; z-index:10; }
+.detail-back { background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:5px 12px; font-size:12px; color:#9ca3af; cursor:pointer; }
+.detail-back:hover { border-color:#e8365d; color:#e2e8f0; }
+.detail-avatar { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
+.detail-name { font-size:16px; font-weight:700; color:#e2e8f0; }
+.detail-meta { font-size:12px; color:#6b7280; margin-top:2px; }
+.detail-score-badge { margin-left:auto; text-align:center; }
+.detail-score-num { font-size:28px; font-weight:700; }
+.detail-score-lbl { font-size:10px; color:#6b7280; }
+.detail-body { padding:20px 24px; }
+.detail-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid #252a45; }
+.detail-tab { padding:8px 16px; font-size:12px; color:#6b7280; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
+.detail-tab:hover { color:#e2e8f0; }
+.detail-tab.active { color:#e8365d; border-bottom-color:#e8365d; font-weight:600; }
+.detail-content { display:none; }
+.detail-content.active { display:block; }
+.detail-filters { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.detail-select { background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:5px 10px; font-size:12px; color:#9ca3af; cursor:pointer; }
+.detail-table { width:100%; border-collapse:collapse; }
+.detail-table th { text-align:left; font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:8px 10px; border-bottom:1px solid #252a45; }
+.detail-table td { padding:9px 10px; border-bottom:1px solid #1c2035; font-size:12px; }
+.detail-table tr:hover td { background:#1c2035; }
+.detail-actions { display:flex; gap:8px; margin-bottom:14px; }
+.detail-score-chart { background:#141728; border:1px solid #252a45; border-radius:10px; padding:16px; }
+.detail-score-chart-title { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; }
+.okr-list { display:flex; flex-direction:column; gap:10px; }
+.okr-item { background:#1c2035; border:1px solid #252a45; border-radius:8px; padding:12px 14px; }
+.okr-name { font-size:12px; font-weight:600; color:#e2e8f0; margin-bottom:6px; }
+.okr-progress-row { display:flex; align-items:center; gap:10px; }
+.okr-bar-track { flex:1; background:#252a45; border-radius:4px; height:6px; overflow:hidden; }
+.okr-bar-fill { height:100%; border-radius:4px; }
+.okr-pct { font-size:12px; font-weight:700; width:36px; text-align:right; }
+.act-list { display:flex; flex-direction:column; gap:8px; }
+.act-item { background:#1c2035; border:1px solid #252a45; border-radius:8px; padding:12px 14px; display:flex; align-items:center; gap:12px; }
+.act-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.act-name { font-size:12px; color:#e2e8f0; flex:1; }
+.act-status { font-size:11px; }
+
+/* ===== MODAL REASIGNACIÓN ===== */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:400; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#141728; border:1px solid #252a45; border-radius:12px; width:520px; max-width:95vw; padding:24px; }
+.modal-title { font-size:15px; font-weight:700; color:#e2e8f0; margin-bottom:4px; }
+.modal-sub { font-size:12px; color:#6b7280; margin-bottom:16px; }
+.modal-section { margin-bottom:14px; }
+.modal-label { font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.modal-select { width:100%; background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:8px 12px; font-size:12px; color:#e2e8f0; }
+.modal-textarea { width:100%; background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:8px 12px; font-size:12px; color:#e2e8f0; resize:vertical; min-height:70px; }
+.modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.modal-btn { background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:7px 16px; font-size:12px; color:#9ca3af; cursor:pointer; }
+.modal-btn:hover { border-color:#6b7280; color:#e2e8f0; }
+.modal-btn-confirm { background:rgba(232,54,93,0.15); border:1px solid rgba(232,54,93,0.4); color:#e8365d; }
+.modal-btn-confirm:hover { background:rgba(232,54,93,0.25); }
+.vuln-check-list { max-height:160px; overflow-y:auto; background:#1c2035; border:1px solid #252a45; border-radius:6px; padding:8px; margin-bottom:4px; }
+.vuln-check-item { display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:12px; color:#e2e8f0; cursor:pointer; border-radius:4px; }
+.vuln-check-item:hover { background:#252a45; }
+.vuln-check-item input { accent-color:#e8365d; }
+</style>
+</head>
+<body>
+
+<!-- ===== TOPBAR ===== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span>Inicio</span>
+    <span style="color:#252a45;">›</span>
+    <span class="current">Team / Desempeño</span>
+  </div>
+  <div class="topbar-right">
+    <div class="btn">📅 Oct 2025 ▾</div>
+    <div class="btn">▼ Filtros</div>
+    <div class="btn btn-primary">↓ Exportar</div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'tab-miequipo')">Mi Equipo</div>
+    <div class="tab" onclick="switchTab(this,'tab-celula')">Por Célula</div>
+    <div class="tab" onclick="switchTab(this,'tab-subdir')">Por Subdirección</div>
+  </div>
+
+  <!-- TAB: MI EQUIPO -->
+  <div id="tab-miequipo">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card" onclick="openDrill('kpi-miembros')">
+        <div class="kpi-label">Miembros del Equipo</div>
+        <div class="kpi-value c-white">8</div>
+        <div class="kpi-sub">Célula Core-Bancario</div>
+      </div>
+      <div class="kpi-card" onclick="openDrill('kpi-score')">
+        <div class="kpi-label">Score Promedio</div>
+        <div class="kpi-value c-yellow">72</div>
+        <div class="kpi-sub">/ 100 puntos</div>
+      </div>
+      <div class="kpi-card" onclick="openDrill('kpi-remediadas')">
+        <div class="kpi-label">Vulns Remediadas (mes)</div>
+        <div class="kpi-value c-green">245</div>
+        <div class="kpi-sub">▲ +18% vs mes anterior</div>
+      </div>
+      <div class="kpi-card" onclick="openDrill('kpi-actividades')">
+        <div class="kpi-label">Actividades Completadas</div>
+        <div class="kpi-value c-green">34</div>
+        <div class="kpi-sub">de 42 asignadas</div>
+      </div>
+      <div class="kpi-card" onclick="openDrill('kpi-okr-riesgo')">
+        <div class="kpi-label">OKRs en Riesgo</div>
+        <div class="kpi-value c-red">3</div>
+        <div class="kpi-sub">Requieren atención</div>
+      </div>
+    </div>
+
+    <!-- MEMBER CARDS -->
+    <div class="section-label">Desempeño Individual — Clic para ver detalle completo</div>
+    <div class="members-grid">
+
+      <div class="member-card" onclick="openDetail('ana')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(59,130,246,0.2);color:#3b82f6;">AG</div>
+          <div>
+            <div class="member-name">Ana García</div>
+            <div class="member-role">Analista SAST / SCA</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-green">88</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-green">88/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:88%;background:linear-gradient(90deg,#16a34a,#22c55e);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">Vulns remediadas</div><div class="mv c-green">82</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-green">94%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">8 / 9</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-verde">En tiempo</span></div></div>
+        </div>
+      </div>
+
+      <div class="member-card" onclick="openDetail('carlos')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(34,197,94,0.2);color:#22c55e;">CL</div>
+          <div>
+            <div class="member-name">Carlos López</div>
+            <div class="member-role">Analista DAST</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-green">81</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-green">81/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:81%;background:linear-gradient(90deg,#16a34a,#22c55e);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">Vulns remediadas</div><div class="mv c-green">64</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-green">89%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">7 / 8</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-verde">En tiempo</span></div></div>
+        </div>
+      </div>
+
+      <div class="member-card" onclick="openDetail('maria')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(234,179,8,0.2);color:#eab308;">MT</div>
+          <div>
+            <div class="member-name">María Torres</div>
+            <div class="member-role">Analista SCA / CDS</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-yellow">68</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-yellow">68/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:68%;background:linear-gradient(90deg,#a16207,#eab308);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">Vulns remediadas</div><div class="mv c-yellow">42</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-yellow">71%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">5 / 8</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-amarillo">En progreso</span></div></div>
+        </div>
+      </div>
+
+      <div class="member-card" onclick="openDetail('pedro')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(239,68,68,0.2);color:#ef4444;">PN</div>
+          <div>
+            <div class="member-name">Pedro Núñez</div>
+            <div class="member-role">Analista Pipeline / Ops</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-red">52</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-red">52/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:52%;background:linear-gradient(90deg,#b91c1c,#ef4444);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">Vulns remediadas</div><div class="mv c-red">28</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-red">58%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">4 / 8</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-rojo">En riesgo</span></div></div>
+        </div>
+      </div>
+
+      <div class="member-card" onclick="openDetail('sandra')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(124,58,237,0.2);color:#7c3aed;">SV</div>
+          <div>
+            <div class="member-name">Sandra Vega</div>
+            <div class="member-role">Analista Threat Modeling</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-yellow">74</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-yellow">74/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:74%;background:linear-gradient(90deg,#5b21b6,#7c3aed);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">TM completados</div><div class="mv c-yellow">8</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-yellow">78%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">6 / 8</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-amarillo">En progreso</span></div></div>
+        </div>
+      </div>
+
+      <div class="member-card" onclick="openDetail('luis')">
+        <div class="member-header">
+          <div class="avatar" style="background:rgba(249,115,22,0.2);color:#f97316;">LR</div>
+          <div>
+            <div class="member-name">Luis Ramírez</div>
+            <div class="member-role">Analista CDS / MAST</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div class="member-score-num c-green">79</div>
+            <div class="member-score-lbl">Score</div>
+          </div>
+        </div>
+        <div class="score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px;"><span>Score de desempeño</span><span class="c-green">79/100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:79%;background:linear-gradient(90deg,#c2410c,#f97316);"></div></div>
+        </div>
+        <div class="member-metrics">
+          <div class="metric-item"><div class="ml">Vulns remediadas</div><div class="mv c-green">29</div></div>
+          <div class="metric-item"><div class="ml">SLA cumplido</div><div class="mv c-green">85%</div></div>
+          <div class="metric-item"><div class="ml">Actividades</div><div class="mv">4 / 5</div></div>
+          <div class="metric-item"><div class="ml">OKRs</div><div class="mv"><span class="badge badge-verde">En tiempo</span></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <div class="chart-title">Score de Desempeño por Miembro — Clic en barra para detalle</div>
+        <div class="chart-container"><canvas id="chart-scores"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Vulnerabilidades Remediadas por Miembro (mes) — Clic en barra para detalle</div>
+        <div class="chart-container"><canvas id="chart-rem"></canvas></div>
+      </div>
+    </div>
+
+    <!-- WORKLOAD TABLE -->
+    <div class="table-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="chart-title" style="margin-bottom:0;">Carga de Trabajo Actual — Vulnerabilidades Asignadas</div>
+        <div style="font-size:11px;color:#6b7280;">Clic en fila para ver detalle del analista</div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Analista</th><th>Motor</th><th>Asignadas</th><th>En Remediación</th><th>SLA Vencido</th><th>% SLA Cumplido</th><th>Carga</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="openDetail('ana')"><td>Ana García</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td>142</td><td class="c-yellow">38</td><td class="c-red">8</td><td class="c-green">94%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:71%;background:#22c55e;"></div></div><span class="pct c-green">71%</span></div></td></tr>
+          <tr onclick="openDetail('carlos')"><td>Carlos López</td><td><span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">DAST</span></td><td>98</td><td class="c-yellow">22</td><td class="c-red">5</td><td class="c-green">89%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:49%;background:#22c55e;"></div></div><span class="pct c-green">49%</span></div></td></tr>
+          <tr onclick="openDetail('maria')" style="background:rgba(239,68,68,0.04);"><td>María Torres</td><td><span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">SCA</span></td><td>186</td><td class="c-yellow">65</td><td class="c-red">22</td><td class="c-yellow">71%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:93%;background:#ef4444;"></div></div><span class="pct c-red">93%</span></div></td></tr>
+          <tr onclick="openDetail('pedro')"><td>Pedro Núñez</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td>124</td><td class="c-yellow">48</td><td class="c-red">18</td><td class="c-red">58%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:62%;background:#eab308;"></div></div><span class="pct c-yellow">62%</span></div></td></tr>
+          <tr onclick="openDetail('sandra')"><td>Sandra Vega</td><td><span class="badge" style="background:rgba(236,72,153,0.15);color:#ec4899;">MDA</span></td><td>45</td><td class="c-yellow">12</td><td class="c-red">4</td><td class="c-yellow">78%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:23%;background:#22c55e;"></div></div><span class="pct c-green">23%</span></div></td></tr>
+          <tr onclick="openDetail('luis')"><td>Luis Ramírez</td><td><span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">CDS</span></td><td>62</td><td class="c-yellow">14</td><td class="c-red">3</td><td class="c-green">85%</td><td><div class="progress-inline"><div class="bar"><div class="fill" style="width:31%;background:#22c55e;"></div></div><span class="pct c-green">31%</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /tab-miequipo -->
+
+  <!-- TAB: POR CÉLULA (placeholder) -->
+  <div id="tab-celula" style="display:none;">
+    <div style="background:#141728;border:1px solid #252a45;border-radius:10px;padding:40px;text-align:center;color:#6b7280;">
+      <div style="font-size:32px;margin-bottom:12px;">🏢</div>
+      <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:6px;">Vista Por Célula</div>
+      <div style="font-size:12px;">Muestra el desempeño agregado de cada célula bajo la coordinación del usuario. Disponible para Coordinadores y roles superiores.</div>
+    </div>
+  </div>
+
+  <!-- TAB: POR SUBDIRECCIÓN (placeholder) -->
+  <div id="tab-subdir" style="display:none;">
+    <div style="background:#141728;border:1px solid #252a45;border-radius:10px;padding:40px;text-align:center;color:#6b7280;">
+      <div style="font-size:32px;margin-bottom:12px;">🏛️</div>
+      <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:6px;">Vista Por Subdirección</div>
+      <div style="font-size:12px;">Muestra el desempeño agregado por subdirección. Disponible para Directores y CISO.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+
+<!-- ===== DRILL-DOWN PANEL ===== -->
+<div class="overlay" id="drill-overlay" onclick="closeDrill()"></div>
+<div class="drill-panel" id="drill-panel">
+  <div class="drill-header">
+    <div>
+      <div class="drill-title" id="drill-title">Detalle</div>
+      <div class="drill-subtitle" id="drill-subtitle">Registros correspondientes</div>
+    </div>
+    <button class="drill-close" onclick="closeDrill()">✕</button>
+  </div>
+  <div class="drill-body" id="drill-body"></div>
+</div>
+
+
+<!-- ===== DETALLE ANALISTA (FULL PAGE) ===== -->
+<div class="detail-page" id="detail-page">
+  <div class="detail-topbar">
+    <button class="detail-back" onclick="closeDetail()">← Regresar al equipo</button>
+    <div class="detail-avatar" id="dp-avatar" style="background:rgba(59,130,246,0.2);color:#3b82f6;">AG</div>
+    <div>
+      <div class="detail-name" id="dp-name">Ana García</div>
+      <div class="detail-meta" id="dp-meta">Analista SAST / SCA · Célula Core-Bancario · Oct 2025</div>
+    </div>
+    <div class="detail-score-badge" style="margin-left:auto;">
+      <div class="detail-score-num" id="dp-score" style="color:#22c55e;">88</div>
+      <div class="detail-score-lbl">Score</div>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-tabs">
+      <div class="detail-tab active" onclick="switchDetailTab(this,'dt-vulns')">Vulnerabilidades Asignadas</div>
+      <div class="detail-tab" onclick="switchDetailTab(this,'dt-actividades')">Actividades de Programa</div>
+      <div class="detail-tab" onclick="switchDetailTab(this,'dt-okrs')">OKRs</div>
+      <div class="detail-tab" onclick="switchDetailTab(this,'dt-historial')">Historial de Score</div>
+    </div>
+
+    <!-- PESTAÑA: VULNERABILIDADES -->
+    <div class="detail-content active" id="dt-vulns">
+      <div class="detail-filters">
+        <select class="detail-select"><option>Todos los Motores</option><option>SAST</option><option>SCA</option><option>DAST</option><option>CDS</option><option>MAST</option></select>
+        <select class="detail-select"><option>Todas las Severidades</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+        <select class="detail-select"><option>Todos los Estatus</option><option>Activa</option><option>En Remediación</option><option>En Revisión</option><option>Solventada</option></select>
+      </div>
+      <div class="detail-actions">
+        <button class="btn" onclick="openReasignacion()">🔄 Reasignar Selección</button>
+        <button class="btn">↓ Exportar</button>
+      </div>
+      <table class="detail-table">
+        <thead>
+          <tr><th><input type="checkbox" style="accent-color:#e8365d;"></th><th>ID</th><th>Motor</th><th>Severidad</th><th>Hallazgo</th><th>SLA</th><th>Estatus</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SAST-0042</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td><span class="badge badge-rojo">Crítica</span></td><td>SQL Injection en módulo de pagos</td><td class="c-red">-3 días</td><td style="color:#6b7280;">En Remediación</td></tr>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SAST-0051</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td><span class="badge badge-rojo">Crítica</span></td><td>Deserialización insegura</td><td class="c-red">-1 día</td><td style="color:#6b7280;">Activa</td></tr>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SCA-0018</td><td><span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">SCA</span></td><td><span class="badge badge-amarillo">Alta</span></td><td>Dependencia log4j 2.14.1 vulnerable</td><td class="c-yellow">+5 días</td><td style="color:#6b7280;">En Revisión</td></tr>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SAST-0063</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td><span class="badge badge-amarillo">Alta</span></td><td>XSS reflejado en formulario de login</td><td class="c-green">+12 días</td><td style="color:#6b7280;">En Remediación</td></tr>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SAST-0071</td><td><span class="badge" style="background:rgba(124,58,237,0.15);color:#7c3aed;">SAST</span></td><td><span class="badge" style="background:rgba(234,179,8,0.15);color:#eab308;">Media</span></td><td>Exposición de información sensible en logs</td><td class="c-green">+18 días</td><td style="color:#6b7280;">Activa</td></tr>
+          <tr><td><input type="checkbox" style="accent-color:#e8365d;"></td><td style="font-family:monospace;color:#6b7280;">SCA-0024</td><td><span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">SCA</span></td><td><span class="badge" style="background:rgba(234,179,8,0.15);color:#eab308;">Media</span></td><td>Librería jackson-databind desactualizada</td><td class="c-green">+22 días</td><td style="color:#6b7280;">Activa</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PESTAÑA: ACTIVIDADES -->
+    <div class="detail-content" id="dt-actividades">
+      <div class="act-list">
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Ejecutar escaneo SAST en repositorio pagos-api</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Revisar y triagear hallazgos críticos del mes</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Actualizar dependencias vulnerables (SCA)</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#eab308;"></div>
+          <div class="act-name">Documentar plan de remediación para SAST-0042</div>
+          <span class="act-status c-yellow">En progreso</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#eab308;"></div>
+          <div class="act-name">Capacitación: Secure Coding OWASP Top 10</div>
+          <span class="act-status c-yellow">En progreso</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Participar en revisión de código del sprint 42</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Generar reporte mensual de vulnerabilidades</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#22c55e;"></div>
+          <div class="act-name">Validar fix de SAST-0031 en ambiente QA</div>
+          <span class="act-status c-green">Completada</span>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:#ef4444;"></div>
+          <div class="act-name">Presentar resultados de seguridad al equipo de desarrollo</div>
+          <span class="act-status c-red">Pendiente</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA: OKRs -->
+    <div class="detail-content" id="dt-okrs">
+      <div class="okr-list">
+        <div class="okr-item">
+          <div class="okr-name">KR-01: Reducir vulnerabilidades críticas activas a menos de 5 al cierre del trimestre</div>
+          <div class="okr-progress-row">
+            <div class="okr-bar-track"><div class="okr-bar-fill" style="width:80%;background:#22c55e;"></div></div>
+            <span class="okr-pct c-green">80%</span>
+            <span class="badge badge-verde">En tiempo</span>
+          </div>
+        </div>
+        <div class="okr-item">
+          <div class="okr-name">KR-02: Lograr 95% de SLA cumplido en vulnerabilidades asignadas</div>
+          <div class="okr-progress-row">
+            <div class="okr-bar-track"><div class="okr-bar-fill" style="width:94%;background:#22c55e;"></div></div>
+            <span class="okr-pct c-green">94%</span>
+            <span class="badge badge-verde">En tiempo</span>
+          </div>
+        </div>
+        <div class="okr-item">
+          <div class="okr-name">KR-03: Completar 100% de las actividades del programa anual asignadas</div>
+          <div class="okr-progress-row">
+            <div class="okr-bar-track"><div class="okr-bar-fill" style="width:89%;background:#eab308;"></div></div>
+            <span class="okr-pct c-yellow">89%</span>
+            <span class="badge badge-amarillo">En progreso</span>
+          </div>
+        </div>
+        <div class="okr-item">
+          <div class="okr-name">KR-04: Obtener certificación CSSLP o equivalente antes del Q4</div>
+          <div class="okr-progress-row">
+            <div class="okr-bar-track"><div class="okr-bar-fill" style="width:60%;background:#eab308;"></div></div>
+            <span class="okr-pct c-yellow">60%</span>
+            <span class="badge badge-amarillo">En progreso</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA: HISTORIAL DE SCORE -->
+    <div class="detail-content" id="dt-historial">
+      <div class="detail-score-chart">
+        <div class="detail-score-chart-title">Score de Desempeño — Últimos 12 meses</div>
+        <div style="position:relative;height:220px;"><canvas id="chart-historial"></canvas></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;">
+        <div style="background:#1c2035;border:1px solid #252a45;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">SCORE ACTUAL</div>
+          <div style="font-size:22px;font-weight:700;color:#22c55e;">88</div>
+        </div>
+        <div style="background:#1c2035;border:1px solid #252a45;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">PROMEDIO 12M</div>
+          <div style="font-size:22px;font-weight:700;color:#3b82f6;">81</div>
+        </div>
+        <div style="background:#1c2035;border:1px solid #252a45;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">MÁXIMO</div>
+          <div style="font-size:22px;font-weight:700;color:#22c55e;">92</div>
+        </div>
+        <div style="background:#1c2035;border:1px solid #252a45;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">MÍNIMO</div>
+          <div style="font-size:22px;font-weight:700;color:#eab308;">68</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /detail-page -->
+
+
+<!-- ===== MODAL REASIGNACIÓN ===== -->
+<div class="modal-overlay" id="modal-reasignacion">
+  <div class="modal">
+    <div class="modal-title">Reasignar Vulnerabilidades</div>
+    <div class="modal-sub">Selecciona las vulnerabilidades a transferir y el analista destino</div>
+    <div class="modal-section">
+      <div class="modal-label">Vulnerabilidades a reasignar</div>
+      <div class="vuln-check-list">
+        <label class="vuln-check-item"><input type="checkbox" checked> SAST-0042 — SQL Injection en módulo de pagos <span class="badge badge-rojo" style="margin-left:auto;">Crítica</span></label>
+        <label class="vuln-check-item"><input type="checkbox" checked> SAST-0051 — Deserialización insegura <span class="badge badge-rojo" style="margin-left:auto;">Crítica</span></label>
+        <label class="vuln-check-item"><input type="checkbox"> SCA-0018 — Dependencia log4j 2.14.1 vulnerable <span class="badge badge-amarillo" style="margin-left:auto;">Alta</span></label>
+        <label class="vuln-check-item"><input type="checkbox"> SAST-0063 — XSS reflejado en formulario de login <span class="badge badge-amarillo" style="margin-left:auto;">Alta</span></label>
+        <label class="vuln-check-item"><input type="checkbox"> SAST-0071 — Exposición de información sensible en logs <span class="badge" style="background:rgba(234,179,8,0.15);color:#eab308;margin-left:auto;">Media</span></label>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Analista Destino</div>
+      <select class="modal-select">
+        <option>Seleccionar analista...</option>
+        <option>Carlos López — 98 asignadas (49% carga)</option>
+        <option>Luis Ramírez — 62 asignadas (31% carga)</option>
+        <option>Sandra Vega — 45 asignadas (23% carga)</option>
+        <option>María Torres — 186 asignadas (93% carga) ⚠️</option>
+        <option>Pedro Núñez — 124 asignadas (62% carga)</option>
+      </select>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Comentario (opcional)</div>
+      <textarea class="modal-textarea" placeholder="Justificación de la reasignación..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeReasignacion()">Cancelar</button>
+      <button class="modal-btn modal-btn-confirm" onclick="confirmReasignacion()">Confirmar Reasignación</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ===== DATA =====
+const drillData = {
+  'kpi-miembros': {
+    title: 'Miembros del Equipo',
+    subtitle: '8 analistas activos — Célula Core-Bancario',
+    summary: [{label:'Total',value:'8',color:'#e2e8f0'},{label:'Score Prom.',value:'72',color:'#eab308'},{label:'En riesgo',value:'1',color:'#ef4444'}],
+    headers: ['Analista','Rol','Score','SLA Cumplido','Vulns Asignadas','Estado'],
+    rows: [
+      ['Ana García','Analista SAST/SCA','88','94%','142','✅ Activo'],
+      ['Carlos López','Analista DAST','81','89%','98','✅ Activo'],
+      ['María Torres','Analista SCA/CDS','68','71%','186','⚠️ Carga alta'],
+      ['Pedro Núñez','Analista Pipeline','52','58%','124','🔴 En riesgo'],
+      ['Sandra Vega','Analista TM','74','78%','45','✅ Activo'],
+      ['Luis Ramírez','Analista CDS/MAST','79','85%','62','✅ Activo'],
+    ]
+  },
+  'kpi-score': {
+    title: 'Score Promedio del Equipo',
+    subtitle: 'Desglose de score por analista — Oct 2025',
+    summary: [{label:'Promedio',value:'72',color:'#eab308'},{label:'≥75 (Verde)',value:'3',color:'#22c55e'},{label:'<50 (Rojo)',value:'1',color:'#ef4444'}],
+    headers: ['Analista','Score','SLA Cumplido','Actividades','OKRs','Semáforo'],
+    rows: [
+      ['Ana García','88','94%','8/9','En tiempo','🟢'],
+      ['Carlos López','81','89%','7/8','En tiempo','🟢'],
+      ['Luis Ramírez','79','85%','4/5','En tiempo','🟢'],
+      ['Sandra Vega','74','78%','6/8','En progreso','🟡'],
+      ['María Torres','68','71%','5/8','En progreso','🟡'],
+      ['Pedro Núñez','52','58%','4/8','En riesgo','🔴'],
+    ]
+  },
+  'kpi-remediadas': {
+    title: 'Vulnerabilidades Remediadas (mes)',
+    subtitle: '245 vulnerabilidades remediadas en Oct 2025',
+    summary: [{label:'Total',value:'245',color:'#22c55e'},{label:'vs Sep',value:'+18%',color:'#22c55e'},{label:'Promedio/analista',value:'41',color:'#3b82f6'}],
+    headers: ['Analista','Motor','Remediadas','Críticas','Altas','Medias/Bajas'],
+    rows: [
+      ['Ana García','SAST','82','12','28','42'],
+      ['Carlos López','DAST','64','8','18','38'],
+      ['María Torres','SCA','42','5','14','23'],
+      ['Pedro Núñez','SAST','28','3','10','15'],
+      ['Sandra Vega','MDA','8','0','2','6'],
+      ['Luis Ramírez','CDS','29','4','9','16'],
+    ]
+  },
+  'kpi-actividades': {
+    title: 'Actividades Completadas',
+    subtitle: '34 de 42 actividades completadas en Oct 2025',
+    summary: [{label:'Completadas',value:'34',color:'#22c55e'},{label:'Pendientes',value:'8',color:'#ef4444'},{label:'% Avance',value:'81%',color:'#3b82f6'}],
+    headers: ['Analista','Completadas','Asignadas','% Avance','Pendientes'],
+    rows: [
+      ['Ana García','8','9','89%','1'],
+      ['Carlos López','7','8','88%','1'],
+      ['María Torres','5','8','63%','3'],
+      ['Pedro Núñez','4','8','50%','4'],
+      ['Sandra Vega','6','8','75%','2'],
+      ['Luis Ramírez','4','5','80%','1'],
+    ]
+  },
+  'kpi-okr-riesgo': {
+    title: 'OKRs en Riesgo',
+    subtitle: '3 Key Results con avance < 40% en el equipo',
+    summary: [{label:'En riesgo',value:'3',color:'#ef4444'},{label:'En progreso',value:'5',color:'#eab308'},{label:'En tiempo',value:'12',color:'#22c55e'}],
+    headers: ['Analista','Key Result','Avance','Semáforo','Fecha límite'],
+    rows: [
+      ['Pedro Núñez','KR-02: 95% SLA cumplido','32%','🔴 En riesgo','31 Oct 2025'],
+      ['Pedro Núñez','KR-03: 100% actividades completadas','38%','🔴 En riesgo','31 Oct 2025'],
+      ['María Torres','KR-01: Reducir críticas a <10','35%','🔴 En riesgo','31 Oct 2025'],
+    ]
+  }
+};
+
+const chartDrillData = {
+  scores: [
+    {title:'Score de Desempeño — Ana García',subtitle:'Score: 88/100 · SAST/SCA · Oct 2025',
+     summary:[{label:'Score',value:'88',color:'#22c55e'},{label:'SLA',value:'94%',color:'#22c55e'},{label:'Actividades',value:'8/9',color:'#3b82f6'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','94%','37.6'],['Actividades completadas','30%','89%','26.7'],['Avance OKRs','20%','80%','16.0'],['Tasa no-reincidencias','10%','78%','7.8']]},
+    {title:'Score de Desempeño — Carlos López',subtitle:'Score: 81/100 · DAST · Oct 2025',
+     summary:[{label:'Score',value:'81',color:'#22c55e'},{label:'SLA',value:'89%',color:'#22c55e'},{label:'Actividades',value:'7/8',color:'#3b82f6'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','89%','35.6'],['Actividades completadas','30%','88%','26.4'],['Avance OKRs','20%','75%','15.0'],['Tasa no-reincidencias','10%','40%','4.0']]},
+    {title:'Score de Desempeño — María Torres',subtitle:'Score: 68/100 · SCA/CDS · Oct 2025',
+     summary:[{label:'Score',value:'68',color:'#eab308'},{label:'SLA',value:'71%',color:'#eab308'},{label:'Actividades',value:'5/8',color:'#eab308'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','71%','28.4'],['Actividades completadas','30%','63%','18.9'],['Avance OKRs','20%','55%','11.0'],['Tasa no-reincidencias','10%','97%','9.7']]},
+    {title:'Score de Desempeño — Pedro Núñez',subtitle:'Score: 52/100 · Pipeline/Ops · Oct 2025',
+     summary:[{label:'Score',value:'52',color:'#ef4444'},{label:'SLA',value:'58%',color:'#ef4444'},{label:'Actividades',value:'4/8',color:'#ef4444'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','58%','23.2'],['Actividades completadas','30%','50%','15.0'],['Avance OKRs','20%','35%','7.0'],['Tasa no-reincidencias','10%','68%','6.8']]},
+    {title:'Score de Desempeño — Sandra Vega',subtitle:'Score: 74/100 · Threat Modeling · Oct 2025',
+     summary:[{label:'Score',value:'74',color:'#eab308'},{label:'SLA',value:'78%',color:'#eab308'},{label:'Actividades',value:'6/8',color:'#eab308'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','78%','31.2'],['Actividades completadas','30%','75%','22.5'],['Avance OKRs','20%','65%','13.0'],['Tasa no-reincidencias','10%','73%','7.3']]},
+    {title:'Score de Desempeño — Luis Ramírez',subtitle:'Score: 79/100 · CDS/MAST · Oct 2025',
+     summary:[{label:'Score',value:'79',color:'#22c55e'},{label:'SLA',value:'85%',color:'#22c55e'},{label:'Actividades',value:'4/5',color:'#3b82f6'}],
+     headers:['Componente','Peso','Valor','Contribución'],
+     rows:[['% SLA cumplido','40%','85%','34.0'],['Actividades completadas','30%','80%','24.0'],['Avance OKRs','20%','70%','14.0'],['Tasa no-reincidencias','10%','70%','7.0']]}
+  ],
+  remediadas: [
+    {title:'Vulnerabilidades Remediadas — Ana García',subtitle:'82 vulnerabilidades remediadas en Oct 2025',
+     summary:[{label:'Total',value:'82',color:'#22c55e'},{label:'Críticas',value:'12',color:'#ef4444'},{label:'Altas',value:'28',color:'#f97316'}],
+     headers:['ID','Motor','Severidad','Hallazgo','Fecha Remediación'],
+     rows:[['SAST-0031','SAST','Alta','Path Traversal en API de archivos','15 Oct'],['SAST-0028','SAST','Alta','SSRF en módulo de reportes','12 Oct'],['SCA-0015','SCA','Alta','Spring Framework CVE-2022-22965','10 Oct'],['SAST-0022','SAST','Media','Hardcoded credentials en config','08 Oct'],['SAST-0019','SAST','Media','Missing security headers','05 Oct']]},
+    {title:'Vulnerabilidades Remediadas — Carlos López',subtitle:'64 vulnerabilidades remediadas en Oct 2025',
+     summary:[{label:'Total',value:'64',color:'#22c55e'},{label:'Críticas',value:'8',color:'#ef4444'},{label:'Altas',value:'18',color:'#f97316'}],
+     headers:['ID','Motor','Severidad','Hallazgo','Fecha Remediación'],
+     rows:[['DAST-0041','DAST','Crítica','IDOR en endpoint de transferencias','20 Oct'],['DAST-0038','DAST','Alta','Open Redirect en login','18 Oct'],['DAST-0035','DAST','Alta','CSRF en formulario de perfil','15 Oct'],['DAST-0029','DAST','Media','Verbose error messages','11 Oct'],['DAST-0025','DAST','Media','Missing HSTS header','08 Oct']]},
+    {title:'Vulnerabilidades Remediadas — María Torres',subtitle:'42 vulnerabilidades remediadas en Oct 2025',
+     summary:[{label:'Total',value:'42',color:'#eab308'},{label:'Críticas',value:'5',color:'#ef4444'},{label:'Altas',value:'14',color:'#f97316'}],
+     headers:['ID','Motor','Severidad','Hallazgo','Fecha Remediación'],
+     rows:[['SCA-0012','SCA','Crítica','Apache Log4j CVE-2021-44228','22 Oct'],['SCA-0009','SCA','Alta','jackson-databind desactualizado','19 Oct'],['CDS-0008','CDS','Alta','API Key expuesta en repositorio','16 Oct'],['SCA-0006','SCA','Media','Librería commons-text vulnerable','13 Oct'],['CDS-0004','CDS','Media','Token JWT en variable de entorno','09 Oct']]},
+    {title:'Vulnerabilidades Remediadas — Pedro Núñez',subtitle:'28 vulnerabilidades remediadas en Oct 2025',
+     summary:[{label:'Total',value:'28',color:'#ef4444'},{label:'Críticas',value:'3',color:'#ef4444'},{label:'Altas',value:'10',color:'#f97316'}],
+     headers:['ID','Motor','Severidad','Hallazgo','Fecha Remediación'],
+     rows:[['SAST-0055','SAST','Alta','Race condition en proceso de pago','21 Oct'],['SAST-0052','SAST','Alta','Buffer overflow en parser XML','17 Oct'],['SAST-0049','SAST','Media','Null pointer dereference','14 Oct'],['SAST-0044','SAST','Media','Unchecked return value','10 Oct'],['SAST-0040','SAST','Baja','Dead code con credenciales','07 Oct']]},
+    {title:'Vulnerabilidades Remediadas — Sandra Vega',subtitle:'8 modelos de amenaza completados en Oct 2025',
+     summary:[{label:'TM Completados',value:'8',color:'#eab308'},{label:'Amenazas',value:'32',color:'#f97316'},{label:'Mitigadas',value:'24',color:'#22c55e'}],
+     headers:['ID','Sistema','Amenazas','Mitigadas','Fecha'],
+     rows:[['MDA-0021','API de Pagos','6','5','24 Oct'],['MDA-0019','Portal de Clientes','8','6','20 Oct'],['MDA-0017','Módulo de Autenticación','5','5','16 Oct'],['MDA-0015','Servicio de Notificaciones','4','4','12 Oct'],['MDA-0013','Integración con SPEI','9','4','08 Oct']]},
+    {title:'Vulnerabilidades Remediadas — Luis Ramírez',subtitle:'29 vulnerabilidades remediadas en Oct 2025',
+     summary:[{label:'Total',value:'29',color:'#22c55e'},{label:'Críticas',value:'4',color:'#ef4444'},{label:'Altas',value:'9',color:'#f97316'}],
+     headers:['ID','Motor','Severidad','Hallazgo','Fecha Remediación'],
+     rows:[['CDS-0018','CDS','Crítica','Contraseña de BD en código fuente','23 Oct'],['MAST-0012','MAST','Alta','Almacenamiento inseguro en iOS','19 Oct'],['CDS-0015','CDS','Alta','Certificado SSL expirado','15 Oct'],['MAST-0009','MAST','Media','Comunicación sin cifrar en Android','11 Oct'],['CDS-0011','CDS','Media','Clave privada en repositorio','07 Oct']]}
+  ]
+};
+
+// ===== TABS =====
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['tab-miequipo','tab-celula','tab-subdir'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  document.getElementById(tabId).style.display = 'block';
+}
+
+// ===== DRILL-DOWN =====
+function openDrill(key) {
+  const d = drillData[key];
+  if(!d) return;
+  document.getElementById('drill-title').textContent = d.title;
+  document.getElementById('drill-subtitle').textContent = d.subtitle;
+  let html = '<div class="drill-summary">';
+  d.summary.forEach(s => {
+    html += `<div class="drill-kpi"><div class="dk-label">${s.label}</div><div class="dk-value" style="color:${s.color};">${s.value}</div></div>`;
+  });
+  html += '</div>';
+  html += '<table class="drill-table"><thead><tr>';
+  d.headers.forEach(h => html += `<th>${h}</th>`);
+  html += '</tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr>';
+    r.forEach((cell,i) => html += `<td style="${i===0?'font-weight:600;color:#e2e8f0;':''}">${cell}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('drill-body').innerHTML = html;
+  document.getElementById('drill-overlay').classList.add('open');
+  document.getElementById('drill-panel').classList.add('open');
+}
+
+function openChartDrill(type, index) {
+  const arr = chartDrillData[type];
+  if(!arr || !arr[index]) return;
+  const d = arr[index];
+  document.getElementById('drill-title').textContent = d.title;
+  document.getElementById('drill-subtitle').textContent = d.subtitle;
+  let html = '<div class="drill-summary">';
+  d.summary.forEach(s => {
+    html += `<div class="drill-kpi"><div class="dk-label">${s.label}</div><div class="dk-value" style="color:${s.color};">${s.value}</div></div>`;
+  });
+  html += '</div>';
+  html += '<table class="drill-table"><thead><tr>';
+  d.headers.forEach(h => html += `<th>${h}</th>`);
+  html += '</tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr>';
+    r.forEach((cell,i) => html += `<td style="${i===0?'font-weight:600;color:#e2e8f0;':''}">${cell}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('drill-body').innerHTML = html;
+  document.getElementById('drill-overlay').classList.add('open');
+  document.getElementById('drill-panel').classList.add('open');
+}
+
+function closeDrill() {
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.getElementById('drill-panel').classList.remove('open');
+}
+
+// ===== DETALLE ANALISTA =====
+const analistas = {
+  ana:    { initials:'AG', color:'rgba(59,130,246,0.2)', textColor:'#3b82f6', name:'Ana García', meta:'Analista SAST / SCA · Célula Core-Bancario · Oct 2025', score:'88', scoreColor:'#22c55e' },
+  carlos: { initials:'CL', color:'rgba(34,197,94,0.2)',  textColor:'#22c55e', name:'Carlos López', meta:'Analista DAST · Célula Core-Bancario · Oct 2025', score:'81', scoreColor:'#22c55e' },
+  maria:  { initials:'MT', color:'rgba(234,179,8,0.2)',  textColor:'#eab308', name:'María Torres', meta:'Analista SCA / CDS · Célula Core-Bancario · Oct 2025', score:'68', scoreColor:'#eab308' },
+  pedro:  { initials:'PN', color:'rgba(239,68,68,0.2)',  textColor:'#ef4444', name:'Pedro Núñez', meta:'Analista Pipeline / Ops · Célula Core-Bancario · Oct 2025', score:'52', scoreColor:'#ef4444' },
+  sandra: { initials:'SV', color:'rgba(124,58,237,0.2)', textColor:'#7c3aed', name:'Sandra Vega', meta:'Analista Threat Modeling · Célula Core-Bancario · Oct 2025', score:'74', scoreColor:'#eab308' },
+  luis:   { initials:'LR', color:'rgba(249,115,22,0.2)', textColor:'#f97316', name:'Luis Ramírez', meta:'Analista CDS / MAST · Célula Core-Bancario · Oct 2025', score:'79', scoreColor:'#22c55e' }
+};
+
+let historialChart = null;
+
+function openDetail(key) {
+  const a = analistas[key];
+  if(!a) return;
+  document.getElementById('dp-avatar').style.background = a.color;
+  document.getElementById('dp-avatar').style.color = a.textColor;
+  document.getElementById('dp-avatar').textContent = a.initials;
+  document.getElementById('dp-name').textContent = a.name;
+  document.getElementById('dp-meta').textContent = a.meta;
+  document.getElementById('dp-score').textContent = a.score;
+  document.getElementById('dp-score').style.color = a.scoreColor;
+  // Reset tabs
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.detail-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.detail-tab')[0].classList.add('active');
+  document.getElementById('dt-vulns').classList.add('active');
+  document.getElementById('detail-page').classList.add('open');
+  // Render historial chart after a tick
+  setTimeout(() => {
+    if(historialChart) { historialChart.destroy(); historialChart = null; }
+    const ctx = document.getElementById('chart-historial');
+    if(ctx) {
+      historialChart = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels:['Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct'],
+          datasets:[{
+            label:'Score',
+            data:[72,68,74,78,80,76,82,85,88,84,86,88],
+            borderColor:'#e8365d',
+            backgroundColor:'rgba(232,54,93,0.1)',
+            borderWidth:2,
+            pointBackgroundColor:'#e8365d',
+            pointRadius:4,
+            fill:true,
+            tension:0.3
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}},
+            y:{min:0,max:100,ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}}
+          }
+        }
+      });
+    }
+  }, 100);
+}
+
+function closeDetail() {
+  document.getElementById('detail-page').classList.remove('open');
+}
+
+function switchDetailTab(el, tabId) {
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.detail-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// ===== MODAL REASIGNACIÓN =====
+function openReasignacion() {
+  document.getElementById('modal-reasignacion').classList.add('open');
+}
+function closeReasignacion() {
+  document.getElementById('modal-reasignacion').classList.remove('open');
+}
+function confirmReasignacion() {
+  closeReasignacion();
+  alert('✅ Reasignación confirmada. Las vulnerabilidades seleccionadas han sido transferidas al analista destino. Se ha registrado el evento en la bitácora de cada hallazgo y se ha enviado notificación al analista destino.');
+}
+
+// ===== CHARTS =====
+const scoreChart = new Chart(document.getElementById('chart-scores'), {
+  type:'bar',
+  data:{
+    labels:['Ana G.','Carlos L.','María T.','Pedro N.','Sandra V.','Luis R.'],
+    datasets:[{
+      label:'Score de Desempeño',
+      data:[88,81,68,52,74,79],
+      backgroundColor:['rgba(34,197,94,0.7)','rgba(34,197,94,0.7)','rgba(234,179,8,0.7)','rgba(239,68,68,0.7)','rgba(234,179,8,0.7)','rgba(34,197,94,0.7)'],
+      borderColor:['#22c55e','#22c55e','#eab308','#ef4444','#eab308','#22c55e'],
+      borderWidth:1,
+      borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}},
+      y:{min:0,max:100,ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}}
+    },
+    onClick:(evt,elements) => {
+      if(elements.length > 0) openChartDrill('scores', elements[0].index);
+    }
+  }
+});
+
+const remChart = new Chart(document.getElementById('chart-rem'), {
+  type:'bar',
+  data:{
+    labels:['Ana G.','Carlos L.','María T.','Pedro N.','Sandra V.','Luis R.'],
+    datasets:[{
+      label:'Remediadas',
+      data:[82,64,42,28,8,29],
+      backgroundColor:'rgba(59,130,246,0.7)',
+      borderColor:'#3b82f6',
+      borderWidth:1,
+      borderRadius:4
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}},
+      y:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'#252a45'}}
+    },
+    onClick:(evt,elements) => {
+      if(elements.length > 0) openChartDrill('remediadas', elements[0].index);
+    }
+  }
+});
+</script>
+</body>
+</html>

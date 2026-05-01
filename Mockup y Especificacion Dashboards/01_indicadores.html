@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Indicadores — AppSec</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; }
+
+  /* TOPBAR */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: #161b22; border-bottom: 1px solid #30363d; }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8b949e; }
+  .breadcrumb span { cursor: pointer; }
+  .breadcrumb span:hover { color: #58a6ff; }
+  .breadcrumb .sep { color: #30363d; }
+  .breadcrumb .current { color: #e6edf3; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .date-range { display: flex; align-items: center; gap: 6px; background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px; font-size: 12px; color: #8b949e; cursor: pointer; }
+  .date-range:hover { border-color: #58a6ff; color: #e6edf3; }
+  .btn-filter { display: flex; align-items: center; gap: 6px; background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #8b949e; cursor: pointer; }
+  .btn-filter:hover { border-color: #58a6ff; color: #e6edf3; }
+  .btn-export { display: flex; align-items: center; gap: 6px; background: #238636; border: 1px solid #2ea043; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #fff; cursor: pointer; }
+  .btn-export:hover { background: #2ea043; }
+
+  /* MAIN */
+  .main { padding: 20px; }
+
+  /* SECTION HEADER */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 13px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; }
+  .section-subtitle { font-size: 11px; color: #484f58; margin-top: 2px; }
+
+  /* MOTOR CARDS GRID */
+  .motors-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+  .motor-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .motor-card:hover { border-color: #58a6ff; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(88,166,255,0.15); }
+  .motor-card.active { border-color: #58a6ff; background: #1c2333; }
+  .motor-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 10px 10px 0 0; }
+  .motor-card.sast::before { background: #58a6ff; }
+  .motor-card.dast::before { background: #f78166; }
+  .motor-card.sca::before { background: #3fb950; }
+  .motor-card.cds::before { background: #d29922; }
+  .motor-card.mda::before { background: #bc8cff; }
+  .motor-card.mast::before { background: #39d353; }
+
+  .motor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .motor-badge { display: flex; align-items: center; gap: 6px; }
+  .motor-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .sast .motor-icon { background: rgba(88,166,255,0.15); color: #58a6ff; }
+  .dast .motor-icon { background: rgba(247,129,102,0.15); color: #f78166; }
+  .sca .motor-icon { background: rgba(63,185,80,0.15); color: #3fb950; }
+  .cds .motor-icon { background: rgba(210,153,34,0.15); color: #d29922; }
+  .mda .motor-icon { background: rgba(188,140,255,0.15); color: #bc8cff; }
+  .mast .motor-icon { background: rgba(57,211,83,0.15); color: #39d353; }
+  .motor-name { font-size: 12px; font-weight: 700; color: #e6edf3; }
+
+  .semaforo { width: 10px; height: 10px; border-radius: 50%; }
+  .semaforo.rojo { background: #f85149; box-shadow: 0 0 6px rgba(248,81,73,0.6); }
+  .semaforo.amarillo { background: #d29922; box-shadow: 0 0 6px rgba(210,153,34,0.6); }
+  .semaforo.verde { background: #3fb950; box-shadow: 0 0 6px rgba(63,185,80,0.6); }
+
+  .motor-main-kpi { margin-bottom: 10px; }
+  .kpi-label { font-size: 10px; color: #8b949e; margin-bottom: 2px; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #e6edf3; line-height: 1; }
+  .kpi-trend { font-size: 11px; margin-top: 3px; }
+  .trend-up { color: #f85149; }
+  .trend-down { color: #3fb950; }
+  .trend-neutral { color: #8b949e; }
+
+  .motor-mini-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border-top: 1px solid #21262d; padding-top: 10px; }
+  .mini-kpi { }
+  .mini-kpi .label { font-size: 9px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; }
+  .mini-kpi .value { font-size: 13px; font-weight: 600; color: #e6edf3; }
+  .mini-kpi .value.danger { color: #f85149; }
+  .mini-kpi .value.warning { color: #d29922; }
+  .mini-kpi .value.success { color: #3fb950; }
+
+  .motor-sla-bar { margin-top: 10px; }
+  .sla-bar-label { display: flex; justify-content: space-between; font-size: 10px; color: #8b949e; margin-bottom: 4px; }
+  .sla-bar-track { background: #21262d; border-radius: 4px; height: 5px; overflow: hidden; }
+  .sla-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .sla-bar-fill.danger { background: #f85149; }
+  .sla-bar-fill.warning { background: #d29922; }
+  .sla-bar-fill.success { background: #3fb950; }
+
+  /* PIPELINE CARDS */
+  .pipeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .pipeline-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .pipeline-card:hover { border-color: #58a6ff; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(88,166,255,0.15); }
+  .pipeline-card.active { border-color: #58a6ff; background: #1c2333; }
+  .pipeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .pipeline-title { font-size: 13px; font-weight: 700; color: #e6edf3; }
+  .pipeline-subtitle { font-size: 11px; color: #8b949e; }
+  .pipeline-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+  .pipeline-kpi { text-align: center; }
+  .pipeline-kpi .label { font-size: 10px; color: #8b949e; margin-bottom: 3px; }
+  .pipeline-kpi .value { font-size: 18px; font-weight: 700; }
+  .pipeline-kpi .value.green { color: #3fb950; }
+  .pipeline-kpi .value.red { color: #f85149; }
+  .pipeline-kpi .value.blue { color: #58a6ff; }
+  .pipeline-kpi .value.white { color: #e6edf3; }
+  .pipeline-mini-chart { height: 50px; }
+
+  /* DETAIL PANEL */
+  .detail-panel { display: none; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .detail-panel.visible { display: block; }
+  .detail-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .detail-panel-title { display: flex; align-items: center; gap: 10px; }
+  .detail-panel-title h2 { font-size: 16px; font-weight: 700; }
+  .btn-close { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px; color: #8b949e; cursor: pointer; font-size: 12px; }
+  .btn-close:hover { color: #e6edf3; border-color: #58a6ff; }
+
+  .kpi-detail-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-detail-card { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px; }
+  .kpi-detail-card .kpi-id { font-size: 10px; color: #484f58; font-family: monospace; margin-bottom: 4px; }
+  .kpi-detail-card .kpi-name { font-size: 11px; color: #8b949e; margin-bottom: 8px; line-height: 1.3; }
+  .kpi-detail-card .kpi-big { font-size: 28px; font-weight: 700; color: #e6edf3; line-height: 1; }
+  .kpi-detail-card .kpi-trend { font-size: 11px; margin-top: 4px; }
+  .kpi-detail-card .kpi-formula { font-size: 10px; color: #484f58; margin-top: 6px; font-style: italic; }
+
+  .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-box { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 14px; }
+  .chart-box-title { font-size: 11px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  .chart-container { position: relative; height: 180px; }
+
+  /* PIPELINE DETAIL */
+  .pipeline-detail-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .pipeline-detail-kpi { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px; text-align: center; }
+  .pipeline-detail-kpi .label { font-size: 10px; color: #8b949e; margin-bottom: 6px; }
+  .pipeline-detail-kpi .value { font-size: 24px; font-weight: 700; }
+
+  .pipeline-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .pipeline-table-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { text-align: left; font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 8px; border-bottom: 1px solid #21262d; }
+  .data-table td { padding: 7px 8px; border-bottom: 1px solid #161b22; font-size: 12px; color: #e6edf3; }
+  .data-table tr:hover td { background: #21262d; }
+  .data-table .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-red { background: rgba(248,81,73,0.15); color: #f85149; }
+  .badge-yellow { background: rgba(210,153,34,0.15); color: #d29922; }
+  .badge-green { background: rgba(63,185,80,0.15); color: #3fb950; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: #58a6ff; }
+
+  /* CAPTURE MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.visible { display: flex; }
+  .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 420px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; }
+  .modal-close:hover { color: #e6edf3; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; color: #8b949e; margin-bottom: 6px; display: block; }
+  .form-input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 13px; }
+  .form-input:focus { outline: none; border-color: #58a6ff; }
+  .form-textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 13px; resize: vertical; min-height: 70px; }
+  .form-textarea:focus { outline: none; border-color: #58a6ff; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 7px 16px; color: #8b949e; cursor: pointer; font-size: 12px; }
+  .btn-save { background: #238636; border: 1px solid #2ea043; border-radius: 6px; padding: 7px 16px; color: #fff; cursor: pointer; font-size: 12px; }
+  .btn-save:hover { background: #2ea043; }
+
+  /* CAPTURE BUTTON */
+  .btn-capture { display: flex; align-items: center; gap: 6px; background: #1c2333; border: 1px solid #388bfd; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #58a6ff; cursor: pointer; }
+  .btn-capture:hover { background: #388bfd22; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #21262d; }
+  .tab { padding: 8px 14px; font-size: 12px; color: #8b949e; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: #e6edf3; }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid #21262d; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="breadcrumb">
+      <span onclick="goHome()">Inicio</span>
+      <span class="sep">›</span>
+      <span class="current" id="breadcrumb-current">Dashboard de Indicadores</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="date-range">📅 Ene 2025 — Dic 2025 ▾</div>
+    <div class="btn-filter">▼ Filtros</div>
+    <div class="btn-export">↓ Exportar</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- VISTA GENERAL (HOME) -->
+  <div id="view-home">
+
+    <!-- INDICADORES POR MOTOR -->
+    <div class="section-header">
+      <div>
+        <div class="section-title">Indicadores por Motor</div>
+        <div class="section-subtitle">Haz clic en un motor para ver el desglose completo de sus 5 indicadores e histórico mensual</div>
+      </div>
+    </div>
+
+    <div class="motors-grid">
+      <!-- SAST -->
+      <div class="motor-card sast" onclick="showMotorDetail('sast')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">SAST</div>
+            <div class="motor-name">SAST</div>
+          </div>
+          <div class="semaforo rojo"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">2,432</div>
+          <div class="kpi-trend trend-up">▲ 12% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">380</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">210</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value warning">55%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value danger">18%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>18%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill danger" style="width:18%"></div></div>
+        </div>
+      </div>
+
+      <!-- DAST -->
+      <div class="motor-card dast" onclick="showMotorDetail('dast')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">DAST</div>
+            <div class="motor-name">DAST</div>
+          </div>
+          <div class="semaforo amarillo"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">982</div>
+          <div class="kpi-trend trend-up">▲ 18% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">145</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">98</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value success">68%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value warning">9%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>9%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill warning" style="width:9%"></div></div>
+        </div>
+      </div>
+
+      <!-- SCA -->
+      <div class="motor-card sca" onclick="showMotorDetail('sca')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">SCA</div>
+            <div class="motor-name">SCA</div>
+          </div>
+          <div class="semaforo rojo"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">1,842</div>
+          <div class="kpi-trend trend-down">▼ 8% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">290</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">340</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value success">117%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value danger">22%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>22%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill danger" style="width:22%"></div></div>
+        </div>
+      </div>
+
+      <!-- CDS -->
+      <div class="motor-card cds" onclick="showMotorDetail('cds')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">CDS</div>
+            <div class="motor-name">Secretos</div>
+          </div>
+          <div class="semaforo amarillo"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">1,156</div>
+          <div class="kpi-trend trend-up">▲ 5% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">180</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">155</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value warning">86%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value warning">11%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>11%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill warning" style="width:11%"></div></div>
+        </div>
+      </div>
+
+      <!-- MDA -->
+      <div class="motor-card mda" onclick="showMotorDetail('mda')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">MDA</div>
+            <div class="motor-name">Threat M.</div>
+          </div>
+          <div class="semaforo verde"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">417</div>
+          <div class="kpi-trend trend-down">▼ 3% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">62</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">71</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value success">114%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value success">4%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>4%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill success" style="width:4%"></div></div>
+        </div>
+      </div>
+
+      <!-- MAST -->
+      <div class="motor-card mast" onclick="showMotorDetail('mast')">
+        <div class="motor-header">
+          <div class="motor-badge">
+            <div class="motor-icon">MAST</div>
+            <div class="motor-name">MAST</div>
+          </div>
+          <div class="semaforo verde"></div>
+        </div>
+        <div class="motor-main-kpi">
+          <div class="kpi-label">Backlog Activo (Altas/Críticas)</div>
+          <div class="kpi-value">357</div>
+          <div class="kpi-trend trend-down">▼ 3% vs mes anterior</div>
+        </div>
+        <div class="motor-mini-kpis">
+          <div class="mini-kpi">
+            <div class="label">Identificadas</div>
+            <div class="value">61</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">Remediadas</div>
+            <div class="value success">72</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">% Remediación</div>
+            <div class="value success">118%</div>
+          </div>
+          <div class="mini-kpi">
+            <div class="label">SLA Vencido</div>
+            <div class="value success">3%</div>
+          </div>
+        </div>
+        <div class="motor-sla-bar">
+          <div class="sla-bar-label"><span>% SLA Vencido</span><span>3%</span></div>
+          <div class="sla-bar-track"><div class="sla-bar-fill success" style="width:3%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INDICADORES DE PIPELINE -->
+    <div class="section-header">
+      <div>
+        <div class="section-title">Indicadores de Pipeline</div>
+        <div class="section-subtitle">Haz clic en un pipeline para ver el desglose por mes, célula, subdirección y top de vulnerabilidades</div>
+      </div>
+    </div>
+
+    <div class="pipeline-grid">
+      <!-- PIPELINE SAST -->
+      <div class="pipeline-card" onclick="showPipelineDetail('sast')">
+        <div class="pipeline-header">
+          <div>
+            <div class="pipeline-title">🔍 Pipeline SAST</div>
+            <div class="pipeline-subtitle">Escaneos de código fuente en CI/CD</div>
+          </div>
+          <div class="semaforo amarillo"></div>
+        </div>
+        <div class="pipeline-kpis">
+          <div class="pipeline-kpi">
+            <div class="label">Total Escaneos</div>
+            <div class="value blue">3,842</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">Aprobados</div>
+            <div class="value green">2,812</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">Rechazados</div>
+            <div class="value red">1,030</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">% Aprobación</div>
+            <div class="value green">73%</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; color:#8b949e; border-top:1px solid #21262d; padding-top:10px;">
+          <span>🔴 Con vulns detectadas: <strong style="color:#f85149">892</strong></span>
+          <span>🟡 Liberados con vulns: <strong style="color:#d29922">47</strong></span>
+          <span>📊 Reincidentes: <strong style="color:#8b949e">23%</strong></span>
+        </div>
+      </div>
+
+      <!-- PIPELINE DAST -->
+      <div class="pipeline-card" onclick="showPipelineDetail('dast')">
+        <div class="pipeline-header">
+          <div>
+            <div class="pipeline-title">🌐 Pipeline DAST</div>
+            <div class="pipeline-subtitle">Escaneos dinámicos de aplicaciones web</div>
+          </div>
+          <div class="semaforo verde"></div>
+        </div>
+        <div class="pipeline-kpis">
+          <div class="pipeline-kpi">
+            <div class="label">Total Escaneos</div>
+            <div class="value blue">1,240</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">Aprobados</div>
+            <div class="value green">1,054</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">Rechazados</div>
+            <div class="value red">186</div>
+          </div>
+          <div class="pipeline-kpi">
+            <div class="label">% Aprobación</div>
+            <div class="value green">85%</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; font-size:11px; color:#8b949e; border-top:1px solid #21262d; padding-top:10px;">
+          <span>🔴 Con vulns detectadas: <strong style="color:#f85149">186</strong></span>
+          <span>🟡 Liberados con vulns: <strong style="color:#d29922">12</strong></span>
+          <span>📊 Reincidentes: <strong style="color:#8b949e">14%</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOTOR DETAIL VIEW -->
+  <div id="view-motor-detail" style="display:none;">
+    <div class="detail-panel visible" id="motor-detail-panel">
+      <div class="detail-panel-header">
+        <div class="detail-panel-title">
+          <div class="motor-icon" id="detail-motor-icon" style="width:36px;height:36px;font-size:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;"></div>
+          <div>
+            <h2 id="detail-motor-name"></h2>
+            <div style="font-size:11px;color:#8b949e;" id="detail-motor-sub"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="btn-capture" onclick="openCaptureModal()">✏️ Capturar valor manual</div>
+          <div class="btn-close" onclick="goHome()">← Volver</div>
+        </div>
+      </div>
+
+      <!-- 5 KPI CARDS -->
+      <div class="kpi-detail-grid" id="kpi-detail-grid">
+        <!-- Generado por JS -->
+      </div>
+
+      <!-- CHARTS -->
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Tendencia Histórica — Ene a Dic 2025</div>
+          <div class="chart-container"><canvas id="chart-historico"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Distribución Actual</div>
+          <div class="chart-container"><canvas id="chart-donut"></canvas></div>
+        </div>
+      </div>
+
+      <!-- SLA TABLE -->
+      <div class="chart-box" style="margin-bottom:0;">
+        <div class="chart-box-title">Configuración de SLAs (editable desde Administración)</div>
+        <table class="data-table" id="sla-table">
+          <thead><tr><th>Severidad</th><th>SLA Configurado</th><th>Vulns con SLA Vencido</th><th>% del Total</th><th>Estado</th></tr></thead>
+          <tbody id="sla-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE DETAIL VIEW -->
+  <div id="view-pipeline-detail" style="display:none;">
+    <div class="detail-panel visible">
+      <div class="detail-panel-header">
+        <div class="detail-panel-title">
+          <div style="font-size:20px;" id="pipeline-detail-icon"></div>
+          <div>
+            <h2 id="pipeline-detail-name"></h2>
+            <div style="font-size:11px;color:#8b949e;" id="pipeline-detail-sub"></div>
+          </div>
+        </div>
+        <div class="btn-close" onclick="goHome()">← Volver</div>
+      </div>
+
+      <!-- 5 KPIs PIPELINE -->
+      <div class="pipeline-detail-grid">
+        <div class="pipeline-detail-kpi">
+          <div class="label">Total Escaneos del Mes</div>
+          <div class="value blue" id="pd-total"></div>
+        </div>
+        <div class="pipeline-detail-kpi">
+          <div class="label">Escaneos Aprobados</div>
+          <div class="value green" id="pd-aprobados"></div>
+        </div>
+        <div class="pipeline-detail-kpi">
+          <div class="label">Escaneos Rechazados</div>
+          <div class="value red" id="pd-rechazados"></div>
+        </div>
+        <div class="pipeline-detail-kpi">
+          <div class="label">% de Aprobación</div>
+          <div class="value green" id="pd-pct"></div>
+        </div>
+        <div class="pipeline-detail-kpi">
+          <div class="label">Liberados con Vulns</div>
+          <div class="value" style="color:#d29922;" id="pd-libvulns"></div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="pipeline-charts-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Escaneos por Mes — Aprobados vs Rechazados</div>
+          <div class="chart-container"><canvas id="pipeline-chart-barras"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title">Tendencia % de Aprobación</div>
+          <div class="chart-container"><canvas id="pipeline-chart-linea"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TABLES ROW -->
+      <div class="pipeline-table-row">
+        <div class="chart-box">
+          <div class="chart-box-title">Top 10 Vulnerabilidades más Frecuentes en Pipeline</div>
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Vulnerabilidad</th><th>Ocurrencias</th><th>Severidad</th></tr></thead>
+            <tbody id="pd-top-vulns"></tbody>
+          </table>
+        </div>
+        <div>
+          <div class="chart-box" style="margin-bottom:12px;">
+            <div class="chart-box-title">Escaneos por Subdirección</div>
+            <table class="data-table">
+              <thead><tr><th>Subdirección</th><th>Total</th><th>Aprobados</th><th>% Aprobación</th></tr></thead>
+              <tbody id="pd-subdir"></tbody>
+            </table>
+          </div>
+          <div class="chart-box">
+            <div class="chart-box-title">Escaneos por Célula (Top 5)</div>
+            <table class="data-table">
+              <thead><tr><th>Célula</th><th>Total</th><th>Con Vulns</th><th>% Aprobación</th></tr></thead>
+              <tbody id="pd-celulas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CAPTURE MODAL -->
+<div class="modal-overlay" id="capture-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Capturar Indicador Manual</div>
+      <button class="modal-close" onclick="closeCaptureModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Indicador</label>
+      <input class="form-input" value="% de Falsos Positivos" readonly style="color:#8b949e;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mes de Captura</label>
+      <select class="form-input">
+        <option>Diciembre 2025</option>
+        <option>Noviembre 2025</option>
+        <option>Octubre 2025</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Valor (%)</label>
+      <input class="form-input" type="number" placeholder="Ej. 12.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nota Justificativa</label>
+      <textarea class="form-textarea" placeholder="Describe el contexto o metodología de cálculo..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeCaptureModal()">Cancelar</button>
+      <button class="btn-save" onclick="closeCaptureModal()">Guardar Valor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+const MOTOR_DATA = {
+  sast: {
+    name: 'SAST', color: '#58a6ff', bg: 'rgba(88,166,255,0.15)',
+    sub: 'Análisis Estático de Código Fuente',
+    sla: { criticos: '2 meses', altos: '2 meses' },
+    kpis: [
+      { id:'SAST-001', name:'# Altas/Críticas identificadas en el mes', value:'380', trend:'+12%', up:true, formula:'Count nuevos del mes con severidad Alta o Crítica' },
+      { id:'SAST-001b', name:'# Altas/Críticas remediadas en el mes', value:'210', trend:'+5%', up:false, formula:'Count registros cuyo estatus cambió a "Remediada" en el mes' },
+      { id:'SAST-002', name:'% Altas/Críticas remediadas', value:'55%', trend:'-3%', up:true, formula:'(Remediadas / Identificadas) × 100' },
+      { id:'SAST-003', name:'Backlog activo Altas/Críticas', value:'2,432', trend:'+8%', up:true, formula:'Count registros con estatus "Activa"' },
+      { id:'SAST-004', name:'% con SLA vencido', value:'18%', trend:'+2%', up:true, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [320,290,350,380,310,290,340,360,380,400,370,380],
+      remediadas: [180,200,220,240,190,210,230,250,210,190,220,210],
+      backlog: [2100,2190,2320,2460,2580,2660,2770,2880,2980,3090,3180,2432],
+    }
+  },
+  dast: {
+    name: 'DAST', color: '#f78166', bg: 'rgba(247,129,102,0.15)',
+    sub: 'Análisis Dinámico de Aplicaciones Web',
+    sla: { criticos: '7 días', altos: '—' },
+    kpis: [
+      { id:'DAST-001', name:'# Altas/Críticas identificadas en el mes', value:'145', trend:'+18%', up:true, formula:'Count nuevos del mes con severidad Alta o Crítica' },
+      { id:'DAST-001b', name:'# Altas/Críticas remediadas en el mes', value:'98', trend:'+10%', up:false, formula:'Count registros cuyo estatus cambió a "Remediada" en el mes' },
+      { id:'DAST-002', name:'% Altas/Críticas remediadas', value:'68%', trend:'+4%', up:false, formula:'(Remediadas / Identificadas) × 100' },
+      { id:'DAST-003', name:'Backlog activo Altas/Críticas', value:'982', trend:'+18%', up:true, formula:'Count registros con estatus "Activa"' },
+      { id:'DAST-004', name:'% con SLA vencido', value:'9%', trend:'-1%', up:false, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [90,110,120,130,100,115,125,140,145,150,140,145],
+      remediadas: [70,80,90,100,80,90,100,110,98,95,100,98],
+      backlog: [700,730,760,790,810,835,860,890,920,950,970,982],
+    }
+  },
+  sca: {
+    name: 'SCA', color: '#3fb950', bg: 'rgba(63,185,80,0.15)',
+    sub: 'Análisis de Composición de Software (Dependencias)',
+    sla: { criticos: '2 meses', altos: '2 meses' },
+    kpis: [
+      { id:'SCA-001', name:'# Altas/Críticas identificadas en el mes', value:'290', trend:'-8%', up:false, formula:'Count nuevos del mes con severidad Alta o Crítica' },
+      { id:'SCA-001b', name:'# Altas/Críticas remediadas en el mes', value:'340', trend:'+15%', up:false, formula:'Count registros cuyo estatus cambió a "Remediada" en el mes' },
+      { id:'SCA-002', name:'% Altas/Críticas remediadas', value:'117%', trend:'+20%', up:false, formula:'(Remediadas / Identificadas) × 100' },
+      { id:'SCA-003', name:'Backlog activo Altas/Críticas', value:'1,842', trend:'-8%', up:false, formula:'Count registros con estatus "Activa"' },
+      { id:'SCA-004', name:'% con SLA vencido', value:'22%', trend:'-3%', up:false, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [350,320,310,300,290,280,300,310,290,280,290,290],
+      remediadas: [200,250,280,310,330,340,350,360,340,350,340,340],
+      backlog: [2200,2270,2300,2290,2250,2190,2140,2090,2040,1970,1910,1842],
+    }
+  },
+  cds: {
+    name: 'CDS', color: '#d29922', bg: 'rgba(210,153,34,0.15)',
+    sub: 'Detección de Secretos en Código (Credentials/Secrets)',
+    sla: { criticos: '7 días', altos: '—' },
+    kpis: [
+      { id:'CDS-001', name:'# Altas/Críticas identificadas en el mes', value:'180', trend:'+5%', up:true, formula:'Count nuevos del mes con severidad Alta o Crítica' },
+      { id:'CDS-001b', name:'# Altas/Críticas remediadas en el mes', value:'155', trend:'+3%', up:false, formula:'Count registros cuyo estatus cambió a "Remediada" en el mes' },
+      { id:'CDS-002', name:'% Altas/Críticas remediadas', value:'86%', trend:'-2%', up:true, formula:'(Remediadas / Identificadas) × 100' },
+      { id:'CDS-003', name:'Backlog activo Altas/Críticas', value:'1,156', trend:'+5%', up:true, formula:'Count registros con estatus "Activa"' },
+      { id:'CDS-004', name:'% con SLA vencido', value:'11%', trend:'+1%', up:true, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [140,150,160,170,165,170,175,180,180,185,180,180],
+      remediadas: [120,130,140,150,155,160,155,160,155,150,155,155],
+      backlog: [980,1000,1020,1040,1050,1060,1080,1100,1120,1140,1150,1156],
+    }
+  },
+  mda: {
+    name: 'MDA', color: '#bc8cff', bg: 'rgba(188,140,255,0.15)',
+    sub: 'Modelado de Amenazas (Threat Modeling)',
+    sla: { criticos: '2 meses', altos: '2 meses' },
+    kpis: [
+      { id:'MDA-001', name:'# Amenazas Altas/Críticas identificadas en el mes', value:'62', trend:'-3%', up:false, formula:'Count nuevos del mes con criticidad Alta o Crítica' },
+      { id:'MDA-001b', name:'# Amenazas Altas/Críticas mitigadas en el mes', value:'71', trend:'+8%', up:false, formula:'Count registros cuyo estatus cambió a "Mitigada" en el mes' },
+      { id:'MDA-002', name:'% Amenazas Altas/Críticas mitigadas', value:'114%', trend:'+10%', up:false, formula:'(Mitigadas / Identificadas) × 100' },
+      { id:'MDA-003', name:'Backlog activo Altas/Críticas', value:'417', trend:'-3%', up:false, formula:'Count registros con estatus "Activa"' },
+      { id:'MDA-004', name:'% con SLA vencido', value:'4%', trend:'-2%', up:false, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [80,75,70,68,65,62,60,62,64,62,60,62],
+      remediadas: [50,55,60,65,68,70,72,71,70,71,70,71],
+      backlog: [520,510,500,490,480,470,460,450,440,430,420,417],
+    }
+  },
+  mast: {
+    name: 'MAST', color: '#39d353', bg: 'rgba(57,211,83,0.15)',
+    sub: 'Análisis de Seguridad en Aplicaciones Móviles',
+    sla: { criticos: '7 días', altos: '—' },
+    kpis: [
+      { id:'MAST-001', name:'# Altas/Críticas identificadas en el mes', value:'61', trend:'-3%', up:false, formula:'Count nuevos del mes con severidad Alta o Crítica' },
+      { id:'MAST-001b', name:'# Altas/Críticas remediadas en el mes', value:'72', trend:'+5%', up:false, formula:'Count registros cuyo estatus cambió a "Remediada" en el mes' },
+      { id:'MAST-002', name:'% Altas/Críticas remediadas', value:'118%', trend:'+8%', up:false, formula:'(Remediadas / Identificadas) × 100' },
+      { id:'MAST-003', name:'Backlog activo Altas/Críticas', value:'357', trend:'-3%', up:false, formula:'Count registros con estatus "Activa"' },
+      { id:'MAST-004', name:'% con SLA vencido', value:'3%', trend:'-1%', up:false, formula:'(Activas con SLA vencido / Total activas) × 100' },
+    ],
+    hist: {
+      identificadas: [80,75,70,68,65,62,60,62,64,62,60,61],
+      remediadas: [55,60,65,68,70,72,74,72,70,72,70,72],
+      backlog: [450,440,430,420,410,400,390,380,370,365,360,357],
+    }
+  }
+};
+
+const PIPELINE_DATA = {
+  sast: {
+    name: 'Pipeline SAST', icon: '🔍', sub: 'Escaneos de código fuente en CI/CD',
+    total: '3,842', aprobados: '2,812', rechazados: '1,030', pct: '73%', libvulns: '47',
+    barras: {
+      aprobados: [210,230,250,240,220,230,245,255,240,235,245,212],
+      rechazados: [90,80,85,90,95,88,82,78,85,90,88,85],
+    },
+    linea: [70,74,75,73,70,72,75,77,74,72,74,73],
+    topVulns: [
+      { name:'SQL Injection', n:412, sev:'Crítica' },
+      { name:'Server-Side Request Forgery (SSRF)', n:298, sev:'Alta' },
+      { name:'Cross-Site Scripting (XSS)', n:256, sev:'Alta' },
+      { name:'Insecure Deserialization', n:198, sev:'Alta' },
+      { name:'Security Misconfiguration', n:187, sev:'Media' },
+      { name:'Broken Access Control', n:165, sev:'Crítica' },
+      { name:'Prototype Pollution', n:142, sev:'Alta' },
+      { name:'Log4Shell (log4j)', n:128, sev:'Crítica' },
+      { name:'Path Traversal', n:112, sev:'Alta' },
+      { name:'Hardcoded Credentials', n:98, sev:'Alta' },
+    ],
+    subdir: [
+      { name:'CORE-BANCARIO', total:1240, aprobados:812, pct:'65%' },
+      { name:'ARQUITECTURA TI', total:980, aprobados:735, pct:'75%' },
+      { name:'PLATAFORMAS DIGITALES', total:890, aprobados:712, pct:'80%' },
+      { name:'EXPERIENCIA DIGITAL', total:732, aprobados:553, pct:'76%' },
+    ],
+    celulas: [
+      { name:'Pagos y Transferencias', total:320, vulns:180, pct:'44%' },
+      { name:'Cuentas y Ahorros', total:290, vulns:145, pct:'50%' },
+      { name:'Tarjetas', total:260, vulns:110, pct:'58%' },
+      { name:'Créditos', total:240, vulns:98, pct:'59%' },
+      { name:'Canales Digitales', total:220, vulns:82, pct:'63%' },
+    ]
+  },
+  dast: {
+    name: 'Pipeline DAST', icon: '🌐', sub: 'Escaneos dinámicos de aplicaciones web',
+    total: '1,240', aprobados: '1,054', rechazados: '186', pct: '85%', libvulns: '12',
+    barras: {
+      aprobados: [78,82,85,88,84,86,90,92,88,86,90,85],
+      rechazados: [22,18,15,12,16,14,10,8,12,14,10,15],
+    },
+    linea: [78,82,85,88,84,86,90,92,88,86,90,85],
+    topVulns: [
+      { name:'Missing Security Headers', n:142, sev:'Alta' },
+      { name:'SSL/TLS Misconfiguration', n:98, sev:'Alta' },
+      { name:'Open Redirect', n:76, sev:'Media' },
+      { name:'Clickjacking', n:65, sev:'Media' },
+      { name:'CORS Misconfiguration', n:54, sev:'Alta' },
+      { name:'Insecure Cookie', n:48, sev:'Media' },
+      { name:'Information Disclosure', n:42, sev:'Baja' },
+      { name:'HTTP Methods Enabled', n:38, sev:'Media' },
+      { name:'Directory Listing', n:32, sev:'Baja' },
+      { name:'Outdated TLS Version', n:28, sev:'Alta' },
+    ],
+    subdir: [
+      { name:'CORE-BANCARIO', total:420, aprobados:378, pct:'90%' },
+      { name:'PLATAFORMAS DIGITALES', total:380, aprobados:323, pct:'85%' },
+      { name:'EXPERIENCIA DIGITAL', total:280, aprobados:224, pct:'80%' },
+      { name:'ARQUITECTURA TI', total:160, aprobados:129, pct:'81%' },
+    ],
+    celulas: [
+      { name:'Banca en Línea', total:180, vulns:27, pct:'85%' },
+      { name:'App Móvil', total:160, vulns:32, pct:'80%' },
+      { name:'Portal Empresarial', total:140, vulns:21, pct:'85%' },
+      { name:'API Gateway', total:120, vulns:14, pct:'88%' },
+      { name:'Pagos Digitales', total:110, vulns:18, pct:'84%' },
+    ]
+  }
+};
+
+let chartHistorico = null, chartDonut = null, chartBarras = null, chartLinea = null;
+
+function goHome() {
+  document.getElementById('view-home').style.display = 'block';
+  document.getElementById('view-motor-detail').style.display = 'none';
+  document.getElementById('view-pipeline-detail').style.display = 'none';
+  document.getElementById('breadcrumb-current').textContent = 'Dashboard de Indicadores';
+  if (chartHistorico) { chartHistorico.destroy(); chartHistorico = null; }
+  if (chartDonut) { chartDonut.destroy(); chartDonut = null; }
+  if (chartBarras) { chartBarras.destroy(); chartBarras = null; }
+  if (chartLinea) { chartLinea.destroy(); chartLinea = null; }
+}
+
+function showMotorDetail(motor) {
+  const d = MOTOR_DATA[motor];
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-pipeline-detail').style.display = 'none';
+  document.getElementById('view-motor-detail').style.display = 'block';
+  document.getElementById('breadcrumb-current').textContent = `Indicadores ${d.name}`;
+  document.getElementById('detail-motor-name').textContent = `Indicadores ${d.name}`;
+  document.getElementById('detail-motor-sub').textContent = d.sub;
+  const icon = document.getElementById('detail-motor-icon');
+  icon.textContent = d.name;
+  icon.style.background = d.bg;
+  icon.style.color = d.color;
+
+  // KPI Cards
+  const grid = document.getElementById('kpi-detail-grid');
+  grid.innerHTML = d.kpis.map(k => `
+    <div class="kpi-detail-card">
+      <div class="kpi-id">${k.id}</div>
+      <div class="kpi-name">${k.name}</div>
+      <div class="kpi-big" style="color:${d.color}">${k.value}</div>
+      <div class="kpi-trend ${k.up ? 'trend-up' : 'trend-down'}">${k.up ? '▲' : '▼'} ${k.trend} vs mes anterior</div>
+      <div class="kpi-formula">${k.formula}</div>
+    </div>
+  `).join('');
+
+  // SLA Table
+  const tbody = document.getElementById('sla-tbody');
+  tbody.innerHTML = `
+    <tr><td>Críticos</td><td>${d.sla.criticos}</td><td style="color:#f85149">312</td><td style="color:#f85149">12.8%</td><td><span class="badge badge-red">Vencido</span></td></tr>
+    <tr><td>Altos</td><td>${d.sla.altos}</td><td style="color:#d29922">128</td><td style="color:#d29922">5.3%</td><td><span class="badge badge-yellow">En Riesgo</span></td></tr>
+    <tr><td>Medios</td><td>—</td><td>0</td><td>0%</td><td><span class="badge badge-green">OK</span></td></tr>
+  `;
+
+  setTimeout(() => {
+    if (chartHistorico) chartHistorico.destroy();
+    if (chartDonut) chartDonut.destroy();
+    chartHistorico = new Chart(document.getElementById('chart-historico'), {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          { label: 'Identificadas', data: d.hist.identificadas, borderColor: '#f85149', backgroundColor: 'rgba(248,81,73,0.1)', tension: 0.4, fill: false, pointRadius: 3 },
+          { label: 'Remediadas', data: d.hist.remediadas, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.1)', tension: 0.4, fill: false, pointRadius: 3 },
+          { label: 'Backlog', data: d.hist.backlog.map(v => v/10), borderColor: d.color, backgroundColor: `${d.color}20`, tension: 0.4, fill: false, pointRadius: 3, borderDash: [4,2] },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } } } }
+    });
+    chartDonut = new Chart(document.getElementById('chart-donut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Críticas', 'Altas', 'Medias', 'Bajas'],
+        datasets: [{ data: [18, 35, 30, 17], backgroundColor: ['#f85149','#d29922','#58a6ff','#3fb950'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 10 }, boxWidth: 12 } } }, cutout: '65%' }
+    });
+  }, 50);
+}
+
+function showPipelineDetail(type) {
+  const d = PIPELINE_DATA[type];
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-motor-detail').style.display = 'none';
+  document.getElementById('view-pipeline-detail').style.display = 'block';
+  document.getElementById('breadcrumb-current').textContent = d.name;
+  document.getElementById('pipeline-detail-icon').textContent = d.icon;
+  document.getElementById('pipeline-detail-name').textContent = d.name;
+  document.getElementById('pipeline-detail-sub').textContent = d.sub;
+  document.getElementById('pd-total').textContent = d.total;
+  document.getElementById('pd-aprobados').textContent = d.aprobados;
+  document.getElementById('pd-rechazados').textContent = d.rechazados;
+  document.getElementById('pd-pct').textContent = d.pct;
+  document.getElementById('pd-libvulns').textContent = d.libvulns;
+
+  // Top vulns
+  document.getElementById('pd-top-vulns').innerHTML = d.topVulns.map((v,i) => `
+    <tr><td style="color:#8b949e">${i+1}</td><td>${v.name}</td><td style="font-weight:600">${v.n}</td><td><span class="badge ${v.sev==='Crítica'?'badge-red':v.sev==='Alta'?'badge-yellow':v.sev==='Media'?'badge-blue':'badge-green'}">${v.sev}</span></td></tr>
+  `).join('');
+
+  // Subdir
+  document.getElementById('pd-subdir').innerHTML = d.subdir.map(s => `
+    <tr><td>${s.name}</td><td>${s.total}</td><td style="color:#3fb950">${s.aprobados}</td><td>${s.pct}</td></tr>
+  `).join('');
+
+  // Celulas
+  document.getElementById('pd-celulas').innerHTML = d.celulas.map(c => `
+    <tr><td>${c.name}</td><td>${c.total}</td><td style="color:#f85149">${c.vulns}</td><td>${c.pct}</td></tr>
+  `).join('');
+
+  setTimeout(() => {
+    if (chartBarras) chartBarras.destroy();
+    if (chartLinea) chartLinea.destroy();
+    chartBarras = new Chart(document.getElementById('pipeline-chart-barras'), {
+      type: 'bar',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          { label: 'Aprobados', data: d.barras.aprobados, backgroundColor: 'rgba(63,185,80,0.7)', borderRadius: 3 },
+          { label: 'Rechazados', data: d.barras.rechazados, backgroundColor: 'rgba(248,81,73,0.7)', borderRadius: 3 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 } } } }, scales: { x: { stacked: false, ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } } } }
+    });
+    chartLinea = new Chart(document.getElementById('pipeline-chart-linea'), {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [{ label: '% Aprobación', data: d.linea, borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.1)', tension: 0.4, fill: true, pointRadius: 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } }, y: { min: 60, max: 100, ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v+'%' }, grid: { color: '#21262d' } } } }
+    });
+  }, 50);
+}
+
+function openCaptureModal() { document.getElementById('capture-modal').classList.add('visible'); }
+function closeCaptureModal() { document.getElementById('capture-modal').classList.remove('visible'); }
+</script>
+</body>
+</html>

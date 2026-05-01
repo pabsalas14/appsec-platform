@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración / Builder No-Code — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+            --sidebar-w: 250px;
+            --drawer-w: 350px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w);
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 10px 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text-main);
+        }
+
+        .menu-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border-right: 3px solid var(--accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .topbar {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background-color: var(--bg-panel);
+        }
+
+        .workspace {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Builder Area */
+        .builder-area {
+            flex: 1;
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .builder-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entity-selector {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+            min-width: 200px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+
+        /* Field List (Schema Builder) */
+        .field-list {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .field-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .field-item:hover {
+            border-color: var(--accent);
+        }
+
+        .field-item.selected {
+            border-color: var(--accent);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .field-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .drag-handle {
+            color: var(--text-muted);
+            cursor: grab;
+        }
+
+        .field-type {
+            font-size: 0.8rem;
+            background-color: var(--bg-dark);
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: var(--text-muted);
+        }
+
+        .field-badges {
+            display: flex;
+            gap: 5px;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .badge.req { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        /* Properties Drawer */
+        .properties-drawer {
+            width: var(--drawer-w);
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            display: none; /* Hidden by default */
+        }
+
+        .properties-drawer.active {
+            display: flex;
+        }
+
+        .drawer-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .drawer-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent);
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: var(--bg-dark);
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .toggle.on {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle.on::after {
+            transform: translateX(20px);
+        }
+
+        .drawer-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* AI Builder View (Hidden initially) */
+        .ai-builder-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .ai-builder-view.active {
+            display: flex;
+        }
+
+        .prompt-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .prompt-textarea {
+            flex: 1;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 15px;
+            border-radius: 6px;
+            resize: none;
+            font-family: monospace;
+            line-height: 1.5;
+        }
+
+        .prompt-textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .var-tag {
+            display: inline-block;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            cursor: pointer;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .var-tag:hover {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .test-console {
+            height: 200px;
+            background-color: #000;
+            border-top: 1px solid var(--border);
+            padding: 15px;
+            font-family: monospace;
+            color: #a78bfa;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .test-console.active {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            ⚙️ AppSec Builder
+        </div>
+        <ul class="menu-list">
+            <li class="menu-item active" onclick="switchView('schema')">📄 Schema Builder</li>
+            <li class="menu-item" onclick="switchView('status')">🔄 Flujos de Estatus</li>
+            <li class="menu-item" onclick="switchView('catalogs')">📋 Catálogos Centrales</li>
+            <li class="menu-item" onclick="switchView('slas')">⏱️ Reglas SLA</li>
+            <li class="menu-item" onclick="switchView('ai')">🤖 AI Builder</li>
+            <li class="menu-item" onclick="switchView('roles')">🔐 Roles y Permisos</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="topbar">
+            <div style="font-weight: 500;" id="topbar-title">Schema Builder (Campos Dinámicos)</div>
+            <div>
+                <button class="btn btn-outline" style="margin-right: 10px;">Descartar Cambios</button>
+                <button class="btn">Publicar Configuración</button>
+            </div>
+        </div>
+
+        <div class="workspace">
+            
+            <!-- Schema Builder View -->
+            <div class="builder-area" id="view-schema">
+                <div class="builder-header">
+                    <select class="entity-selector">
+                        <option>Módulo: Vulnerabilidades</option>
+                        <option>Módulo: Liberaciones</option>
+                        <option>Módulo: Temas Emergentes</option>
+                        <option>Módulo: Threat Modeling</option>
+                    </select>
+                    <button class="btn" onclick="openDrawer('new')">+ Agregar Campo</button>
+                </div>
+                
+                <div class="field-list">
+                    <!-- Field Item (Native) -->
+                    <div class="field-item" onclick="openDrawer('id')">
+                        <div class="field-info">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span style="font-weight: 500;">ID Vulnerabilidad</span>
+                            <span class="field-type">Texto (Autogenerado)</span>
+                        </div>
+                        <div class="field-badges">
+                            <span class="badge req">Obligatorio</span>
+                            <span class="badge">Nativo</span>
+                        </div>
+                    </div>
+
+                    <!-- Field Item -->
+                    <div class="field-item" onclick="openDrawer('motor')">
+                        <div class="field-info">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span style="font-weight: 500;">Motor de Escaneo</span>
+                            <span class="field-type">Catálogo</span>
+                        </div>
+                        <div class="field-badges">
+                            <span class="badge req">Obligatorio</span>
+                            <span class="badge">Filtro</span>
+                        </div>
+                    </div>
+
+                    <!-- Field Item -->
+                    <div class="field-item" onclick="openDrawer('sev')">
+                        <div class="field-info">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span style="font-weight: 500;">Severidad</span>
+                            <span class="field-type">Catálogo</span>
+                        </div>
+                        <div class="field-badges">
+                            <span class="badge req">Obligatorio</span>
+                            <span class="badge">Filtro</span>
+                        </div>
+                    </div>
+
+                    <!-- Field Item -->
+                    <div class="field-item" onclick="openDrawer('desc')">
+                        <div class="field-info">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span style="font-weight: 500;">Descripción Técnica</span>
+                            <span class="field-type">Texto Largo</span>
+                        </div>
+                        <div class="field-badges">
+                            <span class="badge req">Obligatorio</span>
+                        </div>
+                    </div>
+
+                    <!-- Field Item (Custom) -->
+                    <div class="field-item selected" onclick="openDrawer('custom1')">
+                        <div class="field-info">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span style="font-weight: 500;">Ticket Jira Asociado</span>
+                            <span class="field-type">Texto Corto</span>
+                        </div>
+                        <div class="field-badges">
+                            <span class="badge" style="background-color: rgba(59, 130, 246, 0.2); color: #93c5fd;">Personalizado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Builder View -->
+            <div class="builder-area ai-builder-view" id="view-ai">
+                <div class="builder-header">
+                    <select class="entity-selector">
+                        <option>Caso: Triaje de Falsos Positivos (SAST)</option>
+                        <option>Caso: Sugerencia STRIDE (MDA)</option>
+                        <option>Caso: Asistente de Redacción</option>
+                    </select>
+                    <div>
+                        <button class="btn btn-outline" style="margin-right: 10px;" onclick="document.getElementById('console').classList.toggle('active')">Consola de Pruebas</button>
+                        <button class="btn">Guardar Prompt</button>
+                    </div>
+                </div>
+                
+                <div class="prompt-editor">
+                    <div class="form-group">
+                        <label>System Prompt (Instrucciones Base)</label>
+                        <textarea class="prompt-textarea" style="flex: 0.4;">Eres un experto en seguridad aplicativa (AppSec). Tu tarea es analizar un hallazgo de SAST y determinar si es un Falso Positivo probable, basándote en el snippet de código y el contexto del framework. Responde en formato JSON con las llaves: "clasificacion" (Probable FP, Confirmado, Requiere Revisión) y "justificacion" (texto técnico).</textarea>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label>User Prompt (Plantilla de Ejecución)</label>
+                            <div>
+                                <span class="var-tag" onclick="insertVar('{{motor}}')">+ {{motor}}</span>
+                                <span class="var-tag" onclick="insertVar('{{regla_sast}}')">+ {{regla_sast}}</span>
+                                <span class="var-tag" onclick="insertVar('{{snippet}}')">+ {{snippet}}</span>
+                                <span class="var-tag" onclick="insertVar('{{framework}}')">+ {{framework}}</span>
+                            </div>
+                        </div>
+                        <textarea class="prompt-textarea" id="user-prompt">Analiza el siguiente hallazgo reportado por {{motor}}:
+
+Regla violada: {{regla_sast}}
+Framework del proyecto: {{framework}}
+
+Snippet de código afectado:
+```
+{{snippet}}
+```
+
+Considera si el framework {{framework}} ya implementa protecciones nativas contra {{regla_sast}} que el motor no haya detectado.</textarea>
+                    </div>
+                </div>
+
+                <div class="test-console" id="console">
+                    > Ejecutando prueba con datos simulados...
+                    > Modelo: gpt-4-turbo | Temp: 0.2
+                    > 
+                    > RESULTADO:
+                    > {
+                    >   "clasificacion": "Probable FP",
+                    >   "justificacion": "El snippet muestra el uso de PreparedStatement en Java/Spring Boot. Aunque el motor SAST detectó concatenación de strings en la línea 42, la variable concatenada es una constante estática (nombre de tabla), no input de usuario. Los parámetros reales se pasan mediante setString(), lo que previene SQL Injection. Por lo tanto, es un falso positivo."
+                    > }
+                </div>
+            </div>
+
+            <!-- Properties Drawer -->
+            <div class="properties-drawer active" id="drawer">
+                <div class="drawer-header">
+                    Propiedades del Campo
+                    <button class="close-btn" onclick="closeDrawer()">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <div class="form-group">
+                        <label>Nombre del Campo (Etiqueta)</label>
+                        <input type="text" class="form-control" value="Ticket Jira Asociado">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nombre Interno (API Key)</label>
+                        <input type="text" class="form-control" value="ticket_jira_asociado" disabled style="opacity: 0.7;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de Dato</label>
+                        <select class="form-control">
+                            <option selected>Texto Corto</option>
+                            <option>Texto Largo</option>
+                            <option>Número</option>
+                            <option>Catálogo (Dropdown)</option>
+                            <option>Relación</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Comportamiento</label>
+                        
+                        <div class="toggle-group">
+                            <span style="font-size: 0.9rem;">Obligatorio</span>
+                            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        
+                        <div class="toggle-group">
+                            <span style="font-size: 0.9rem;">Visible en Tabla Principal</span>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                        
+                        <div class="toggle-group">
+                            <span style="font-size: 0.9rem;">Permitir Filtrar por este campo</span>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+
+                        <div class="toggle-group">
+                            <span style="font-size: 0.9rem;">Editable por el usuario</span>
+                            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-footer">
+                    <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); margin-right: auto;">Eliminar</button>
+                    <button class="btn btn-outline" onclick="closeDrawer()">Cancelar</button>
+                    <button class="btn" onclick="closeDrawer()">Guardar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchView(viewId) {
+            // Update menu active state
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Hide all views
+            document.getElementById('view-schema').style.display = 'none';
+            document.getElementById('view-ai').classList.remove('active');
+            document.getElementById('drawer').classList.remove('active');
+
+            // Show selected view
+            if (viewId === 'schema') {
+                document.getElementById('view-schema').style.display = 'flex';
+                document.getElementById('topbar-title').innerText = 'Schema Builder (Campos Dinámicos)';
+            } else if (viewId === 'ai') {
+                document.getElementById('view-ai').classList.add('active');
+                document.getElementById('topbar-title').innerText = 'AI Builder (Configuración de Prompts)';
+            } else {
+                // Placeholder for other views
+                document.getElementById('view-schema').style.display = 'flex';
+                document.getElementById('topbar-title').innerText = 'Vista en construcción...';
+            }
+        }
+
+        function openDrawer(fieldId) {
+            document.getElementById('drawer').classList.add('active');
+            
+            // Update selected state in list
+            document.querySelectorAll('.field-item').forEach(el => el.classList.remove('selected'));
+            if(event && event.currentTarget) {
+                event.currentTarget.classList.add('selected');
+            }
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('active');
+            document.querySelectorAll('.field-item').forEach(el => el.classList.remove('selected'));
+        }
+
+        function insertVar(varName) {
+            const textarea = document.getElementById('user-prompt');
+            textarea.value += ' ' + varName;
+            textarea.focus();
+        }
+    </script>
+</body>
+</html>

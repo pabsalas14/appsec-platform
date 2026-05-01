@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organización (6 Niveles Capturables) — AppSec</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-card: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+            --tree-w: 450px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Topbar */
+        .topbar {
+            padding: 20px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.05); }
+
+        /* Main Layout */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left Panel (Tree View) */
+        .tree-panel {
+            width: var(--tree-w);
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px 8px 35px;
+            border-radius: 6px;
+            outline: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+            background-repeat: no-repeat;
+            background-position: 10px center;
+        }
+
+        .search-input:focus { border-color: var(--accent); }
+
+        .tree-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        /* Tree Nodes */
+        .tree-node {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2px;
+        }
+
+        .node-content {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .node-content:hover { background-color: rgba(255,255,255,0.05); }
+        .node-content.selected { background-color: rgba(59, 130, 246, 0.1); color: var(--accent); }
+
+        .node-toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+
+        .node-toggle.open { transform: rotate(90deg); }
+        .node-toggle.empty { visibility: hidden; }
+
+        .node-icon {
+            margin: 0 8px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .node-content.selected .node-icon { color: var(--accent); }
+
+        .node-label {
+            flex: 1;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .node-badge {
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .node-children {
+            padding-left: 20px;
+            border-left: 1px dashed var(--border);
+            margin-left: 18px;
+            display: none;
+        }
+
+        .node-children.open { display: flex; flex-direction: column; }
+
+        /* Right Panel (Detail Form) */
+        .detail-panel {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: var(--bg-dark);
+        }
+
+        .detail-card {
+            background-color: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .card-body {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .form-control {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus { border-color: var(--accent); }
+        .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .card-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        /* Level Badges */
+        .lvl-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .lvl-1 { border-left: 3px solid #ef4444; } /* Dirección */
+        .lvl-2 { border-left: 3px solid #f59e0b; } /* Subdirección */
+        .lvl-3 { border-left: 3px solid #10b981; } /* Gerencia */
+        .lvl-4 { border-left: 3px solid #3b82f6; } /* Organización */
+        .lvl-5 { border-left: 3px solid #8b5cf6; } /* Célula */
+        .lvl-6 { border-left: 3px solid #ec4899; } /* Repositorio */
+
+        /* Dynamic Fields */
+        .dynamic-field { display: none; }
+        .dynamic-field.active { display: flex; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="page-title">
+            Organización (6 Niveles Capturables)
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline">↓ Exportar Estructura</button>
+            <button class="btn btn-outline">🔄 Sincronizar AD / IAM</button>
+            <button class="btn">↑ Importar Excel</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Left Panel: Tree View -->
+        <div class="tree-panel">
+            <div class="tree-header">
+                <input type="text" class="search-input" placeholder="Buscar dirección, gerencia, célula, repo...">
+            </div>
+            <div class="tree-body">
+                
+                <!-- Nivel 1: Dirección -->
+                <div class="tree-node">
+                    <div class="node-content" onclick="toggleNode(this); selectNode('Dirección de Tecnología', 'Dirección', 'N/A', 'Ana García', 'lvl-1')">
+                        <div class="node-toggle open">▶</div>
+                        <div class="node-icon">🏛️</div>
+                        <div class="node-label">Dirección de Tecnología</div>
+                        <div class="node-badge">850 repos</div>
+                    </div>
+                    
+                    <div class="node-children open">
+                        
+                        <!-- Nivel 2: Subdirección -->
+                        <div class="tree-node">
+                            <div class="node-content" onclick="toggleNode(this); selectNode('Subdirección de Canales Digitales', 'Subdirección', 'Dirección de Tecnología', 'Luis Pérez', 'lvl-2')">
+                                <div class="node-toggle open">▶</div>
+                                <div class="node-icon">🏬</div>
+                                <div class="node-label">Subdirección de Canales Digitales</div>
+                                <div class="node-badge">120 repos</div>
+                            </div>
+                            
+                            <div class="node-children open">
+                                
+                                <!-- Nivel 3: Gerencia -->
+                                <div class="tree-node">
+                                    <div class="node-content" onclick="toggleNode(this); selectNode('Gerencia de Banca Móvil', 'Gerencia', 'Subdirección de Canales Digitales', 'María Torres', 'lvl-3')">
+                                        <div class="node-toggle open">▶</div>
+                                        <div class="node-icon">💼</div>
+                                        <div class="node-label">Gerencia de Banca Móvil</div>
+                                        <div class="node-badge">45 repos</div>
+                                    </div>
+                                    
+                                    <div class="node-children open">
+                                        
+                                        <!-- Nivel 4: Organización -->
+                                        <div class="tree-node">
+                                            <div class="node-content selected" onclick="toggleNode(this); selectNode('Org-BancaMovil-GitHub', 'Organización', 'Gerencia de Banca Móvil', 'Pedro Núñez', 'lvl-4', {plataforma: 'GitHub', url: 'https://github.com/org-bancamovil'})">
+                                                <div class="node-toggle open">▶</div>
+                                                <div class="node-icon">🌐</div>
+                                                <div class="node-label">Org-BancaMovil-GitHub</div>
+                                                <div class="node-badge">27 repos</div>
+                                            </div>
+                                            
+                                            <div class="node-children open">
+                                                
+                                                <!-- Nivel 5: Célula -->
+                                                <div class="tree-node">
+                                                    <div class="node-content" onclick="toggleNode(this); selectNode('Célula Login Biométrico', 'Célula', 'Org-BancaMovil-GitHub', 'Jorge Ruiz', 'lvl-5')">
+                                                        <div class="node-toggle open">▶</div>
+                                                        <div class="node-icon">👥</div>
+                                                        <div class="node-label">Célula Login Biométrico</div>
+                                                        <div class="node-badge">2 repos</div>
+                                                    </div>
+                                                    
+                                                    <div class="node-children open">
+                                                        
+                                                        <!-- Nivel 6: Repositorio -->
+                                                        <div class="tree-node">
+                                                            <div class="node-content" onclick="toggleNode(this); selectNode('ios-biometric-auth', 'Repositorio', 'Célula Login Biométrico', 'Jorge Ruiz', 'lvl-6', {repoUrl: 'https://github.com/org-bancamovil/ios-biometric-auth', lang: 'Swift', crit: 'Alta'})">
+                                                                <div class="node-toggle empty">▶</div>
+                                                                <div class="node-icon">📦</div>
+                                                                <div class="node-label">ios-biometric-auth</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="tree-node">
+                                                            <div class="node-content" onclick="toggleNode(this); selectNode('android-biometric-auth', 'Repositorio', 'Célula Login Biométrico', 'Jorge Ruiz', 'lvl-6', {repoUrl: 'https://github.com/org-bancamovil/android-biometric-auth', lang: 'Kotlin', crit: 'Alta'})">
+                                                                <div class="node-toggle empty">▶</div>
+                                                                <div class="node-icon">📦</div>
+                                                                <div class="node-label">android-biometric-auth</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Nivel 5: Célula Transferencias -->
+                                                <div class="tree-node">
+                                                    <div class="node-content" onclick="toggleNode(this); selectNode('Célula Transferencias', 'Célula', 'Org-BancaMovil-GitHub', 'Elena Díaz', 'lvl-5')">
+                                                        <div class="node-toggle">▶</div>
+                                                        <div class="node-icon">👥</div>
+                                                        <div class="node-label">Célula Transferencias</div>
+                                                        <div class="node-badge">3 repos</div>
+                                                    </div>
+                                                    <div class="node-children"></div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Nivel 4: Organización Atlassian -->
+                                        <div class="tree-node">
+                                            <div class="node-content" onclick="toggleNode(this); selectNode('Org-BancaMovil-Bitbucket', 'Organización', 'Gerencia de Banca Móvil', 'Roberto Sánchez', 'lvl-4', {plataforma: 'Atlassian', url: 'https://bitbucket.org/org-bancamovil'})">
+                                                <div class="node-toggle">▶</div>
+                                                <div class="node-icon">🌐</div>
+                                                <div class="node-label">Org-BancaMovil-Bitbucket</div>
+                                                <div class="node-badge">18 repos</div>
+                                            </div>
+                                            <div class="node-children"></div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Panel: Detail Form -->
+        <div class="detail-panel">
+            <div class="detail-card">
+                <div class="card-header">
+                    <div class="card-title" id="form-title">Detalle del Nodo</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger);">🗑️ Eliminar</button>
+                        <button class="btn" onclick="prepareCreate()" id="btn-add-sub">+ Agregar Sub-nivel</button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Nombre del Nodo</label>
+                            <input type="text" class="form-control" id="input-nombre" value="Org-BancaMovil-GitHub">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Nivel Jerárquico</label>
+                            <div style="margin-top: 5px;">
+                                <span class="lvl-badge lvl-4" id="input-nivel">Organización</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Entidad Padre (Reporta a)</label>
+                        <input type="text" class="form-control" id="input-padre" value="Gerencia de Banca Móvil" disabled>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Para cambiar la entidad padre, arrastra este nodo en el árbol de la izquierda.</span>
+                    </div>
+
+                    <div style="height: 1px; background-color: var(--border); margin: 10px 0;"></div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Responsable (Owner)</label>
+                            <div style="position: relative;">
+                                <input type="text" class="form-control" id="input-owner" value="Pedro Núñez" style="width: 100%; padding-left: 35px;">
+                                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);">👤</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Recibirá notificaciones y reportes de este nivel y sus hijos.</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fields: Organización -->
+                    <div class="form-row dynamic-field active" id="fields-org">
+                        <div class="form-group">
+                            <label>Plataforma</label>
+                            <select class="form-control" id="input-plataforma">
+                                <option value="GitHub" selected>GitHub</option>
+                                <option value="Atlassian">Atlassian (Bitbucket)</option>
+                                <option value="GitLab">GitLab</option>
+                                <option value="Azure">Azure DevOps</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 2;">
+                            <label>URL Base de la Organización</label>
+                            <input type="url" class="form-control" id="input-org-url" value="https://github.com/org-bancamovil">
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fields: Repositorio -->
+                    <div class="form-row dynamic-field" id="fields-repo">
+                        <div class="form-group" style="flex: 2;">
+                            <label>URL del Repositorio</label>
+                            <input type="url" class="form-control" id="input-repo-url" placeholder="https://github.com/org/repo">
+                        </div>
+                        <div class="form-group">
+                            <label>Lenguaje Principal</label>
+                            <select class="form-control" id="input-lang">
+                                <option value="Java">Java</option>
+                                <option value="Python">Python</option>
+                                <option value="JavaScript">JavaScript / TS</option>
+                                <option value="Swift">Swift</option>
+                                <option value="Kotlin">Kotlin</option>
+                                <option value="C#">C#</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Criticidad</label>
+                            <select class="form-control" id="input-crit">
+                                <option value="Alta">Alta</option>
+                                <option value="Media">Media</option>
+                                <option value="Baja">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div class="card-footer">
+                    <button class="btn btn-outline">Descartar Cambios</button>
+                    <button class="btn">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const niveles = ['Dirección', 'Subdirección', 'Gerencia', 'Organización', 'Célula', 'Repositorio'];
+
+        function toggleNode(element) {
+            if (event.target.classList.contains('node-toggle')) {
+                event.stopPropagation();
+                const toggle = event.target;
+                if (toggle.classList.contains('empty')) return;
+                
+                toggle.classList.toggle('open');
+                const children = element.nextElementSibling;
+                if (children && children.classList.contains('node-children')) {
+                    children.classList.toggle('open');
+                }
+            }
+        }
+
+        function selectNode(nombre, nivel, padre, owner, lvlClass, extraData = null) {
+            // Highlight in tree
+            document.querySelectorAll('.node-content').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Update form
+            document.getElementById('form-title').innerText = 'Detalle del Nodo';
+            document.getElementById('input-nombre').value = nombre;
+            
+            const badge = document.getElementById('input-nivel');
+            badge.className = 'lvl-badge ' + lvlClass;
+            badge.innerText = nivel;
+
+            document.getElementById('input-padre').value = padre;
+            document.getElementById('input-owner').value = owner;
+
+            // Handle Dynamic Fields
+            document.getElementById('fields-org').classList.remove('active');
+            document.getElementById('fields-repo').classList.remove('active');
+
+            if (nivel === 'Organización' && extraData) {
+                document.getElementById('fields-org').classList.add('active');
+                document.getElementById('input-plataforma').value = extraData.plataforma;
+                document.getElementById('input-org-url').value = extraData.url;
+            } else if (nivel === 'Repositorio' && extraData) {
+                document.getElementById('fields-repo').classList.add('active');
+                document.getElementById('input-repo-url').value = extraData.repoUrl;
+                document.getElementById('input-lang').value = extraData.lang;
+                document.getElementById('input-crit').value = extraData.crit;
+            }
+
+            // Handle Add Sub-level button
+            const btnAdd = document.getElementById('btn-add-sub');
+            if (nivel === 'Repositorio') {
+                btnAdd.style.display = 'none'; // Repositorio is the lowest level
+            } else {
+                btnAdd.style.display = 'inline-flex';
+            }
+        }
+
+        function prepareCreate() {
+            const padre = document.getElementById('input-nombre').value;
+            const currentLvlText = document.getElementById('input-nivel').innerText;
+            
+            const currentIndex = niveles.indexOf(currentLvlText);
+            if (currentIndex === -1 || currentIndex >= niveles.length - 1) {
+                alert('No se pueden crear sub-niveles por debajo de Repositorio.');
+                return;
+            }
+
+            const newLvlText = niveles[currentIndex + 1];
+            const newLvlClass = 'lvl-' + (currentIndex + 2); // +1 for 0-index, +1 for next level
+
+            // Update form for creation
+            document.getElementById('form-title').innerText = 'Crear Nuevo Sub-nivel';
+            document.getElementById('input-nombre').value = '';
+            document.getElementById('input-nombre').placeholder = 'Ej. Nuevo ' + newLvlText + '...';
+            
+            const badge = document.getElementById('input-nivel');
+            badge.className = 'lvl-badge ' + newLvlClass;
+            badge.innerText = newLvlText;
+
+            document.getElementById('input-padre').value = padre;
+            document.getElementById('input-owner').value = '';
+            document.getElementById('input-owner').placeholder = 'Buscar usuario...';
+
+            // Handle Dynamic Fields for creation
+            document.getElementById('fields-org').classList.remove('active');
+            document.getElementById('fields-repo').classList.remove('active');
+
+            if (newLvlText === 'Organización') {
+                document.getElementById('fields-org').classList.add('active');
+                document.getElementById('input-org-url').value = '';
+            } else if (newLvlText === 'Repositorio') {
+                document.getElementById('fields-repo').classList.add('active');
+                document.getElementById('input-repo-url').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
