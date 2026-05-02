@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,8 @@ import {
 } from '@/hooks/useServiceReleases';
 import { useServiceReleaseOperacionConfig } from '@/hooks/useOperacionConfig';
 import { useServicios } from '@/hooks/useServicios';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { logger } from '@/lib/logger';
 import {
   ESTADOS_SERVICE_RELEASE,
@@ -55,7 +58,9 @@ import {
   type ServiceReleaseFormInput,
   type ServiceReleaseUpdate,
 } from '@/lib/schemas/service_release.schema';
-import { extractErrorMessage, formatDate } from '@/lib/utils';
+import { UrlFilterChips, type UrlFilterChipItem } from '@/components/filters/UrlFilterChips';
+import { EntityCustomFieldsCard } from '@/components/modules/EntityCustomFieldsCard';
+import { cn, extractErrorMessage, formatDate } from '@/lib/utils';
 
 const ALL = '' as const;
 
@@ -145,6 +150,7 @@ function ServiceReleaseForm({
   });
 
   const pending = createMut.isPending || updateMut.isPending;
+  useUnsavedChanges(form.formState.isDirty);
   const tr = operacion?.transiciones;
   const estadoOptions = useMemo(() => {
     const toOpt = (e: string) => ({ value: e, label: e });
@@ -316,6 +322,11 @@ function ServiceReleaseForm({
           placeholder="PROJ-123"
         />
       </div>
+      {initial ? (
+        <div className="border-t border-border pt-4">
+          <EntityCustomFieldsCard entityType="service_release" entityId={initial.id} />
+        </div>
+      ) : null}
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="outline">
@@ -332,10 +343,11 @@ function ServiceReleaseForm({
 }
 
 export default function ServiceReleasesPage() {
-  const [q, setQ] = useState('');
-  const [jiraF, setJiraF] = useState('');
-  const [servicioF, setServicioF] = useState<string>(ALL);
-  const [estadoF, setEstadoF] = useState<string>(ALL);
+  const { getParam, setParam, clearAll } = useUrlFilters();
+  const q = getParam('q') ?? '';
+  const jiraF = getParam('jira') ?? '';
+  const servicioF = getParam('servicio') ?? ALL;
+  const estadoF = getParam('estado') ?? ALL;
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<ServiceRelease | null>(null);
   const deleteMut = useDeleteServiceRelease();
@@ -376,12 +388,52 @@ export default function ServiceReleasesPage() {
     });
   }, [rows, q, servicioById]);
 
+  const urlChipItems = useMemo((): UrlFilterChipItem[] => {
+    const chips: UrlFilterChipItem[] = [];
+    if (q.trim()) {
+      chips.push({
+        key: 'q',
+        label: `Buscar: ${q}`,
+        onRemove: () => setParam('q', null),
+      });
+    }
+    if (servicioF !== ALL) {
+      const nm = servicioById.get(servicioF);
+      chips.push({
+        key: 'servicio',
+        label: `Servicio: ${nm ?? servicioF.slice(0, 8)}`,
+        onRemove: () => setParam('servicio', null),
+      });
+    }
+    if (estadoF !== ALL) {
+      chips.push({
+        key: 'estado',
+        label: `Estado: ${estadoF}`,
+        onRemove: () => setParam('estado', null),
+      });
+    }
+    if (jiraF.trim()) {
+      chips.push({
+        key: 'jira',
+        label: `Jira API: ${jiraF}`,
+        onRemove: () => setParam('jira', null),
+      });
+    }
+    return chips;
+  }, [q, servicioF, estadoF, jiraF, servicioById, setParam]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Registros — Liberaciones de servicio"
         description="Versiones de despliegue vinculadas a un servicio. El tablero de operación está en la otra pestaña."
       >
+        <div className="flex flex-wrap items-center gap-2">
+          <DashboardCsvExportButton
+            apiPath="/service_releases/export.csv"
+            filename="service_releases.csv"
+            label="Exportar CSV"
+          />
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button disabled={!servicioOptions.length}>
@@ -396,6 +448,7 @@ export default function ServiceReleasesPage() {
             <ServiceReleaseForm onSuccess={() => setCreateOpen(false)} servicioOptions={servicioOptions} />
           </DialogContent>
         </Dialog>
+        </div>
       </PageHeader>
 
       <Card>
@@ -411,7 +464,7 @@ export default function ServiceReleasesPage() {
               <Select
                 className="mt-1"
                 value={servicioF}
-                onChange={(e) => setServicioF(e.target.value)}
+                onChange={(e) => setParam('servicio', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...servicioOptions,
@@ -423,7 +476,7 @@ export default function ServiceReleasesPage() {
               <Select
                 className="mt-1"
                 value={estadoF}
-                onChange={(e) => setEstadoF(e.target.value)}
+                onChange={(e) => setParam('estado', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...ESTADOS_SERVICE_RELEASE.map((e) => ({ value: e, label: e })),
@@ -436,7 +489,7 @@ export default function ServiceReleasesPage() {
                 className="mt-1"
                 placeholder="PROJ-42 (búsqueda parcial en servidor)"
                 value={jiraF}
-                onChange={(e) => setJiraF(e.target.value)}
+                onChange={(e) => setParam('jira', e.target.value.trim() ? e.target.value : null)}
               />
             </div>
             <div className="max-w-md sm:col-span-2 lg:col-span-1">
@@ -445,10 +498,46 @@ export default function ServiceReleasesPage() {
                 className="mt-1"
                 placeholder="Nombre, versión, servicio, contexto…"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => setParam('q', e.target.value.trim() ? e.target.value : null)}
               />
             </div>
           </div>
+
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="text-xs font-medium text-muted-foreground">Filtro rápido por estado (chips)</p>
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setParam('estado', null)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition-colors',
+                  estadoF === ALL
+                    ? 'border-primary bg-primary/15 text-foreground'
+                    : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                )}
+              >
+                Todos
+              </button>
+              {ESTADOS_SERVICE_RELEASE.map((est) => (
+                <button
+                  key={est}
+                  type="button"
+                  onClick={() => setParam('estado', est)}
+                  className={cn(
+                    'max-w-[220px] truncate rounded-full border px-3 py-1 text-xs transition-colors',
+                    estadoF === est
+                      ? 'border-primary bg-primary/15 text-foreground'
+                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                  )}
+                  title={est}
+                >
+                  {est}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <UrlFilterChips items={urlChipItems} onClearAll={clearAll} className="border-t border-border pt-4" />
 
           {isLoading && (
             <div className="flex justify-center py-12 text-muted-foreground">

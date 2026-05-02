@@ -4,14 +4,38 @@ import api from '@/lib/api';
 import type { Iniciativa, IniciativaCreate, IniciativaUpdate } from '@/lib/schemas/iniciativa.schema';
 
 type Envelope<T> = { status: 'success'; data: T };
+type PaginatedIniciativas = Envelope<Iniciativa[]> & {
+  meta?: { page: number; page_size: number; total: number; total_pages?: number };
+  pagination?: { page: number; page_size: number; total: number; total_pages?: number };
+};
 
 const KEY = ['iniciativas'] as const;
+
+export function useIniciativa(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, id],
+    queryFn: async () => {
+      if (!id) throw new Error('id requerido');
+      const { data } = await api.get<Envelope<Iniciativa>>(`/iniciativas/${id}`);
+      if (data.status !== 'success' || !data.data) {
+        throw new Error('Respuesta inválida del servidor');
+      }
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
 
 export function useIniciativas() {
   return useQuery({
     queryKey: KEY,
     queryFn: async () => {
-      const { data } = await api.get<Envelope<Iniciativa[]>>('/iniciativas/');
+      const { data } = await api.get<PaginatedIniciativas>('/iniciativas/', {
+        params: { page: 1, page_size: 100 },
+      });
+      if (data.status !== 'success' || !Array.isArray(data.data)) {
+        throw new Error('Respuesta inválida del servidor');
+      }
       return data.data;
     },
   });

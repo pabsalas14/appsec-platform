@@ -71,12 +71,18 @@ async def progreso_iniciativa_mes(
     if n == 0:
         return ProgresoMesPayload(anio=y, mes=m, progreso_total_pct=0.0, actividades=[])
 
-    total_w = 0.0
+    all_have_peso = all(getattr(h, "peso", None) is not None and h.peso > 0 for h in use)
+    if all_have_peso:
+        raw_weights = [float(h.peso) for h in use]
+        sw = sum(raw_weights)
+        weights = [100.0 * w / sw for w in raw_weights] if sw > 0 else [100.0 / n] * n
+    else:
+        weights = [100.0 / n] * n
+
+    total_w = sum(weights)
     weighted = 0.0
     rows: list[dict] = []
-    for h in use:
-        w = float(h.porcentaje_completado) if h.porcentaje_completado and h.porcentaje_completado > 0 else 100.0 / n
-        total_w += w
+    for h, w in zip(use, weights, strict=True):
         fac = _estado_a_factor(h.estado)
         weighted += w * fac
         rows.append(
@@ -84,6 +90,7 @@ async def progreso_iniciativa_mes(
                 "id": str(h.id),
                 "titulo": h.titulo,
                 "peso_pct": round(w, 2),
+                "peso_configurado": getattr(h, "peso", None),
                 "estado": h.estado,
                 "aporte_simulado_pct": round(w * fac, 2),
             }

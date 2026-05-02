@@ -461,12 +461,19 @@ export default function CustomFieldsPage() {
               <textarea
                 value={formData.config || ''}
                 onChange={(e) => handleFormChange('config', e.target.value)}
-                placeholder='{"options": [{"label": "Opción 1", "value": "opt1"}]}'
+                placeholder={
+                  '{"options":[{"label":"Opción 1","value":"opt1"}],"visibility":{"show_when":{"field":"estado","equals":"Abierto"}}}'
+                }
                 className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm font-mono"
-                rows={4}
+                rows={5}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Para select: {`{"options": [{"label": "...", "value": "..."}]}`}
+              <p className="text-xs text-muted-foreground mt-1 space-y-1">
+                <span className="block">Select: opciones y default opcional.</span>
+                <span className="block">
+                  Visibilidad (spec 19.1): clave <code className="rounded bg-muted px-1">visibility</code> con{' '}
+                  <code className="rounded bg-muted px-1">show_when</code> / <code className="rounded bg-muted px-1">hide_when</code>{' '}
+                  y condiciones sobre el valor de otro campo del mismo formulario.
+                </span>
               </p>
             </div>
           </div>

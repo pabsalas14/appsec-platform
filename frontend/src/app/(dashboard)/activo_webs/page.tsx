@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowDownAZ, ArrowUpAZ, ExternalLink, Link2, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -50,6 +51,7 @@ import { useGerencias } from '@/hooks/useGerencias';
 import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
 import { useClientPagedList } from '@/hooks/useClientPagedList';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { logger } from '@/lib/logger';
 import {
   ActivoWebCreateSchema,
@@ -57,7 +59,7 @@ import {
   type ActivoWebCreate,
   type ActivoWebUpdate,
 } from '@/lib/schemas/activo_web.schema';
-import { extractErrorMessage, formatDate } from '@/lib/utils';
+import { cn, extractErrorMessage, formatDate } from '@/lib/utils';
 
 const AMBIENTES: { value: string; label: string }[] = [
   { value: 'produccion', label: 'Producción' },
@@ -139,6 +141,7 @@ function ActivoWebForm({
   }, [wTip]);
 
   const pending = createMut.isPending || updateMut.isPending;
+  useUnsavedChanges(form.formState.isDirty);
 
   const onSubmit = form.handleSubmit((data) => {
     const payload: ActivoWebCreate = {
@@ -255,7 +258,7 @@ function ActivoWebForm({
 }
 
 export default function ActivoWebsPage() {
-  const { data: rows, isLoading, isError } = useActivoWebs();
+  const { data: rows, isLoading, isError, error: loadError } = useActivoWebs();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: orgs } = useOrganizacions();
@@ -363,7 +366,7 @@ export default function ActivoWebsPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
-        title="Activos web (BRD §3.3)"
+        title="Activos web"
         description="Expuestos vía URL, asignados a célula; base para riesgo y pruebas de seguridad."
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -450,6 +453,49 @@ export default function ActivoWebsPage() {
               />
             </div>
           </div>
+
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="text-xs font-medium text-muted-foreground">Gerencia (chips)</p>
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setGerenciaF(ALL);
+                  setOrgF(ALL);
+                  setCelulaF(ALL);
+                }}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition-colors',
+                  gerenciaF === ALL
+                    ? 'border-primary bg-primary/15 text-foreground'
+                    : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                )}
+              >
+                Todas
+              </button>
+              {(gerencias || []).map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => {
+                    setGerenciaF(g.id);
+                    setOrgF(ALL);
+                    setCelulaF(ALL);
+                  }}
+                  className={cn(
+                    'max-w-[240px] truncate rounded-full border px-3 py-1 text-xs transition-colors',
+                    gerenciaF === g.id
+                      ? 'border-primary bg-primary/15 text-foreground'
+                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                  )}
+                  title={g.nombre}
+                >
+                  {g.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mb-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
             <div className="max-w-md flex-1">
               <label className="text-sm font-medium">Buscar</label>
@@ -471,7 +517,11 @@ export default function ActivoWebsPage() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           )}
-          {isError && <p className="text-destructive">No se pudo cargar el catálogo.</p>}
+          {isError && (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {extractErrorMessage(loadError, 'No se pudo cargar el catálogo de activos web.')}
+            </p>
+          )}
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay activos web. Crea uno o defina células primero.</p>
           )}
@@ -496,7 +546,11 @@ export default function ActivoWebsPage() {
                   const s = g ? subdirName.get(g.subdireccion_id) : undefined;
                   return (
                     <DataTableRow key={a.id}>
-                      <DataTableCell className="font-medium">{a.nombre}</DataTableCell>
+                      <DataTableCell className="font-medium">
+                        <Link href={`/activo_webs/${a.id}`} className="hover:text-primary hover:underline">
+                          {a.nombre}
+                        </Link>
+                      </DataTableCell>
                       <DataTableCell>
                         <Badge variant="default">{ambienteLabel(a.ambiente)}</Badge>
                       </DataTableCell>

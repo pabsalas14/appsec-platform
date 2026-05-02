@@ -12,6 +12,7 @@ import {
   Loader,
   Search,
   Shield,
+  ShieldCheck,
   Target,
 } from "lucide-react";
 
@@ -23,6 +24,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui";
+import api from "@/lib/api";
 
 interface SearchResult {
   tipo: string;
@@ -46,6 +48,7 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   "Hallazgo MAST": Shield,
   Control: BookOpen,
   Auditoría: FileText,
+  "Revision SCR": ShieldCheck,
 };
 
 export function SearchCommand() {
@@ -56,10 +59,10 @@ export function SearchCommand() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Handle Ctrl+K / Cmd+K to open
+  // Búsqueda global de datos: Alt+K (la paleta de navegación usa Ctrl+K en CommandPalette).
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if (event.altKey && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setIsOpen((prev) => !prev);
       }
@@ -81,22 +84,13 @@ export function SearchCommand() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/v1/search?q=${encodeURIComponent(searchQuery)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Search failed");
-      }
-
-      const data = await response.json();
-      setResults(data.data?.results || {});
+      const { data } = await api.get<{
+        status: string;
+        data: { results: GroupedResults };
+      }>("/search", {
+        params: { q: searchQuery },
+      });
+      setResults(data.data?.results ?? {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setResults({});
@@ -133,7 +127,7 @@ export function SearchCommand() {
   return (
     <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
       <CommandInput
-        placeholder="Search vulnerabilities, plans, themes, initiatives..."
+        placeholder="Buscar hallazgos, planes, temas, iniciativas, SCR…"
         value={query}
         onValueChange={setQuery}
       />
@@ -141,7 +135,7 @@ export function SearchCommand() {
         {isLoading && (
           <div className="flex items-center justify-center py-6">
             <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+            <span className="ml-2 text-sm text-muted-foreground">Buscando…</span>
           </div>
         )}
 
@@ -152,13 +146,13 @@ export function SearchCommand() {
         )}
 
         {!isLoading && !error && query && totalResults === 0 && (
-          <CommandEmpty>No results found for &quot;{query}&quot;</CommandEmpty>
+          <CommandEmpty>Sin resultados para «{query}»</CommandEmpty>
         )}
 
         {!isLoading && !error && !query && (
           <div className="px-2 py-4">
             <p className="text-xs text-muted-foreground">
-              Type to search across vulnerabilities, plans, themes, initiatives, and more.
+              Escribe para buscar en datos indexados (incluye revisiones SCR de tu usuario). Atajo: Alt+K.
             </p>
           </div>
         )}
@@ -204,23 +198,21 @@ export function SearchCommandTrigger() {
     <button
       type="button"
       onClick={() => {
-        // This will be handled by the SearchCommand component
-        // Just trigger the open via keyboard shortcut
         const event = new KeyboardEvent("keydown", {
           key: "k",
-          ctrlKey: true,
+          altKey: true,
           bubbles: true,
         });
-        document.dispatchEvent(event);
+        window.dispatchEvent(event);
       }}
       className="hidden h-9 min-w-[240px] items-center gap-2 rounded-lg border border-border bg-card/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-accent md:inline-flex"
     >
       <span className="inline-flex items-center gap-1 text-muted-foreground/80">
         <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Search...</span>
+        <span className="hidden sm:inline">Buscar datos…</span>
       </span>
       <span className="ml-auto rounded border border-border px-1.5 text-[10px] font-medium leading-5 text-muted-foreground">
-        Ctrl K
+        Alt K
       </span>
     </button>
   );

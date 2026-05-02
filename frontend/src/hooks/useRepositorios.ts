@@ -17,6 +17,17 @@ export function useRepositorios() {
   });
 }
 
+export function useRepositorio(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, id] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<Repositorio>>(`/repositorios/${id}`);
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateRepositorio() {
   const qc = useQueryClient();
   return useMutation({

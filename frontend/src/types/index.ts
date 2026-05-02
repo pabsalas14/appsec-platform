@@ -139,6 +139,8 @@ export interface AuditLog {
   user_agent: string | null;
   request_id: string | null;
   status: string;
+  prev_hash: string | null;
+  row_hash: string | null;
   metadata: Record<string, unknown>;
 }
 

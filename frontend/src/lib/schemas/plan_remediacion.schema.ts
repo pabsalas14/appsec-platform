@@ -11,6 +11,7 @@ export const PlanRemediacionSchema = z.object({
   auditoria_id: z.string().uuid(),
   created_at: z.string(),
   updated_at: z.string(),
+  vulnerabilidad_ids: z.array(z.string().uuid()).optional(),
 });
 
 export const PlanRemediacionCreateSchema = z.object({

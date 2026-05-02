@@ -25,6 +25,7 @@ from app.api.deps import get_current_user, get_db
 from app.core.response import success
 from app.core.search import sanitize_search_term
 from app.models.auditoria import Auditoria
+from app.models.code_security_review import CodeSecurityReview
 from app.models.control_seguridad import ControlSeguridad
 from app.models.hallazgo_dast import HallazgoDast
 from app.models.hallazgo_mast import HallazgoMAST
@@ -93,6 +94,7 @@ async def global_search(
         "Hallazgos MAST": [],
         "Controles de Seguridad": [],
         "Auditorías": [],
+        "Revisiones SCR": [],
     }
 
     # ── Vulnerabilidades ──────────────────────────────────────────────────────
@@ -302,6 +304,32 @@ async def global_search(
                 nombre=audit.titulo,
                 descripcion=None,
                 url=f"/auditorias/{audit.id}",
+            )
+        )
+
+    # ── Code Security Review (SCR) — solo propiedad del usuario actual ────────
+    stmt = (
+        select(CodeSecurityReview)
+        .where(
+            CodeSecurityReview.user_id == current_user.id,
+            CodeSecurityReview.deleted_at.is_(None),
+            or_(
+                CodeSecurityReview.titulo.ilike(pattern),
+                CodeSecurityReview.descripcion.ilike(pattern),
+                CodeSecurityReview.rama_analizar.ilike(pattern),
+            ),
+        )
+        .limit(10)
+    )
+    scr_rows = await db.scalars(stmt)
+    for rev in scr_rows:
+        results["Revisiones SCR"].append(
+            SearchResult(
+                tipo="Revision SCR",
+                id=rev.id,
+                nombre=rev.titulo,
+                descripcion=rev.descripcion,
+                url=f"/code_security_reviews/{rev.id}",
             )
         )
 

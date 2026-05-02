@@ -2,7 +2,7 @@
 
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { CommandPaletteTrigger } from '@/components/layout/CommandPalette';
-import { SearchCommand, SearchCommandTrigger } from '@/components/SearchCommand';
+import { SearchCommand } from '@/components/SearchCommand';
 import { NotificationsPopover } from '@/components/layout/NotificationsPopover';
 import { RateLimitIndicator } from '@/components/rate-limit/RateLimitIndicator';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -22,7 +22,6 @@ export function Header() {
         <div className="min-w-0 flex-1 truncate">
           <Breadcrumbs />
         </div>
-        <SearchCommandTrigger />
         <CommandPaletteTrigger />
         <div className="flex items-center gap-1">
           <NotificationsPopover />

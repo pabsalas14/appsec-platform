@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -170,20 +171,95 @@ function RoleDialog({
 
 export default function AdminRolesPage() {
   const { data: roles, isLoading } = useRoles();
+  const { data: allPermissions } = usePermissions();
   const deleteMut = useDeleteRole();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Role | null>(null);
+
+  const permByGroup = useMemo(
+    () => groupPermissions((allPermissions ?? []).map((p) => p.code)),
+    [allPermissions],
+  );
+  const groupKeys = useMemo(() => Object.keys(permByGroup).sort(), [permByGroup]);
+  const matrixRows = useMemo(() => {
+    if (!roles?.length) return [];
+    return groupKeys.map((g) => {
+      const codes = permByGroup[g] ?? [];
+      const cells = roles.map((r) => codes.filter((code) => r.permissions.includes(code)).length);
+      return { group: g, codes, cells };
+    });
+  }, [roles, groupKeys, permByGroup]);
 
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Roles & Permissions"
-        description="Demo M:N del framework. Los permisos se siembran desde app/core/permissions.py y son editables aquí."
+        description="Demo M:N del framework. Los permisos se siembran desde app/core/permissions.py y son editables aquí. La tabla siguiente resume cobertura por prefijo (spec 20)."
       >
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> New role
         </Button>
       </PageHeader>
+
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-foreground">Separación de funciones (SoD)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Las reglas SoD combinan rol y contexto operativo (quién puede aprobar frente a quién solicitó). La matriz de arriba cubre permisos;
+              las reglas activables viven en su propio catálogo.
+            </p>
+          </div>
+          <Link
+            href="/regla_so_ds"
+            className={cn(
+              'inline-flex shrink-0 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-sm font-medium backdrop-blur-sm transition-all hover:bg-white/[0.08] hover:border-white/20',
+            )}
+          >
+            Ver reglas SoD
+          </Link>
+        </CardContent>
+      </Card>
+
+      {!isLoading && roles && roles.length > 0 && matrixRows.length > 0 && (
+        <Card>
+          <CardContent className="space-y-2 p-5">
+            <h2 className="text-sm font-semibold text-foreground">Matriz resumen (módulo × rol)</h2>
+            <p className="text-xs text-muted-foreground">
+              Cada celda es la cantidad de permisos concedidos en ese prefijo; el total del prefijo es{' '}
+              <span className="font-mono text-foreground">asignados/total</span>.
+            </p>
+            <div className="overflow-x-auto rounded-md border border-border">
+              <table className="w-full min-w-[640px] text-xs">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="p-2 text-left font-medium">Prefijo</th>
+                    <th className="p-2 text-right font-medium text-muted-foreground">Total cat.</th>
+                    {(roles as Role[]).map((r) => (
+                      <th key={r.id} className="p-2 text-center font-medium">
+                        {r.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrixRows.map((row) => (
+                    <tr key={row.group} className="border-b border-border/60">
+                      <td className="p-2 font-mono text-[11px]">{row.group}</td>
+                      <td className="p-2 text-right text-muted-foreground">{row.codes.length}</td>
+                      {row.cells.map((cell, idx) => (
+                        <td key={(roles as Role[])[idx]?.id ?? idx} className="p-2 text-center tabular-nums">
+                          {cell}/{row.codes.length}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center p-12">

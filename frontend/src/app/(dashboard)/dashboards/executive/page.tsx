@@ -264,6 +264,9 @@ export default function ExecutiveDashboardPage() {
         
         {/* Filtros Globales Arriba */}
         <div className="mb-4">
+          <p className="mb-3 text-xs text-muted-foreground">
+            KPIs y series desde la API de dashboard ejecutivo (spec 21); filtros aplican al conjunto de datos mostrado.
+          </p>
           <HierarchyFiltersBarCard
             title="Filtros globales (organización e inventario)"
             filters={filters}

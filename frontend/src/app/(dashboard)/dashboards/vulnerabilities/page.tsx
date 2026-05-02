@@ -36,6 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { VulnerabilidadMotorCreateSheet } from '@/components/modules/VulnerabilidadMotorCreateSheet';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 interface EngineStat { motor: string; count: number; trend: number; }
@@ -129,7 +130,8 @@ export default function VulnerabilitiesDashboard() {
   const [path, setPath] = useState<{name: string, level: number, id: string}[]>([{ name: 'Global', level: 0, id: '' }]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVuln, setSelectedVuln] = useState<VulnRowDetail | null>(null);
-  
+  const [createVulnOpen, setCreateVulnOpen] = useState(false);
+
   // Global Filters State
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [selectedEngines, setSelectedEngines] = useState<string[]>([]);
@@ -505,6 +507,15 @@ export default function VulnerabilitiesDashboard() {
           <div className="flex justify-between items-center px-2">
              <CardTitle className="text-[16px] font-black uppercase tracking-[3px] text-slate-100">Listado Maestro de Hallazgos</CardTitle>
              <div className="flex gap-2">
+               <Button
+                 type="button"
+                 variant="outline"
+                 size="sm"
+                 className="h-9 px-4 text-[11px] font-black bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20"
+                 onClick={() => setCreateVulnOpen(true)}
+               >
+                 Nueva vulnerabilidad
+               </Button>
                <Button variant="outline" size="sm" className="h-9 px-4 text-[11px] font-black bg-[#e8365d15] border-[#e8365d40] text-[#e8365d] hover:bg-[#e8365d25]">🤖 Análisis Predictivo IA</Button>
                <Button variant="outline" size="sm" className="h-9 px-4 text-[11px] font-black bg-[#1c2035] border-[#252a45] hover:border-slate-500 transition-colors">Exportar Todo</Button>
              </div>
@@ -668,6 +679,10 @@ export default function VulnerabilitiesDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0d0f1a] text-[#e2e8f0] font-sans pb-10">
+      <p className="mx-6 mt-4 max-w-4xl text-[11px] leading-relaxed text-[#94a3b8] border border-[#252a45]/80 rounded-lg bg-[#141728]/80 px-4 py-2">
+        Spec 21 · Vista organizacional de vulnerabilidades: KPI por motor y severidad, tendencia y drill-down por niveles (Dirección → … →
+        Repositorio). Los filtros del hub se aplican vía query cuando navegas desde Dashboard · Hub.
+      </p>
       {/* Topbar */}
       <div className="sticky top-0 z-40 bg-[#0d0f1a]/95 backdrop-blur-md border-b border-[#252a45] px-6 py-3 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-2 text-[13px]">
@@ -693,6 +708,15 @@ export default function VulnerabilitiesDashboard() {
              ))}
            </div>
            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-[11px] font-black bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
+                onClick={() => setCreateVulnOpen(true)}
+              >
+                + Hallazgo
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -738,6 +762,8 @@ export default function VulnerabilitiesDashboard() {
         {currentLevel === 5 && renderLevel6()}
         {currentLevel === 6 && renderLevel7()}
       </div>
+
+      <VulnerabilidadMotorCreateSheet open={createVulnOpen} onOpenChange={setCreateVulnOpen} />
 
       {/* Global Filters Drawer */}
       <Sheet open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>

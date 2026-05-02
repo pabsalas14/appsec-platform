@@ -9,6 +9,7 @@ const KEY = ['pipeline_releases'] as const;
 
 export type PipelineReleasesListParams = {
   repositorio_id?: string;
+  activo_web_id?: string;
   service_release_id?: string;
   scan_id?: string;
   tipo?: string;

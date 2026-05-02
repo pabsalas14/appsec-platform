@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Building2, Target, User, Waypoints } from 'lucide-react';
 
@@ -121,8 +122,23 @@ export default function OkrDashboardPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Dashboard Ejecutivo OKR/MBO"
-        description="Drill-down multinivel N0 a N3 con panel lateral para evaluacion."
-      />
+        description="Cascada N0–N3, semáforos y Q-review: valide el avance en revisiones de trimestre y cierre (spec §7 Desempeño)."
+      >
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/okr_revision_qs"
+            className="inline-flex items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm transition-all hover:bg-white/[0.08]"
+          >
+            Revisiones Q
+          </Link>
+          <Link
+            href="/okr_cierre_qs"
+            className="inline-flex items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm transition-all hover:bg-white/[0.08]"
+          >
+            Cierres Q
+          </Link>
+        </div>
+      </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="cursor-pointer" onClick={() => setLevel('N0')}>

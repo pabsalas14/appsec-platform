@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -77,6 +78,16 @@ const PROGRAM_COLORS: Record<string, string> = {
 };
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+/** Rutas CRUD por motor; SCA/CDS/MDA comparten el módulo de código fuente hasta tener pantallas dedicadas. */
+const PROGRAM_CRUD_ROUTES: Record<string, string> = {
+  SAST: '/programa_sasts',
+  DAST: '/programa_dasts',
+  SCA: '/programa_source_codes',
+  CDS: '/programa_source_codes',
+  MDA: '/programa_source_codes',
+  MAST: '/ejecucion_masts',
+};
 
 function getStatusLabel(pct: number): { label: string; cls: string } {
   if (pct >= 80) return { label: 'En meta', cls: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' };
@@ -283,10 +294,13 @@ function ProgramDetailPanel({
           </div>
         </div>
 
-        <Button className="w-full" size="sm" variant="outline">
-          Ver listado de hallazgos del programa
-          <ChevronRight className="h-3 w-3 ml-1" />
-        </Button>
+        <Link
+          href={PROGRAM_CRUD_ROUTES[program] ?? '/dashboards/programs'}
+          className="inline-flex w-full items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-foreground backdrop-blur-sm transition-all duration-200 hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-white/20"
+        >
+          Ir al módulo del programa
+          <ChevronRight className="ml-1 h-3 w-3" />
+        </Link>
       </CardContent>
     </Card>
   );

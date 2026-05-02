@@ -27,12 +27,16 @@ export function EmailTemplatesTab() {
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
 
   const handleCopyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     toast.success('Copiado al portapapeles');
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -40,7 +44,7 @@ export function EmailTemplatesTab() {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Plantillas de correo predefinidas. Puedes ver el contenido HTML y copiar para referencia.
+          Plantillas transaccionales (backoffice). Contenido HTML y variables según el backend.
         </AlertDescription>
       </Alert>
 
@@ -48,55 +52,48 @@ export function EmailTemplatesTab() {
         {templates.map((template) => (
           <Card key={template.id}>
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-base">{template.name}</CardTitle>
-                  <CardDescription className="mt-1">{template.description}</CardDescription>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base">{template.nombre}</CardTitle>
+                  <CardDescription className="mt-1">{template.descripcion ?? '—'}</CardDescription>
                 </div>
-                <Badge variant={template.is_default ? 'default' : 'secondary'}>
-                  {template.is_default ? 'Predeterminado' : 'Personalizado'}
-                </Badge>
+                <Badge variant={template.activo ? 'default' : 'secondary'}>{template.activo ? 'Activa' : 'Inactiva'}</Badge>
               </div>
             </CardHeader>
             <CardContent className="flex gap-2">
               <Sheet open={selectedTemplate?.id === template.id} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
                 <SheetTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedTemplate(template)}
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
+                  <Button size="sm" variant="outline" onClick={() => setSelectedTemplate(template)}>
+                    <Eye className="mr-1 h-3 w-3" />
                     Ver
                   </Button>
                 </SheetTrigger>
                 {selectedTemplate?.id === template.id && (
                   <SheetContent>
                     <SheetHeader>
-                      <SheetTitle>{template.name}</SheetTitle>
+                      <SheetTitle>{template.nombre}</SheetTitle>
                     </SheetHeader>
                     <div className="mt-4 space-y-4">
                       <div>
-                        <label className="text-sm font-medium">Asunto</label>
-                        <div className="mt-1 rounded-md bg-muted p-3 text-sm font-mono">
-                          {template.subject}
-                        </div>
+                        <p className="text-sm font-medium">Asunto</p>
+                        <div className="mt-1 rounded-md bg-muted p-3 font-mono text-sm">{template.asunto}</div>
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Contenido HTML</label>
+                        <p className="text-sm font-medium">Contenido HTML</p>
                         <div className="mt-1 max-h-[400px] overflow-auto rounded-md bg-muted p-3">
                           <div
                             className="prose prose-sm dark:prose-invert text-sm"
-                            dangerouslySetInnerHTML={{ __html: template.html_content }}
+                            dangerouslySetInnerHTML={{ __html: template.cuerpo_html }}
                           />
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
                           className="mt-2"
-                          onClick={() => handleCopyToClipboard(template.html_content)}
+                          type="button"
+                          onClick={() => handleCopyToClipboard(template.cuerpo_html)}
                         >
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className="mr-1 h-3 w-3" />
                           Copiar HTML
                         </Button>
                       </div>

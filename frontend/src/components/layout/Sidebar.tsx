@@ -3,14 +3,19 @@
 import {
   AppWindow,
   Bell,
-  Briefcase,
   Bug,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   FileSearch,
+  GitBranch,
   LayoutDashboard,
+  LayoutGrid,
+  LineChart,
   Network,
+  Package,
+  Rocket,
+  Sigma,
   ScrollText,
   Server,
   Settings,
@@ -43,22 +48,21 @@ type NavSection =
   | { title: string; items: NavItem[]; adminOnly?: boolean; groups?: undefined }
   | { title: string; groups: NavGroup[]; adminOnly?: boolean; items?: undefined };
 
-/** Arquitectura menú v3 — navegación relacional; SCR se mantiene aparte (producto). */
+/** Menú alineado a Especificación Maestra §2 (7 bloques funcionales) + SCR + Admin. */
 const SECTIONS: NavSection[] = [
   {
-    title: 'Principal',
+    title: 'Dashboards',
     items: [
       { href: '/dashboards/executive', label: 'Dashboard ejecutivo', icon: LayoutDashboard },
       { href: '/madurez', label: 'Score de madurez', icon: TrendingUp },
-      { href: '/dashboards', label: 'Índice de tableros', icon: LayoutDashboard },
-      { href: '/notificacions', label: 'Notificaciones', icon: Bell },
+      { href: '/dashboards', label: 'Índice de tableros', icon: LayoutGrid },
     ],
   },
   {
     title: 'Organización e inventario',
     items: [
       { href: '/organizacion/jerarquia', label: 'Estructura organizacional', icon: Network },
-      { href: '/inventario', label: 'Inventario de activos', icon: Briefcase },
+      { href: '/inventario', label: 'Repositorios y activos web', icon: Package },
     ],
   },
   {
@@ -66,24 +70,58 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: '/dashboards/vulnerabilities', label: 'Concentrado de hallazgos', icon: ShieldCheck },
       { href: '/plan_remediacions', label: 'Planes de remediación', icon: ClipboardList },
-      { href: '/programa_threat_modelings', label: 'Threat modeling', icon: Network },
+      { href: '/programa_threat_modelings', label: 'Threat modeling (MDA)', icon: Network },
     ],
   },
   {
-    title: 'Operación y seguimiento',
+    title: 'Operación y liberaciones',
     items: [
-      { href: '/dashboards/releases', label: 'Liberaciones de servicio', icon: Server },
-      { href: '/dashboards/programs', label: 'Programas anuales', icon: Target },
-      { href: '/dashboards/emerging-themes', label: 'Temas emergentes y auditorías', icon: FileSearch },
+      { href: '/dashboards/kanban', label: 'Kanban de liberaciones', icon: Server },
+      { href: '/dashboards/releases', label: 'Servicios y liberaciones', icon: Server },
+      { href: '/hallazgo_pipelines', label: 'Pipeline de escaneos', icon: GitBranch },
+      { href: '/service_releases', label: 'Liberaciones de servicio', icon: Package },
+      { href: '/pipeline_releases', label: 'Liberaciones de pipeline', icon: Rocket },
+      { href: '/dashboards/emerging-themes', label: 'Temas emergentes', icon: FileSearch },
       { href: '/iniciativas', label: 'Iniciativas', icon: Target },
       { href: '/revision_terceros', label: 'Revisión de terceros', icon: FileWarning },
     ],
   },
   {
-    title: 'Desempeño (OKR)',
+    title: 'Programas y auditorías',
     items: [
-      { href: '/mis_compromisos', label: 'Mis compromisos', icon: UserCircle },
-      { href: '/dashboards/team', label: 'Mi equipo', icon: Users },
+      { href: '/programas', label: 'Programas e iniciativas', icon: Target },
+      { href: '/dashboards/programs', label: 'Dashboard programas anuales', icon: LineChart },
+      { href: '/auditorias/registros', label: 'Auditorías', icon: FileSearch },
+      { href: '/servicio_regulado_registros', label: 'Servicios regulados', icon: ScrollText },
+    ],
+  },
+  {
+    title: 'Desempeño (OKR)',
+    groups: [
+      {
+        title: 'Resumen',
+        items: [
+          { href: '/mis_compromisos', label: 'Mis compromisos', icon: UserCircle },
+          { href: '/dashboards/team', label: 'Mi equipo', icon: Users },
+          { href: '/okr_dashboard', label: 'Dashboard OKR', icon: LineChart },
+        ],
+      },
+      {
+        title: 'Registros OKR',
+        items: [
+          { href: '/okr_compromisos', label: 'Compromisos OKR', icon: ClipboardList },
+          { href: '/okr_revision_qs', label: 'Revisiones trimestrales', icon: FileSearch },
+          { href: '/okr_cierre_qs', label: 'Cierre trimestral', icon: ScrollText },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Indicadores y notificaciones',
+    items: [
+      { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart },
+      { href: '/indicadores_formulas', label: 'Fórmulas de indicadores', icon: Sigma },
+      { href: '/notificacions', label: 'Centro de notificaciones', icon: Bell },
     ],
   },
   {
@@ -100,7 +138,10 @@ const SECTIONS: NavSection[] = [
   {
     title: 'Administración',
     adminOnly: true,
-    items: [{ href: '/admin', label: 'Administración', icon: Settings, adminOnly: true }],
+    items: [
+      { href: '/admin', label: 'Administración', icon: Settings, adminOnly: true },
+      { href: '/admin/operacion', label: 'Operación (BRD)', icon: Server, adminOnly: true },
+    ],
   },
   {
     title: 'Developer',
@@ -125,14 +166,20 @@ function SidebarLink({
     <Link
       href={item.href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-        'text-muted-foreground hover:text-foreground hover:bg-accent',
-        active && 'bg-primary/10 text-foreground',
+        'group flex items-center gap-3 rounded-lg border border-transparent px-2.5 py-2 text-sm transition-all duration-150',
+        'text-muted-foreground hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-foreground',
+        active &&
+          'border-primary/25 bg-primary/[0.12] text-foreground shadow-sm shadow-primary/5 dark:bg-primary/15',
         collapsed && 'justify-center px-2',
       )}
     >
-      <Icon className={cn('h-4 w-4 shrink-0', active && 'text-primary')} />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      <Icon
+        className={cn(
+          'h-4 w-4 shrink-0 opacity-80 group-hover:opacity-100',
+          active && 'text-primary opacity-100',
+        )}
+      />
+      {!collapsed && <span className="truncate font-medium tracking-tight">{item.label}</span>}
     </Link>
   );
 
@@ -192,7 +239,7 @@ export function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-2 py-4">
+      <nav className="flex-1 space-y-7 overflow-y-auto px-2.5 py-4">
         {SECTIONS.map((section) => {
           if (section.adminOnly && !isAdmin) return null;
 
@@ -208,7 +255,7 @@ export function Sidebar() {
             return (
               <div key={section.title}>
                 {!collapsed && (
-                  <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground/80">
+                  <div className="mb-2.5 border-b border-white/[0.04] px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/90">
                     {section.title}
                   </div>
                 )}
@@ -240,11 +287,11 @@ export function Sidebar() {
           return (
             <div key={section.title}>
               {!collapsed && (
-                <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground/80">
+                <div className="mb-2.5 border-b border-white/[0.04] px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/90">
                   {section.title}
                 </div>
               )}
-              <div className="space-y-0.5">{renderItems(visibleItems)}</div>
+              <div className="space-y-1">{renderItems(visibleItems)}</div>
             </div>
           );
         })}

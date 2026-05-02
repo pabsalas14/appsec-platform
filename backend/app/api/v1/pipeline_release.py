@@ -24,6 +24,7 @@ router = APIRouter()
 @router.get("")
 async def list_pipeline_releases(
     repositorio_id: UUID | None = Query(default=None),
+    activo_web_id: UUID | None = Query(default=None),
     service_release_id: UUID | None = Query(default=None),
     scan_id: str | None = Query(default=None, max_length=255),
     tipo: str | None = Query(default=None, max_length=50),
@@ -39,6 +40,8 @@ async def list_pipeline_releases(
     ]
     if repositorio_id:
         cond.append(PipelineRelease.repositorio_id == repositorio_id)
+    if activo_web_id:
+        cond.append(PipelineRelease.activo_web_id == activo_web_id)
     if service_release_id:
         cond.append(PipelineRelease.service_release_id == service_release_id)
     if scan_id and scan_id.strip():

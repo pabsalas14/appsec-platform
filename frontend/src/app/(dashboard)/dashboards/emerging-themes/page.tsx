@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { AlertCircle, FileSearch } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
@@ -53,9 +54,25 @@ export default function EmergingThemesDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0f1a] text-[#e2e8f0] p-6 font-sans">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-wide">8. Temas Emergentes y Auditorías</h1>
-        <p className="text-muted-foreground text-sm mt-1">Monitoreo de auditorías activas y temas transversales registrados.</p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-wide">Temas emergentes y auditorías</h1>
+          <p className="text-muted-foreground text-sm mt-1">Monitoreo de auditorías activas y temas transversales registrados.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/temas_emergentes/registros"
+            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-sm font-medium text-foreground hover:bg-[#252a45]/80"
+          >
+            Registros temas
+          </Link>
+          <Link
+            href="/auditorias/registros"
+            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-sm font-medium text-foreground hover:bg-[#252a45]/80"
+          >
+            Registros auditorías
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

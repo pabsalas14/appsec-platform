@@ -168,6 +168,41 @@ def require_permission(*permission_codes: str):
     return permission_checker
 
 
+async def ensure_user_permissions(db: AsyncSession, current_user: User, *permission_codes: str) -> None:
+    """Raise ForbiddenException if ``current_user`` lacks any of ``permission_codes``.
+
+    Same matrix as :func:`require_permission` (admin bypass, role_permissions join).
+    """
+
+    if current_user.role in ("super_admin", "admin"):
+        return
+
+    from app.models.role import Permission, Role, role_permissions
+
+    role_result = await db.execute(select(Role).where(Role.name == current_user.role))
+    role_obj = role_result.scalar_one_or_none()
+
+    if role_obj is None:
+        from app.services.permission_seed import ensure_roles_permissions_seeded
+
+        await ensure_roles_permissions_seeded(db)
+        role_result = await db.execute(select(Role).where(Role.name == current_user.role))
+        role_obj = role_result.scalar_one_or_none()
+
+    if role_obj is None:
+        raise ForbiddenException("Your role has not been configured. Contact an administrator.")
+
+    perm_result = await db.execute(
+        select(Permission.code)
+        .join(role_permissions, Permission.id == role_permissions.c.permission_id)
+        .where(role_permissions.c.role_id == role_obj.id)
+    )
+    user_permissions = {row[0] for row in perm_result.all()}
+    missing = set(permission_codes) - user_permissions
+    if missing:
+        raise ForbiddenException(f"Missing required permissions: {', '.join(sorted(missing))}")
+
+
 # ─── Shared helpers ──────────────────────────────────────────────────────────
 
 

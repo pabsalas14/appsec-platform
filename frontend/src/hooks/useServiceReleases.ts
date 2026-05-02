@@ -37,6 +37,17 @@ export function useServiceReleases(params?: ServiceReleasesListParams) {
   });
 }
 
+export function useServiceRelease(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, id] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<ServiceRelease>>(`/service_releases/${id}`);
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateServiceRelease() {
   const qc = useQueryClient();
   return useMutation({
@@ -44,7 +55,9 @@ export function useCreateServiceRelease() {
       const { data } = await api.post<Envelope<ServiceRelease>>('/service_releases/', payload);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['service_releases'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: KEY });
+    },
   });
 }
 
@@ -55,7 +68,10 @@ export function useUpdateServiceRelease() {
       const { data } = await api.patch<Envelope<ServiceRelease>>(`/service_releases/${id}`, payload);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['service_releases'] }),
+    onSuccess: (_d, variables) => {
+      void qc.invalidateQueries({ queryKey: KEY });
+      void qc.invalidateQueries({ queryKey: [...KEY, variables.id] });
+    },
   });
 }
 
@@ -65,6 +81,8 @@ export function useDeleteServiceRelease() {
     mutationFn: async (id: string) => {
       await api.delete(`/service_releases/${id}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['service_releases'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: KEY });
+    },
   });
 }

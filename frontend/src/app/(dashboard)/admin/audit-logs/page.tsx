@@ -1,7 +1,7 @@
 "use client";
 
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Download, Loader2, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
@@ -23,6 +23,56 @@ import {
 } from '@/components/ui';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import type { AuditLog } from '@/types';
+
+function csvEscape(v: string | null | undefined): string {
+  const s = v ?? '';
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function downloadAuditLogsCsv(items: AuditLog[]) {
+  const headers = [
+    'ts',
+    'action',
+    'entity_type',
+    'entity_id',
+    'actor_user_id',
+    'status',
+    'request_id',
+    'ip',
+    'user_agent',
+    'prev_hash',
+    'row_hash',
+  ];
+  const lines = [
+    headers.join(','),
+    ...items.map((e) =>
+      [
+        e.ts,
+        e.action,
+        e.entity_type,
+        e.entity_id,
+        e.actor_user_id,
+        e.status,
+        e.request_id,
+        e.ip,
+        e.user_agent,
+        e.prev_hash,
+        e.row_hash,
+      ]
+        .map((c) => csvEscape(typeof c === 'string' ? c : c == null ? '' : String(c)))
+        .join(','),
+    ),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `audit_logs_${format(new Date(), 'yyyy-MM-dd_HHmm')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const ACTION_OPTIONS = [
   { value: '', label: 'All actions' },
@@ -94,12 +144,24 @@ export default function AdminAuditLogsPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Audit Logs"
-        description="Read-only trail of every mutation in the system. Filtros y paginación se reflejan en la URL (compartir, historial del navegador)."
+        description="Trazabilidad con IP, cadena de hashes (row_hash / prev_hash) para verificación de integridad. La exportación CSV refleja la página actual."
       >
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            type="button"
+            disabled={!data?.items?.length}
+            onClick={() => downloadAuditLogsCsv(data?.items ?? [])}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV (firma cadena)
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+        </div>
       </PageHeader>
 
       <Card>
@@ -171,7 +233,9 @@ export default function AdminAuditLogsPage() {
             <DataTableTh>Action</DataTableTh>
             <DataTableTh>Entity</DataTableTh>
             <DataTableTh>Actor</DataTableTh>
+            <DataTableTh className="min-w-[100px]">IP</DataTableTh>
             <DataTableTh>Status</DataTableTh>
+            <DataTableTh className="font-mono text-[11px]">row_hash</DataTableTh>
             <DataTableTh>Request ID</DataTableTh>
           </DataTableHead>
           <DataTableBody>
@@ -205,6 +269,9 @@ export default function AdminAuditLogsPage() {
                     <span className="text-muted-foreground">system</span>
                   )}
                 </DataTableCell>
+                <DataTableCell className="font-mono text-xs text-muted-foreground">
+                  {entry.ip ?? '—'}
+                </DataTableCell>
                 <DataTableCell>
                   <Badge
                     variant="default"
@@ -216,6 +283,9 @@ export default function AdminAuditLogsPage() {
                   >
                     {entry.status}
                   </Badge>
+                </DataTableCell>
+                <DataTableCell className="font-mono text-[10px] text-muted-foreground">
+                  {entry.row_hash ? `${entry.row_hash.slice(0, 10)}…` : '—'}
                 </DataTableCell>
                 <DataTableCell className="font-mono text-xs text-muted-foreground">
                   {entry.request_id?.slice(0, 8) ?? '—'}

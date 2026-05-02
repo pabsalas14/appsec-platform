@@ -1,13 +1,17 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { GitBranch, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, GitBranch, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,6 +51,8 @@ import {
 } from '@/hooks/usePipelineReleases';
 import { useRepositorios } from '@/hooks/useRepositorios';
 import { useServiceReleases } from '@/hooks/useServiceReleases';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { logger } from '@/lib/logger';
 import {
   PipelineMesOptions,
@@ -57,6 +63,7 @@ import {
   type PipelineReleaseCreate,
   type PipelineReleaseUpdate,
 } from '@/lib/schemas/pipeline_release.schema';
+import { UrlFilterChips, type UrlFilterChipItem } from '@/components/filters/UrlFilterChips';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
 
 const ALL = '' as const;
@@ -98,6 +105,7 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions, activoOpti
   });
   const tipo = form.watch('tipo');
   const pending = createMut.isPending;
+  useUnsavedChanges(form.formState.isDirty);
 
   const onSubmit = form.handleSubmit((data) => {
     const mesStr = data.mes?.trim() ?? '';
@@ -304,6 +312,7 @@ function PipelineEditForm({
   });
   const pending = updateMut.isPending;
   const tipo = initial.tipo;
+  useUnsavedChanges(form.formState.isDirty);
 
   const onSubmit = form.handleSubmit((data) => {
     const patch: PipelineReleaseUpdate = {};
@@ -467,12 +476,13 @@ function PipelineEditForm({
 }
 
 export default function PipelineReleasesPage() {
-  const [q, setQ] = useState('');
-  const [repoF, setRepoF] = useState<string>(ALL);
-  const [releaseF, setReleaseF] = useState<string>(ALL);
-  const [tipoF, setTipoF] = useState<string>(ALL);
-  const [resF, setResF] = useState<string>(ALL);
-  const [mesF, setMesF] = useState<string>(ALL);
+  const { getParam, setParam, clearAll } = useUrlFilters();
+  const q = getParam('q') ?? '';
+  const repoF = getParam('repo') ?? ALL;
+  const releaseF = getParam('rel') ?? ALL;
+  const tipoF = getParam('tipo') ?? ALL;
+  const resF = getParam('res') ?? ALL;
+  const mesF = getParam('mes') ?? ALL;
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<PipelineRelease | null>(null);
   const deleteMut = useDeletePipelineRelease();
@@ -538,11 +548,58 @@ export default function PipelineReleasesPage() {
       });
   }, [rows, q, resF, repoName, activoById]);
 
+  const urlChipItems = useMemo((): UrlFilterChipItem[] => {
+    const chips: UrlFilterChipItem[] = [];
+    if (q.trim()) {
+      chips.push({
+        key: 'q',
+        label: `Buscar: ${q}`,
+        onRemove: () => setParam('q', null),
+      });
+    }
+    if (repoF !== ALL) {
+      chips.push({
+        key: 'repo',
+        label: `Repo: ${repoName(repoF)}`,
+        onRemove: () => setParam('repo', null),
+      });
+    }
+    if (releaseF !== ALL) {
+      chips.push({
+        key: 'rel',
+        label: `Liberación: ${releaseLabel(releaseF)}`,
+        onRemove: () => setParam('rel', null),
+      });
+    }
+    if (tipoF !== ALL) {
+      chips.push({
+        key: 'tipo',
+        label: `Tipo: ${tipoF}`,
+        onRemove: () => setParam('tipo', null),
+      });
+    }
+    if (mesF !== ALL) {
+      chips.push({
+        key: 'mes',
+        label: `Mes: ${mesF}`,
+        onRemove: () => setParam('mes', null),
+      });
+    }
+    if (resF !== ALL) {
+      chips.push({
+        key: 'res',
+        label: `Resultado: ${resF}`,
+        onRemove: () => setParam('res', null),
+      });
+    }
+    return chips;
+  }, [q, repoF, releaseF, tipoF, mesF, resF, repoName, releaseLabel, setParam]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Pipelines (SAST / DAST / SCA)"
-        description="Ejecuciones vinculadas a repositorio (SAST/SCA) o a repositorio y/o activo web (DAST). Filtros de lista en servidor: repo, liberación, tipo, mes (BRD §10.2)."
+        description="Ejecuciones vinculadas a repositorio (SAST/SCA) o a repositorio y/o activo web (DAST). Filtros de lista en servidor: repo, liberación, tipo, mes (BRD 10.2)."
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
@@ -565,6 +622,19 @@ export default function PipelineReleasesPage() {
         </Dialog>
       </PageHeader>
 
+      <Alert>
+        <AlertTitle>Correlación con hallazgos de pipeline</AlertTitle>
+        <AlertDescription className="text-sm leading-relaxed">
+          El import CSV de hallazgos usa una coincidencia estricta por <code className="rounded bg-muted px-1">scan_id</code> y{' '}
+          <code className="rounded bg-muted px-1">branch</code> (rama) con el registro de pipeline correspondiente. Completa esos
+          campos en cada ejecución antes de importar. Ver{' '}
+          <Link href="/hallazgo_pipelines" className="font-medium text-primary underline underline-offset-2">
+            Hallazgos pipeline
+          </Link>{' '}
+          y el botón de enlace en cada fila.
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardContent className="p-4 space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -578,7 +648,7 @@ export default function PipelineReleasesPage() {
               <Select
                 className="mt-1"
                 value={repoF}
-                onChange={(e) => setRepoF(e.target.value)}
+                onChange={(e) => setParam('repo', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...repoOptions,
@@ -590,7 +660,7 @@ export default function PipelineReleasesPage() {
               <Select
                 className="mt-1"
                 value={releaseF}
-                onChange={(e) => setReleaseF(e.target.value)}
+                onChange={(e) => setParam('rel', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todas' },
                   ...releaseOptions,
@@ -602,7 +672,7 @@ export default function PipelineReleasesPage() {
               <Select
                 className="mt-1"
                 value={tipoF}
-                onChange={(e) => setTipoF(e.target.value)}
+                onChange={(e) => setParam('tipo', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...TIPOS_PIPELINE.map((t) => ({ value: t, label: t })),
@@ -614,7 +684,7 @@ export default function PipelineReleasesPage() {
               <Select
                 className="mt-1"
                 value={mesF}
-                onChange={(e) => setMesF(e.target.value)}
+                onChange={(e) => setParam('mes', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
@@ -626,7 +696,7 @@ export default function PipelineReleasesPage() {
               <Select
                 className="mt-1"
                 value={resF}
-                onChange={(e) => setResF(e.target.value)}
+                onChange={(e) => setParam('res', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todos' },
                   ...RESULTADOS_PIPELINE.map((r) => ({ value: r, label: r })),
@@ -635,9 +705,16 @@ export default function PipelineReleasesPage() {
             </div>
             <div className="max-w-md">
               <label className="text-sm font-medium">Buscar</label>
-              <Input className="mt-1" placeholder="Rama, commit, scan, repo, activo…" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input
+                className="mt-1"
+                placeholder="Rama, commit, scan, repo, activo…"
+                value={q}
+                onChange={(e) => setParam('q', e.target.value.trim() ? e.target.value : null)}
+              />
             </div>
           </div>
+
+          <UrlFilterChips items={urlChipItems} onClearAll={clearAll} className="border-t border-border pt-4" />
 
           {isLoading && (
             <div className="flex justify-center py-12 text-muted-foreground">
@@ -691,6 +768,13 @@ export default function PipelineReleasesPage() {
                     </DataTableCell>
                     <DataTableCell>
                       <div className="flex gap-1">
+                        <Link
+                          href={`/hallazgo_pipelines?pipe=${r.id}`}
+                          className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-white/[0.06] hover:text-foreground"
+                          title="Hallazgos correlacionados"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
                         <Button type="button" variant="ghost" size="xs" onClick={() => setEdit(r)}>
                           <Pencil className="h-4 w-4" />
                         </Button>

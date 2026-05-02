@@ -17,6 +17,17 @@ export function useActivoWebs() {
   });
 }
 
+export function useActivoWeb(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, id] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<ActivoWeb>>(`/activo_webs/${id}`);
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateActivoWeb() {
   const qc = useQueryClient();
   return useMutation({

@@ -1503,18 +1503,6 @@ async def dashboard_programs_heatmap(
     )
 
 
-@router.get("/releases-kanban")
-async def dashboard_releases_kanban(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
-):
-    """Dashboard 7: Kanban view logic."""
-    from app.services.dashboard_extra import build_releases_kanban
-
-    payload = await build_releases_kanban(db)
-    return success(payload)
-
-
 @router.get("/temas-auditorias")
 async def dashboard_temas_auditorias(
     db: AsyncSession = Depends(get_db),

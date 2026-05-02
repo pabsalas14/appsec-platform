@@ -4,11 +4,17 @@ import { z } from 'zod';
 
 export const FIELD_TYPES = ['text', 'number', 'date', 'select', 'boolean', 'url', 'user_ref'] as const;
 
+/** Alineado a ADR-0016 (P04) + proyecto (legacy demo). */
 export const ENTITY_TYPES = [
   'vulnerabilidad',
+  'repositorio',
+  'activo_web',
+  'service_release',
+  'plan_remediacion',
   'iniciativa',
   'auditoria',
   'tema_emergente',
+  'hallazgo_pipeline',
   'proyecto',
 ] as const;
 
@@ -53,4 +59,40 @@ export const selectFieldConfigSchema = z.object({
 });
 
 export type SelectFieldConfig = z.infer<typeof selectFieldConfigSchema>;
+
+/** Reglas de visibilidad opcionales (spec 19.1): el UI consume `config` JSON completo. */
+export const visibilityRulesSchema = z
+  .object({
+    show_when: z
+      .object({
+        field: z.string(),
+        equals: z.union([z.string(), z.number(), z.boolean()]).optional(),
+        in: z.array(z.union([z.string(), z.number()])).optional(),
+      })
+      .optional(),
+    hide_when: z
+      .object({
+        field: z.string(),
+        equals: z.union([z.string(), z.number(), z.boolean()]).optional(),
+      })
+      .optional(),
+  })
+  .optional();
+
+export const customFieldConfigEnvelopeSchema = z
+  .object({
+    options: z
+      .array(
+        z.object({
+          label: z.string(),
+          value: z.string(),
+        }),
+      )
+      .optional(),
+    default_value: z.string().optional().nullable(),
+    visibility: visibilityRulesSchema,
+  })
+  .passthrough();
+
+export type CustomFieldConfigEnvelope = z.infer<typeof customFieldConfigEnvelopeSchema>;
 

@@ -57,6 +57,7 @@ def import_all_orm() -> None:
     import app.models.hallazgo_tercero
     import app.models.herramienta_externa
     import app.models.historial_vulnerabilidad
+    import app.models.historico_scoring_mensual
     import app.models.hito_iniciativa
     import app.models.indicador_formula
     import app.models.iniciativa

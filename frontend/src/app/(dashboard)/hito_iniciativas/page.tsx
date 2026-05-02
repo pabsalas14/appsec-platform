@@ -40,27 +40,43 @@ export default function HitoIniciativasPage() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { nombre: '', descripcion: null, fecha_objetivo: '', iniciativa_id: '' },
+    defaultValues: { nombre: '', descripcion: null, fecha_objetivo: '', iniciativa_id: '', peso: undefined },
   });
 
   const resetAndOpen = useCallback(() => {
-    form.reset({ nombre: '', descripcion: null, fecha_objetivo: '', iniciativa_id: iniciativaOpts[0]?.value ?? '' });
+    form.reset({
+      nombre: '',
+      descripcion: null,
+      fecha_objetivo: '',
+      iniciativa_id: iniciativaOpts[0]?.value ?? '',
+      peso: undefined,
+    });
     setCreateOpen(true);
   }, [form, iniciativaOpts]);
 
   const openEdit = useCallback((item: HitoIniciativa) => {
-    form.reset({ nombre: item.nombre, descripcion: item.descripcion ?? null, fecha_objetivo: item.fecha_objetivo?.slice(0, 16) ?? '', iniciativa_id: item.iniciativa_id });
+    form.reset({
+      nombre: item.nombre,
+      descripcion: item.descripcion ?? null,
+      fecha_objetivo: item.fecha_objetivo?.slice(0, 16) ?? '',
+      iniciativa_id: item.iniciativa_id,
+      peso: item.peso ?? undefined,
+    });
     setEditTarget(item);
   }, [form]);
 
   const onSubmit = async (values: FormData) => {
     try {
+      const payload = {
+        ...values,
+        peso: Number.isFinite(values.peso) ? values.peso : undefined,
+      };
       if (editTarget) {
-        await updateMut?.mutateAsync?.({ id: editTarget.id, ...values });
+        await updateMut?.mutateAsync?.({ id: editTarget.id, ...payload });
         toast.success('Hito actualizado');
         setEditTarget(null);
       } else {
-        await createMut?.mutateAsync?.(values);
+        await createMut?.mutateAsync?.(payload);
         toast.success('Hito creado');
         setCreateOpen(false);
       }
@@ -96,6 +112,20 @@ export default function HitoIniciativasPage() {
       <div>
         <label className="text-sm font-medium">Fecha objetivo *</label>
         <Input className="mt-1" type="datetime-local" {...form.register('fecha_objetivo')} />
+      </div>
+      <div>
+        <label className="text-sm font-medium">Peso relativo (opcional)</label>
+        <Input
+          className="mt-1"
+          type="number"
+          min={1}
+          max={10000}
+          placeholder="Ej. 40 (si todos los hitos tienen peso, se normaliza el avance)"
+          {...form.register('peso', { valueAsNumber: true })}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Si todos los hitos de la iniciativa tienen peso, el progreso del mes usa esos valores; si no, reparto equitativo.
+        </p>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
@@ -136,6 +166,7 @@ export default function HitoIniciativasPage() {
                   <DataTableTh>Nombre</DataTableTh>
                   <DataTableTh>Descripción</DataTableTh>
                   <DataTableTh>Fecha objetivo</DataTableTh>
+                  <DataTableTh>Peso</DataTableTh>
                   <DataTableTh className="w-24" />
                 </DataTableRow>
               </DataTableHead>
@@ -145,6 +176,9 @@ export default function HitoIniciativasPage() {
                     <DataTableCell className="font-medium">{item.nombre}</DataTableCell>
                     <DataTableCell className="text-sm text-muted-foreground max-w-xs truncate">{item.descripcion ?? '—'}</DataTableCell>
                     <DataTableCell className="text-sm text-muted-foreground">{formatDate(item.fecha_objetivo)}</DataTableCell>
+                    <DataTableCell className="text-sm text-muted-foreground">
+                      {item.peso != null ? item.peso : '—'}
+                    </DataTableCell>
                     <DataTableCell>
                       <div className="flex gap-1">
                         <Dialog open={editTarget?.id === item.id} onOpenChange={(o) => { if (!o) { setEditTarget(null); form.reset(); } }}>

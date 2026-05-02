@@ -3,6 +3,8 @@
 **Auditor:** Claude AI  
 **Período:** Auditoría exhaustiva vs. Especificación Técnica Maestra
 
+**Nota 2026-05:** Parte de los hallazgos de esta auditoría quedaron **desactualizados** tras cambios en código (p. ej. centro de notificaciones en `/notificacions`, import masiva de vulnerabilidades con UI en registros, dashboard de iniciativas alineado a APIs existentes). Ver [`docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md`](docs/qa/MODULOS_APSEC_SPEC_COMPLIANCE.md). La sección **SCR** no se revisó en esa actualización operativa.
+
 ---
 
 ## RESUMEN EJECUTIVO
@@ -267,7 +269,7 @@ La plataforma **AppSec está al 89% de completitud** comparada con la especifica
 | Endpoints CRUD | ✅ | API funcional |
 | Reglas automáticas | ✅ | SLA vencido, tema estancado |
 | Scheduler | ✅ | APScheduler (diario) |
-| **Frontend** | ❌ | **NO EXISTE /notifications page** |
+| **Frontend** | ✅ | Listado y preferencias en `/notificacions` (ruta en español/catalán) |
 | Preferencias usuario | ❌ | Usuario no puede configurar |
 
 ### Gaps Críticos (P0)

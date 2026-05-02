@@ -23,10 +23,17 @@ import {
   Textarea,
 } from '@/components/ui';
 import { useVulnerabilidadFlujoConfig } from '@/hooks/useOperacionConfig';
-import { useTriageVulnerabilidadIa, useUpdateVulnerabilidad, useVulnerabilidad } from '@/hooks/useVulnerabilidads';
+import { VulnerabilidadHistorialTimeline } from '@/components/modules/VulnerabilidadHistorialTimeline';
+import {
+  useTriageVulnerabilidadIa,
+  useUpdateVulnerabilidad,
+  useVulnerabilidad,
+  useVulnerabilidadHistorial,
+} from '@/hooks/useVulnerabilidads';
 import { logger } from '@/lib/logger';
 import { labelForEstatusId, optionsForEstadoTransiciones, resolveEstatusIdFromRaw } from '@/lib/vulnerabilidadFlujo';
 import type { VulnerabilidadIATriageResponse } from '@/lib/schemas/vulnerabilidad_ia_triage_response.schema';
+import { EntityCustomFieldsCard } from '@/components/modules/EntityCustomFieldsCard';
 import { cn, extractErrorMessage, formatDate } from '@/lib/utils';
 
 function verdictBadge(verdict: VulnerabilidadIATriageResponse['verdict']) {
@@ -47,6 +54,7 @@ export default function VulnerabilidadDetailPage() {
   const params = useParams();
   const id = typeof params.id === 'string' ? params.id : undefined;
   const { data: vuln, isLoading, error } = useVulnerabilidad(id);
+  const { data: historialRaw, isLoading: histLoading } = useVulnerabilidadHistorial(id);
   const { data: flujoCfg } = useVulnerabilidadFlujoConfig();
   const estatus = flujoCfg?.estatus;
   const updateVuln = useUpdateVulnerabilidad();
@@ -210,6 +218,8 @@ export default function VulnerabilidadDetailPage() {
           </CardContent>
         </Card>
 
+        <EntityCustomFieldsCard entityType="vulnerabilidad" entityId={vuln.id} />
+
         <Card>
           <CardHeader>
             <CardTitle>Flujo de estatus (D1)</CardTitle>
@@ -339,6 +349,18 @@ export default function VulnerabilidadDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Bitácora de actividad</CardTitle>
+          <CardDescription>
+            Línea de tiempo de cambios de estado y responsable persistidos para este hallazgo (spec 30).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VulnerabilidadHistorialTimeline raw={historialRaw} isLoading={histLoading} />
+        </CardContent>
+      </Card>
     </PageWrapper>
   );
 }

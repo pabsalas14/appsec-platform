@@ -7,11 +7,18 @@ type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['hallazgo_terceros'] as const;
 
-export function useHallazgoTerceros() {
+export type HallazgoTercerosListFilters = {
+  revision_tercero_id?: string;
+};
+
+export function useHallazgoTerceros(filters?: HallazgoTercerosListFilters) {
+  const rev = filters?.revision_tercero_id;
   return useQuery({
-    queryKey: KEY,
+    queryKey: [...KEY, rev ?? 'all'] as const,
     queryFn: async () => {
-      const { data } = await api.get<Envelope<HallazgoTercero[]>>('/hallazgo_terceros/');
+      const { data } = await api.get<Envelope<HallazgoTercero[]>>('/hallazgo_terceros/', {
+        params: rev ? { revision_tercero_id: rev } : undefined,
+      });
       return data.data;
     },
   });

@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 FUENTES_VALIDAS = {"SAST", "DAST", "SCA", "CDS", "MDA", "TM", "MAST", "Auditoria", "Tercero"}
 SEVERIDADES_VALIDAS = {"Critica", "Alta", "Media", "Baja"}
@@ -129,3 +129,26 @@ class VulnerabilidadIATriageRead(BaseModel):
     rationale: str
     suggested_state: str | None = None
     raw_content: str
+
+
+class VulnerabilidadBulkActionRequest(BaseModel):
+    """Acciones masivas sobre hallazgos propios (spec 37)."""
+
+    ids: list[UUID] = Field(..., min_length=1, max_length=100)
+    action: Literal["estado", "responsable", "delete"]
+    estado: str | None = None
+    responsable_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def validate_payload(self):
+        if self.action == "estado" and (self.estado is None or not str(self.estado).strip()):
+            raise ValueError("estado es obligatorio cuando action=estado")
+        if self.action == "delete" and (self.estado is not None or self.responsable_id is not None):
+            raise ValueError("delete no debe incluir estado ni responsable_id")
+        return self
+
+
+class VulnerabilidadBulkActionResult(BaseModel):
+    processed: int
+    failed: int
+    errors: list[str] = Field(default_factory=list)

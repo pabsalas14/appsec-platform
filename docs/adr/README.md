@@ -28,3 +28,5 @@ New decisions MUST:
 | [0013](0013-operational-security-defaults.md) | Operational security defaults | accepted |
 | [0014](0014-file-upload-and-content-handling-security.md) | File upload and content handling security | accepted |
 | [0015](0015-password-policy-and-cookie-tuning.md) | Password policy, cookie tuning and edge rate-limit | accepted |
+| [0016](0016-no-code-builder-scope-brd.md) | No-Code builder scope (P04) bounded to BRD entity types | accepted |
+| [0017](0017-appsec-spec-ux-criteria.md) | AppSec modules spec — measurable UX criteria (P01–P24) | accepted |

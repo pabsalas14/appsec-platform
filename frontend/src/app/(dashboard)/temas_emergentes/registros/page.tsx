@@ -40,6 +40,7 @@ import {
   Select,
   Textarea,
 } from '@/components/ui';
+import { EntityCustomFieldsCard } from '@/components/modules/EntityCustomFieldsCard';
 import {
   useCreateTemaEmergente,
   useDeleteTemaEmergente,
@@ -166,6 +167,11 @@ export default function TemaEmergentesPage() {
         <label className="text-sm font-medium">Fuente *</label>
         <Input className="mt-1" maxLength={255} placeholder="CVE, blog, proveedor…" {...form.register('fuente')} />
       </div>
+      {editTarget ? (
+        <div className="border-t border-border pt-3">
+          <EntityCustomFieldsCard entityType="tema_emergente" entityId={editTarget.id} />
+        </div>
+      ) : null}
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); }}>Cancelar</Button>

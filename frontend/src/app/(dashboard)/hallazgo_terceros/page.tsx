@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Bug, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -397,7 +398,14 @@ export default function HallazgoTercerosPage() {
                 {filtered.map((r) => (
                   <DataTableRow key={r.id}>
                     <DataTableCell>
-                      <div className="text-xs text-muted-foreground mb-0.5">{revLabel(r.revision_tercero_id)}</div>
+                      <div className="mb-0.5 text-xs">
+                        <Link
+                          href={`/revision_terceros/${r.revision_tercero_id}`}
+                          className="text-primary underline-offset-2 hover:underline"
+                        >
+                          {revLabel(r.revision_tercero_id)}
+                        </Link>
+                      </div>
                       <div className="font-medium line-clamp-2">{r.titulo}</div>
                     </DataTableCell>
                     <DataTableCell>
@@ -460,7 +468,12 @@ export default function HallazgoTercerosPage() {
           </DialogHeader>
           {edit && (
             <form className="space-y-3" onSubmit={onEdit}>
-              <p className="text-xs text-muted-foreground">Revisión: {revLabel(edit.revision_tercero_id)}</p>
+              <p className="text-xs text-muted-foreground">
+                Revisión:{' '}
+                <Link href={`/revision_terceros/${edit.revision_tercero_id}`} className="text-primary underline-offset-2 hover:underline">
+                  {revLabel(edit.revision_tercero_id)}
+                </Link>
+              </p>
               <div>
                 <label className="text-sm font-medium">Vulnerabilidad</label>
                 <Select

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Pencil, Plus, Target, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -275,7 +276,7 @@ function IniciativaFormView({
 }
 
 export default function IniciativasPage() {
-  const { data: rows, isLoading, isError } = useIniciativas();
+  const { data: rows, isLoading, isError, error: listError } = useIniciativas();
   const { data: orgs } = useOrganizacions();
   const { data: celulas } = useCelulas();
   const [q, setQ] = useState('');
@@ -344,9 +345,23 @@ export default function IniciativasPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
-        title="Iniciativas (BRD)"
+        title="Iniciativas"
         description="Líneas de trabajo o mejora; opcionalmente asociadas a una célula, con fechas de seguimiento."
       >
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/hito_iniciativas"
+            className="inline-flex items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all duration-200 hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-white/20"
+          >
+            Hitos
+          </Link>
+          <Link
+            href="/actualizacion_iniciativas"
+            className="inline-flex items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-all duration-200 hover:bg-white/[0.08] focus:outline-none focus:ring-2 focus:ring-white/20"
+          >
+            Actualizaciones
+          </Link>
+        </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -450,7 +465,11 @@ export default function IniciativasPage() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           )}
-          {isError && <p className="text-destructive">No se pudo cargar el catálogo.</p>}
+          {isError && (
+            <p className="text-destructive">
+              {extractErrorMessage(listError, 'No se pudo cargar el listado de iniciativas.')}
+            </p>
+          )}
           {rows && rows.length === 0 && !isLoading && (
             <p className="text-muted-foreground">No hay iniciativas. Crea la primera o asocia una célula.</p>
           )}

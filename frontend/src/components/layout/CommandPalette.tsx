@@ -17,6 +17,7 @@ import {
   FolderKanban,
   Layers,
   LayoutDashboard,
+  LineChart,
   ListChecks,
   ListTodo,
   Moon,
@@ -24,6 +25,8 @@ import {
   Plus,
   ScrollText,
   Settings,
+  ShieldCheck,
+  Sigma,
   GanttChartSquare,
   Smartphone,
   Sun,
@@ -97,6 +100,27 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
 
+          <CommandGroup heading="Code Security (SCR)">
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/dashboard'))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard SCR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/new'))}>
+              <FileSearch className="mr-2 h-4 w-4" /> Nuevo escaneo SCR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/findings'))}>
+              <Bug className="mr-2 h-4 w-4" /> Hallazgos SCR
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/history'))}>
+              <ScrollText className="mr-2 h-4 w-4" /> Historial de escaneos
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/forensic'))}>
+              <Network className="mr-2 h-4 w-4" /> Investigación forense
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/code_security_reviews/agents'))}>
+              <ShieldCheck className="mr-2 h-4 w-4" /> Agentes SCR
+            </CommandItem>
+          </CommandGroup>
+
           <CommandGroup heading="Navigate">
             <CommandItem onSelect={() => run(() => router.push('/'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
@@ -124,6 +148,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/vulnerabilidads/registros'))}>
               <Bug className="mr-2 h-4 w-4" /> Vulnerabilidades
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/excepcion_vulnerabilidads'))}>
+              <AlertTriangle className="mr-2 h-4 w-4" /> Excepciones de vulnerabilidad
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/subdireccions'))}>
               <Building2 className="mr-2 h-4 w-4" /> Subdirecciones
@@ -173,6 +200,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/hallazgo_terceros'))}>
               <Building2 className="mr-2 h-4 w-4" /> Hallazgos tercero
             </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/revision_terceros'))}>
+              <ClipboardList className="mr-2 h-4 w-4" /> Revisiones tercero
+            </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/hallazgo_auditorias'))}>
               <FileSearch className="mr-2 h-4 w-4" /> Hallazgos auditoría
             </CommandItem>
@@ -185,6 +215,12 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             <CommandItem onSelect={() => run(() => router.push('/dashboards/executive'))}>
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard Ejecutivo
             </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/indicadores'))}>
+              <LineChart className="mr-2 h-4 w-4" /> Indicadores (KPIs)
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/indicadores_formulas'))}>
+              <Sigma className="mr-2 h-4 w-4" /> Fórmulas de indicadores
+            </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/vulnerabilities'))}>
               <AlertTriangle className="mr-2 h-4 w-4" /> Dashboard Vulnerabilidades
             </CommandItem>
@@ -193,6 +229,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/releases'))}>
               <Layers className="mr-2 h-4 w-4" /> Dashboard Releases
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => router.push('/programas'))}>
+              <Target className="mr-2 h-4 w-4" /> Hub programas e iniciativas
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push('/dashboards/programs'))}>
               <Layers className="mr-2 h-4 w-4" /> Dashboard Programas

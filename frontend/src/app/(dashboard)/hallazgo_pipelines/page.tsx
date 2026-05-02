@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Bug, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -48,6 +48,8 @@ import {
 } from '@/hooks/useHallazgoPipelines';
 import { usePipelineReleases } from '@/hooks/usePipelineReleases';
 import { useRepositorios } from '@/hooks/useRepositorios';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { useVulnerabilidads } from '@/hooks/useVulnerabilidads';
 import { logger } from '@/lib/logger';
 import {
@@ -57,6 +59,8 @@ import {
   type HallazgoPipeline,
   type HallazgoPipelineUpdate,
 } from '@/lib/schemas/hallazgo_pipeline.schema';
+import { UrlFilterChips, type UrlFilterChipItem } from '@/components/filters/UrlFilterChips';
+import { EntityCustomFieldsCard } from '@/components/modules/EntityCustomFieldsCard';
 import { extractErrorMessage, formatDate } from '@/lib/utils';
 import { z } from 'zod';
 
@@ -76,15 +80,16 @@ const formEdit = z.object({
 });
 type FormEdit = z.infer<typeof formEdit>;
 
-export default function HallazgoPipelinesPage() {
+function HallazgoPipelinesPageContent() {
+  const { getParam, setParam, clearAll } = useUrlFilters();
+  const q = getParam('q') ?? '';
+  const pipeF = getParam('pipe') ?? ALL;
+  const sevF = getParam('sev') ?? ALL;
+  const estF = getParam('est') ?? ALL;
   const { data: rows, isLoading, isError } = useHallazgoPipelines();
   const { data: pipes } = usePipelineReleases();
   const { data: repos } = useRepositorios();
   const { data: vulns } = useVulnerabilidads();
-  const [q, setQ] = useState('');
-  const [pipeF, setPipeF] = useState<string>(ALL);
-  const [sevF, setSevF] = useState<string>(ALL);
-  const [estF, setEstF] = useState<string>(ALL);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<HallazgoPipeline | null>(null);
   const createMut = useCreateHallazgoPipeline();
@@ -126,6 +131,39 @@ export default function HallazgoPipelinesPage() {
       });
   }, [rows, q, pipeF, sevF, estF, plLabel]);
 
+  const urlChipItems = useMemo((): UrlFilterChipItem[] => {
+    const chips: UrlFilterChipItem[] = [];
+    if (q.trim()) {
+      chips.push({
+        key: 'q',
+        label: `Buscar: ${q}`,
+        onRemove: () => setParam('q', null),
+      });
+    }
+    if (pipeF !== ALL) {
+      chips.push({
+        key: 'pipe',
+        label: `Pipeline: ${plLabel(pipeF)}`,
+        onRemove: () => setParam('pipe', null),
+      });
+    }
+    if (sevF !== ALL) {
+      chips.push({
+        key: 'sev',
+        label: `Severidad: ${sevF}`,
+        onRemove: () => setParam('sev', null),
+      });
+    }
+    if (estF !== ALL) {
+      chips.push({
+        key: 'est',
+        label: `Estado: ${estF}`,
+        onRemove: () => setParam('est', null),
+      });
+    }
+    return chips;
+  }, [q, pipeF, sevF, estF, plLabel, setParam]);
+
   const formC = useForm<FormCreateInput>({
     resolver: zodResolver(HallazgoPipelineFormCreateSchema),
     defaultValues: {
@@ -153,6 +191,14 @@ export default function HallazgoPipelinesPage() {
       estado: 'Abierto',
     },
   });
+  useUnsavedChanges(createOpen && formC.formState.isDirty);
+  useUnsavedChanges(Boolean(edit) && formE.formState.isDirty);
+
+  useEffect(() => {
+    if (pipeF === ALL || !pipeOptions.some((o) => o.value === pipeF)) return;
+    formC.setValue('pipeline_release_id', pipeF, { shouldDirty: false });
+  }, [pipeF, pipeOptions, formC]);
+
   useEffect(() => {
     if (!edit) return;
     formE.reset({
@@ -381,21 +427,27 @@ export default function HallazgoPipelinesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 max-w-4xl">
             <Select
               value={pipeF}
-              onChange={(e) => setPipeF(e.target.value)}
+              onChange={(e) => setParam('pipe', e.target.value === ALL ? null : e.target.value)}
               options={[{ value: ALL, label: 'Todos los pipelines' }, ...pipeOptions]}
             />
             <Select
               value={sevF}
-              onChange={(e) => setSevF(e.target.value)}
+              onChange={(e) => setParam('sev', e.target.value === ALL ? null : e.target.value)}
               options={[{ value: ALL, label: 'Severidad' }, ...SEVERIDADES_HALLAZGO.map((x) => ({ value: x, label: x }))]}
             />
             <Select
               value={estF}
-              onChange={(e) => setEstF(e.target.value)}
+              onChange={(e) => setParam('est', e.target.value === ALL ? null : e.target.value)}
               options={[{ value: ALL, label: 'Estado' }, ...ESTADOS_HALLAZGO_PIPELINE.map((x) => ({ value: x, label: x }))]}
             />
-            <Input placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input
+              placeholder="Buscar…"
+              value={q}
+              onChange={(e) => setParam('q', e.target.value.trim() ? e.target.value : null)}
+            />
           </div>
+
+          <UrlFilterChips items={urlChipItems} onClearAll={clearAll} className="border-t border-border pt-4" />
 
           {isLoading && <Loader2 className="h-6 w-6 animate-spin mx-auto my-8" />}
           {isError && <p className="text-destructive">Error al cargar.</p>}
@@ -478,6 +530,7 @@ export default function HallazgoPipelinesPage() {
           {edit && (
             <form className="space-y-3" onSubmit={onEdit}>
               <p className="text-xs text-muted-foreground">Pipeline: {plLabel(edit.pipeline_release_id)}</p>
+              <EntityCustomFieldsCard entityType="hallazgo_pipeline" entityId={edit.id} />
               <div>
                 <label className="text-sm font-medium">Vulnerabilidad</label>
                 <Select
@@ -566,5 +619,19 @@ export default function HallazgoPipelinesPage() {
         </DialogContent>
       </Dialog>
     </PageWrapper>
+  );
+}
+
+export default function HallazgoPipelinesPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageWrapper className="flex min-h-[40vh] items-center justify-center p-6">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </PageWrapper>
+      }
+    >
+      <HallazgoPipelinesPageContent />
+    </Suspense>
   );
 }

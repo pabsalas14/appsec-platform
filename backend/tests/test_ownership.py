@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from tests.graph_helpers import create_celula_id
+from tests.graph_helpers import create_celula_id, create_org_hierarchy
 
 
 async def _create_task(client: AsyncClient, headers: dict[str, str]) -> str:
@@ -36,6 +36,16 @@ async def _create_project(client: AsyncClient, headers: dict[str, str]) -> str:
     )
     assert resp.status_code == 201, resp.text
     return resp.json()["data"]["id"]
+
+
+async def _create_gerencia(client: AsyncClient, headers: dict[str, str]) -> str:
+    h = await create_org_hierarchy(client, headers)
+    return h["gerencia_id"]
+
+
+async def _create_organizacion(client: AsyncClient, headers: dict[str, str]) -> str:
+    h = await create_org_hierarchy(client, headers)
+    return h["organizacion_id"]
 
 
 async def _create_subdireccion(client: AsyncClient, headers: dict[str, str]) -> str:
@@ -197,6 +207,14 @@ OWNED_ENTITIES = [
     pytest.param("direccions", _create_direccion, "/api/v1/direccions/{id}", {"nombre": "PwnD"}, id="direccions"),
     pytest.param(
         "subdireccions", _create_subdireccion, "/api/v1/subdireccions/{id}", {"nombre": "PwnN"}, id="subdireccions"
+    ),
+    pytest.param("gerencias", _create_gerencia, "/api/v1/gerencias/{id}", {"nombre": "PwnG"}, id="gerencias"),
+    pytest.param(
+        "organizacions",
+        _create_organizacion,
+        "/api/v1/organizacions/{id}",
+        {"nombre": "PwnO"},
+        id="organizacions",
     ),
     pytest.param("celulas", _create_celula, "/api/v1/celulas/{id}", {"nombre": "PwnC"}, id="celulas"),
     pytest.param(

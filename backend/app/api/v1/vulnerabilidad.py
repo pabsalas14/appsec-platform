@@ -12,16 +12,22 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import Response
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db, require_permission
+from app.api.deps import ensure_user_permissions, get_current_user, get_db, require_permission
 from app.api.deps_ownership import require_ownership
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException, ValidationException
+from app.core.logging import logger
 from app.core.permissions import P
 from app.core.response import success
+from app.models.historial_vulnerabilidad import HistorialVulnerabilidad
 from app.models.user import User
 from app.models.vulnerabilidad import Vulnerabilidad
+from app.schemas.historial_vulnerabilidad import HistorialVulnerabilidadRead
 from app.schemas.vulnerabilidad import (
+    VulnerabilidadBulkActionRequest,
+    VulnerabilidadBulkActionResult,
     VulnerabilidadCreate,
     VulnerabilidadIATriageRead,
     VulnerabilidadIATriageRequest,
@@ -141,6 +147,43 @@ async def export_vulnerabilidades_csv(
     )
 
 
+@router.get("/import/template/{motor}")
+async def download_vulnerabilidad_import_template(
+    motor: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Descarga CSV vacío con cabeceras esperadas para importación por motor (spec 23)."""
+    from app.services.vulnerabilidad_bulk_import import resolve_fuente
+
+    resolve_fuente(motor)
+    headers = [
+        "titulo",
+        "severidad",
+        "estado",
+        "descripcion",
+        "repositorio_id",
+        "activo_web_id",
+        "servicio_id",
+        "aplicacion_movil_id",
+        "cwe_id",
+        "owasp_categoria",
+        "cvss_score",
+        "responsable_id",
+    ]
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(headers)
+    body = buf.getvalue()
+    safe_motor = motor.strip().lower().replace("/", "_")
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="template_import_{safe_motor}.csv"',
+        },
+    )
+
+
 @router.post("/import/{motor}")
 async def import_vulnerabilidades_bulk(
     motor: str,
@@ -207,11 +250,19 @@ async def list_vulnerabilidads(
     sla: str | None = None,
     reincidencia: bool = False,
     created_after: str | None = Query(default=None, description="ISO-8601: filtra created_at >="),
+    celula_id: UUID | None = Query(default=None, description="Activo (repo/web) asignado a esta célula."),
+    organizacion_id: UUID | None = Query(
+        default=None,
+        description="Activo cuya célula pertenece a esta organización.",
+    ),
 ):
     """List vulnerabilidads del usuario: paginación, búsqueda, filtros y orden (BRD §13.2 P20)."""
     from sqlalchemy import and_, case, func, or_, select
 
     from app.core.response import paginated
+    from app.models.activo_web import ActivoWeb
+    from app.models.celula import Celula
+    from app.models.repositorio import Repositorio
 
     page = max(1, page)
     page_size = min(max(1, page_size), 100)
@@ -239,6 +290,51 @@ async def list_vulnerabilidads(
     ca = _parse_created_after(created_after)
     if ca is not None:
         base_where.append(Vulnerabilidad.created_at >= ca)
+
+    if celula_id is not None:
+        repo_sub = select(Repositorio.id).where(
+            Repositorio.celula_id == celula_id,
+            Repositorio.user_id == current_user.id,
+            Repositorio.deleted_at.is_(None),
+        )
+        aw_sub = select(ActivoWeb.id).where(
+            ActivoWeb.celula_id == celula_id,
+            ActivoWeb.user_id == current_user.id,
+            ActivoWeb.deleted_at.is_(None),
+        )
+        base_where.append(
+            or_(
+                Vulnerabilidad.repositorio_id.in_(repo_sub),
+                Vulnerabilidad.activo_web_id.in_(aw_sub),
+            )
+        )
+    elif organizacion_id is not None:
+        repo_sub = (
+            select(Repositorio.id)
+            .join(Celula, Celula.id == Repositorio.celula_id)
+            .where(
+                Celula.organizacion_id == organizacion_id,
+                Repositorio.user_id == current_user.id,
+                Repositorio.deleted_at.is_(None),
+                Celula.deleted_at.is_(None),
+            )
+        )
+        aw_sub = (
+            select(ActivoWeb.id)
+            .join(Celula, Celula.id == ActivoWeb.celula_id)
+            .where(
+                Celula.organizacion_id == organizacion_id,
+                ActivoWeb.user_id == current_user.id,
+                ActivoWeb.deleted_at.is_(None),
+                Celula.deleted_at.is_(None),
+            )
+        )
+        base_where.append(
+            or_(
+                Vulnerabilidad.repositorio_id.in_(repo_sub),
+                Vulnerabilidad.activo_web_id.in_(aw_sub),
+            )
+        )
 
     if sla == "vencida":
         now = datetime.now(UTC)
@@ -302,6 +398,96 @@ async def list_vulnerabilidads(
         page_size=page_size,
         total=total,
     )
+
+
+@router.post("/bulk-action")
+async def bulk_action_vulnerabilidades(
+    body: VulnerabilidadBulkActionRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Acciones masivas sobre hallazgos propios: estado, responsable o borrado lógico (spec 37)."""
+    scope = {"user_id": current_user.id}
+    processed = 0
+    errors: list[str] = []
+
+    if body.action == "delete":
+        await ensure_user_permissions(db, current_user, P.VULNERABILITIES.DELETE)
+    else:
+        await ensure_user_permissions(db, current_user, P.VULNERABILITIES.EDIT)
+
+    for vid in body.ids:
+        try:
+            if body.action == "delete":
+                ok = await vulnerabilidad_svc.delete(
+                    db, vid, scope=scope, actor_id=current_user.id
+                )
+                if ok:
+                    processed += 1
+                else:
+                    errors.append(f"{vid}: no encontrado")
+            elif body.action == "estado":
+                await vulnerabilidad_svc.update(
+                    db,
+                    vid,
+                    VulnerabilidadUpdate(estado=body.estado),
+                    scope=scope,
+                )
+                processed += 1
+            else:
+                await vulnerabilidad_svc.update(
+                    db,
+                    vid,
+                    VulnerabilidadUpdate(responsable_id=body.responsable_id),
+                    scope=scope,
+                )
+                processed += 1
+        except ValidationException as e:
+            errors.append(f"{vid}: {e.detail}")
+        except Exception as e:
+            logger.warning(
+                "vulnerabilidad.bulk_action.item_failed",
+                extra={"event": "vulnerabilidad.bulk_action.item_failed", "id": str(vid), "error": str(e)},
+            )
+            errors.append(f"{vid}: error")
+
+    logger.info(
+        "vulnerabilidad.bulk_action",
+        extra={
+            "event": "vulnerabilidad.bulk_action",
+            "user_id": str(current_user.id),
+            "action": body.action,
+            "processed": processed,
+            "failed": len(errors),
+        },
+    )
+    out = VulnerabilidadBulkActionResult(processed=processed, failed=len(errors), errors=errors[:50])
+    return success(out.model_dump())
+
+
+@router.get("/{id}/historial")
+async def list_vulnerabilidad_historial(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Bitácora de cambios de estado/responsable para una vulnerabilidad propia (spec 30)."""
+    try:
+        entity_id = UUID(id)
+    except (ValueError, TypeError) as e:
+        raise NotFoundException(f"Invalid ID format: {id}") from e
+
+    vuln = await vulnerabilidad_svc.get(db, entity_id, scope={"user_id": current_user.id})
+    if not vuln:
+        raise NotFoundException(f"Vulnerabilidad {id} not found")
+
+    result = await db.execute(
+        select(HistorialVulnerabilidad)
+        .where(HistorialVulnerabilidad.vulnerabilidad_id == entity_id)
+        .order_by(HistorialVulnerabilidad.created_at.desc())
+    )
+    rows = result.scalars().all()
+    return success([HistorialVulnerabilidadRead.model_validate(x).model_dump(mode="json") for x in rows])
 
 
 @router.get("/{id}")

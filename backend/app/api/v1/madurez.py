@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.response import success
+from app.models.activo_web import ActivoWeb
 from app.models.celula import Celula
 from app.models.gerencia import Gerencia
 from app.models.organizacion import Organizacion
@@ -189,6 +190,38 @@ async def get_madurez_summary(
         celula_id=celula_id,
     )
     return success(payload)
+
+
+@router.get("/node-scores")
+async def madurez_node_scores(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Scores 0–100 por `celula_id` para la columna Madurez en `/organizacion/jerarquia` (BRD §1)."""
+    cel_repo = (
+        await db.scalars(
+            select(Repositorio.celula_id).where(
+                Repositorio.user_id == current_user.id,
+                Repositorio.deleted_at.is_(None),
+                Repositorio.celula_id.isnot(None),
+            )
+        )
+    ).all()
+    cel_aw = (
+        await db.scalars(
+            select(ActivoWeb.celula_id).where(
+                ActivoWeb.user_id == current_user.id,
+                ActivoWeb.deleted_at.is_(None),
+                ActivoWeb.celula_id.isnot(None),
+            )
+        )
+    ).all()
+    cel_ids = {c for c in cel_repo if c} | {c for c in cel_aw if c}
+    scores: dict[str, float] = {}
+    for cid in cel_ids:
+        payload = await _compute_madurez_payload(db, current_user, celula_id=cid)
+        scores[str(cid)] = float(payload["score"])
+    return success({"celula": scores})
 
 
 @router.get("/export.csv")

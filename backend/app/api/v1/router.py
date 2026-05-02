@@ -36,6 +36,9 @@ from app.api.v1 import (
     ejecucion_dast,
     # ── Módulo 4 — MAST ───────────────────────────────────────────────────────
     ejecucion_mast,
+    email_logs,
+    email_template,
+    entity_custom_fields,
     estado_cumplimiento,
     etapa_release,
     evidencia_auditoria,
@@ -121,9 +124,16 @@ api_router.include_router(dashboard_export.router, prefix="/dashboard", tags=["D
 api_router.include_router(navigation.router, prefix="/navigation", tags=["Navigation"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
+api_router.include_router(email_template.router, prefix="/email-templates", tags=["Email templates"])
+api_router.include_router(email_logs.router, prefix="/email-logs", tags=["Email logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(user_preferences.router, tags=["User preferences"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
+api_router.include_router(
+    entity_custom_fields.router,
+    prefix="/entity-custom-fields",
+    tags=["Entity custom fields"],
+)
 api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
 api_router.include_router(agents_router, prefix="/agents", tags=["Agents"])
 api_router.include_router(admin_router, prefix="/admin")

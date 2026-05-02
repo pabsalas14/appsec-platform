@@ -9,7 +9,7 @@ Reglas:
 from __future__ import annotations
 
 import uuid
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -101,8 +101,6 @@ class ExcepcionVulnerabilidadService(
         scope: dict[str, Any] | None = None,
     ) -> ExcepcionVulnerabilidad | None:
         """Aprueba una excepción. Valida SoD: aprobador != creador si regla activa."""
-        from datetime import datetime
-
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, excepcion_id)
@@ -136,8 +134,6 @@ class ExcepcionVulnerabilidadService(
         scope: dict[str, Any] | None = None,
     ) -> ExcepcionVulnerabilidad | None:
         """Rechaza una excepción. Valida SoD: aprobador != creador si regla activa."""
-        from datetime import datetime
-
         from app.core.exceptions import ConflictException
 
         record = await self._get_for_decision(db, excepcion_id)
@@ -160,6 +156,31 @@ class ExcepcionVulnerabilidadService(
         await db.refresh(record)
         await self._audit(db, "rechazar", record, metadata={"aprobador_id": str(aprobador_id), "notas": notas})
         return record
+
+    async def reconciliar_vencidas(self, db: AsyncSession) -> dict[str, int]:
+        """Excepciones aprobadas cuya fecha límite ya pasó → estado Vencida y reactivación de ciclo en la vuln (spec 29)."""
+        now = datetime.now(UTC)
+        result = await db.execute(
+            select(ExcepcionVulnerabilidad).where(
+                ExcepcionVulnerabilidad.estado == "Aprobada",
+                ExcepcionVulnerabilidad.fecha_limite < now,
+                ExcepcionVulnerabilidad.deleted_at.is_(None),
+            )
+        )
+        rows = result.scalars().all()
+        n = 0
+        for ex in rows:
+            ex.estado = "Vencida"
+            await self._set_vuln_exception_state(db, ex.vulnerabilidad_id, approved=False)
+            await self._audit(
+                db,
+                "vencer_automatico",
+                ex,
+                metadata={"vulnerabilidad_id": str(ex.vulnerabilidad_id)},
+            )
+            n += 1
+        await db.flush()
+        return {"vencidas": n}
 
 
 excepcion_vulnerabilidad_svc = ExcepcionVulnerabilidadService(

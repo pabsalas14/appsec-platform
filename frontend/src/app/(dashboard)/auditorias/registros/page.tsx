@@ -40,6 +40,7 @@ import {
   Select,
   Textarea,
 } from '@/components/ui';
+import { EntityCustomFieldsCard } from '@/components/modules/EntityCustomFieldsCard';
 import {
   useAuditorias,
   useCreateAuditoria,
@@ -166,6 +167,11 @@ export default function AuditoriasPage() {
           />
         </div>
       </div>
+      {editTarget ? (
+        <div className="border-t border-border pt-3">
+          <EntityCustomFieldsCard entityType="auditoria" entityId={editTarget.id} />
+        </div>
+      ) : null}
       <div className="flex justify-end gap-2 pt-2">
         <DialogClose asChild>
           <Button type="button" variant="outline" onClick={() => { setEditTarget(null); form.reset(); }}>Cancelar</Button>

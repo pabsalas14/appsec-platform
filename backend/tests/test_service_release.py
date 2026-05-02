@@ -8,6 +8,8 @@ from httpx import AsyncClient
 from tests.graph_helpers import create_servicio_id
 
 BASE_URL = "/api/v1/service_releases"
+VULN_URL = "/api/v1/vulnerabilidads"
+EXC_URL = "/api/v1/excepcion_vulnerabilidads"
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -131,3 +133,107 @@ async def test_service_release_export_csv_success(client: AsyncClient, admin_aut
     assert resp.headers.get("content-type", "").startswith("text/csv")
     assert "nombre,version,estado_actual" in resp.text
     assert "Release v2.0" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_move_to_production_blocked_when_blocking_vuln(
+    client: AsyncClient,
+    auth_headers: dict,
+):
+    svc_id = await _create_servicio(client, auth_headers)
+    rel = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
+    assert rel.status_code == 201, rel.text
+    rid = rel.json()["data"]["id"]
+
+    v = await client.post(
+        VULN_URL,
+        headers=auth_headers,
+        json={
+            "titulo": "Hallazgo bloqueante",
+            "fuente": "SAST",
+            "severidad": "Critica",
+            "estado": "Abierta",
+            "servicio_id": svc_id,
+        },
+    )
+    assert v.status_code == 201, v.text
+
+    move = await client.patch(
+        f"{BASE_URL}/{rid}/move",
+        headers=auth_headers,
+        json={"column": "En Produccion"},
+    )
+    assert move.status_code == 400, move.text
+    assert "Producción" in move.text or "producción" in move.text.lower()
+
+
+@pytest.mark.asyncio
+async def test_move_to_production_allowed_without_blocking_vulns(
+    client: AsyncClient,
+    auth_headers: dict,
+):
+    svc_id = await _create_servicio(client, auth_headers)
+    rel = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
+    assert rel.status_code == 201, rel.text
+    rid = rel.json()["data"]["id"]
+
+    move = await client.patch(
+        f"{BASE_URL}/{rid}/move",
+        headers=auth_headers,
+        json={"column": "En Produccion"},
+    )
+    assert move.status_code == 200, move.text
+    assert move.json()["data"]["estado_actual"] == "En Produccion"
+
+
+@pytest.mark.asyncio
+async def test_move_to_production_allowed_with_approved_exception(
+    client: AsyncClient,
+    auth_headers: dict,
+    admin_auth_headers: dict,
+):
+    svc_id = await _create_servicio(client, auth_headers)
+    rel = await client.post(BASE_URL, headers=auth_headers, json=_payload(svc_id))
+    assert rel.status_code == 201, rel.text
+    rid = rel.json()["data"]["id"]
+
+    v = await client.post(
+        VULN_URL,
+        headers=auth_headers,
+        json={
+            "titulo": "Hallazgo con excepción",
+            "fuente": "SAST",
+            "severidad": "Alta",
+            "estado": "Abierta",
+            "servicio_id": svc_id,
+        },
+    )
+    assert v.status_code == 201, v.text
+    vid = v.json()["data"]["id"]
+
+    ex = await client.post(
+        EXC_URL,
+        headers=auth_headers,
+        json={
+            "vulnerabilidad_id": vid,
+            "justificacion": "Riesgo aceptado temporalmente con controles compensatorios",
+            "fecha_limite": "2030-12-01T00:00:00Z",
+        },
+    )
+    assert ex.status_code == 201, ex.text
+    eid = ex.json()["data"]["id"]
+
+    ap = await client.post(
+        f"{EXC_URL}/{eid}/aprobar",
+        headers=admin_auth_headers,
+        json={"notas": "Comité AppSec"},
+    )
+    assert ap.status_code == 200, ap.text
+
+    move = await client.patch(
+        f"{BASE_URL}/{rid}/move",
+        headers=auth_headers,
+        json={"column": "En Produccion"},
+    )
+    assert move.status_code == 200, move.text
+    assert move.json()["data"]["estado_actual"] == "En Produccion"

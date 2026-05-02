@@ -1,12 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import { Loader2, Save } from 'lucide-react';
+import { CalendarClock, Loader2, Play, Save } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button, Card, CardContent, CardHeader, CardTitle, PageHeader, PageWrapper, Textarea } from '@/components/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableRow,
+  DataTableTh,
+  Input,
+  PageHeader,
+  PageWrapper,
+  Textarea,
+} from '@/components/ui';
+import { useCerrarPeriodoFreeze } from '@/hooks/useCerrarPeriodoFreeze';
+import { useEjecutarScoringMensual, useHistoricoScoringMensual } from '@/hooks/useMonthlyScoring';
 import { useServiceReleaseOperacionConfig, useVulnerabilidadFlujoConfig } from '@/hooks/useOperacionConfig';
 import { useSystemSettings, useUpsertSystemSetting } from '@/hooks/useSystemSettings';
 import { logger } from '@/lib/logger';
@@ -45,6 +73,16 @@ export default function AdminOperacionPage() {
   const [cicloProgramasText, setCicloProgramasText] = useState('');
   const [cicloKpisText, setCicloKpisText] = useState('');
 
+  const now = new Date();
+  const [scoringAnio, setScoringAnio] = useState(now.getFullYear());
+  const [scoringMes, setScoringMes] = useState(now.getMonth() + 1);
+  const scoringHist = useHistoricoScoringMensual({ anio: scoringAnio, mes: scoringMes });
+  const scoringRun = useEjecutarScoringMensual();
+  const cerrarPeriodo = useCerrarPeriodoFreeze();
+  const [cerrarOpen, setCerrarOpen] = useState(false);
+  const [cpAnio, setCpAnio] = useState(now.getFullYear());
+  const [cpMes, setCpMes] = useState(now.getMonth() + 1);
+
   const trS = findSetting(settings, KEYS.transiciones);
   const knS = findSetting(settings, KEYS.kanban);
   const estS = findSetting(settings, KEYS.estatusVuln);
@@ -82,6 +120,67 @@ export default function AdminOperacionPage() {
   useEffect(() => {
     if (kpS) setCicloKpisText(stringify(kpS.value));
   }, [kpS]);
+
+  const transicionesPreview = useMemo(() => {
+    try {
+      const raw = transicionesText.trim() ? JSON.parse(transicionesText) : {};
+      if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { rows: [] as { origen: string; destinos: string }[], error: null as string | null };
+      const rows = Object.entries(raw as Record<string, unknown>).map(([origen, dest]) => ({
+        origen,
+        destinos: Array.isArray(dest) ? (dest as unknown[]).map(String).join(' · ') : JSON.stringify(dest),
+      }));
+      return { rows, error: null as string | null };
+    } catch {
+      return { rows: [] as { origen: string; destinos: string }[], error: 'JSON inválido' };
+    }
+  }, [transicionesText]);
+
+  const estatusVulnPreview = useMemo(() => {
+    try {
+      const raw = estatusVulnText.trim() ? JSON.parse(estatusVulnText) : [];
+      if (!Array.isArray(raw)) return { items: [] as { id: string; label: string; trans: string }[], error: 'Se esperaba un array' };
+      const items = raw.map((x: { id?: string; label?: string; transiciones_permitidas?: string[] }) => ({
+        id: String(x?.id ?? ''),
+        label: String(x?.label ?? ''),
+        trans: Array.isArray(x?.transiciones_permitidas) ? x.transiciones_permitidas.join(', ') : '—',
+      }));
+      return { items, error: null as string | null };
+    } catch {
+      return { items: [] as { id: string; label: string; trans: string }[], error: 'JSON inválido' };
+    }
+  }, [estatusVulnText]);
+
+  const freezeResumen = useMemo(() => {
+    try {
+      const raw = freezeText.trim() ? JSON.parse(freezeText) : null;
+      if (raw === null || typeof raw !== 'object') return { ok: true as const, parts: [] as string[], error: null as string | null };
+      const o = raw as Record<string, unknown>;
+      const parts: string[] = [];
+      if (typeof o.enabled === 'boolean') parts.push(`Freeze ${o.enabled ? 'activo' : 'inactivo'}`);
+      if (o.dia_cierre_mensual != null) parts.push(`Cierre día ${String(o.dia_cierre_mensual)}`);
+      const mods = o.modulos_bloqueados;
+      if (Array.isArray(mods)) parts.push(`Módulos bloqueados: ${mods.length}`);
+      const pc = o.periodos_cerrados;
+      if (Array.isArray(pc)) parts.push(`Periodos cerrados registrados: ${pc.length}`);
+      return { ok: true as const, parts, error: null as string | null };
+    } catch {
+      return { ok: false as const, parts: [] as string[], error: 'JSON inválido' };
+    }
+  }, [freezeText]);
+
+  const kanbanPreview = useMemo(() => {
+    try {
+      const raw = kanbanText.trim() ? JSON.parse(kanbanText) : {};
+      if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+        return { columnas: [] as string[], error: null as string | null };
+      }
+      const co = (raw as Record<string, unknown>).columnas_orden;
+      const columnas = Array.isArray(co) ? co.map(String) : [];
+      return { columnas, error: null as string | null };
+    } catch {
+      return { columnas: [] as string[], error: 'JSON inválido' };
+    }
+  }, [kanbanText]);
 
   const saveTransiciones = () => {
     let parsed: unknown;
@@ -223,9 +322,71 @@ export default function AdminOperacionPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarClock className="h-4 w-4" />
+            Scoring mensual de madurez (spec 12)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Ejecuta el motor de los 4 pilares y persiste snapshots jerárquicos. Requiere rol admin/backoffice.
+          </p>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="flex gap-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Año</label>
+              <Input
+                type="number"
+                className="mt-1 w-28"
+                value={scoringAnio}
+                min={2000}
+                max={2100}
+                onChange={(e) => setScoringAnio(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Mes</label>
+              <Input
+                type="number"
+                className="mt-1 w-24"
+                value={scoringMes}
+                min={1}
+                max={12}
+                onChange={(e) => setScoringMes(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => {
+              scoringRun.mutate(
+                { anio: scoringAnio, mes: scoringMes },
+                {
+                  onSuccess: (r) => {
+                    toast.success(`Scoring ejecutado · células: ${r.celulas_computadas ?? '—'}`);
+                  },
+                  onError: (e) => {
+                    toast.error(extractErrorMessage(e, 'Error al ejecutar scoring'));
+                  },
+                },
+              );
+            }}
+            disabled={scoringRun.isPending}
+          >
+            {scoringRun.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+            Ejecutar scoring
+          </Button>
+          <p className="text-xs text-muted-foreground sm:ml-auto">
+            Registros en historico ({scoringAnio}-{String(scoringMes).padStart(2, '0')}):{' '}
+            {scoringHist.isLoading ? '…' : (scoringHist.data?.length ?? 0)}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Transiciones entre estados (service releases)</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Mapa: estado origen → lista de estados destino. Vacío o ausente = sin validación estricta en el backend.
+            Mapa: estado origen → lista de estados destino (spec 19.2 / liberaciones). Vacío o ausente = sin validación estricta en el backend.
             Vista efectiva: {opRead ? 'sincronizada' : '—'}
           </p>
         </CardHeader>
@@ -237,6 +398,29 @@ export default function AdminOperacionPage() {
             spellCheck={false}
             placeholder='{ "Borrador": [ "En Revision de Diseno" ] }'
           />
+          {transicionesPreview.error && (
+            <p className="text-xs text-destructive">{transicionesPreview.error}</p>
+          )}
+          {!transicionesPreview.error && transicionesPreview.rows.length > 0 && (
+            <div className="rounded-md border border-border overflow-x-auto">
+              <DataTable>
+                <DataTableHead>
+                  <tr>
+                    <DataTableTh>Estado origen</DataTableTh>
+                    <DataTableTh>Destinos permitidos</DataTableTh>
+                  </tr>
+                </DataTableHead>
+                <DataTableBody>
+                  {transicionesPreview.rows.map((row) => (
+                    <DataTableRow key={row.origen}>
+                      <DataTableCell className="font-medium text-sm">{row.origen}</DataTableCell>
+                      <DataTableCell className="text-xs text-muted-foreground">{row.destinos || '—'}</DataTableCell>
+                    </DataTableRow>
+                  ))}
+                </DataTableBody>
+              </DataTable>
+            </div>
+          )}
           <div className="flex justify-end">
             <Button type="button" onClick={saveTransiciones} disabled={upsert.isPending}>
               {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -262,6 +446,16 @@ export default function AdminOperacionPage() {
             spellCheck={false}
             placeholder='{ "columnas_orden": [ "Borrador", "En Revision de Diseno" ] }'
           />
+          {kanbanPreview.error && <p className="text-xs text-destructive">{kanbanPreview.error}</p>}
+          {!kanbanPreview.error && kanbanPreview.columnas.length > 0 && (
+            <ol className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              {kanbanPreview.columnas.map((c, i) => (
+                <li key={`${c}-${i}`} className="rounded-md border border-border px-2 py-1">
+                  <span className="font-mono text-[10px] text-muted-foreground/80">{i + 1}.</span> {c}
+                </li>
+              ))}
+            </ol>
+          )}
           <div className="flex justify-end">
             <Button type="button" onClick={saveKanban} disabled={upsert.isPending}>
               {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -291,6 +485,31 @@ export default function AdminOperacionPage() {
             spellCheck={false}
             placeholder='[ { "id": "Abierta", "label": "Abierta", "transiciones_permitidas": ["En Remediación"] } ]'
           />
+          {estatusVulnPreview.error && (
+            <p className="text-xs text-destructive">{estatusVulnPreview.error}</p>
+          )}
+          {!estatusVulnPreview.error && estatusVulnPreview.items.length > 0 && (
+            <div className="rounded-md border border-border overflow-x-auto max-h-[240px] overflow-y-auto">
+              <DataTable>
+                <DataTableHead>
+                  <tr>
+                    <DataTableTh>id</DataTableTh>
+                    <DataTableTh>Label</DataTableTh>
+                    <DataTableTh>Transiciones</DataTableTh>
+                  </tr>
+                </DataTableHead>
+                <DataTableBody>
+                  {estatusVulnPreview.items.map((row) => (
+                    <DataTableRow key={row.id}>
+                      <DataTableCell className="font-mono text-xs">{row.id}</DataTableCell>
+                      <DataTableCell className="text-sm">{row.label}</DataTableCell>
+                      <DataTableCell className="text-xs text-muted-foreground max-w-[320px]">{row.trans}</DataTableCell>
+                    </DataTableRow>
+                  ))}
+                </DataTableBody>
+              </DataTable>
+            </div>
+          )}
           <div className="flex justify-end">
             <Button type="button" onClick={saveEstatusVuln} disabled={upsert.isPending}>
               {upsert.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -309,14 +528,31 @@ export default function AdminOperacionPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
+          {freezeResumen.error ? (
+            <p className="text-xs text-destructive">{freezeResumen.error}</p>
+          ) : freezeResumen.parts.length > 0 ? (
+            <Alert>
+              <AlertTitle className="text-sm">Resumen de configuración</AlertTitle>
+              <AlertDescription className="text-xs space-x-2 flex flex-wrap gap-1">
+                {freezeResumen.parts.map((p) => (
+                  <Badge key={p} variant="secondary">
+                    {p}
+                  </Badge>
+                ))}
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <Textarea
             className="min-h-[180px] font-mono text-xs"
             value={freezeText}
             onChange={(e) => setFreezeText(e.target.value)}
             spellCheck={false}
-            placeholder='{ "enabled": true, "dia_cierre_mensual": 5, "modulos_bloqueados": ["programas","indicadores","okr"] }'
+            placeholder='{ "enabled": true, "dia_cierre_mensual": 5, "modulos_bloqueados": ["programas","indicadores","okr"], "periodos_cerrados": [] }'
           />
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setCerrarOpen(true)}>
+              Registrar cierre en histórico (spec 35)
+            </Button>
             <Button
               type="button"
               onClick={() => saveJsonSetting(KEYS.freeze, freezeText, frS?.description, 'Freeze mensual guardado')}
@@ -327,6 +563,71 @@ export default function AdminOperacionPage() {
               Guardar freeze
             </Button>
           </div>
+          <Dialog open={cerrarOpen} onOpenChange={setCerrarOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Cerrar periodo en histórico</DialogTitle>
+              </DialogHeader>
+              <p className="text-xs text-muted-foreground">
+                Añade una entrada a <code className="rounded bg-muted px-1">periodos_cerrados</code> sin sobrescribir el JSON
+                completo (requiere backoffice).
+              </p>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs font-medium text-muted-foreground">Año</label>
+                  <Input
+                    type="number"
+                    className="mt-1"
+                    min={2000}
+                    max={2100}
+                    value={cpAnio}
+                    onChange={(e) => setCpAnio(Number(e.target.value))}
+                  />
+                </div>
+                <div className="w-28">
+                  <label className="text-xs font-medium text-muted-foreground">Mes</label>
+                  <Input
+                    type="number"
+                    className="mt-1"
+                    min={1}
+                    max={12}
+                    value={cpMes}
+                    onChange={(e) => setCpMes(Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Cancelar
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  disabled={cerrarPeriodo.isPending}
+                  onClick={() =>
+                    cerrarPeriodo.mutate(
+                      { anio: cpAnio, mes: cpMes },
+                      {
+                        onSuccess: (r) => {
+                          toast.success(`Periodo cerrado · total en histórico: ${r.total_periodos_cerrados}`);
+                          setCerrarOpen(false);
+                          void qc.invalidateQueries({ queryKey: ['admin', 'settings'] });
+                        },
+                        onError: (e) => {
+                          logger.error('admin.operacion.freeze.cerrar', { error: e });
+                          toast.error(extractErrorMessage(e, 'No se pudo registrar'));
+                        },
+                      },
+                    )
+                  }
+                >
+                  {cerrarPeriodo.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Confirmar cierre
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 

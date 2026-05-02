@@ -5,7 +5,10 @@ export const HitoIniciativaSchema = z.object({
   user_id: z.string().uuid(),
   nombre: z.string(),
   descripcion: z.string().nullable().optional(),
-  fecha_objetivo: z.string(),
+  fecha_objetivo: z.string().nullable().optional(),
+  estado: z.string().optional(),
+  porcentaje_completado: z.number().nullable().optional(),
+  peso: z.number().int().min(1).max(10000).nullable().optional(),
   iniciativa_id: z.string().uuid(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -16,12 +19,14 @@ export const HitoIniciativaCreateSchema = z.object({
   descripcion: z.string().max(2000).nullable().optional(),
   fecha_objetivo: z.string().min(1),
   iniciativa_id: z.string().uuid(),
+  peso: z.number().int().min(1).max(10000).optional(),
 });
 
 export const HitoIniciativaUpdateSchema = z.object({
   nombre: z.string().min(1).max(255).optional(),
   descripcion: z.string().max(2000).nullable().optional(),
   fecha_objetivo: z.string().optional(),
+  peso: z.number().int().min(1).max(10000).nullable().optional(),
 });
 
 export type HitoIniciativa = z.infer<typeof HitoIniciativaSchema>;

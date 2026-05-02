@@ -30,6 +30,17 @@ export function useRevisionTerceros() {
   });
 }
 
+export function useRevisionTercero(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, id] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<RevisionTercero>>(`/revision_terceros/${id}`);
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateRevisionTercero() {
   const qc = useQueryClient();
   return useMutation({

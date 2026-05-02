@@ -718,6 +718,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 estado="Completado",
                 fecha_estimada=ctx.now,
                 porcentaje_completado=100,
+                peso=100,
             )
         )
     n_a = await db.scalar(

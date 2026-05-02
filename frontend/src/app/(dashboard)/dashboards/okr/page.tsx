@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
@@ -39,9 +40,21 @@ export default function OKRDashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6 font-sans">
+      <div
+        className="mb-6 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+        role="note"
+      >
+        Vista agregada desde{' '}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">GET /dashboard/okr</code>.
+        Para el flujo operativo (compromisos, revisiones y drill-down con datos reales) usa el{' '}
+        <Link href="/okr_dashboard" className="font-medium text-primary underline-offset-4 hover:underline">
+          dashboard OKR principal
+        </Link>
+        .
+      </div>
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-wide">9. Compromisos OKR</h1>
+          <h1 className="text-3xl font-bold tracking-wide">9. Compromisos OKR (simulador)</h1>
           <p className="text-muted-foreground text-sm mt-1">Simulador de Cascada y Drill-down (4 niveles)</p>
         </div>
       </div>

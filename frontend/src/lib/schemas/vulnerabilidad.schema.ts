@@ -35,7 +35,8 @@ fecha_limite_sla: z.string().nullable().optional(),
 repositorio_id: z.string().uuid().nullable().optional(),
 activo_web_id: z.string().uuid().nullable().optional(),
 servicio_id: z.string().uuid().nullable().optional(),
-aplicacion_movil_id: z.string().uuid().nullable().optional(),
+  aplicacion_movil_id: z.string().uuid().nullable().optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const VulnerabilidadUpdateSchema = VulnerabilidadCreateSchema.partial();

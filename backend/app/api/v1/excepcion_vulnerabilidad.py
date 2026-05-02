@@ -23,6 +23,7 @@ from app.schemas.excepcion_vulnerabilidad import (
     ExcepcionVulnerabilidadRead,
     ExcepcionVulnerabilidadUpdate,
 )
+from app.core.logging import logger
 from app.services.audit_service import record as audit_record
 from app.services.excepcion_vulnerabilidad_service import excepcion_vulnerabilidad_svc
 
@@ -98,6 +99,24 @@ async def create_excepcion(
         db, entity_in, extra={"user_id": current_user.id, "estado": "Pendiente"}
     )
     return success(ExcepcionVulnerabilidadRead.model_validate(entity).model_dump(mode="json"))
+
+
+@router.post("/reconciliar-vencidas")
+async def reconciliar_excepciones_vencidas(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.APPROVE)),
+):
+    """Cierra excepciones aprobadas vencidas y reactiva SLA en vulnerabilidades (spec 29)."""
+    out = await excepcion_vulnerabilidad_svc.reconciliar_vencidas(db)
+    logger.info(
+        "excepcion_vulnerabilidad.reconciliar_vencidas",
+        extra={
+            "event": "excepcion_vulnerabilidad.reconciliar_vencidas",
+            "user_id": str(current_user.id),
+            **out,
+        },
+    )
+    return success(out)
 
 
 @router.patch("/{id}")

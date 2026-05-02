@@ -1,13 +1,17 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle, Loader2, Pencil, Plus, RefreshCw, Trash2, XCircle } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -29,6 +33,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -40,9 +45,12 @@ import {
 } from '@/components/ui';
 import { localDateTimeToIso, isoToLocalDateTime } from '@/components/crud';
 import {
+  useAprobarExcepcionVulnerabilidad,
   useCreateExcepcionVulnerabilidad,
   useDeleteExcepcionVulnerabilidad,
   useExcepcionVulnerabilidads,
+  useRechazarExcepcionVulnerabilidad,
+  useReconciliarExcepcionesVencidas,
   useUpdateExcepcionVulnerabilidad,
 } from '@/hooks/useExcepcionVulnerabilidads';
 import { useVulnerabilidads } from '@/hooks/useVulnerabilidads';
@@ -216,7 +224,12 @@ export default function ExcepcionVulnerabilidadsPage() {
   const [q, setQ] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<ExcepcionVulnerabilidad | null>(null);
+  const [decisionDialog, setDecisionDialog] = useState<{ id: string; kind: 'aprobar' | 'rechazar' } | null>(null);
+  const [notasDecision, setNotasDecision] = useState('');
   const deleteMut = useDeleteExcepcionVulnerabilidad();
+  const aprobarMut = useAprobarExcepcionVulnerabilidad();
+  const rechazarMut = useRechazarExcepcionVulnerabilidad();
+  const reconciliarMut = useReconciliarExcepcionesVencidas();
 
   const vOpts = useMemo(
     () => (vulns ?? []).map((v) => ({ value: v.id, label: v.titulo.slice(0, 60) })),
@@ -243,22 +256,60 @@ export default function ExcepcionVulnerabilidadsPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Excepciones de vulnerabilidad"
-        description="Excepciones con fecha límite y flujo de aprobación."
+        description="Solicitud con fecha límite; aprobación o rechazo requiere permiso vulnerabilities.approve (SoD en backend)."
       >
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={!vOpts.length}>
-              <Plus className="mr-2 h-4 w-4" /> Nueva
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Nueva excepción</DialogTitle>
-            </DialogHeader>
-            <FormFields onSuccess={() => setCreateOpen(false)} vOpts={vOpts} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={reconciliarMut.isPending}
+            onClick={() =>
+              reconciliarMut.mutate(undefined, {
+                onSuccess: (d) => {
+                  toast.success(
+                    d.vencidas === 0
+                      ? 'Sin excepciones aprobadas vencidas'
+                      : `Marcadas como vencidas: ${d.vencidas}`,
+                  );
+                },
+                onError: (e) => {
+                  logger.error('excepcion_vulnerabilidad.reconciliar.failed', { error: e });
+                  toast.error(extractErrorMessage(e, 'No se pudo reconciliar'));
+                },
+              })
+            }
+          >
+            {reconciliarMut.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            Reconciliar vencidas
+          </Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={!vOpts.length}>
+                <Plus className="mr-2 h-4 w-4" /> Nueva
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Nueva excepción</DialogTitle>
+              </DialogHeader>
+              <FormFields onSuccess={() => setCreateOpen(false)} vOpts={vOpts} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
+
+      <Alert>
+        <AlertTitle className="text-sm">Flujo (spec 29)</AlertTitle>
+        <AlertDescription className="text-xs leading-relaxed">
+          Pendiente → aprobación/rechazo por API dedicada (opcional: notas del aprobador). Las excepciones en estado Aprobada con fecha límite
+          pasada pueden pasar a Vencida con «Reconciliar vencidas» (reactiva la vulnerabilidad según política). El SLA y los estados siguen el
+          catálogo D1 y el motor de negocio.
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardContent className="p-4">
@@ -276,14 +327,19 @@ export default function ExcepcionVulnerabilidadsPage() {
                   <DataTableTh>Estado</DataTableTh>
                   <DataTableTh>Fecha límite</DataTableTh>
                   <DataTableTh>Actualizado</DataTableTh>
-                  <DataTableTh className="w-[100px]"> </DataTableTh>
+                  <DataTableTh className="min-w-[140px]">Acciones</DataTableTh>
                 </tr>
               </DataTableHead>
               <DataTableBody>
                 {filtered.map((item) => (
                   <DataTableRow key={item.id}>
-                    <DataTableCell className="text-xs text-muted-foreground max-w-[160px] truncate">
-                      {vLabel(item.vulnerabilidad_id)}
+                    <DataTableCell className="max-w-[200px] truncate">
+                      <Link
+                        href={`/vulnerabilidads/${item.vulnerabilidad_id}`}
+                        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        {vLabel(item.vulnerabilidad_id)}
+                      </Link>
                     </DataTableCell>
                     <DataTableCell>{item.estado}</DataTableCell>
                     <DataTableCell className="text-xs whitespace-nowrap">{formatDate(item.fecha_limite)}</DataTableCell>
@@ -291,7 +347,37 @@ export default function ExcepcionVulnerabilidadsPage() {
                       {formatDate(item.updated_at)}
                     </DataTableCell>
                     <DataTableCell>
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
+                        {item.estado === 'Pendiente' && (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              title="Aprobar"
+                              disabled={aprobarMut.isPending || rechazarMut.isPending}
+                              onClick={() => {
+                                setNotasDecision('');
+                                setDecisionDialog({ id: item.id, kind: 'aprobar' });
+                              }}
+                            >
+                              <CheckCircle className="h-4 w-4 text-emerald-600" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              title="Rechazar"
+                              disabled={aprobarMut.isPending || rechazarMut.isPending}
+                              onClick={() => {
+                                setNotasDecision('');
+                                setDecisionDialog({ id: item.id, kind: 'rechazar' });
+                              }}
+                            >
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
                         <Button type="button" variant="ghost" size="xs" onClick={() => setEdit(item)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -340,6 +426,79 @@ export default function ExcepcionVulnerabilidadsPage() {
             <DialogTitle>Editar excepción</DialogTitle>
           </DialogHeader>
           {edit && <FormFields key={edit.id} initial={edit} onSuccess={() => setEdit(null)} vOpts={vOpts} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={decisionDialog !== null}
+        onOpenChange={(o) => {
+          if (!o) setDecisionDialog(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{decisionDialog?.kind === 'aprobar' ? 'Aprobar excepción' : 'Rechazar excepción'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-1">
+            <label className="text-sm font-medium" htmlFor="notas-aprobador-dialog">
+              Notas del aprobador (opcional)
+            </label>
+            <Textarea
+              id="notas-aprobador-dialog"
+              value={notasDecision}
+              onChange={(e) => setNotasDecision(e.target.value)}
+              placeholder="Contexto o condiciones…"
+              rows={4}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant={decisionDialog?.kind === 'rechazar' ? 'destructive' : 'default'}
+              disabled={aprobarMut.isPending || rechazarMut.isPending}
+              onClick={() => {
+                if (!decisionDialog) return;
+                const notas = notasDecision.trim() || null;
+                const done = () => {
+                  toast.success(decisionDialog.kind === 'aprobar' ? 'Excepción aprobada' : 'Excepción rechazada');
+                  setDecisionDialog(null);
+                };
+                if (decisionDialog.kind === 'aprobar') {
+                  aprobarMut.mutate(
+                    { id: decisionDialog.id, notas },
+                    {
+                      onSuccess: done,
+                      onError: (e) => {
+                        logger.error('excepcion_vulnerabilidad.aprobar.failed', { id: decisionDialog.id, error: e });
+                        toast.error(extractErrorMessage(e, 'No se pudo aprobar'));
+                      },
+                    },
+                  );
+                } else {
+                  rechazarMut.mutate(
+                    { id: decisionDialog.id, notas },
+                    {
+                      onSuccess: done,
+                      onError: (e) => {
+                        logger.error('excepcion_vulnerabilidad.rechazar.failed', { id: decisionDialog.id, error: e });
+                        toast.error(extractErrorMessage(e, 'No se pudo rechazar'));
+                      },
+                    },
+                  );
+                }
+              }}
+            >
+              {(aprobarMut.isPending || rechazarMut.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {decisionDialog?.kind === 'aprobar' ? 'Aprobar' : 'Rechazar'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </PageWrapper>

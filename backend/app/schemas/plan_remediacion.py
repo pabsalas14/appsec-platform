@@ -44,3 +44,4 @@ class PlanRemediacionRead(PlanRemediacionBase):
     user_id: UUID
     created_at: datetime
     updated_at: datetime
+    vulnerabilidad_ids: list[UUID] = Field(default_factory=list)

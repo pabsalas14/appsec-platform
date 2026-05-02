@@ -4,9 +4,11 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Separator } from '@/components/ui';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useVulnerabilidad } from '@/hooks/useVulnerabilidads';
+import { VulnerabilidadHistorialTimeline } from '@/components/modules/VulnerabilidadHistorialTimeline';
+import { useVulnerabilidad, useVulnerabilidadHistorial } from '@/hooks/useVulnerabilidads';
 import { useVulnerabilidadFlujoConfig } from '@/hooks/useOperacionConfig';
 import { labelForEstatusId } from '@/lib/vulnerabilidadFlujo';
 import { formatDate } from '@/lib/utils';
@@ -19,6 +21,9 @@ type Props = {
 
 export function VulnerabilidadPreviewSheet({ id, open, onOpenChange }: Props) {
   const { data: v, isLoading, error } = useVulnerabilidad(id ?? undefined);
+  const { data: historialRaw, isLoading: histLoading } = useVulnerabilidadHistorial(
+    open && id ? id : undefined,
+  );
   const { data: flujo } = useVulnerabilidadFlujoConfig();
   const estatus = flujo?.estatus;
 
@@ -28,7 +33,7 @@ export function VulnerabilidadPreviewSheet({ id, open, onOpenChange }: Props) {
         <SheetHeader>
           <SheetTitle>Vista rápida</SheetTitle>
           <SheetDescription>
-            Detalle técnico resumido. Abre la página completa para acciones, historial e IA.
+            Detalle técnico resumido. Abre la página completa para acciones avanzadas e IA (triaje FP).
           </SheetDescription>
         </SheetHeader>
         <div className="mt-4 flex flex-1 flex-col gap-4 border-t border-border/60 p-1 pt-4">
@@ -77,6 +82,13 @@ export function VulnerabilidadPreviewSheet({ id, open, onOpenChange }: Props) {
                   <dd className="whitespace-nowrap">{formatDate(v.created_at)}</dd>
                 </div>
               </dl>
+              <Separator className="my-4" />
+              <div>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Bitácora (spec 30)
+                </h4>
+                <VulnerabilidadHistorialTimeline raw={historialRaw} isLoading={histLoading} compact />
+              </div>
               <div className="mt-auto flex flex-wrap gap-2 border-t border-border/60 pt-4">
                 <Link
                   href={`/vulnerabilidads/${v.id}`}

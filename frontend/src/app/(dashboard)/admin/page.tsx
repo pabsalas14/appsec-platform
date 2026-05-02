@@ -30,6 +30,12 @@ type HubCard = {
 
 const BUILDER_CARDS: HubCard[] = [
   {
+    href: '/query-builder',
+    title: 'Query builder',
+    description: 'Consultas guardadas sobre el modelo de datos (validación + vista previa). Spec fase 1.',
+    icon: LineChart,
+  },
+  {
     href: '/admin/module-views',
     title: 'Module views',
     description: 'Vistas de tabla, Kanban, calendario y tarjetas por módulo.',

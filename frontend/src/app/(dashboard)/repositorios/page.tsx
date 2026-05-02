@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowDownAZ, ArrowUpAZ, ExternalLink, GitBranch, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -52,6 +53,8 @@ import { useOrganizacions } from '@/hooks/useOrganizacions';
 import { useSubdireccions } from '@/hooks/useSubdireccions';
 import { useClientPagedList } from '@/hooks/useClientPagedList';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { logger } from '@/lib/logger';
 import {
   RepositorioCreateSchema,
@@ -59,7 +62,8 @@ import {
   type RepositorioCreate,
   type RepositorioUpdate,
 } from '@/lib/schemas/repositorio.schema';
-import { extractErrorMessage, formatDate } from '@/lib/utils';
+import { UrlFilterChips, type UrlFilterChipItem } from '@/components/filters/UrlFilterChips';
+import { cn, extractErrorMessage, formatDate } from '@/lib/utils';
 
 const PLATFORMS = ['GitHub', 'GitLab', 'Bitbucket', 'Azure DevOps', 'Otro'] as const;
 
@@ -166,6 +170,7 @@ function RepositorioForm({
   );
 
   const pending = createMut.isPending || updateMut.isPending;
+  useUnsavedChanges(form.formState.isDirty);
 
   const onSubmit = form.handleSubmit((data) => {
     const payload: RepositorioCreate = {
@@ -358,17 +363,19 @@ function RepositorioForm({
 }
 
 export default function RepositoriosPage() {
+  const { getParam, setParam, setParams, clearAll } = useUrlFilters();
+  const q = getParam('q') ?? '';
+  const nombreOrderDesc = getParam('sort') === 'nombre_desc';
+  const gerenciaF = getParam('g') ?? ALL;
+  const orgF = getParam('org') ?? ALL;
+  const celulaF = getParam('cel') ?? ALL;
+
   const { data: rows, isLoading, isError } = useRepositorios();
   const { data: currentUser } = useCurrentUser();
   const { data: subdirs } = useSubdireccions();
   const { data: gerencias } = useGerencias();
   const { data: orgs } = useOrganizacions();
   const { data: celulas } = useCelulas();
-  const [q, setQ] = useState('');
-  const [nombreOrderDesc, setNombreOrderDesc] = useState(false);
-  const [gerenciaF, setGerenciaF] = useState<string>(ALL);
-  const [orgF, setOrgF] = useState<string>(ALL);
-  const [celulaF, setCelulaF] = useState<string>(ALL);
   const [createOpen, setCreateOpen] = useState(false);
   const [edit, setEdit] = useState<Repositorio | null>(null);
   const deleteMut = useDeleteRepositorio();
@@ -444,10 +451,64 @@ export default function RepositoriosPage() {
 
   const paged = useClientPagedList(sorted, [q, nombreOrderDesc, celulaF, gerenciaF, orgF]);
 
+  const urlChipItems = useMemo((): UrlFilterChipItem[] => {
+    const chips: UrlFilterChipItem[] = [];
+    if (q.trim()) {
+      chips.push({
+        key: 'q',
+        label: `Buscar: ${q}`,
+        onRemove: () => setParam('q', null),
+      });
+    }
+    if (gerenciaF !== ALL) {
+      const g = gerencias?.find((x) => x.id === gerenciaF);
+      chips.push({
+        key: 'g',
+        label: `Gerencia: ${g?.nombre ?? gerenciaF.slice(0, 8)}`,
+        onRemove: () => setParams({ g: null, org: null, cel: null }),
+      });
+    }
+    if (orgF !== ALL) {
+      const o = orgs?.find((x) => x.id === orgF);
+      chips.push({
+        key: 'org',
+        label: `Organización: ${o?.nombre ?? orgF.slice(0, 8)}`,
+        onRemove: () => setParams({ org: null, cel: null }),
+      });
+    }
+    if (celulaF !== ALL) {
+      const c = celulas?.find((x) => x.id === celulaF);
+      chips.push({
+        key: 'cel',
+        label: `Célula: ${c?.nombre ?? celulaF.slice(0, 8)}`,
+        onRemove: () => setParam('cel', null),
+      });
+    }
+    if (nombreOrderDesc) {
+      chips.push({
+        key: 'sort',
+        label: 'Orden: nombre Z-A',
+        onRemove: () => setParam('sort', null),
+      });
+    }
+    return chips;
+  }, [
+    q,
+    gerenciaF,
+    orgF,
+    celulaF,
+    nombreOrderDesc,
+    gerencias,
+    orgs,
+    celulas,
+    setParam,
+    setParams,
+  ]);
+
   return (
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
-        title="Repositorios (BRD §3.2)"
+        title="Repositorios"
         description="Mapeo por organización, con célula opcional y responsable por repositorio."
       >
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -494,9 +555,8 @@ export default function RepositoriosPage() {
                 className="mt-1"
                 value={gerenciaF}
                 onChange={(e) => {
-                  setGerenciaF(e.target.value);
-                  setOrgF(ALL);
-                  setCelulaF(ALL);
+                  const v = e.target.value;
+                  setParams({ g: v === ALL ? null : v, org: null, cel: null });
                 }}
                 options={[
                   { value: ALL, label: 'Todas' },
@@ -510,8 +570,8 @@ export default function RepositoriosPage() {
                 className="mt-1"
                 value={orgF}
                 onChange={(e) => {
-                  setOrgF(e.target.value);
-                  setCelulaF(ALL);
+                  const v = e.target.value;
+                  setParams({ org: v === ALL ? null : v, cel: null });
                 }}
                 options={[
                   { value: ALL, label: 'Todas' },
@@ -527,7 +587,7 @@ export default function RepositoriosPage() {
               <Select
                 className="mt-1"
                 value={celulaF}
-                onChange={(e) => setCelulaF(e.target.value)}
+                onChange={(e) => setParam('cel', e.target.value === ALL ? null : e.target.value)}
                 options={[
                   { value: ALL, label: 'Todas' },
                   ...filteredCelulas.map((c) => {
@@ -538,6 +598,41 @@ export default function RepositoriosPage() {
               />
             </div>
           </div>
+
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="text-xs font-medium text-muted-foreground">Gerencia (chips)</p>
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setParams({ g: null, org: null, cel: null })}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs transition-colors',
+                  gerenciaF === ALL
+                    ? 'border-primary bg-primary/15 text-foreground'
+                    : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                )}
+              >
+                Todas
+              </button>
+              {(gerencias || []).map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setParams({ g: g.id, org: null, cel: null })}
+                  className={cn(
+                    'max-w-[240px] truncate rounded-full border px-3 py-1 text-xs transition-colors',
+                    gerenciaF === g.id
+                      ? 'border-primary bg-primary/15 text-foreground'
+                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
+                  )}
+                  title={g.nombre}
+                >
+                  {g.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
             <div className="max-w-md flex-1">
               <label className="text-sm font-medium">Buscar</label>
@@ -545,14 +640,21 @@ export default function RepositoriosPage() {
                 className="mt-1"
                 placeholder="Nombre, URL, plataforma, rama…"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => setParam('q', e.target.value.trim() ? e.target.value : null)}
               />
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => setNombreOrderDesc((v) => !v)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setParam('sort', nombreOrderDesc ? null : 'nombre_desc')}
+            >
               {nombreOrderDesc ? <ArrowDownAZ className="mr-2 h-4 w-4" /> : <ArrowUpAZ className="mr-2 h-4 w-4" />}
               Orden: {nombreOrderDesc ? 'Z-A' : 'A-Z'}
             </Button>
           </div>
+
+          <UrlFilterChips items={urlChipItems} onClearAll={clearAll} className="border-t border-border pt-4" />
 
           {isLoading && (
             <div className="flex justify-center py-12 text-muted-foreground">
@@ -586,7 +688,11 @@ export default function RepositoriosPage() {
                   const s = g ? subdirName.get(g.subdireccion_id) : undefined;
                   return (
                     <DataTableRow key={r.id}>
-                      <DataTableCell className="font-medium">{r.nombre}</DataTableCell>
+                      <DataTableCell className="font-medium">
+                        <Link href={`/repositorios/${r.id}`} className="hover:text-primary hover:underline">
+                          {r.nombre}
+                        </Link>
+                      </DataTableCell>
                       <DataTableCell>
                         <Badge variant="primary">{r.plataforma}</Badge>
                       </DataTableCell>

@@ -131,6 +131,7 @@ async def build_vulnerabilities_org_dashboard(
             "solventadas": solventadas,
             "nuevas": nuevas,
             "tendencia": trend,
+            "diff": diff,
             "up": diff > 0
         })
 
@@ -209,11 +210,14 @@ async def build_vulnerabilities_org_dashboard(
         if t > 0:
             score = max(0, int(100 - ((crit * 10) + (alta * 3) + (med * 1)) / t * 100))
             
+        total_scope = await _n(db, child_scope, extra_filters)
+        cerradas_scope = await _n(db, child_scope, [*extra_filters, Vulnerabilidad.estado == "Cerrada"])
+        pct_cerradas = int(round(100 * cerradas_scope / total_scope)) if total_scope else 0
         return {
             "sast": sast, "sca": sca, "cds": cds, "dast": dast, "mda": mda, "mast": mast,
             "maturity_score": score,
-            "aprobados": "75%", 
-            "rechazados": "25%"
+            "aprobados": f"{pct_cerradas}%",
+            "rechazados": f"{max(0, 100 - pct_cerradas)}%",
         }
 
     if repositorio_id is not None:
@@ -293,27 +297,39 @@ async def build_vulnerabilities_org_dashboard(
     
     summary = {
         "total": total,
-        "by_engine": [{"motor": m["nombre"], "count": m["actual"], "trend": int(m["tendencia"])} for m in engine_data],
+        "by_engine": [{"motor": m["nombre"], "count": m["actual"], "trend": m["diff"]} for m in engine_data],
         "by_severity": by_sev,
         "trend": [{"period": trend_data["labels"][i], "count": trend_data["activas"][i]} for i in range(len(trend_data["labels"]))],
         "pipeline": by_state
     }
+
+    cerradas_tot = by_state.get("Cerrada", 0)
+    pct_pipeline = int(round(100 * cerradas_tot / total)) if total else 0
+    tendencia_str = "0%"
+    if len(trend_data["activas"]) >= 2:
+        cur_a = trend_data["activas"][-1]
+        prev_a = trend_data["activas"][-2]
+        if prev_a > 0:
+            delta_pct = int(round(100 * (cur_a - prev_a) / prev_a))
+            tendencia_str = f"{'+' if delta_pct >= 0 else ''}{delta_pct}%"
+        elif cur_a > 0:
+            tendencia_str = "+100%"
 
     return {
         "summary": summary,
         "semaforo": {
             "estado": sem_status,
             "total": total,
-            "tendencia": "+5%" # Mock trend
+            "tendencia": tendencia_str,
         },
         "motores": engine_data,
         "tendencia": trend_data,
         "top_vulns": top_vulns,
         "pipeline": {
-            "total": 3842, # Mock
-            "aprobados": 2812,
-            "rechazados": 1030,
-            "pct": 73
+            "total": total,
+            "aprobados": cerradas_tot,
+            "rechazados": max(0, total - cerradas_tot),
+            "pct": pct_pipeline,
         },
         "children": children,
         "children_type": children_type,

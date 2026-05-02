@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, text
+from sqlalchemy import Column, DateTime, ForeignKey, String, Table, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +15,25 @@ from app.models.mixins import SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.auditoria import Auditoria
+    from app.models.vulnerabilidad import Vulnerabilidad
+
+
+plan_remediacion_vulnerabilidads = Table(
+    "plan_remediacion_vulnerabilidads",
+    Base.metadata,
+    Column(
+        "plan_remediacion_id",
+        UUID(as_uuid=True),
+        ForeignKey("planes_remediacion.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "vulnerabilidad_id",
+        UUID(as_uuid=True),
+        ForeignKey("vulnerabilidads.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
 
 
 class PlanRemediacion(SoftDeleteMixin, Base):
@@ -46,3 +65,8 @@ class PlanRemediacion(SoftDeleteMixin, Base):
     )
 
     auditoria: Mapped[Auditoria] = relationship(back_populates="planes_remediacion")
+    vulnerabilidades: Mapped[list["Vulnerabilidad"]] = relationship(
+        "Vulnerabilidad",
+        secondary=plan_remediacion_vulnerabilidads,
+        lazy="noload",
+    )

@@ -38,6 +38,10 @@ class HitoIniciativa(SoftDeleteMixin, Base):
     estado: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     fecha_estimada: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     porcentaje_completado: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    #: Peso relativo del hito dentro de la iniciativa (1–10000). Si todos los hitos
+    #: tienen peso, el progreso mensual normaliza a 100 %. Si alguno carece de peso,
+    #: se reparte el peso en partes iguales entre todos los hitos del período.
+    peso: Mapped[int | None] = mapped_column(Integer(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

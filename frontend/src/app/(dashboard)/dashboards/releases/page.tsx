@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, Layers, PlayCircle } from 'lucide-react';
 
 import { DashboardCsvExportButton } from '@/components/dashboard/DashboardCsvExportButton';
@@ -12,7 +13,6 @@ import {
   useDashboardReleases,
   useDashboardReleasesTable,
 } from '@/hooks/useAppDashboardPanels';
-
 export default function ReleasesDashboardPage() {
   const { filters, updateFilter, clearFilters, applyFilters } = useDashboardHierarchyFilters();
   const { data: kpi, isLoading: kpiLoading } = useDashboardReleases(filters);
@@ -20,17 +20,31 @@ export default function ReleasesDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0f1a] text-[#e2e8f0] p-6 font-sans">
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col gap-4 justify-between items-start mb-8 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-wide">6. Liberaciones (Releases)</h1>
+          <h1 className="text-3xl font-bold tracking-wide">Liberaciones</h1>
           <p className="text-muted-foreground text-sm mt-1">Control operativo de releases por jerarquía organizacional.</p>
         </div>
-        <DashboardCsvExportButton
-          apiPath="/service_releases/export.csv"
-          filename="service_releases.csv"
-          label="Exportar releases"
-          className="bg-[#1c2035] border-[#252a45] text-xs h-9"
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/service_releases/registros"
+            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-xs font-medium text-foreground hover:bg-[#252a45]/80"
+          >
+            Gestionar registros
+          </Link>
+          <Link
+            href="/dashboards/kanban"
+            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-xs font-medium text-foreground hover:bg-[#252a45]/80"
+          >
+            Kanban
+          </Link>
+          <DashboardCsvExportButton
+            apiPath="/service_releases/export.csv"
+            filename="service_releases.csv"
+            label="Exportar releases"
+            className="bg-[#1c2035] border-[#252a45] text-xs h-9"
+          />
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -125,7 +139,7 @@ export default function ReleasesDashboardPage() {
             )}
           </div>
         </div>
-</div>
+      </div>
     </div>
   );
 }

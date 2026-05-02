@@ -2,10 +2,20 @@
 
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
-import { FileSpreadsheet, Filter, PanelRight, Printer, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileSpreadsheet, Filter, Loader2, PanelRight, Printer, Settings2, X } from 'lucide-react';
 
+import { VulnerabilidadBulkImportCard } from '@/components/modules/VulnerabilidadBulkImportCard';
 import { VulnerabilidadPreviewSheet } from '@/components/modules/VulnerabilidadPreviewSheet';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Badge,
   Button,
   Card,
@@ -21,15 +31,23 @@ import {
   PageHeader,
   PageWrapper,
   Select,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Skeleton,
 } from '@/components/ui';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useVulnerabilidadsList } from '@/hooks/useVulnerabilidads';
+import { useCelulas } from '@/hooks/useCelulas';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useOrganizacions } from '@/hooks/useOrganizacions';
+import { useTableColumnVisibility } from '@/hooks/useTableColumnVisibility';
+import { useVulnerabilidadBulkAction, useVulnerabilidadsList } from '@/hooks/useVulnerabilidads';
 import { useVulnerabilidadFlujoConfig } from '@/hooks/useOperacionConfig';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { exportXLSX, printTableHtml } from '@/lib/export';
 import { labelForEstatusId } from '@/lib/vulnerabilidadFlujo';
-import { formatDate } from '@/lib/utils';
+import { logger } from '@/lib/logger';
+import { extractErrorMessage, formatDate } from '@/lib/utils';
 import type { Vulnerabilidad } from '@/lib/schemas/vulnerabilidad.schema';
 
 const SEVERIDAD_OPTS = [
@@ -58,6 +76,29 @@ const PAGE_SIZES = [
   { value: '50', label: '50' },
   { value: '100', label: '100' },
 ];
+
+const DATA_COLUMNS = [
+  'id',
+  'titulo',
+  'fuente',
+  'severidad',
+  'activo',
+  'sla',
+  'estado',
+  'creado',
+] as const;
+type DataCol = (typeof DATA_COLUMNS)[number];
+
+const COL_LABELS: Record<DataCol, string> = {
+  id: 'ID',
+  titulo: 'Título',
+  fuente: 'Motor',
+  severidad: 'Severidad',
+  activo: 'Activo',
+  sla: 'SLA',
+  estado: 'Estado',
+  creado: 'Creado',
+};
 
 function shortId(id: string) {
   return id.replace(/-/g, '').slice(0, 8);
@@ -99,6 +140,14 @@ export default function VulnerabilidadsPage() {
   }, [searchParams]);
 
   const { data, isLoading, error } = useVulnerabilidadsList(listSp);
+  const { data: user } = useCurrentUser();
+  const { data: celulas } = useCelulas();
+  const { data: orgs } = useOrganizacions();
+  const bulkMut = useVulnerabilidadBulkAction();
+  const { isVisible, toggle: toggleCol } = useTableColumnVisibility('vuln-registros-cols-v1', DATA_COLUMNS);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkEstado, setBulkEstado] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const estatus = flujo?.estatus;
   const estadoOptions = useMemo(
@@ -130,6 +179,89 @@ export default function VulnerabilidadsPage() {
 
   const reinc = getParam('reincidencia') === 'true' || getParam('reincidencia') === '1';
 
+  const visClass = useCallback(
+    (col: DataCol, responsive: string) => (!isVisible(col) ? 'hidden' : responsive),
+    [isVisible],
+  );
+
+  const allSelectedOnPage = items.length > 0 && items.every((i) => selected.has(i.id));
+
+  const toggleSelectAllPage = useCallback(() => {
+    if (!items.length) return;
+    if (allSelectedOnPage) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const i of items) next.delete(i.id);
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const i of items) next.add(i.id);
+        return next;
+      });
+    }
+  }, [allSelectedOnPage, items]);
+
+  const estadoBulkOptions = useMemo(
+    () => (estatus ?? []).map((e) => ({ value: e.id, label: e.label })),
+    [estatus],
+  );
+
+  const runBulkEstado = useCallback(() => {
+    if (!bulkEstado.trim()) {
+      toast.error('Elige un estatus');
+      return;
+    }
+    bulkMut.mutate(
+      { action: 'estado', ids: [...selected], estado: bulkEstado },
+      {
+        onSuccess: (d) => {
+          toast.success(
+            d.failed ? `Procesados ${d.processed}, con incidencias ${d.failed}` : `Actualizados: ${d.processed}`,
+          );
+          if (d.errors.length) logger.warn('vulnerabilidad.bulk.partial', { errors: d.errors });
+          setSelected(new Set());
+        },
+        onError: (e) => {
+          logger.error('vulnerabilidad.bulk.estado.failed', { error: e });
+          toast.error(extractErrorMessage(e, 'No se pudo aplicar el estado'));
+        },
+      },
+    );
+  }, [bulkEstado, bulkMut, selected]);
+
+  const runBulkAssignMe = useCallback(() => {
+    if (!user?.id) {
+      toast.error('Sesión sin usuario');
+      return;
+    }
+    bulkMut.mutate(
+      { action: 'responsable', ids: [...selected], responsable_id: user.id },
+      {
+        onSuccess: (d) => {
+          toast.success(`Responsable actualizado en ${d.processed} filas`);
+          setSelected(new Set());
+        },
+        onError: (e) => toast.error(extractErrorMessage(e, 'No se pudo asignar')),
+      },
+    );
+  }, [bulkMut, selected, user?.id]);
+
+  const runBulkDelete = useCallback(() => {
+    bulkMut.mutate(
+      { action: 'delete', ids: [...selected] },
+      {
+        onSuccess: (d) => {
+          toast.success(`Eliminados (lógico): ${d.processed}`);
+          setDeleteOpen(false);
+          setSelected(new Set());
+        },
+        onError: (e) => toast.error(extractErrorMessage(e, 'No se pudo eliminar')),
+      },
+    );
+  }, [bulkMut, selected]);
+
   const filterChips = useMemo(() => {
     const chips: { key: string; label: string }[] = [];
     const q = getParam('q');
@@ -146,8 +278,18 @@ export default function VulnerabilidadsPage() {
     const sla = getParam('sla');
     if (sla) chips.push({ key: 'sla', label: 'SLA: vencida' });
     if (reinc) chips.push({ key: 'reincidencia', label: 'Solo reincidencia' });
+    const cel = getParam('celula_id');
+    if (cel) {
+      const nm = celulas?.find((c) => c.id === cel)?.nombre ?? cel.slice(0, 8);
+      chips.push({ key: 'celula_id', label: `Célula: ${nm}` });
+    }
+    const org = getParam('organizacion_id');
+    if (org) {
+      const nm = orgs?.find((o) => o.id === org)?.nombre ?? org.slice(0, 8);
+      chips.push({ key: 'organizacion_id', label: `Organización: ${nm}` });
+    }
     return chips;
-  }, [estatus, getParam, reinc]);
+  }, [celulas, estatus, getParam, orgs, reinc]);
 
   const removeChip = (key: string) => {
     if (key === 'reincidencia') setParam('reincidencia', null);
@@ -156,6 +298,8 @@ export default function VulnerabilidadsPage() {
     else if (key === 'fuente') setParam('fuente', null);
     else if (key === 'estado') setParam('estado', null);
     else if (key === 'sla') setParam('sla', null);
+    else if (key === 'celula_id') setParam('celula_id', null);
+    else if (key === 'organizacion_id') setParam('organizacion_id', null);
     setParam('page', '1');
   };
 
@@ -215,10 +359,13 @@ export default function VulnerabilidadsPage() {
           if (!o) setPreviewId(null);
         }}
       />
-      <PageHeader
+        <PageHeader
         title="Catálogo de vulnerabilidades"
-        description="Filtros compactos (drawer), chips activos, exportación XLS/impresión coherente con la grilla, vista rápida lateral."
+        description="Filtros, columnas configurables (spec 38), acciones masivas en la barra inferior (spec 37), exportación e impresión alineadas a la grilla, vista rápida lateral."
       />
+      <div className="mb-6 max-w-5xl">
+        <VulnerabilidadBulkImportCard />
+      </div>
       {flujoLoading && <p className="text-xs text-muted-foreground">Cargando catálogo de estatus…</p>}
 
       <div className="mb-3 flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
@@ -298,6 +445,28 @@ export default function VulnerabilidadsPage() {
         </div>
       )}
 
+      <div className="mb-3 flex max-w-5xl flex-wrap items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5">
+              <Settings2 className="h-3.5 w-3.5" />
+              Columnas
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-60 space-y-2 p-3" align="start">
+            <p className="text-xs font-medium text-muted-foreground">Mostrar columnas (persistente en este navegador)</p>
+            <div className="grid gap-2">
+              {DATA_COLUMNS.map((c) => (
+                <label key={c} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Checkbox checked={isVisible(c)} onChange={() => toggleCol(c)} />
+                  {COL_LABELS[c]}
+                </label>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
         <SheetContent className="flex w-full flex-col gap-4 overflow-y-auto sm:max-w-md">
           <SheetHeader>
@@ -347,6 +516,36 @@ export default function VulnerabilidadsPage() {
                 ]}
               />
             </div>
+            <div>
+              <label className="text-sm font-medium">Organización (activo)</label>
+              <Select
+                className="mt-1"
+                value={getParam('organizacion_id') ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setParams({ organizacion_id: v || null, celula_id: null, page: '1' });
+                }}
+                options={[
+                  { value: '', label: 'Todas' },
+                  ...(orgs ?? []).map((o) => ({ value: o.id, label: o.nombre })),
+                ]}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Célula (activo)</label>
+              <Select
+                className="mt-1"
+                value={getParam('celula_id') ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setParams({ celula_id: v || null, organizacion_id: null, page: '1' });
+                }}
+                options={[
+                  { value: '', label: 'Todas' },
+                  ...(celulas ?? []).map((c) => ({ value: c.id, label: c.nombre })),
+                ]}
+              />
+            </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 id="rein"
@@ -384,8 +583,15 @@ export default function VulnerabilidadsPage() {
           <DataTable>
             <DataTableHead>
               <tr>
-                <DataTableTh className="w-[1%] font-mono text-[10px]">ID</DataTableTh>
-                <DataTableTh>
+                <DataTableTh className="w-10">
+                  <Checkbox
+                    checked={allSelectedOnPage}
+                    onChange={toggleSelectAllPage}
+                    aria-label="Seleccionar todos en esta página"
+                  />
+                </DataTableTh>
+                <DataTableTh className={visClass('id', 'w-[1%] font-mono text-[10px]')}>ID</DataTableTh>
+                <DataTableTh className={visClass('titulo', '')}>
                   <button
                     type="button"
                     data-testid="header-titulo"
@@ -396,8 +602,8 @@ export default function VulnerabilidadsPage() {
                     {curSort === 'titulo' ? (curOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </button>
                 </DataTableTh>
-                <DataTableTh className="hidden md:table-cell">Motor</DataTableTh>
-                <DataTableTh>
+                <DataTableTh className={visClass('fuente', 'hidden md:table-cell')}>Motor</DataTableTh>
+                <DataTableTh className={visClass('severidad', '')}>
                   <button
                     type="button"
                     className="font-semibold hover:underline"
@@ -407,10 +613,10 @@ export default function VulnerabilidadsPage() {
                     {curSort === 'severidad' ? (curOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </button>
                 </DataTableTh>
-                <DataTableTh className="hidden lg:table-cell">Activo</DataTableTh>
-                <DataTableTh className="hidden xl:table-cell">SLA</DataTableTh>
-                <DataTableTh className="hidden lg:table-cell">Estado</DataTableTh>
-                <DataTableTh className="hidden xl:table-cell">
+                <DataTableTh className={visClass('activo', 'hidden lg:table-cell')}>Activo</DataTableTh>
+                <DataTableTh className={visClass('sla', 'hidden xl:table-cell')}>SLA</DataTableTh>
+                <DataTableTh className={visClass('estado', 'hidden lg:table-cell')}>Estado</DataTableTh>
+                <DataTableTh className={visClass('creado', 'hidden xl:table-cell')}>
                   <button
                     type="button"
                     className="font-semibold hover:underline"
@@ -433,10 +639,31 @@ export default function VulnerabilidadsPage() {
                     setPreviewOpen(true);
                   }}
                 >
-                  <DataTableCell className="font-mono text-[10px] text-muted-foreground">
+                  <DataTableCell className="w-10">
+                    <div
+                      role="presentation"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <Checkbox
+                        checked={selected.has(item.id)}
+                        onChange={() => {
+                          setSelected((prev) => {
+                            const n = new Set(prev);
+                            if (n.has(item.id)) n.delete(item.id);
+                            else n.add(item.id);
+                            return n;
+                          });
+                        }}
+                        aria-label={`Seleccionar ${shortId(item.id)}`}
+                      />
+                    </div>
+                  </DataTableCell>
+                  <DataTableCell className={`font-mono text-[10px] text-muted-foreground ${visClass('id', '')}`}>
                     {shortId(item.id)}
                   </DataTableCell>
-                  <DataTableCell className="max-w-[200px]">
+                  <DataTableCell className={`max-w-[200px] ${visClass('titulo', '')}`}>
                     <span className="font-medium text-foreground group-hover:underline">
                       {item.titulo}
                     </span>
@@ -444,28 +671,28 @@ export default function VulnerabilidadsPage() {
                       {item.fuente}
                     </p>
                   </DataTableCell>
-                  <DataTableCell className="hidden text-sm md:table-cell">
+                  <DataTableCell className={visClass('fuente', 'hidden text-sm md:table-cell')}>
                     <Badge variant="default">{item.fuente}</Badge>
                   </DataTableCell>
-                  <DataTableCell>
+                  <DataTableCell className={visClass('severidad', '')}>
                     <Badge variant="severity" severityName={item.severidad.toLowerCase()}>
                       {item.severidad}
                     </Badge>
                   </DataTableCell>
-                  <DataTableCell className="hidden font-mono text-xs text-muted-foreground lg:table-cell">
+                  <DataTableCell className={visClass('activo', 'hidden font-mono text-xs text-muted-foreground lg:table-cell')}>
                     {activoRuta(item)}
                   </DataTableCell>
-                  <DataTableCell className="hidden text-xs text-muted-foreground xl:table-cell whitespace-nowrap">
+                  <DataTableCell className={visClass('sla', 'hidden text-xs text-muted-foreground xl:table-cell whitespace-nowrap')}>
                     {slaSummary(item.fecha_limite_sla)}
                   </DataTableCell>
-                  <DataTableCell className="hidden lg:table-cell">
+                  <DataTableCell className={visClass('estado', 'hidden lg:table-cell')}>
                     <span title={item.estado}>
                       <Badge variant="default">
                         {estatus?.length ? labelForEstatusId(estatus, item.estado) : item.estado}
                       </Badge>
                     </span>
                   </DataTableCell>
-                  <DataTableCell className="hidden text-xs text-muted-foreground xl:table-cell whitespace-nowrap">
+                  <DataTableCell className={visClass('creado', 'hidden text-xs text-muted-foreground xl:table-cell whitespace-nowrap')}>
                     {formatDate(item.created_at)}
                   </DataTableCell>
                   <DataTableCell className="text-right">
@@ -551,6 +778,70 @@ export default function VulnerabilidadsPage() {
             >
               Siguiente
             </Button>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar {selected.size} hallazgos?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Borrado lógico (soft delete). Requiere permiso <span className="font-mono">vulnerabilities.delete</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => runBulkDelete()}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {selected.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-3 shadow-lg backdrop-blur-md">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium">
+              {selected.size} seleccionado{selected.size === 1 ? '' : 's'}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="min-w-[160px]">
+                <Select
+                  value={bulkEstado}
+                  onChange={(e) => setBulkEstado(e.target.value)}
+                  options={[{ value: '', label: 'Estado destino…' }, ...estadoBulkOptions]}
+                  disabled={!estadoBulkOptions.length}
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={runBulkEstado}
+                disabled={bulkMut.isPending || !bulkEstado}
+              >
+                {bulkMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Aplicar estado
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={runBulkAssignMe} disabled={bulkMut.isPending}>
+                Asignarme
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+                disabled={bulkMut.isPending}
+              >
+                Eliminar
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+                Limpiar selección
+              </Button>
+            </div>
           </div>
         </div>
       )}

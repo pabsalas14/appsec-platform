@@ -352,6 +352,134 @@ DEFAULT_SETTINGS: list[dict] = [
         ],
         "description": "Tipos de temas emergentes disponibles en el módulo de Temas Emergentes.",
     },
+    # ── 10. Catálogos transversales (spec 33; seeds por defecto en system_settings) ─
+    {
+        "key": "catalogo.motores_escaneo",
+        "value": [
+            {"id": "sast", "label": "SAST"},
+            {"id": "dast", "label": "DAST"},
+            {"id": "sca", "label": "SCA"},
+            {"id": "cds", "label": "Container / CDS"},
+            {"id": "mast", "label": "MAST"},
+            {"id": "tm", "label": "Threat Modeling"},
+        ],
+        "description": "Cat_MotorEscaneo — referencia para formularios y reportes.",
+    },
+    {
+        "key": "catalogo.tipos_excepcion",
+        "value": [
+            {"id": "temporal", "label": "Excepción temporal"},
+            {"id": "compensatorio", "label": "Control compensatorio"},
+            {"id": "aceptacion_riesgo", "label": "Aceptación de riesgo residual"},
+        ],
+        "description": "Cat_TipoExcepcion — clasificación de solicitudes (spec 29).",
+    },
+    {
+        "key": "catalogo.frecuencia_kpi",
+        "value": [
+            {"id": "mensual", "label": "Mensual"},
+            {"id": "bimestral", "label": "Bimestral"},
+            {"id": "trimestral", "label": "Trimestral"},
+            {"id": "semestral", "label": "Semestral"},
+            {"id": "anual", "label": "Anual"},
+        ],
+        "description": "Cat_FrecuenciaKPI.",
+    },
+    {
+        "key": "catalogo.tipo_dato_kpi",
+        "value": [
+            {"id": "numero", "label": "Número"},
+            {"id": "porcentaje", "label": "Porcentaje"},
+            {"id": "booleano", "label": "Sí / No"},
+            {"id": "texto", "label": "Texto"},
+        ],
+        "description": "Cat_TipoDatoKPI.",
+    },
+    {
+        "key": "catalogo.sentido_kpi",
+        "value": [
+            {"id": "mayor_mejor", "label": "Mayor es mejor"},
+            {"id": "menor_mejor", "label": "Menor es mejor"},
+            {"id": "objetivo_rango", "label": "Dentro de rango objetivo"},
+        ],
+        "description": "Cat_SentidoKPI.",
+    },
+    {
+        "key": "catalogo.nivel_permiso",
+        "value": [
+            {"id": "ninguno", "label": "Ninguno"},
+            {"id": "lectura", "label": "Lectura"},
+            {"id": "escritura", "label": "Escritura"},
+            {"id": "admin_modulo", "label": "Administrador del módulo"},
+        ],
+        "description": "Cat_NivelPermiso — matriz roles (spec 20), vista conceptual.",
+    },
+    {
+        "key": "catalogo.tipo_widget",
+        "value": [
+            {"id": "kpi_card", "label": "Tarjeta KPI"},
+            {"id": "line_chart", "label": "Líneas"},
+            {"id": "bar_chart", "label": "Barras"},
+            {"id": "table", "label": "Tabla"},
+            {"id": "gauge", "label": "Gauge / medidor"},
+        ],
+        "description": "Cat_TipoWidget — dashboard builder / paleta.",
+    },
+    {
+        "key": "catalogo.owasp_top10_referencia",
+        "value": [
+            {"id": "A01", "label": "A01 Broken Access Control"},
+            {"id": "A02", "label": "A02 Cryptographic Failures"},
+            {"id": "A03", "label": "A03 Injection"},
+            {"id": "A04", "label": "A04 Insecure Design"},
+            {"id": "A05", "label": "A05 Security Misconfiguration"},
+            {"id": "A06", "label": "A06 Vulnerable Components"},
+            {"id": "A07", "label": "A07 Auth Failures"},
+            {"id": "A08", "label": "A08 Data Integrity"},
+            {"id": "A09", "label": "A09 Logging Failures"},
+            {"id": "A10", "label": "A10 SSRF"},
+        ],
+        "description": "Cat_ClasificacionOWASP — referencia etiquetado (no sustituye CWE).",
+    },
+    {
+        "key": "catalogo.tipos_cambio_liberacion",
+        "value": [
+            {"id": "hotfix", "label": "Hotfix"},
+            {"id": "feature", "label": "Feature"},
+            {"id": "debt", "label": "Deuda técnica / refactor"},
+            {"id": "config", "label": "Cambio de configuración"},
+        ],
+        "description": "Tipos de cambio en liberaciones (BRD operación).",
+    },
+    {
+        "key": "catalogo.ambiente_ejecucion",
+        "value": [
+            {"id": "dev", "label": "Desarrollo"},
+            {"id": "qa", "label": "QA / preproducción"},
+            {"id": "prod", "label": "Producción"},
+        ],
+        "description": "Ambientes para DAST y despliegue.",
+    },
+    {
+        "key": "catalogo.resultado_ejecucion_pipeline",
+        "value": [
+            {"id": "pendiente", "label": "Pendiente"},
+            {"id": "en_progreso", "label": "En progreso"},
+            {"id": "exitoso", "label": "Exitoso"},
+            {"id": "fallido", "label": "Fallido"},
+            {"id": "cancelado", "label": "Cancelado"},
+        ],
+        "description": "Resultado de ejecución SAST/DAST/SCA (pipeline_releases).",
+    },
+    {
+        "key": "catalogo.estado_periodo_mes",
+        "value": [
+            {"id": "abierto", "label": "Abierto a captura"},
+            {"id": "en_cierre", "label": "En cierre"},
+            {"id": "congelado", "label": "Congelado / inmutable"},
+        ],
+        "description": "Estatus de periodo mensual (spec 35, vista conceptual).",
+    },
     # ── 11. Roles base y permisos ─────────────────────────────────────────────
     {
         "key": "rbac.roles_base",

@@ -610,7 +610,7 @@ export interface paths {
         };
         /**
          * Dashboard Releases Kanban
-         * @description Dashboard 7: Kanban view logic.
+         * @description Dashboard 7: Releases kanban grouped by status.
          */
         get: operations["dashboard_releases_kanban_api_v1_dashboard_releases_kanban_get"];
         put?: never;
@@ -970,6 +970,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/email-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description List all email templates (backoffice).
+         */
+        get: operations["list_templates_api_v1_email_templates_get"];
+        put?: never;
+        /**
+         * Create Template
+         * @description Create email template.
+         */
+        post: operations["create_template_api_v1_email_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Template
+         * @description Get email template by ID.
+         */
+        get: operations["get_template_api_v1_email_templates__template_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Template
+         * @description Delete email template.
+         */
+        delete: operations["delete_template_api_v1_email_templates__template_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Template
+         * @description Update email template.
+         */
+        patch: operations["update_template_api_v1_email_templates__template_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/email-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Email Logs
+         * @description Lista intentos de correo recientes (tabla `email_logs`).
+         */
+        get: operations["list_email_logs_api_v1_email_logs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/uploads": {
         parameters: {
             query?: never;
@@ -1022,6 +1094,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/user-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Preferences
+         * @description Get current user's notification preferences.
+         */
+        get: operations["get_preferences_api_v1_user_preferences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Preferences
+         * @description Update current user's notification preferences.
+         */
+        patch: operations["update_preferences_api_v1_user_preferences_patch"];
+        trace?: never;
+    };
+    "/api/v1/user-preferences/email/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable Email Notifications
+         * @description Enable email notifications for specific types.
+         */
+        post: operations["enable_email_notifications_api_v1_user_preferences_email_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/user-preferences/email/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable Email Notifications
+         * @description Disable email notifications for specific types.
+         */
+        post: operations["disable_email_notifications_api_v1_user_preferences_email_disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -1045,6 +1181,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-custom-fields/{entity_type}/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Entity Custom Field Values */
+        get: operations["get_entity_custom_field_values_api_v1_entity_custom_fields__entity_type___entity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entity-custom-fields/{entity_type}/{entity_id}/{field_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set Entity Custom Field Value */
+        patch: operations["set_entity_custom_field_value_api_v1_entity_custom_fields__entity_type___entity_id___field_id__patch"];
         trace?: never;
     };
     "/api/v1/catalogs/{catalog_type}": {
@@ -2513,6 +2683,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/scoring-mensual/ejecutar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ejecutar Scoring Mensual
+         * @description Calcula y persiste snapshots por célula y rollup jerárquico para el periodo indicado.
+         */
+        post: operations["ejecutar_scoring_mensual_api_v1_admin_scoring_mensual_ejecutar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scoring-mensual/historico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Historico Scoring
+         * @description Lista snapshots de scoring del usuario actual.
+         */
+        get: operations["list_historico_scoring_api_v1_admin_scoring_mensual_historico_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/operacion/freeze/cerrar-periodo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cerrar Periodo Freeze
+         * @description Registra un mes/año en `periodo.freeze.periodos_cerrados` (tabla histórica inmutable vía auditoría).
+         */
+        post: operations["cerrar_periodo_freeze_api_v1_admin_operacion_freeze_cerrar_periodo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/": {
         parameters: {
             query?: never;
@@ -3407,6 +3637,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/vulnerabilidads/import/template/{motor}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Vulnerabilidad Import Template
+         * @description Descarga CSV vacío con cabeceras esperadas para importación por motor (spec 23).
+         */
+        get: operations["download_vulnerabilidad_import_template_api_v1_vulnerabilidads_import_template__motor__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vulnerabilidads/import/{motor}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Vulnerabilidades Bulk
+         * @description Importación masiva por motor (SAST, DAST, …). Una fila por hallazgo; activo por columnas o defaults.
+         */
+        post: operations["import_vulnerabilidades_bulk_api_v1_vulnerabilidads_import__motor__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/vulnerabilidads": {
         parameters: {
             query?: never;
@@ -3425,6 +3695,46 @@ export interface paths {
          * @description Create a new vulnerabilidad for the current user.
          */
         post: operations["create_vulnerabilidad_api_v1_vulnerabilidads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vulnerabilidads/bulk-action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Action Vulnerabilidades
+         * @description Acciones masivas sobre hallazgos propios: estado, responsable o borrado lógico (spec 37).
+         */
+        post: operations["bulk_action_vulnerabilidades_api_v1_vulnerabilidads_bulk_action_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vulnerabilidads/{id}/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Vulnerabilidad Historial
+         * @description Bitácora de cambios de estado/responsable para una vulnerabilidad propia (spec 30).
+         */
+        get: operations["list_vulnerabilidad_historial_api_v1_vulnerabilidads__id__historial_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3598,6 +3908,26 @@ export interface paths {
          * @description Actualiza parcialmente una excepción (solo mientras está Pendiente).
          */
         patch: operations["update_excepcion_api_v1_excepcion_vulnerabilidads__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/excepcion_vulnerabilidads/reconciliar-vencidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconciliar Excepciones Vencidas
+         * @description Cierra excepciones aprobadas vencidas y reactiva SLA en vulnerabilidades (spec 29).
+         */
+        post: operations["reconciliar_excepciones_vencidas_api_v1_excepcion_vulnerabilidads_reconciliar_vencidas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/excepcion_vulnerabilidads/{id}/aprobar": {
@@ -6202,6 +6532,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plan_remediacions/{id}/vulnerabilidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Plan Vulnerabilidades
+         * @description Hallazgos vinculados al plan (spec 8 — pestaña hallazgos).
+         */
+        get: operations["list_plan_vulnerabilidades_api_v1_plan_remediacions__id__vulnerabilidades_get"];
+        put?: never;
+        /**
+         * Link Plan Vulnerabilidad
+         * @description Vincula un hallazgo al plan (M:N).
+         */
+        post: operations["link_plan_vulnerabilidad_api_v1_plan_remediacions__id__vulnerabilidades_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plan_remediacions/{id}/vulnerabilidades/{vulnerabilidad_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink Plan Vulnerabilidad
+         * @description Desvincula un hallazgo del plan.
+         */
+        delete: operations["unlink_plan_vulnerabilidad_api_v1_plan_remediacions__id__vulnerabilidades__vulnerabilidad_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plan_remediacions/{id}": {
         parameters: {
             query?: never;
@@ -6675,6 +7049,26 @@ export interface paths {
          *     bajo el mismo alcance jerárquico que los dashboards, con pesos en `system_settings` `madurez.pesos`.
          */
         get: operations["get_madurez_summary_api_v1_madurez_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/madurez/node-scores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Madurez Node Scores
+         * @description Scores 0–100 por `celula_id` para la columna Madurez en `/organizacion/jerarquia` (BRD §1).
+         */
+        get: operations["madurez_node_scores_api_v1_madurez_node_scores_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7482,6 +7876,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/code_security_reviews/compare/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Review Comparison
+         * @description Exporta comparación real entre dos escaneos del usuario.
+         */
+        get: operations["export_review_comparison_api_v1_code_security_reviews_compare_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/findings/global": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Global Findings */
+        get: operations["list_global_findings_api_v1_code_security_reviews_findings_global_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/events/global": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Global Events */
+        get: operations["list_global_events_api_v1_code_security_reviews_events_global_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/findings/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Global Findings */
+        get: operations["export_global_findings_api_v1_code_security_reviews_findings_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/events/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Global Events */
+        get: operations["export_global_events_api_v1_code_security_reviews_events_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/code_security_reviews/{review_id}": {
         parameters: {
             query?: never;
@@ -7558,6 +8040,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/code_security_reviews/{review_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Code Security Review */
+        post: operations["cancel_code_security_review_api_v1_code_security_reviews__review_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Metrics */
+        get: operations["get_review_metrics_api_v1_code_security_reviews__review_id__metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/code_security_reviews/{review_id}/findings": {
         parameters: {
             query?: never;
@@ -7565,17 +8081,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * List Findings
-         * @description Lista hallazgos de una revisión con filtros y paginación.
-         */
-        get: operations["list_findings_api_v1_code_security_reviews__review_id__findings_get"];
+        /** List Review Findings */
+        get: operations["list_review_findings_api_v1_code_security_reviews__review_id__findings_get"];
         put?: never;
-        /**
-         * Create Finding
-         * @description Crea un nuevo hallazgo manualmente.
-         */
-        post: operations["create_finding_api_v1_code_security_reviews__review_id__findings_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7589,25 +8098,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get Finding Detail
-         * @description Retorna detalles completos de un hallazgo específico.
-         */
-        get: operations["get_finding_detail_api_v1_code_security_reviews__review_id__findings__finding_id__get"];
+        /** Get Finding */
+        get: operations["get_finding_api_v1_code_security_reviews__review_id__findings__finding_id__get"];
         put?: never;
         post?: never;
-        /**
-         * Delete Finding
-         * @description Elimina un hallazgo (soft delete).
-         */
-        delete: operations["delete_finding_api_v1_code_security_reviews__review_id__findings__finding_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update Finding
-         * @description Actualiza estado, asignación o notas de un hallazgo.
-         */
-        patch: operations["update_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch"];
+        /** Patch Finding */
+        patch: operations["patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Finding Comments */
+        get: operations["list_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get"];
+        put?: never;
+        /** Create Finding Comment */
+        post: operations["create_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/code_security_reviews/{review_id}/events": {
@@ -7617,11 +8134,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get Forensic Events
-         * @description Retorna eventos forenses ordenados por timestamp (más recientes primero).
-         */
-        get: operations["get_forensic_events_api_v1_code_security_reviews__review_id__events_get"];
+        /** List Review Events */
+        get: operations["list_review_events_api_v1_code_security_reviews__review_id__events_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7990,6 +8504,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/scr/runtime-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scr Runtime Check
+         * @description Checklist operativo para saber si SCR puede ejecutar un flujo end-to-end.
+         */
+        get: operations["scr_runtime_check_api_v1_admin_scr_runtime_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/scr/llm-config/test-connection": {
         parameters: {
             query?: never;
@@ -8025,7 +8559,7 @@ export interface paths {
         put?: never;
         /**
          * Add Github Token
-         * @description Agrega token GitHub (GitLab no soportado aún en BD SCR).
+         * @description Agrega token SCM para SCR.
          */
         post: operations["add_github_token_api_v1_admin_scr_github_tokens_post"];
         delete?: never;
@@ -8045,7 +8579,7 @@ export interface paths {
         put?: never;
         /**
          * Validate Github Token
-         * @description Valida un PAT contra la API de GitHub.
+         * @description Valida un PAT contra la API de GitHub o GitLab.
          */
         post: operations["validate_github_token_api_v1_admin_scr_github_tokens_validate_post"];
         delete?: never;
@@ -8275,7 +8809,7 @@ export interface paths {
         };
         /**
          * Search Forensic Events
-         * @description Busca eventos forenses por query, autor, archivo o rango de fechas.
+         * @description Busca eventos forenses reales por texto, autor, archivo y rango.
          */
         get: operations["search_forensic_events_api_v1_code_security_reviews__review_id__events_search_get"];
         put?: never;
@@ -8295,7 +8829,7 @@ export interface paths {
         };
         /**
          * Get Forensic Timeline
-         * @description Retorna timeline de eventos forenses agrupados por período.
+         * @description Agrupa eventos forenses reales por hora/día/semana.
          */
         get: operations["get_forensic_timeline_api_v1_code_security_reviews__review_id__timeline_get"];
         put?: never;
@@ -8315,7 +8849,7 @@ export interface paths {
         };
         /**
          * Get Forensic Summary
-         * @description Retorna resumen ejecutivo de investigación forense.
+         * @description Resumen forense real basado en eventos y hallazgos.
          */
         get: operations["get_forensic_summary_api_v1_code_security_reviews__review_id__forensic_summary_get"];
         put?: never;
@@ -8335,7 +8869,7 @@ export interface paths {
         };
         /**
          * Analyze Author Activity
-         * @description Analiza actividad de un autor específico en el historial.
+         * @description Analiza actividad real de un autor en una revisión.
          */
         get: operations["analyze_author_activity_api_v1_code_security_reviews__review_id__author_analysis__author__get"];
         put?: never;
@@ -8355,7 +8889,7 @@ export interface paths {
         };
         /**
          * Detect Anomalies
-         * @description Detecta anomalías en historial de commits (timing, author, pattern, etc).
+         * @description Lista indicadores forenses reales derivados del campo indicadores.
          */
         get: operations["detect_anomalies_api_v1_code_security_reviews__review_id__anomalies_get"];
         put?: never;
@@ -8375,7 +8909,7 @@ export interface paths {
         };
         /**
          * Get Commit Details
-         * @description Retorna detalles completos de un commit específico.
+         * @description Retorna eventos reales asociados a un commit.
          */
         get: operations["get_commit_details_api_v1_code_security_reviews__review_id__commit__commit_hash__details_get"];
         put?: never;
@@ -8421,7 +8955,7 @@ export interface paths {
         head?: never;
         /**
          * Bulk Assign Findings
-         * @description Asigna múltiples hallazgos a un usuario específico.
+         * @description Asigna múltiples hallazgos a un usuario existente por email.
          */
         patch: operations["bulk_assign_findings_api_v1_code_security_reviews__review_id__findings_bulk_assign_patch"];
         trace?: never;
@@ -8437,7 +8971,7 @@ export interface paths {
         put?: never;
         /**
          * Bulk Mark False Positives
-         * @description Marca múltiples hallazgos como falsos positivos.
+         * @description Marca múltiples hallazgos como falsos positivos y registra feedback.
          */
         post: operations["bulk_mark_false_positives_api_v1_code_security_reviews__review_id__findings_bulk_false_positive_post"];
         delete?: never;
@@ -8457,7 +8991,7 @@ export interface paths {
         put?: never;
         /**
          * Create Bulk Remediation Plan
-         * @description Crea plan de remediación para múltiples hallazgos.
+         * @description Crea un plan calculado desde los hallazgos seleccionados.
          */
         post: operations["create_bulk_remediation_plan_api_v1_code_security_reviews__review_id__findings_bulk_remediation_plan_post"];
         delete?: never;
@@ -8477,7 +9011,7 @@ export interface paths {
         put?: never;
         /**
          * Bulk Export Findings
-         * @description Exporta múltiples hallazgos en formato especificado.
+         * @description Devuelve los hallazgos seleccionados listos para exportación.
          */
         post: operations["bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post"];
         delete?: never;
@@ -8500,70 +9034,6 @@ export interface paths {
         get: operations["get_bulk_status_report_api_v1_code_security_reviews__review_id__findings_bulk_status_report_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/transition-state": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Transition Finding State
-         * @description Transiciona hallazgo a nuevo estado en workflow (con validación de transiciones válidas).
-         */
-        post: operations["transition_finding_state_api_v1_code_security_reviews__review_id__findings__finding_id__transition_state_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/remediation-plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Finding Remediation Plan
-         * @description Retorna plan de remediación para un hallazgo específico.
-         */
-        get: operations["get_finding_remediation_plan_api_v1_code_security_reviews__review_id__findings__finding_id__remediation_plan_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/comments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Finding Comments
-         * @description Obtiene todos los comentarios de un hallazgo.
-         */
-        get: operations["get_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get"];
-        put?: never;
-        /**
-         * Add Finding Comment
-         * @description Agrega comentario a un hallazgo.
-         */
-        post: operations["add_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9446,6 +9916,15 @@ export interface components {
              */
             file: string;
         };
+        /** Body_import_vulnerabilidades_bulk_api_v1_vulnerabilidads_import__motor__post */
+        Body_import_vulnerabilidades_bulk_api_v1_vulnerabilidads_import__motor__post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV UTF-8 con cabecera
+             */
+            file: string;
+        };
         /** Body_rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post */
         Body_rechazar_aceptacion_api_v1_aceptacion_riesgos__id__rechazar_post: {
             /** Notas */
@@ -9551,6 +10030,13 @@ export interface components {
             /** Organizacion Id */
             organizacion_id?: string | null;
         };
+        /** CerrarPeriodoBody */
+        CerrarPeriodoBody: {
+            /** Anio */
+            anio: number;
+            /** Mes */
+            mes: number;
+        };
         /**
          * ChangelogEntradaCreate
          * @description Fields required to create a changelog_entrada. user_id is set from auth context.
@@ -9655,53 +10141,12 @@ export interface components {
             /** Version */
             version?: string | null;
         };
-        /** CodeSecurityFindingCreateSchema */
-        CodeSecurityFindingCreateSchema: {
-            /**
-             * Review Id
-             * Format: uuid
-             */
-            review_id: string;
-            /** Archivo */
-            archivo: string;
-            /** Linea Inicio */
-            linea_inicio: number;
-            /** Linea Fin */
-            linea_fin: number;
-            /** Tipo Riesgo */
-            tipo_riesgo: string;
-            /** Severidad */
-            severidad: string;
-            /** Confianza */
-            confianza: number;
-            /** Descripcion */
-            descripcion: string;
-            /** Codigo Snippet */
-            codigo_snippet: string;
-            /** Impacto */
-            impacto: string;
-            /** Explotabilidad */
-            explotabilidad: string;
-            /** Remediacion Sugerida */
-            remediacion_sugerida?: string | null;
-        };
         /** CodeSecurityFindingUpdate */
         CodeSecurityFindingUpdate: {
             /** Estado */
             estado?: string | null;
             /** Asignado A Id */
             asignado_a_id?: string | null;
-        };
-        /** CodeSecurityFindingUpdateSchema */
-        CodeSecurityFindingUpdateSchema: {
-            /** Estado */
-            estado?: string | null;
-            /** Assignee Email */
-            assignee_email?: string | null;
-            /** Responsable Notas */
-            responsable_notas?: string | null;
-            /** Severidad */
-            severidad?: string | null;
         };
         /** CodeSecurityOrgBatchCreate */
         CodeSecurityOrgBatchCreate: {
@@ -9730,7 +10175,7 @@ export interface components {
             titulo: string;
             /**
              * Estado
-             * @description PENDING | ANALYZING | COMPLETED | FAILED
+             * @description PENDING | ANALYZING | COMPLETED | FAILED | CANCELLED
              * @default PENDING
              */
             estado: string;
@@ -10592,6 +11037,67 @@ export interface components {
             resultado?: string | null;
             /** Url Reporte */
             url_reporte?: string | null;
+        };
+        /** EjecutarScoringBody */
+        EjecutarScoringBody: {
+            /** Anio */
+            anio: number;
+            /** Mes */
+            mes: number;
+        };
+        /**
+         * EmailTemplateCreate
+         * @description Create email template payload.
+         */
+        EmailTemplateCreate: {
+            /** Nombre */
+            nombre: string;
+            /** Asunto */
+            asunto: string;
+            /** Cuerpo Html */
+            cuerpo_html: string;
+            /** Variables */
+            variables?: string[];
+            /** Descripcion */
+            descripcion?: string | null;
+            /**
+             * Activo
+             * @default true
+             */
+            activo: boolean;
+        };
+        /**
+         * EmailTemplateUpdate
+         * @description Update email template payload (partial).
+         */
+        EmailTemplateUpdate: {
+            /** Asunto */
+            asunto?: string | null;
+            /** Cuerpo Html */
+            cuerpo_html?: string | null;
+            /** Variables */
+            variables?: string[] | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Activo */
+            activo?: boolean | null;
+        };
+        /**
+         * EnableEmailChannelRequest
+         * @description Request to enable email channel for notification types.
+         */
+        EnableEmailChannelRequest: {
+            /**
+             * Notification Types
+             * @description List of notification types to enable (sla_vencida, vulnerabilidad_critica, etc.)
+             */
+            notification_types?: string[] | null;
+            /**
+             * All Types
+             * @description If true, enable all notification types
+             * @default false
+             */
+            all_types: boolean;
         };
         /**
          * EstadoCumplimientoCreate
@@ -11474,7 +11980,7 @@ export interface components {
         };
         /**
          * HitoIniciativaCreate
-         * @description Schema for creating HitoIniciativa.
+         * @description Create payload; accepts ``nombre`` / ``fecha_objetivo`` aliases for API compatibility.
          */
         HitoIniciativaCreate: {
             /** Nombre */
@@ -11482,10 +11988,19 @@ export interface components {
             /** Descripcion */
             descripcion?: string | null;
             /**
-             * Fecha Objetivo
-             * Format: date-time
+             * Estado
+             * @default pendiente
              */
-            fecha_objetivo: string;
+            estado: string;
+            /** Fecha Objetivo */
+            fecha_objetivo?: string | null;
+            /** Porcentaje Completado */
+            porcentaje_completado?: number | null;
+            /**
+             * Peso
+             * @description Peso relativo para agregar avance (opcional; si todos los hitos tienen peso, se normaliza)
+             */
+            peso?: number | null;
             /**
              * Iniciativa Id
              * Format: uuid
@@ -11494,15 +12009,21 @@ export interface components {
         };
         /**
          * HitoIniciativaUpdate
-         * @description Schema for updating HitoIniciativa (all fields optional).
+         * @description Partial update.
          */
         HitoIniciativaUpdate: {
             /** Nombre */
             nombre?: string | null;
             /** Descripcion */
             descripcion?: string | null;
+            /** Estado */
+            estado?: string | null;
             /** Fecha Objetivo */
             fecha_objetivo?: string | null;
+            /** Porcentaje Completado */
+            porcentaje_completado?: number | null;
+            /** Peso */
+            peso?: number | null;
         };
         /** IAConfigUpdate */
         IAConfigUpdate: {
@@ -11658,6 +12179,15 @@ export interface components {
              * @default false
              */
             is_default: boolean;
+        };
+        /** LinkVulnBody */
+        LinkVulnBody: {
+            /**
+             * Vulnerabilidad Id
+             * Format: uuid
+             * @description Hallazgo a vincular al plan
+             */
+            vulnerabilidad_id: string;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -13472,6 +14002,18 @@ export interface components {
             /** Project Id */
             project_id?: string | null;
         };
+        /** TeamCalificarBody */
+        TeamCalificarBody: {
+            /**
+             * Analista Id
+             * Format: uuid
+             */
+            analista_id: string;
+            /** Calificacion */
+            calificacion: number;
+            /** Comentario */
+            comentario?: string | null;
+        };
         /**
          * TemaEmergenteCreate
          * @description Schema for creating TemaEmergente.
@@ -13542,6 +14084,20 @@ export interface components {
             categoria?: ("SAST" | "DAST" | "SCA" | "TM" | "MAST") | null;
             /** Descripcion */
             descripcion?: string | null;
+        };
+        /**
+         * UpdatePreferencesRequest
+         * @description Request to update preferences.
+         */
+        UpdatePreferencesRequest: {
+            /** Notificaciones Automaticas */
+            notificaciones_automaticas?: boolean | null;
+            /** Email Notificaciones */
+            email_notificaciones?: Record<string, never> | null;
+            /** Digest Type */
+            digest_type?: string | null;
+            /** Digest Hour Utc */
+            digest_hour_utc?: number | null;
         };
         /**
          * UserAdminCreate
@@ -13672,6 +14228,23 @@ export interface components {
             error_message?: string | null;
             /** Enabled */
             enabled?: boolean | null;
+        };
+        /**
+         * VulnerabilidadBulkActionRequest
+         * @description Acciones masivas sobre hallazgos propios (spec 37).
+         */
+        VulnerabilidadBulkActionRequest: {
+            /** Ids */
+            ids: string[];
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "estado" | "responsable" | "delete";
+            /** Estado */
+            estado?: string | null;
+            /** Responsable Id */
+            responsable_id?: string | null;
         };
         /**
          * VulnerabilidadCreate
@@ -14962,11 +15535,7 @@ export interface operations {
     };
     dashboard_team_calificar_api_v1_dashboard_team_calificar_post: {
         parameters: {
-            query: {
-                analista_id: string;
-                calificacion: number;
-                comentario?: string | null;
-            };
+            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -14976,7 +15545,11 @@ export interface operations {
                 access_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamCalificarBody"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -15080,7 +15653,12 @@ export interface operations {
     };
     dashboard_releases_kanban_api_v1_dashboard_releases_kanban_get: {
         parameters: {
-            query?: never;
+            query?: {
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -15746,6 +16324,226 @@ export interface operations {
             };
         };
     };
+    list_templates_api_v1_email_templates_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_template_api_v1_email_templates_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailTemplateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_template_api_v1_email_templates__template_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_template_api_v1_email_templates__template_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_template_api_v1_email_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                template_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailTemplateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_email_logs_api_v1_email_logs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_uploads_api_v1_uploads_get: {
         parameters: {
             query?: {
@@ -15891,6 +16689,154 @@ export interface operations {
             };
         };
     };
+    get_preferences_api_v1_user_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_preferences_api_v1_user_preferences_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePreferencesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_email_notifications_api_v1_user_preferences_email_enable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnableEmailChannelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_email_notifications_api_v1_user_preferences_email_disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnableEmailChannelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     global_search_api_v1_search_get: {
         parameters: {
             query: {
@@ -15907,6 +16853,85 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_entity_custom_field_values_api_v1_entity_custom_fields__entity_type___entity_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                entity_type: string;
+                entity_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_entity_custom_field_value_api_v1_entity_custom_fields__entity_type___entity_id___field_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                entity_type: string;
+                entity_id: string;
+                field_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -20132,6 +21157,120 @@ export interface operations {
             };
         };
     };
+    ejecutar_scoring_mensual_api_v1_admin_scoring_mensual_ejecutar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EjecutarScoringBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_historico_scoring_api_v1_admin_scoring_mensual_historico_get: {
+        parameters: {
+            query?: {
+                anio?: number | null;
+                mes?: number | null;
+                scope_kind?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cerrar_periodo_freeze_api_v1_admin_operacion_freeze_cerrar_periodo_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CerrarPeriodoBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     root_api_v1__get: {
         parameters: {
             query?: never;
@@ -22564,6 +23703,87 @@ export interface operations {
             };
         };
     };
+    download_vulnerabilidad_import_template_api_v1_vulnerabilidads_import_template__motor__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                motor: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_vulnerabilidades_bulk_api_v1_vulnerabilidads_import__motor__post: {
+        parameters: {
+            query?: {
+                default_repositorio_id?: string | null;
+                default_activo_web_id?: string | null;
+                default_servicio_id?: string | null;
+                default_aplicacion_movil_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                motor: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_vulnerabilidades_bulk_api_v1_vulnerabilidads_import__motor__post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_vulnerabilidads_api_v1_vulnerabilidads_get: {
         parameters: {
             query?: {
@@ -22580,6 +23800,10 @@ export interface operations {
                 reincidencia?: boolean;
                 /** @description ISO-8601: filtra created_at >= */
                 created_after?: string | null;
+                /** @description Activo (repo/web) asignado a esta célula. */
+                celula_id?: string | null;
+                /** @description Activo cuya célula pertenece a esta organización. */
+                organizacion_id?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -22632,6 +23856,80 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_action_vulnerabilidades_api_v1_vulnerabilidads_bulk_action_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VulnerabilidadBulkActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_vulnerabilidad_historial_api_v1_vulnerabilidads__id__historial_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23098,6 +24396,40 @@ export interface operations {
                 "application/json": components["schemas"]["ExcepcionVulnerabilidadUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconciliar_excepciones_vencidas_api_v1_excepcion_vulnerabilidads_reconciliar_vencidas_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -24263,6 +25595,7 @@ export interface operations {
         parameters: {
             query?: {
                 repositorio_id?: string | null;
+                activo_web_id?: string | null;
                 service_release_id?: string | null;
                 scan_id?: string | null;
                 tipo?: string | null;
@@ -31315,6 +32648,114 @@ export interface operations {
             };
         };
     };
+    list_plan_vulnerabilidades_api_v1_plan_remediacions__id__vulnerabilidades_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_plan_vulnerabilidad_api_v1_plan_remediacions__id__vulnerabilidades_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkVulnBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_plan_vulnerabilidad_api_v1_plan_remediacions__id__vulnerabilidades__vulnerabilidad_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                vulnerabilidad_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_plan_remediacion_api_v1_plan_remediacions__id__get: {
         parameters: {
             query?: never;
@@ -32717,6 +34158,40 @@ export interface operations {
                 organizacion_id?: string | null;
                 celula_id?: string | null;
             };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    madurez_node_scores_api_v1_madurez_node_scores_get: {
+        parameters: {
+            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -35103,7 +36578,18 @@ export interface operations {
     };
     list_code_security_reviews_api_v1_code_security_reviews__get: {
         parameters: {
-            query?: never;
+            query?: {
+                search?: string | null;
+                estado?: string | null;
+                repo?: string | null;
+                provider?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                skip?: number;
+                limit?: number;
+                sort_by?: string;
+                sort_order?: string;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -35175,7 +36661,18 @@ export interface operations {
     };
     list_code_security_reviews_api_v1_code_security_reviews_get: {
         parameters: {
-            query?: never;
+            query?: {
+                search?: string | null;
+                estado?: string | null;
+                repo?: string | null;
+                provider?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                skip?: number;
+                limit?: number;
+                sort_by?: string;
+                sort_order?: string;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -35224,6 +36721,202 @@ export interface operations {
                 "application/json": components["schemas"]["CodeSecurityReviewCreate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_review_comparison_api_v1_code_security_reviews_compare_export_get: {
+        parameters: {
+            query: {
+                base_review_id: string;
+                target_review_id: string;
+                /** @description Format: pdf or json */
+                format?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_global_findings_api_v1_code_security_reviews_findings_global_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                search?: string | null;
+                severidad?: string | null;
+                estado?: string | null;
+                tipo_malicia?: string | null;
+                repo?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_global_events_api_v1_code_security_reviews_events_global_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                query?: string | null;
+                author?: string | null;
+                repo?: string | null;
+                severity?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_global_findings_api_v1_code_security_reviews_findings_export_get: {
+        parameters: {
+            query?: {
+                format?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_global_events_api_v1_code_security_reviews_events_export_get: {
+        parameters: {
+            query?: {
+                format?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -35453,14 +37146,83 @@ export interface operations {
             };
         };
     };
-    list_findings_api_v1_code_security_reviews__review_id__findings_get: {
+    cancel_code_security_review_api_v1_code_security_reviews__review_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_metrics_api_v1_code_security_reviews__review_id__metrics_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_findings_api_v1_code_security_reviews__review_id__findings_get: {
         parameters: {
             query?: {
                 skip?: number;
                 limit?: number;
                 severidad?: string | null;
                 estado?: string | null;
-                tipo_riesgo?: string | null;
+                tipo_malicia?: string | null;
+                search?: string | null;
                 sort_by?: string;
                 sort_order?: string;
             };
@@ -35468,9 +37230,7 @@ export interface operations {
                 /** @description Bearer <token> */
                 authorization?: string | null;
             };
-            path: {
-                review_id: string;
-            };
+            path?: never;
             cookie?: {
                 access_token?: string | null;
             };
@@ -35497,7 +37257,7 @@ export interface operations {
             };
         };
     };
-    create_finding_api_v1_code_security_reviews__review_id__findings_post: {
+    get_finding_api_v1_code_security_reviews__review_id__findings__finding_id__get: {
         parameters: {
             query?: never;
             header?: {
@@ -35505,47 +37265,6 @@ export interface operations {
                 authorization?: string | null;
             };
             path: {
-                review_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CodeSecurityFindingCreateSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_finding_detail_api_v1_code_security_reviews__review_id__findings__finding_id__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
                 finding_id: string;
             };
             cookie?: {
@@ -35574,7 +37293,7 @@ export interface operations {
             };
         };
     };
-    delete_finding_api_v1_code_security_reviews__review_id__findings__finding_id__delete: {
+    patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch: {
         parameters: {
             query?: never;
             header?: {
@@ -35582,44 +37301,6 @@ export interface operations {
                 authorization?: string | null;
             };
             path: {
-                review_id: string;
-                finding_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
                 finding_id: string;
             };
             cookie?: {
@@ -35628,7 +37309,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CodeSecurityFindingUpdateSchema"];
+                "application/json": components["schemas"]["CodeSecurityFindingUpdate"];
             };
         };
         responses: {
@@ -35652,20 +37333,99 @@ export interface operations {
             };
         };
     };
-    get_forensic_events_api_v1_code_security_reviews__review_id__events_get: {
+    list_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_events_api_v1_code_security_reviews__review_id__events_get: {
         parameters: {
             query?: {
                 skip?: number;
                 limit?: number;
                 severity?: string | null;
+                author?: string | null;
+                file?: string | null;
+                query?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
             };
-            path: {
-                review_id: string;
-            };
+            path?: never;
             cookie?: {
                 access_token?: string | null;
             };
@@ -36388,6 +38148,40 @@ export interface operations {
                 "application/json": components["schemas"]["LLMProviderConfigSchema"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scr_runtime_check_api_v1_admin_scr_runtime_check_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -37487,159 +39281,6 @@ export interface operations {
             };
             path: {
                 review_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    transition_finding_state_api_v1_code_security_reviews__review_id__findings__finding_id__transition_state_post: {
-        parameters: {
-            query: {
-                new_state: string;
-                reason?: string | null;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
-                finding_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_finding_remediation_plan_api_v1_code_security_reviews__review_id__findings__finding_id__remediation_plan_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
-                finding_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
-                finding_id: string;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post: {
-        parameters: {
-            query: {
-                comment: string;
-            };
-            header?: {
-                /** @description Bearer <token> */
-                authorization?: string | null;
-            };
-            path: {
-                review_id: string;
-                finding_id: string;
             };
             cookie?: {
                 access_token?: string | null;

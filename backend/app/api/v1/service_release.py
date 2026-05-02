@@ -186,26 +186,27 @@ async def move_service_release(
         extra={"event": "service_release.move", "release_id": str(id), "target_column": move_req.column},
     )
 
-    # Validate column exists
-    valid_columns = [
-        "Borrador",
-        "Pendiente Aprobación",
-        "Design Review",
-        "Security Validation",
-        "En Ejecución",
-        "Completado",
-    ]
+    from app.schemas.service_release import ESTADOS_VALIDOS
 
-    if move_req.column not in valid_columns:
+    if move_req.column not in ESTADOS_VALIDOS:
         from fastapi import HTTPException
 
-        raise HTTPException(status_code=400, detail=f"Invalid column: {move_req.column}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid column: {move_req.column}. Allowed: {ESTADOS_VALIDOS}",
+        )
+
+    from app.services.service_release_move_validation import validate_move_high_risk_state
+
+    await validate_move_high_risk_state(
+        db,
+        servicio_id=entity.servicio_id,
+        target_column=move_req.column,
+    )
 
     # Update the release state
     update_data = ServiceReleaseUpdate(estado_actual=move_req.column)
-    updated = await service_release_svc.update(
-        db, id, update_data, scope={"user_id": current_user.id}, actor_id=current_user.id
-    )
+    updated = await service_release_svc.update(db, id, update_data, scope={"user_id": current_user.id})
 
     return success(
         ServiceReleaseRead.model_validate(updated).model_dump(mode="json"),

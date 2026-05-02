@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClipboardCheck, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { ClipboardCheck, Eye, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -169,6 +170,13 @@ export default function PlanRemediacionsPage() {
                     <DataTableCell className="text-sm text-muted-foreground">{formatDate(item.fecha_limite)}</DataTableCell>
                     <DataTableCell>
                       <div className="flex gap-1">
+                        <Link
+                          href={`/plan_remediacions/${item.id}`}
+                          title="Ver detalle"
+                          className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-all hover:bg-white/[0.06] hover:text-foreground"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Link>
                         <Dialog open={editTarget?.id === item.id} onOpenChange={(o) => { if (!o) { setEditTarget(null); form.reset(); } }}>
                           <DialogTrigger asChild>
                             <Button size="icon" variant="ghost" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>

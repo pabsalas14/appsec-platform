@@ -78,6 +78,7 @@ export function useUpdateVulnerabilidad() {
     onSuccess: (_data, variables) => {
       void qc.invalidateQueries({ queryKey: KEY });
       void qc.invalidateQueries({ queryKey: [...KEY, variables.id] });
+      void qc.invalidateQueries({ queryKey: [...KEY, 'historial', variables.id] });
     },
   });
 }
@@ -89,6 +90,49 @@ export function useDeleteVulnerabilidad() {
       await api.delete(`/vulnerabilidads/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useVulnerabilidadHistorial(id: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, 'historial', id] as const,
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<unknown[]>>(`/vulnerabilidads/${id}/historial`);
+      return data.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+type BulkPayload =
+  | { action: 'estado'; ids: string[]; estado: string }
+  | { action: 'responsable'; ids: string[]; responsable_id: string | null }
+  | { action: 'delete'; ids: string[] };
+
+export function useVulnerabilidadBulkAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: BulkPayload) => {
+      const body =
+        payload.action === 'delete'
+          ? { ids: payload.ids, action: 'delete' as const }
+          : payload.action === 'estado'
+            ? { ids: payload.ids, action: 'estado' as const, estado: payload.estado }
+            : {
+                ids: payload.ids,
+                action: 'responsable' as const,
+                responsable_id: payload.responsable_id,
+              };
+      const { data } = await api.post<Envelope<{ processed: number; failed: number; errors: string[] }>>(
+        '/vulnerabilidads/bulk-action',
+        body,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: KEY });
+      void qc.invalidateQueries({ queryKey: [...KEY, 'historial'] });
+    },
   });
 }
 

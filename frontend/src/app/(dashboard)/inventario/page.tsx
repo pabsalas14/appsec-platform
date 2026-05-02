@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { GitBranch, Globe2, Package } from 'lucide-react';
+import { GitBranch, Globe2, Network, Package } from 'lucide-react';
 
 import { Card, CardContent, PremiumPageHeader, PremiumPanel, PageWrapper, premiumShellCardClass } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -29,13 +29,33 @@ export default function InventarioPage() {
   return (
     <PageWrapper className="space-y-6 p-6">
       <PremiumPageHeader
-        eyebrow="Inventario BRD"
+        eyebrow="Inventario"
         icon={Package}
         title="Inventario unificado"
-        description="Pestañas para repositorios y activos web; el detalle completo de cada registro se abre en su módulo."
-      />
+        description="Aquí gestionas activos (repositorios y URLs). La jerarquía corporativa (dirección → célula) solo se edita en Estructura organizacional; este hub sirve para navegar y abrir cada catálogo."
+      >
+        <Link
+          href="/organizacion/jerarquia"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.06] px-4 py-2 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-white/[0.1]"
+        >
+          <Network className="h-4 w-4 text-primary" aria-hidden />
+          Ver jerarquía organizacional
+        </Link>
+      </PremiumPageHeader>
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+        <span className="font-medium text-foreground/90">Operación relacionada:</span>
+        <Link href="/hallazgo_pipelines" className="underline-offset-4 hover:underline">
+          Pipeline de escaneos
+        </Link>
+        <span aria-hidden className="text-border">
+          ·
+        </span>
+        <Link href="/dashboards/kanban" className="underline-offset-4 hover:underline">
+          Kanban de liberaciones
+        </Link>
+      </p>
       <PremiumPanel className="p-4">
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-border/40 pb-1">
+      <div className="mb-6 flex flex-wrap gap-1 rounded-xl border border-white/[0.06] bg-white/[0.02] p-1">
         {tabs.map((t) => {
           const Icon = t.icon;
           return (
@@ -44,13 +64,13 @@ export default function InventarioPage() {
               type="button"
               onClick={() => setActive(t.id)}
               className={cn(
-                'inline-flex items-center gap-2 rounded-t-md border border-b-0 px-4 py-2 text-sm font-medium transition-colors',
+                'inline-flex flex-1 min-w-[140px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
                 active === t.id
-                  ? 'border-border bg-card text-foreground'
-                  : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                  ? 'bg-primary/15 text-foreground shadow-sm ring-1 ring-primary/20'
+                  : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 shrink-0" />
               {t.label}
             </button>
           );
@@ -69,13 +89,17 @@ export default function InventarioPage() {
                 <div>
                   <h2 className="text-lg font-semibold">{t.label}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    En el listado, el nombre de cada fila abre la ficha de detalle (pipelines correlacionados y vulnerabilidades).
+                  </p>
                 </div>
               </div>
               <Link
                 href={t.href}
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                className="inline-flex w-fit items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
               >
-                Abrir módulo <Package className="h-3.5 w-3.5" />
+                Abrir módulo
+                <Package className="h-3.5 w-3.5" />
               </Link>
             </CardContent>
           </Card>

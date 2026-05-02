@@ -1,32 +1,35 @@
+'use client';
+
 import { useCallback, useEffect } from 'react';
 
-type Options = {
-  enabled: boolean;
-  message?: string;
-};
+type Opts = { enabled: boolean };
 
-const DEFAULT_MESSAGE = 'Tienes cambios sin guardar. Si sales ahora, los perderás.';
+export function useUnsavedChanges(enabled: boolean): void;
+export function useUnsavedChanges(opts: Opts): { confirmIfNeeded: () => boolean };
+export function useUnsavedChanges(
+  enabledOrOpts: boolean | Opts,
+): void | { confirmIfNeeded: () => boolean } {
+  const isOpts = typeof enabledOrOpts !== 'boolean';
+  const enabled = isOpts ? enabledOrOpts.enabled : enabledOrOpts;
 
-/**
- * Evita cierre accidental de pestaña/recarga y expone helper para confirmar descartes
- * al cerrar Dialog/Sheet o navegar manualmente desde UI.
- */
-export function useUnsavedChanges({ enabled, message = DEFAULT_MESSAGE }: Options) {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) return undefined;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = message;
+      e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [enabled, message]);
+  }, [enabled]);
 
-  const confirmIfNeeded = useCallback(() => {
+  const confirmIfNeeded = useCallback((): boolean => {
     if (!enabled) return true;
-    return window.confirm(message);
-  }, [enabled, message]);
+    return typeof window !== 'undefined' ? window.confirm('¿Descartar cambios sin guardar?') : true;
+  }, [enabled]);
+
+  if (!isOpts) {
+    return;
+  }
 
   return { confirmIfNeeded };
 }
-

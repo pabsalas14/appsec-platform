@@ -48,3 +48,40 @@ export function useDeleteExcepcionVulnerabilidad() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+export function useAprobarExcepcionVulnerabilidad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, notas }: { id: string; notas?: string | null }) => {
+      const { data } = await api.post<Envelope<ExcepcionVulnerabilidad>>(`/excepcion_vulnerabilidads/${id}/aprobar`, {
+        notas: notas ?? null,
+      });
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useRechazarExcepcionVulnerabilidad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, notas }: { id: string; notas?: string | null }) => {
+      const { data } = await api.post<Envelope<ExcepcionVulnerabilidad>>(`/excepcion_vulnerabilidads/${id}/rechazar`, {
+        notas: notas ?? null,
+      });
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useReconciliarExcepcionesVencidas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<Envelope<{ vencidas: number }>>('/excepcion_vulnerabilidads/reconciliar-vencidas');
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}

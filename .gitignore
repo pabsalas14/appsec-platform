@@ -41,5 +41,8 @@ playwright/.cache/
 # Keep the example override committed, ignore local-only tweaks
 docker-compose.local.yml
 
+# ── Local tooling ───────────────────────────────────────────────────────
+.claude/
+
 # ── Uploads (dev volume) ───────────────────────────────────────────────
 backend/uploads/

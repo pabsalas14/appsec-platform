@@ -42,7 +42,7 @@ export default function DashboardsHubPage() {
     <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Dashboard · Hub (V2 — 10 tableros)"
-        description="Mapa a los 10 tableros AppSec V2. Filtros jerárquicos vía query en URLs compatibles. OKR (9) vive en /okr_dashboard."
+        description="Mapa a los 10 tableros AppSec V2 (spec 21: KPI por motor/severidad, drill-down jerárquico, filtros persistentes). Filtros jerárquicos vía query en URLs compatibles. OKR (9) vive en /okr_dashboard."
       />
       <HierarchyFiltersBarCard
         title="Filtros jerárquicos"

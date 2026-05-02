@@ -29,6 +29,12 @@ function isImage(a: Attachment) {
   return a.content_type.startsWith('image/');
 }
 
+function isPdf(a: Attachment) {
+  return a.content_type === 'application/pdf';
+}
+
+const API_PREFIX = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 export default function UploadsPage() {
   const { data: files = [], isLoading } = useUploads();
   const uploadMut = useUploadFile();
@@ -114,9 +120,15 @@ export default function UploadsPage() {
               <div className="flex h-40 items-center justify-center bg-muted/40">
                 {isImage(attachment) ? (
                   <AuthImage
-                    src={`${process.env.NEXT_PUBLIC_API_URL ?? ''}${attachment.url}`}
+                    src={`${API_PREFIX}${attachment.url}`}
                     alt={attachment.filename}
                     className="h-full w-full object-cover"
+                  />
+                ) : isPdf(attachment) ? (
+                  <iframe
+                    title={attachment.filename}
+                    src={`${API_PREFIX}${attachment.url}`}
+                    className="h-full w-full border-0 bg-background"
                   />
                 ) : (
                   <FileIcon className="h-10 w-10 text-muted-foreground" />

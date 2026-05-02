@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { LineChart, RefreshCw, Info } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -112,12 +113,22 @@ export default function IndicadoresPage() {
     };
   }, [filteredKey, filtered]);
 
+  const noFormulasAtAll = !loading && formulas.length === 0;
+  const noFormulasForMotor = !loading && formulas.length > 0 && filtered.length === 0;
+
   return (
-    <PageWrapper>
+    <PageWrapper className="space-y-6 p-6">
       <PageHeader
         title="Indicadores (KPIs)"
         description="Indicadores tipo 1: valor en tiempo real por fórmula. Filtra por motor. Tipo 2 (captura manual) e histórico 12M: pestañas inferiores."
-      />
+      >
+        <Link
+          href="/indicadores_formulas"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/[0.08]"
+        >
+          Definir fórmulas
+        </Link>
+      </PageHeader>
 
       <div
         className="mb-4 flex gap-2 rounded-lg border border-border/80 bg-muted/30 p-3 text-sm text-muted-foreground"
@@ -131,29 +142,34 @@ export default function IndicadoresPage() {
       </div>
 
       {err ? <p className="text-destructive text-sm mb-2">{err}</p> : null}
-      {madurez ? (
-        <Card className="mb-4">
-          <CardContent className="pt-4 flex items-center gap-3 flex-wrap">
-            <LineChart className="h-5 w-5" />
-            <div>
+      <Card className="mb-4">
+        <CardContent className="flex flex-wrap items-center gap-3 pt-4">
+          <LineChart className="h-5 w-5 shrink-0 text-primary" />
+          {madurez ? (
+            <div className="min-w-0 flex-1">
               <p className="text-sm text-muted-foreground">Score de madurez (resumen)</p>
               <p className="text-2xl font-semibold">
                 {madurez.score} / {madurez.max}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void loadFormulas()}
-              className="ml-auto"
-              disabled={loading}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refrescar datos
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
+          ) : (
+            <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+              No hay resumen de madurez disponible (API sin datos o sin configurar). El score global aparece cuando{' '}
+              <span className="font-mono text-xs">/madurez/summary</span> responde correctamente.
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void loadFormulas()}
+            className="ml-auto shrink-0"
+            disabled={loading}
+          >
+            <RefreshCw className="mr-1 h-4 w-4" />
+            Refrescar datos
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="w-full min-w-[200px] max-w-sm">
@@ -182,8 +198,30 @@ export default function IndicadoresPage() {
         <TabsContent value="auto" className="space-y-2">
           {loading ? (
             <p className="text-muted-foreground">Cargando fórmulas…</p>
-          ) : filtered.length === 0 ? (
-            <p className="text-muted-foreground">No hay fórmulas para el motor seleccionado.</p>
+          ) : noFormulasAtAll ? (
+            <Card className="border-dashed">
+              <CardContent className="space-y-4 pt-6">
+                <p className="text-sm font-medium text-foreground">Aún no hay fórmulas de indicadores</p>
+                <p className="text-sm text-muted-foreground">
+                  Crea fórmulas en el catálogo para ver valores calculados aquí. Los códigos deben existir en{' '}
+                  <span className="font-mono text-xs">indicadores_formulas</span>.
+                </p>
+                <Link
+                  href="/indicadores_formulas"
+                  className="inline-flex w-fit items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                >
+                  Ir a fórmulas de indicadores
+                </Link>
+              </CardContent>
+            </Card>
+          ) : noFormulasForMotor ? (
+            <p className="text-muted-foreground">
+              No hay fórmulas para el motor seleccionado. Cambia el filtro o añade una fórmula con ese motor en{' '}
+              <Link href="/indicadores_formulas" className="font-medium text-primary underline-offset-4 hover:underline">
+                Fórmulas de indicadores
+              </Link>
+              .
+            </p>
           ) : (
             <ul className="space-y-2">
               {filtered.map((f) => {

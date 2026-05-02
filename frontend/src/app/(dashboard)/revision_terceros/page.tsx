@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -271,7 +272,7 @@ function FormFields({
         <Input className="mt-1" {...form.register('informe_sha256')} />
       </div>
       <div className="border-t border-border pt-3">
-        <p className="mb-2 text-sm font-medium">BRD §10.3 — Checklist y cierre</p>
+        <p className="mb-2 text-sm font-medium">BRD 10.3 — Checklist y cierre</p>
         <p className="mb-2 text-xs text-muted-foreground">
           Plantilla desde la API; los resultados se almacenan con la revisión.
         </p>
@@ -427,7 +428,7 @@ export default function RevisionTercerosPage() {
                   <DataTableTh>Tipo</DataTableTh>
                   <DataTableTh>Estado</DataTableTh>
                   <DataTableTh className="w-[64px] text-center">
-                    <span title="BRD 10.3 checklist">§10.3</span>
+                    <span title="BRD 10.3 checklist">10.3</span>
                   </DataTableTh>
                   <DataTableTh>Actualizado</DataTableTh>
                   <DataTableTh className="w-[100px]"> </DataTableTh>
@@ -436,7 +437,11 @@ export default function RevisionTercerosPage() {
               <DataTableBody>
                 {filtered.map((item) => (
                   <DataTableRow key={item.id}>
-                    <DataTableCell className="font-medium max-w-[200px] truncate">{item.nombre_empresa}</DataTableCell>
+                    <DataTableCell className="font-medium max-w-[200px] truncate">
+                      <Link href={`/revision_terceros/${item.id}`} className="hover:text-primary hover:underline">
+                        {item.nombre_empresa}
+                      </Link>
+                    </DataTableCell>
                     <DataTableCell className="text-sm">{item.tipo}</DataTableCell>
                     <DataTableCell>{item.estado}</DataTableCell>
                     <DataTableCell className="text-center text-xs">
