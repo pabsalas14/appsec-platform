@@ -17,9 +17,9 @@
 ### Entregas operativas recientes (producto / no-code / SCR)
 
 - **Centro de administración** (`/admin`): hub con tarjetas hacia module views, campos, reglas, fórmulas, catálogos, dashboard builder, IA, usuarios, auditoría, integraciones SCR, etc. Las rutas profundas (`/admin/module-views`, …) siguen igual.
-- **Menú lateral**: tableros analíticos agrupados en sección colapsable; bloques BRD (organización, inventario, entrega, hallazgos, threat modeling) como subsecciones; la sección **Code Security (SCR)** se mantiene como hasta ahora.
+- **Menú lateral**: arquitectura v3 (*Sidebar* — navegación relacional): **Principal**, **Organización e inventario**, **Gestión de vulnerabilidades**, **Operación y seguimiento**, **Desempeño (OKR)**, más **Code Security (SCR)** sin cambios de alcance y **Administración** (`/admin`) solo para backoffice.
 - **Seed `nocode_defaults`**: tras `make seed` aparecen datos demo de module views, custom field, validation rule, fórmula y AI rule (IDs deterministas).
-- **SCR**: el pipeline separa la transacción de preparación (`ANALYZING`) del trabajo pesado; el **progreso** se escribe con `persist_scr_review_progress_durable` para que el polling vea avance sin esperar el commit final.
+- **SCR**: el progreso se persiste con `persist_scr_review_progress_durable`; la sesión larga del pipeline sincroniza `progreso` / `agente_actual` / `actividad` en el objeto ORM tras cada actualización durable para que la barra y el SSE no queden en **0 %** hasta el final.
 
 ### Dashboards AppSec (V2)
 
