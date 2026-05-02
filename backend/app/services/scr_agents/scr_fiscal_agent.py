@@ -1,4 +1,30 @@
-"""Fiscal Agent — Genera reportes ejecutivos con narrativa de riesgo y síntesis."""
+"""SCR Fiscal Agent — Genera reportes ejecutivos con narrativa de riesgo y síntesis.
+
+Este módulo implementa el Fiscal Agent, el tercer paso del pipeline SCR.
+Sintetiza hallazgos técnicos en reportes ejecutivos para directivos con:
+- Resumen ejecutivo (2-3 párrafos enfocados en impacto)
+- Evaluación de riesgo (LOW/MEDIUM/HIGH/CRITICAL)
+- Narrativa de evolución del ataque (cronología de eventos)
+- Hallazgos clave (lista de impacts principales)
+- Recomendaciones accionables (pasos de remediación)
+- Nivel de confianza (confidence level de la evaluación)
+
+El Fiscal usa LLM (Anthropic, OpenAI, etc) para síntesis en lenguaje natural
+combinado con lógica determinística de fallback cuando LLM no está disponible.
+
+Ejemplo:
+    >>> report = await run_fiscal_real(
+    ...     review_id="uuid-123",
+    ...     review_title="Security Review of Auth Service",
+    ...     db=db_session,
+    ...     llm=llm_runtime,
+    ...     usage_out={}
+    ... )
+    >>> print(report.resumen_ejecutivo)
+    "Se detectó código malicioso en el módulo de autenticación..."
+    >>> print(report.puntuacion_riesgo_global)
+    95
+"""
 
 from __future__ import annotations
 
@@ -114,18 +140,72 @@ async def run_fiscal_real(
 ) -> CodeSecurityReport:
     """Run Fiscal Agent with LLM-powered executive report generation.
 
-    Uses LLM to synthesize technical findings into business-focused executive reports
-    with attack narratives, risk assessments, and actionable recommendations.
-    Falls back to a deterministic report based only on persisted findings/events when LLM is unavailable.
+    Primary implementation synthesizing technical findings into business-focused
+    executive reports. Uses LLM for natural language synthesis, with deterministic
+    fallback when LLM is unavailable.
+
+    Report Structure:
+    1. executive_summary: 2-3 paragraph executive overview
+    2. risk_assessment: Overall risk level (LOW/MEDIUM/HIGH/CRITICAL)
+    3. attack_narrative: Chronological attack evolution story
+    4. key_findings: Bulleted list of critical impacts
+    5. recommendations: Ordered remediation steps
+    6. confidence_level: Analyst confidence in assessment
+
+    LLM Processing:
+    - Retrieves up to 10 most critical findings from Inspector
+    - Retrieves up to 20 most suspicious events from Detective
+    - Fetches personalized agent config (prompts, parameters) from DB
+    - Sends to LLM with custom system and user prompts
+    - Parses structured JSON response with validation
+
+    Fallback Logic:
+    - If LLM API fails: Uses _generate_enhanced_fallback_report()
+    - If JSON parsing fails: Validates and enhances with defaults
+    - Empty findings/events: Returns "no findings" template
+    - All fallback paths persist identical CodeSecurityReport structure
 
     Args:
-        review_id: UUID of the code security review
-        review_title: Title of the review
-        db: Database session
-        llm: Runtime LLM desde BD (SCR) o None para env
+        review_id (str): UUID of the code security review
+        review_title (str): Human-readable review title (used in prompts)
+        db (AsyncSession): SQLAlchemy async session for loading findings/events
+            and persisting the generated report
+        llm (ScrLlmRuntime, optional): Resolved LLM runtime from DB config or None
+            for environment variable fallback. If None, uses ANTHROPIC_DEFAULT_MODEL.
+        usage_out (dict, optional): Output dict to track token/cost usage.
+            If provided, will be updated with:
+            - tokens_used: Total tokens consumed
+            - input_tokens: Tokens in LLM prompt
+            - output_tokens: Tokens in LLM response
+            - provider: Provider name (anthropic, openai, etc)
+            - model: Model name used
 
     Returns:
-        Created CodeSecurityReport instance
+        CodeSecurityReport: Newly created and flushed report instance with fields:
+            - review_id: Links to parent review
+            - resumen_ejecutivo: Executive summary text
+            - desglose_severidad: Count dict {CRITICO, ALTO, MEDIO, BAJO}
+            - narrativa_evolucion: Attack timeline narrative
+            - pasos_remediacion: Remediation recommendations list
+            - puntuacion_riesgo_global: Numeric risk score (0-100)
+            - created_at: Timestamp of report generation
+
+    Raises:
+        Exception: Only if DB persistence fails (LLM errors are caught and fallback)
+
+    Example:
+        >>> usage = {}
+        >>> report = await run_fiscal_real(
+        ...     review_id="550e8400-e29b-41d4-a716-446655440000",
+        ...     review_title="Auth Service Security Review",
+        ...     db=db_session,
+        ...     llm=llm_runtime,
+        ...     usage_out=usage
+        ... )
+        >>> print(f"Risk: {report.puntuacion_riesgo_global}/100")
+        Risk: 92/100
+        >>> print(f"Cost: ${usage.get('cost_usd', 0):.4f}")
+        Cost: $0.0142
     """
     logger.info("fiscal.start", extra={"review_id": review_id})
 

@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, require_permission
 from app.api.deps_ownership import require_ownership
+from app.core.logging import logger
 from app.core.permissions import P
 from app.core.rate_limit import enforce_rate_limit
 from app.core.response import success
@@ -96,6 +97,18 @@ async def list_code_security_reviews(
     current_user: User = Depends(require_permission(P.CODE_SECURITY.VIEW)),
 ):
     """Fase 3 — lista revisiones SCR del usuario actual."""
+    logger.info(
+        "scr.list_reviews.start",
+        extra={
+            "user_id": str(current_user.id),
+            "search": search,
+            "estado": estado,
+            "repo_filter": repo is not None,
+            "skip": skip,
+            "limit": limit,
+        },
+    )
+
     stmt = select(CodeSecurityReview).where(
         CodeSecurityReview.user_id == current_user.id,
         CodeSecurityReview.deleted_at.is_(None),
@@ -129,6 +142,12 @@ async def list_code_security_reviews(
     sort_col = sort_columns.get(sort_by, CodeSecurityReview.created_at)
     stmt = stmt.order_by(asc(sort_col) if sort_order.lower() == "asc" else desc(sort_col)).offset(skip).limit(limit)
     items = (await db.execute(stmt)).scalars().all()
+
+    logger.info(
+        "scr.list_reviews.success",
+        extra={"user_id": str(current_user.id), "results_count": len(items)},
+    )
+
     return success([CodeSecurityReviewRead.model_validate(x).model_dump(mode="json") for x in items])
 
 
@@ -139,14 +158,42 @@ async def create_code_security_review(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission(P.CODE_SECURITY.CREATE)),
 ):
-    # Rate limit: max 5 SCR creations per user per hour
-    enforce_rate_limit(
-        bucket="scr_create",
-        key=str(current_user.id),
-        limit=5,
-        window_seconds=3600,
+    logger.info(
+        "scr.create_review.start",
+        extra={
+            "user_id": str(current_user.id),
+            "titulo": entity_in.titulo,
+            "scan_type": entity_in.tipo_escaneo,
+            "url_repositorio": entity_in.url_repositorio,
+        },
     )
+
+    # Rate limit: max 5 SCR creations per user per hour
+    try:
+        enforce_rate_limit(
+            bucket="scr_create",
+            key=str(current_user.id),
+            limit=5,
+            window_seconds=3600,
+        )
+    except Exception as e:
+        logger.warning(
+            "scr.create_review.rate_limit_exceeded",
+            extra={"user_id": str(current_user.id), "error": str(e)},
+        )
+        raise
+
     entity = await code_security_review_svc.create(db, entity_in, extra={"user_id": current_user.id})
+
+    logger.info(
+        "scr.create_review.success",
+        extra={
+            "user_id": str(current_user.id),
+            "review_id": str(entity.id),
+            "estado": entity.estado,
+        },
+    )
+
     payload = success(CodeSecurityReviewRead.model_validate(entity).model_dump(mode="json"))
     return JSONResponse(status_code=201, content=payload)
 

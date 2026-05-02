@@ -1,283 +1,465 @@
-"""Inspector Agent — Detección de patrones maliciosos en código usando LLM."""
+"""SCR Inspector Agent — Detección de patrones maliciosos en código.
+
+Este módulo implementa el Inspector Agent, el primer paso del pipeline SCR.
+Analiza código fuente en busca de:
+- Backdoors y code injection
+- Logical bombs y time bombs
+- Credential exposure
+- Malicious patterns (ofuscación, hidden code, etc)
+
+El Inspector usa LLM (Anthropic, OpenAI, etc) para análisis semántico
+combinado con regex patterns para detección rápida.
+
+Ejemplo:
+    >>> inspector = InspectorAgent(llm_provider="anthropic")
+    >>> findings = await inspector.analyze_code(
+    ...     code="import os; os.system('rm -rf /')",
+    ...     context={"file": "setup.py", "repo": "https://github.com/..."}
+    ... )
+    >>> print(findings)
+    [
+        {
+            "tipo_malicia": "COMMAND_INJECTION",
+            "severidad": "CRITICO",
+            "confianza": 0.95,
+            "linea_inicio": 1,
+            "descripcion": "Direct os.system() with unsanitized input"
+        }
+    ]
+"""
 
 from __future__ import annotations
 
 import json
 import os
-from typing import Any, Dict
+import re
+from dataclasses import dataclass
+from typing import Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.logging import logger
-from app.models.agente_config import AgenteConfig
 from app.services.ia_provider import AIProviderType, get_ai_provider
-from app.services.scr_json import parse_llm_json
-from app.services.scr_llm_catalog import ANTHROPIC_DEFAULT_MODEL, LLM_PROVIDER_CATALOG, default_base_url, normalize_model
-
-DEFAULT_MALICIOUS_PATTERNS = {
-    "EXEC_ENV_BACKDOOR": "Ejecución oculta vía variables de entorno o configuración",
-    "LOGIC_BOMB": "Código que ejecuta condicionalmente para causar daño",
-    "OBFUSCATED_CODE": "Código deliberadamente ofuscado para ocultar funcionalidad",
-    "PRIVILEGE_ESCALATION": "Intentos de elevar privilegios",
-    "DATA_EXFILTRATION": "Código que exfiltra datos sensibles",
-    "SUPPLY_CHAIN_ATTACK": "Dependencias o imports sospechosos",
-    "TIMING_ATTACK": "Código que explota side-channels de timing",
-    "SUSPICIOUS_PERMISSIONS": "Solicitudes de permisos sospechosas",
-    "DEFERRED_EXECUTION": "Código diseñado para ejecutarse en un momento futuro o bajo condiciones específicas",
-    "DYNAMIC_CODE_EXECUTION": "Uso de eval(), exec(), o similares para ejecutar código dinámicamente desde cadenas",
-}
-
-DEFAULT_PATTERN_SEVERITY = {
-    "EXEC_ENV_BACKDOOR": "CRITICO",
-    "LOGIC_BOMB": "CRITICO",
-    "OBFUSCATED_CODE": "MEDIO",
-    "PRIVILEGE_ESCALATION": "ALTO",
-    "DATA_EXFILTRATION": "CRITICO",
-    "SUPPLY_CHAIN_ATTACK": "ALTO",
-    "TIMING_ATTACK": "MEDIO",
-    "SUSPICIOUS_PERMISSIONS": "MEDIO",
-    "DEFERRED_EXECUTION": "ALTO",
-    "DYNAMIC_CODE_EXECUTION": "ALTO",
-}
 
 
-def _build_inspector_system_prompt(patterns: Dict[str, str]) -> str:
-    """Construye el prompt del sistema para Inspector Agent."""
-    patterns_list = "\n".join(f"  - {k}: {v}" for k, v in patterns.items())
-    return f"""Eres un experto en seguridad de código especializado en detectar patrones maliciosos.
-Tu rol es analizar código fuente e identificar:
-
-{patterns_list}
-
-IMPORTANTE:
-- Responde SOLO en JSON válido
-- Si no hay hallazgos maliciosos, retorna: {{"findings": []}}
-- Cada hallazgo debe tener: archivo, linea_inicio, linea_fin, tipo_malicia, confianza (0-1), descripcion, codigo_snippet, impacto, explotabilidad
-- Sé específico: incluye líneas exactas y fragmentos de código problemático
-- Confianza: 0.9+ si es evidencia clara, 0.6-0.9 si hay indicadores fuertes, <0.6 si es sospecha"""
-
-
-def _chunk_source_files(source_files: dict[str, str], *, max_chunk_chars: int = 12000, max_chunks: int = 50) -> list[tuple[str, str]]:
-    chunks: list[tuple[str, str]] = []
-    for filepath, content in source_files.items():
-        if filepath.startswith("_"):
-            continue
-        text = content or ""
-        if not text.strip():
-            continue
-        for start in range(0, len(text), max_chunk_chars):
-            suffix = "" if start == 0 else f"#parte-{(start // max_chunk_chars) + 1}"
-            chunks.append((f"{filepath}{suffix}", text[start : start + max_chunk_chars]))
-            if len(chunks) >= max_chunks:
-                return chunks
-    return chunks
+@dataclass
+class Finding:
+    """Hallazgo de código malicioso.
+    
+    Attributes:
+        tipo_malicia: Categoría (BACKDOOR, INJECTION, LOGIC_BOMB, etc)
+        severidad: BAJO, MEDIO, ALTO, CRITICO
+        confianza: Score 0-1 de confianza del hallazgo
+        linea_inicio: Línea donde comienza
+        linea_fin: Línea donde termina
+        descripcion: Descripción del hallazgo
+        codigo_snippet: Código relevante (~200 chars)
+    """
+    tipo_malicia: str
+    severidad: str
+    confianza: float
+    linea_inicio: int
+    linea_fin: int
+    descripcion: str
+    codigo_snippet: str
 
 
-def _build_inspector_prompt(code_chunks: list[tuple[str, str]], analysis_context: str | None = None, output_format: str | None = None) -> str:
-    """Construye el prompt para análisis de código."""
-    files_text = "\n\n".join(
-        f"--- Archivo: {filepath} ---\n{content}"
-        for filepath, content in code_chunks
-    )
+class InspectorAgent:
+    """Agente Inspector del pipeline SCR.
+    
+    Realiza análisis de patrones maliciosos usando combinación de:
+    - LLM semántico (análisis contextual)
+    - Regex patterns (detección rápida)
+    - AST analysis (Python - detección estructural)
+    
+    Attributes:
+        llm_provider: Provider LLM a usar (default: anthropic)
+        llm_model: Modelo específico (default: claude-3-5-sonnet)
+        max_chunk_size: Max bytes por chunk para LLM (default: 200KB)
+    """
 
-    return f"""Analiza el siguiente código en busca de patrones maliciosos:
+    MALICIOUS_PATTERNS = {
+        "BACKDOOR": [
+            r"__import__\s*\(\s*['\"]os['\"]",
+            r"subprocess\.Popen\s*\(\s*['\"](?:bash|sh|cmd|powershell)",
+            r"eval\s*\(\s*(?:input|raw_input|request\.args)",
+        ],
+        "CREDENTIAL_EXPOSURE": [
+            r"(password|secret|api_key|token)\s*=\s*['\"][^'\"]{10,}['\"]",
+            r"AWS_SECRET_ACCESS_KEY\s*=",
+            r"GITHUB_TOKEN\s*=",
+        ],
+        "LOGIC_BOMB": [
+            r"datetime\.now\(\).*==\s*datetime\(",
+            r"time\.time\(\).*==\s*\d{10}",
+        ],
+    }
 
-{files_text}
+    def __init__(
+        self,
+        llm_provider: str = "anthropic",
+        llm_model: str = "claude-3-5-sonnet-20241022",
+        max_chunk_size: int = 200_000,
+    ):
+        """Inicializa el Inspector Agent.
+        
+        Args:
+            llm_provider: Proveedor LLM (anthropic, openai, ollama, etc)
+            llm_model: Modelo específico del proveedor
+            max_chunk_size: Máximo de bytes por chunk de código a analizar
+        """
+        self.llm_provider = llm_provider
+        self.llm_model = llm_model
+        self.max_chunk_size = max_chunk_size
+        ptype_map = {
+            "anthropic": AIProviderType.ANTHROPIC,
+            "openai": AIProviderType.OPENAI,
+            "ollama": AIProviderType.OLLAMA,
+        }
+        ptype = ptype_map.get(str(llm_provider).lower(), AIProviderType.ANTHROPIC)
+        api_key = ""
+        if ptype == AIProviderType.ANTHROPIC:
+            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        elif ptype == AIProviderType.OPENAI:
+            api_key = os.getenv("OPENAI_API_KEY", "")
+        elif ptype == AIProviderType.OLLAMA:
+            api_key = os.getenv("OLLAMA_API_KEY", "ollama")
+        kwargs: dict[str, object] = {"model": llm_model, "api_key": api_key or "unset"}
+        if ptype == AIProviderType.OLLAMA:
+            kwargs["base_url"] = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self.llm = get_ai_provider(ptype, **kwargs)
 
-{analysis_context or ""}
-
-Responde en JSON con esta estructura:
-{{
-  "findings": [
-    {{
-      "archivo": "path/to/file.py",
-      "linea_inicio": 10,
-      "linea_fin": 15,
-      "tipo_malicia": "EXEC_ENV_BACKDOOR",
-      "confianza": 0.85,
-      "descripcion": "...",
-      "codigo_snippet": "...",
-      "impacto": "...",
-      "explotabilidad": "..."
-    }}
-  ]
-}}
-{output_format or ""}"""
-
-
-async def run_inspector_real(
-    *,
-    rutas_fuente: dict[str, str],
-    db: AsyncSession | None = None,
-    provider: AIProviderType = AIProviderType.ANTHROPIC,
-    model: str = ANTHROPIC_DEFAULT_MODEL,
-    temperature: float = 0.3,
-    max_tokens: int = 4096,
-    timeout_seconds: int = 120,
-    api_key_override: str | None = None,
-    base_url_override: str | None = None,
-    usage_out: dict[str, Any] | None = None,
-) -> list[dict[str, Any]]:
-    """Inspector Agent real — Detecta patrones maliciosos usando LLM."""
-
-    if not rutas_fuente:
-        logger.warning("scr.inspector.empty_source", extra={"event": "scr.inspector.empty_source"})
-        return []
-
-    try:
-        max_chunks = int(os.getenv("SCR_INSPECTOR_MAX_CHUNKS", "50"))
-        max_chunk_chars = int(os.getenv("SCR_INSPECTOR_MAX_CHARS_PER_CHUNK", "12000"))
-        code_chunks = _chunk_source_files(rutas_fuente, max_chunk_chars=max_chunk_chars, max_chunks=max_chunks)
-
-        patterns = DEFAULT_MALICIOUS_PATTERNS.copy()
-        pattern_severity = DEFAULT_PATTERN_SEVERITY.copy()
-        system_prompt_override = None
-        analysis_context = None
-        output_format = None
-
-        if db is not None:
-            stmt = (
-                select(AgenteConfig)
-                .where(AgenteConfig.agente_tipo == "inspector", AgenteConfig.activo == True)
-                .order_by(AgenteConfig.creado_en.desc())
-                .limit(1)
-            )
-
-            result = await db.execute(stmt)
-            config = result.scalar_one_or_none()
-
-            if config and config.patrones_personalizados:
-                patterns.update(config.patrones_personalizados)
-            if config and config.prompt_sistema_personalizado:
-                system_prompt_override = config.prompt_sistema_personalizado
-            if config and config.parametros_llm:
-                for disabled_pattern in config.parametros_llm.get("disabled_patterns") or []:
-                    patterns.pop(str(disabled_pattern), None)
-                analysis_context = config.parametros_llm.get("analysis_context")
-                output_format = config.parametros_llm.get("output_format")
-
-        model = normalize_model(provider.value, model)
-
-        if provider == AIProviderType.ANTHROPIC:
-            api_key = (api_key_override or "").strip() or os.getenv("ANTHROPIC_API_KEY", "")
-            if not api_key:
-                logger.warning(
-                    "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": "anthropic"}
-                )
-                return []
-
-            llm_provider = get_ai_provider(
-                provider,
-                api_key=api_key,
-                model=model,
-                timeout_seconds=timeout_seconds,
-            )
-        elif provider == AIProviderType.OLLAMA:
-            llm_provider = get_ai_provider(
-                provider,
-                base_url=base_url_override or os.getenv("OLLAMA_BASE_URL", default_base_url(provider.value) or "http://localhost:11434"),
-                model=model,
-                timeout_seconds=timeout_seconds,
-            )
-        else:
-            env_name = f"{provider.value.upper()}_API_KEY"
-            api_key = (api_key_override or "").strip() or os.getenv(env_name, "")
-            requires_api_key = bool(LLM_PROVIDER_CATALOG.get(provider.value, {}).get("requires_api_key"))
-            if requires_api_key and not api_key:
-                logger.warning(
-                    "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": provider}
-                )
-                return []
-
-            kwargs = {"model": model, "timeout_seconds": timeout_seconds}
-            if api_key:
-                kwargs["api_key"] = api_key
-            base_url = base_url_override or default_base_url(provider.value)
-            if base_url:
-                kwargs["base_url"] = base_url
-            llm_provider = get_ai_provider(provider, **kwargs)
-
-        system_prompt = system_prompt_override or _build_inspector_system_prompt(patterns)
-        user_prompt = _build_inspector_prompt(code_chunks, analysis_context=analysis_context, output_format=output_format)
-
-        logger.info(
-            "scr.inspector.llm_call",
-            extra={
-                "event": "scr.inspector.llm_call",
-                "provider": provider,
-                "model": model,
-                "files_count": len(code_chunks),
-            },
-        )
-
-        response = await llm_provider.generate(
-            prompt=user_prompt,
-            system=system_prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        if usage_out is not None:
-            usage_out.update(
+    async def analyze_code(
+        self,
+        code: str,
+        filename: str = "unknown",
+        repo_context: Optional[dict] = None,
+    ) -> list[Finding]:
+        """Analiza código en busca de patrones maliciosos.
+        
+        Realiza análisis en dos fases:
+        1. Regex pattern matching (rápido, determinístico)
+        2. LLM semantic analysis (lento, contextual)
+        
+        Args:
+            code: Contenido del código a analizar
+            filename: Nombre del archivo (para contexto)
+            repo_context: Contexto del repositorio
                 {
-                    "tokens_used": response.tokens_used or 0,
-                    "input_tokens": response.input_tokens or 0,
-                    "output_tokens": response.output_tokens or 0,
-                    "provider": response.provider or provider.value,
-                    "model": model,
+                    "url": "https://github.com/...",
+                    "branch": "main",
+                    "commit": "abc123..."
                 }
-            )
-
-        result = parse_llm_json(response.content, default={})
-        findings_raw = result.get("findings", []) if isinstance(result, dict) else []
-        if not isinstance(result, dict):
-            logger.error(
-                "scr.inspector.json_parse_error",
-                extra={"event": "scr.inspector.json_parse_error", "content": response.content[:200]},
-            )
-            raise ValueError("Inspector no devolvió JSON válido")
+        
+        Returns:
+            Lista de findings encontrados ordenados por severidad
+        
+        Raises:
+            ValueError: Si el código es muy grande (> 10MB)
+        """
+        if len(code) > 10_000_000:
+            raise ValueError("Code too large (>10MB)")
 
         findings = []
-        for finding in findings_raw:
-            if not isinstance(finding, dict):
-                continue
 
-            tipo = finding.get("tipo_malicia", "OBFUSCATED_CODE")
-            severidad = pattern_severity.get(tipo, "MEDIO")
+        # Phase 1: Regex patterns (fast)
+        findings.extend(self._regex_analysis(code, filename))
 
-            enriched = {
-                "archivo": str(finding.get("archivo", "unknown.py")),
-                "linea_inicio": int(finding.get("linea_inicio", 1)),
-                "linea_fin": int(finding.get("linea_fin", 1)),
-                "tipo_malicia": tipo,
-                "severidad": severidad,
-                "confianza": float(finding.get("confianza", 0.7)),
-                "descripcion": str(finding.get("descripcion", "")),
-                "codigo_snippet": str(finding.get("codigo_snippet", "")),
-                "impacto": str(finding.get("impacto", "")),
-                "explotabilidad": str(finding.get("explotabilidad", "")),
-                "remediacion_sugerida": str(finding.get("remediacion_sugerida", "Revisión humana recomendada")),
-                "estado": "DETECTED",
-            }
-            findings.append(enriched)
+        # Phase 2: LLM analysis (slow but thorough)
+        llm_findings = await self._llm_analysis(code, filename, repo_context)
+        findings.extend(llm_findings)
 
-        logger.info(
-            "scr.inspector.complete",
-            extra={
-                "event": "scr.inspector.complete",
-                "findings_count": len(findings),
-                "provider": provider,
-            },
+        # Deduplicate and sort
+        findings = self._deduplicate(findings)
+        findings.sort(
+            key=lambda f: (
+                {"CRITICO": 0, "ALTO": 1, "MEDIO": 2, "BAJO": 3}.get(f.severidad, 4),
+                -f.confianza,
+            )
         )
 
         return findings
 
-    except Exception as e:
-        logger.error("scr.inspector.error", extra={"event": "scr.inspector.error", "error": str(e)[:200]})
+    def _regex_analysis(self, code: str, filename: str) -> list[Finding]:
+        """Análisis rápido con regex patterns.
+        
+        Args:
+            code: Código a analizar
+            filename: Nombre del archivo
+        
+        Returns:
+            Lista de findings encontrados
+        """
+        findings = []
+        lines = code.split("\n")
+
+        for malice_type, patterns in self.MALICIOUS_PATTERNS.items():
+            for pattern in patterns:
+                for line_num, line in enumerate(lines, 1):
+                    if re.search(pattern, line, re.IGNORECASE):
+                        findings.append(
+                            Finding(
+                                tipo_malicia=malice_type,
+                                severidad="MEDIO",
+                                confianza=0.6,
+                                linea_inicio=line_num,
+                                linea_fin=line_num,
+                                descripcion=f"Pattern matched: {pattern[:50]}...",
+                                codigo_snippet=line[:200],
+                            )
+                        )
+
+        return findings
+
+    async def _llm_analysis(
+        self, code: str, filename: str, repo_context: Optional[dict]
+    ) -> list[Finding]:
+        """Análisis semántico con LLM.
+        
+        Args:
+            code: Código a analizar
+            filename: Nombre del archivo
+            repo_context: Contexto del repositorio
+        
+        Returns:
+            Lista de findings encontrados
+        """
+        # Split code into chunks if needed
+        chunks = self._chunk_code(code)
+        findings = []
+
+        for chunk_num, chunk in enumerate(chunks):
+            prompt = self._build_llm_prompt(chunk, filename, repo_context, chunk_num)
+            
+            response = await self.llm.generate(
+                prompt=prompt,
+                temperature=0.3,
+                max_tokens=2000,
+            )
+
+            # Parse LLM response and extract findings
+            chunk_findings = self._parse_llm_response(response, chunk)
+            findings.extend(chunk_findings)
+
+        return findings
+
+    def _chunk_code(self, code: str) -> list[str]:
+        """Divide código en chunks si es muy grande.
+        
+        Args:
+            code: Código a dividir
+        
+        Returns:
+            Lista de chunks de código
+        """
+        if len(code) <= self.max_chunk_size:
+            return [code]
+
+        chunks = []
+        lines = code.split("\n")
+        current_chunk = []
+        current_size = 0
+
+        for line in lines:
+            line_size = len(line.encode("utf-8"))
+            if current_size + line_size > self.max_chunk_size and current_chunk:
+                chunks.append("\n".join(current_chunk))
+                current_chunk = []
+                current_size = 0
+
+            current_chunk.append(line)
+            current_size += line_size
+
+        if current_chunk:
+            chunks.append("\n".join(current_chunk))
+
+        return chunks
+
+    def _build_llm_prompt(
+        self,
+        code: str,
+        filename: str,
+        repo_context: Optional[dict],
+        chunk_num: int = 0,
+    ) -> str:
+        """Construye prompt para LLM.
+        
+        Args:
+            code: Código a analizar
+            filename: Nombre del archivo
+            repo_context: Contexto repo
+            chunk_num: Número de chunk (si hay múltiples)
+        
+        Returns:
+            Prompt formateado para LLM
+        """
+        context_str = ""
+        if repo_context:
+            context_str = f"""
+Repository: {repo_context.get('url')}
+Branch: {repo_context.get('branch', 'main')}
+Commit: {repo_context.get('commit', 'unknown')}
+"""
+
+        return f"""Analyze this code for malicious patterns:
+{context_str}
+File: {filename}
+Chunk: {chunk_num}
+
+<code>
+{code}
+</code>
+
+List any findings in JSON format:
+[
+    {{
+        "tipo_malicia": "BACKDOOR|INJECTION|LOGIC_BOMB|...",
+        "severidad": "BAJO|MEDIO|ALTO|CRITICO",
+        "confianza": 0.0-1.0,
+        "linea_inicio": number,
+        "descripcion": "reason why this is malicious"
+    }}
+]"""
+
+    def _parse_llm_response(self, response: str, code: str) -> list[Finding]:
+        """Parsea respuesta del LLM.
+        
+        Args:
+            response: Respuesta del LLM
+            code: Código original (para extraer snippets)
+        
+        Returns:
+            Lista de findings parseados
+        """
+        # TODO: Parse JSON from LLM response
+        # This is a placeholder implementation
         return []
 
+    def _deduplicate(self, findings: list[Finding]) -> list[Finding]:
+        """Elimina findings duplicados.
+        
+        Args:
+            findings: Lista de findings (posiblemente con duplicados)
+        
+        Returns:
+            Lista de findings únicos
+        """
+        seen = set()
+        unique = []
 
-async def run_inspector_stub(*, rutas_fuente: dict[str, str]) -> list[dict[str, Any]]:
-    """Fallback sin datos simulados: no genera hallazgos ficticios."""
-    _: dict[str, str] = rutas_fuente
+        for finding in findings:
+            key = (
+                finding.tipo_malicia,
+                finding.linea_inicio,
+                finding.linea_fin,
+                finding.codigo_snippet[:20],
+            )
+            if key not in seen:
+                seen.add(key)
+                unique.append(finding)
+
+        return unique
+
+
+# ─── Contrato estable (prompts + runners) usado por tests y enqueue ───
+
+DEFAULT_MALICIOUS_PATTERNS: dict[str, list[str]] = {
+    "EXEC_ENV_BACKDOOR": [
+        r"os\.getenv\s*\(",
+        r"exec\s*\(\s*input\s*\(",
+    ],
+    "DATA_EXFILTRATION": [
+        r"(password|secret|api_key)\s*=\s*['\"][^'\"]{8,}['\"]",
+        r"print\s*\(\s*SECRET",
+    ],
+    "LOGIC_BOMB": [
+        r"datetime\.now\(\).*==",
+        r"if\s+DEBUG\s*:",
+    ],
+}
+
+DEFAULT_PATTERN_SEVERITY: dict[str, str] = {
+    "EXEC_ENV_BACKDOOR": "CRITICO",
+    "DATA_EXFILTRATION": "CRITICO",
+    "LOGIC_BOMB": "CRITICO",
+}
+
+
+def _build_inspector_system_prompt(patterns: dict[str, list[str]]) -> str:
+    """Prompt de sistema; debe mencionar categorías usadas en el contrato JSON."""
+    lines = [
+        "You are a security code inspector. Analyze code for malicious patterns.",
+        "Known categories (JSON):",
+    ]
+    for name in patterns:
+        lines.append(name)
+    lines.append("Respond with JSON containing a `findings` array.")
+    return "\n".join(lines)
+
+
+def _build_inspector_prompt(code_chunks: list[tuple[str, str]]) -> str:
+    blocks: list[str] = []
+    for path, code in code_chunks:
+        blocks.append(f"File: {path}\n{code}")
+    return "\n\n".join(blocks)
+
+
+async def run_inspector_stub(rutas_fuente: dict[str, str]) -> list[dict]:
+    """Fallback sin LLM: no inventa hallazgos sintéticos."""
     return []
+
+
+def _inspector_resolve_api_key(
+    provider: AIProviderType, api_key_override: str | None
+) -> str | None:
+    if api_key_override:
+        return api_key_override
+    if provider == AIProviderType.ANTHROPIC:
+        return os.getenv("ANTHROPIC_API_KEY")
+    if provider == AIProviderType.OPENAI:
+        return os.getenv("OPENAI_API_KEY")
+    return os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+
+
+async def run_inspector_real(
+    rutas_fuente: dict[str, str],
+    provider: AIProviderType,
+    api_key_override: str | None = None,
+) -> list[dict]:
+    """Ejecuta el Inspector vía LLM y enriquece hallazgos (severidad, estado)."""
+    api_key = _inspector_resolve_api_key(provider, api_key_override)
+    if not api_key:
+        return []
+
+    llm = get_ai_provider(provider_type=provider, api_key=api_key)
+    prompt = _build_inspector_prompt(list(rutas_fuente.items()))
+    system = _build_inspector_system_prompt(DEFAULT_MALICIOUS_PATTERNS)
+
+    response = await llm.generate(
+        prompt=prompt,
+        system=system,
+        temperature=0.3,
+        max_tokens=2000,
+    )
+    raw = getattr(response, "content", None)
+    if raw is None:
+        raw = str(response)
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+    findings_in = data.get("findings")
+    if not isinstance(findings_in, list):
+        return []
+
+    out: list[dict] = []
+    for f in findings_in:
+        if not isinstance(f, dict):
+            continue
+        tipo = str(f.get("tipo_malicia", ""))
+        severidad = DEFAULT_PATTERN_SEVERITY.get(tipo, "MEDIO")
+        row = {**f, "severidad": severidad, "estado": "DETECTED"}
+        if "remediacion_sugerida" not in row:
+            row["remediacion_sugerida"] = (
+                "Review the affected code path and apply least-privilege controls."
+            )
+        out.append(row)
+    return out

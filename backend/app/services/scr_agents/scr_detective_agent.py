@@ -1,4 +1,37 @@
-"""Detective Agent — Análisis forense de Git timeline y patrones de commits."""
+"""SCR Detective Agent — Análisis forense de Git timeline y patrones de commits.
+
+Este módulo implementa el Detective Agent, el segundo paso del pipeline SCR.
+Analiza el historial de Git para detectar:
+- Commits con mensajes genéricos en archivos críticos (HIDDEN_COMMITS)
+- Commits fuera de horario laboral o en fines de semana (TIMING_ANOMALIES)
+- Múltiples commits en corto tiempo por mismo autor (RAPID_SUCCESSION)
+- Cambios masivos que podrían ocultar malicia (MASS_CHANGES)
+- Primeros autores tocando rutas críticas (AUTHOR_ANOMALIES)
+- Cambios a archivos de seguridad crítica (CRITICAL_FILES)
+
+El Detective usa LLM (Anthropic, OpenAI, etc) para análisis semántico combinado
+con reglas de patrón para detección rápida de anomalías forenses.
+
+Ejemplo:
+    >>> events = await run_detective_real(
+    ...     review_id="uuid-123",
+    ...     inspector_findings=[...],
+    ...     commits=[...],
+    ...     db=db_session,
+    ...     llm=llm_runtime
+    ... )
+    >>> print(events)
+    [
+        {
+            "timestamp": "2024-05-01T14:30:00Z",
+            "author": "suspicious_user",
+            "archivo": "auth/service.py",
+            "nivel_riesgo": "CRITICAL",
+            "indicadores": ["TIMING_ANOMALIES", "HIDDEN_COMMITS"],
+            "descripcion": "Off-hours commit with generic message to critical auth file"
+        }
+    ]
+"""
 
 from __future__ import annotations
 
@@ -116,16 +149,55 @@ async def run_detective_agent(
     commits: list[dict[str, Any]],
     db: AsyncSession,
 ) -> list[CodeSecurityEvent]:
-    """Run Detective Agent to analyze Git timeline and create forensic events.
+    """Run Detective Agent (Rule-Based) to analyze Git timeline and create forensic events.
+
+    This is the fallback/fast-path implementation using pattern-based detection
+    rather than LLM analysis. Suitable for quick detection of common anomalies.
+
+    Detects six categories of forensic anomalies:
+    1. HIDDEN_COMMITS: Generic messages on critical files
+    2. TIMING_ANOMALIES: Off-hours or weekend commits
+    3. RAPID_SUCCESSION: Multiple commits in short time window
+    4. MASS_CHANGES: Large commits (>500 lines) hiding changes
+    5. AUTHOR_ANOMALIES: New author on critical file
+    6. CRITICAL_FILES: Any changes to security-critical paths
 
     Args:
-        review_id: UUID of the code security review
-        inspector_findings: List of findings from Inspector Agent
-        commits: List of commit data from Git
-        db: Database session
+        review_id (str): UUID of the code security review
+        inspector_findings (list[dict]): List of findings from Inspector Agent (context)
+        commits (list[dict]): List of commit data from Git with keys:
+            - hash: Commit SHA
+            - author: Author name/email
+            - timestamp: Commit timestamp (datetime or ISO string)
+            - message: Commit message
+            - files: List of modified file paths
+            - lines_changed: Total lines changed
+        db (AsyncSession): SQLAlchemy async session for DB persistence
 
     Returns:
-        List of created CodeSecurityEvent instances
+        list[CodeSecurityEvent]: List of created event instances (bulk inserted to DB)
+
+    Raises:
+        Exception: Propagated from database operations
+
+    Example:
+        >>> events = await run_detective_agent(
+        ...     review_id="550e8400-e29b-41d4-a716-446655440000",
+        ...     inspector_findings=[...],
+        ...     commits=[
+        ...         {
+        ...             "hash": "abc123def456",
+        ...             "author": "john_doe",
+        ...             "timestamp": "2024-05-01T22:30:00Z",
+        ...             "message": "fix",
+        ...             "files": ["src/auth/service.py"],
+        ...             "lines_changed": 150
+        ...         }
+        ...     ],
+        ...     db=db_session
+        ... )
+        >>> len(events)
+        3
     """
     logger.info("detective.start", extra={"review_id": review_id, "commits_count": len(commits)})
 
@@ -242,18 +314,53 @@ async def run_detective_real(
 ) -> list[CodeSecurityEvent]:
     """Run Detective Agent with LLM-powered forensic analysis of Git timeline.
 
-    Uses LLM to detect sophisticated patterns that rule-based approaches might miss,
-    with fallback to rule-based analysis when LLM is unavailable.
+    Primary implementation using LLM (Claude, GPT, etc) to detect sophisticated
+    forensic patterns beyond rule-based detection. Falls back to rule-based
+    analysis if LLM fails or is unavailable.
+
+    LLM Analysis Benefits:
+    - Contextual understanding of commit messages and code patterns
+    - Detection of sophisticated attack evolution patterns
+    - Correlation between findings and commit timeline
+    - Natural language reasoning about author behavior anomalies
+    - Domain knowledge about typical APT/insider threat timelines
+
+    Fallback Behavior:
+    - If LLM API call fails, silently falls back to run_detective_agent()
+    - If LLM response is invalid JSON, falls back to rule-based analysis
+    - Logs warnings when fallback occurs for monitoring
 
     Args:
-        review_id: UUID of the code security review
-        inspector_findings: List of findings from Inspector Agent
-        commits: List of commit data from Git
-        db: Database session
-        llm: Runtime LLM resuelto desde BD (SCR) o None para env
+        review_id (str): UUID of the code security review
+        inspector_findings (list[dict]): List of findings from Inspector Agent (for context)
+        commits (list[dict]): List of commit data from Git
+        db (AsyncSession): SQLAlchemy async session for DB persistence
+        llm (ScrLlmRuntime, optional): Resolved LLM runtime from DB config or None
+            for environment variable fallback. If None, uses ANTHROPIC_DEFAULT_MODEL.
+        usage_out (dict, optional): Output dict to track token usage and costs.
+            If provided, will be updated with:
+            - tokens_used: Total tokens consumed
+            - cost_usd: Estimated cost in USD
+            - model: Model name used
 
     Returns:
-        List of created CodeSecurityEvent instances
+        list[CodeSecurityEvent]: List of created event instances (persisted to DB)
+
+    Raises:
+        Exception: Only if DB persistence fails (LLM errors are caught and fallback)
+
+    Example:
+        >>> usage = {}
+        >>> events = await run_detective_real(
+        ...     review_id="550e8400-e29b-41d4-a716-446655440000",
+        ...     inspector_findings=[...],
+        ...     commits=[...],
+        ...     db=db_session,
+        ...     llm=llm_runtime,
+        ...     usage_out=usage
+        ... )
+        >>> print(f"Cost: ${usage.get('cost_usd', 0):.4f}")
+        Cost: $0.0350
     """
     logger.info("detective_real.start", extra={"review_id": review_id, "commits_count": len(commits)})
 
