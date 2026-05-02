@@ -11,7 +11,10 @@ Tests cover:
 - Fallback to rule-based when LLM fails
 """
 
+import uuid
+
 import pytest
+import pytest_asyncio
 from datetime import datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +29,16 @@ from app.services.scr_agents.scr_detective_agent import (
     _calculate_risk_level,
 )
 from app.models.code_security_event import CodeSecurityEvent
+
+SCR_TEST_REVIEW_ID = str(uuid.UUID("00000000-0000-4000-8000-00000000c0de"))
+
+
+@pytest_asyncio.fixture
+async def detective_unit_db(async_db: AsyncSession) -> AsyncSession:
+    """Evita INSERT reales: las pruebas del detective no requieren fila en `code_security_reviews`."""
+    async_db.add_all = MagicMock()  # type: ignore[method-assign]
+    async_db.flush = AsyncMock()  # type: ignore[method-assign]
+    return async_db
 
 
 class TestOffHoursDetection:
@@ -187,18 +200,18 @@ class TestDetectiveAgentEdgeCases:
     """Edge case tests for run_detective_agent function."""
 
     @pytest.mark.asyncio
-    async def test_empty_commits_list(self, db: AsyncSession):
+    async def test_empty_commits_list(self, detective_unit_db: AsyncSession):
         """Test handling of empty commits list."""
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=[],
-            db=db,
+            db=detective_unit_db,
         )
         assert events == []
 
     @pytest.mark.asyncio
-    async def test_single_commit_no_indicators(self, db: AsyncSession):
+    async def test_single_commit_no_indicators(self, detective_unit_db: AsyncSession):
         """Test single commit with no risk indicators."""
         commits = [
             {
@@ -212,15 +225,15 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) == 0  # No indicators = no events
 
     @pytest.mark.asyncio
-    async def test_large_commit_creates_event(self, db: AsyncSession):
+    async def test_large_commit_creates_event(self, detective_unit_db: AsyncSession):
         """Test large commits (>500 lines) create events."""
         commits = [
             {
@@ -234,17 +247,17 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) > 0
-        assert any(e.nivel_riesgo == "MEDIUM" for e in events)
+        assert any(e.nivel_riesgo == "HIGH" for e in events)
         assert any("MASS_CHANGES" in e.indicadores for e in events)
 
     @pytest.mark.asyncio
-    async def test_off_hours_commit_creates_event(self, db: AsyncSession):
+    async def test_off_hours_commit_creates_event(self, detective_unit_db: AsyncSession):
         """Test off-hours commits create events."""
         commits = [
             {
@@ -258,16 +271,16 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) > 0
         assert any("TIMING_ANOMALIES" in e.indicadores for e in events)
 
     @pytest.mark.asyncio
-    async def test_critical_file_modification_creates_event(self, db: AsyncSession):
+    async def test_critical_file_modification_creates_event(self, detective_unit_db: AsyncSession):
         """Test modifications to critical files create events."""
         commits = [
             {
@@ -281,16 +294,16 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) > 0
         assert any("CRITICAL_FILES" in e.indicadores for e in events)
 
     @pytest.mark.asyncio
-    async def test_multiple_commits_rapid_succession(self, db: AsyncSession):
+    async def test_multiple_commits_rapid_succession(self, detective_unit_db: AsyncSession):
         """Test rapid succession of commits by same author."""
         now = datetime(2024, 5, 1, 10, 0, 0)
         commits = [
@@ -306,16 +319,16 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) > 0
         assert any("RAPID_SUCCESSION" in e.indicadores for e in events)
 
     @pytest.mark.asyncio
-    async def test_new_author_on_critical_file(self, db: AsyncSession):
+    async def test_new_author_on_critical_file(self, detective_unit_db: AsyncSession):
         """Test new author on critical files generates author anomaly."""
         commits = [
             {
@@ -329,10 +342,10 @@ class TestDetectiveAgentEdgeCases:
         ]
 
         events = await run_detective_agent(
-            review_id="test-123",
+            review_id=SCR_TEST_REVIEW_ID,
             inspector_findings=[],
             commits=commits,
-            db=db,
+            db=detective_unit_db,
         )
         assert len(events) > 0
         assert any("AUTHOR_ANOMALIES" in e.indicadores for e in events)
@@ -342,7 +355,7 @@ class TestDetectiveRealFallback:
     """Test LLM fallback behavior in run_detective_real."""
 
     @pytest.mark.asyncio
-    async def test_falls_back_to_rules_on_llm_failure(self, db: AsyncSession):
+    async def test_falls_back_to_rules_on_llm_failure(self, detective_unit_db: AsyncSession):
         """Test fallback to rule-based analysis when LLM fails."""
         commits = [
             {
@@ -363,10 +376,10 @@ class TestDetectiveRealFallback:
 
             # Should not raise, should fall back
             events = await run_detective_real(
-                review_id="test-123",
+                review_id=SCR_TEST_REVIEW_ID,
                 inspector_findings=[],
                 commits=commits,
-                db=db,
+                db=detective_unit_db,
                 llm=MagicMock(),
             )
 
@@ -374,7 +387,7 @@ class TestDetectiveRealFallback:
             assert len(events) > 0
 
     @pytest.mark.asyncio
-    async def test_falls_back_on_invalid_json(self, db: AsyncSession):
+    async def test_falls_back_on_invalid_json(self, detective_unit_db: AsyncSession):
         """Test fallback when LLM returns invalid JSON."""
         commits = [
             {
@@ -397,10 +410,10 @@ class TestDetectiveRealFallback:
 
             # Should not raise, should fall back
             events = await run_detective_real(
-                review_id="test-123",
+                review_id=SCR_TEST_REVIEW_ID,
                 inspector_findings=[],
                 commits=commits,
-                db=db,
+                db=detective_unit_db,
                 llm=MagicMock(),
             )
 

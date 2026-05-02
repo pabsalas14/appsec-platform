@@ -19,3 +19,5 @@ async def test_procesar_reglas_admin_ok(client: AsyncClient, admin_auth_headers:
     assert "sla_riesgo_creadas" in d
     assert "tema_estancado_creadas" in d
     assert "vulnerabilidad_inactiva_creadas" in d
+    assert "iniciativa_vencida_creadas" in d
+    assert "plan_remediacion_vencido_creadas" in d

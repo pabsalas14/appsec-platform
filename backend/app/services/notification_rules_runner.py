@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
 from app.models.actualizacion_tema import ActualizacionTema
+from app.models.iniciativa import Iniciativa
 from app.models.notificacion import Notificacion
+from app.models.plan_remediacion import PlanRemediacion
 from app.models.tema_emergente import TemaEmergente
 from app.models.user import User
 from app.models.vulnerabilidad import Vulnerabilidad
@@ -216,6 +218,103 @@ async def run_vulnerabilidad_inactiva(
     return created
 
 
+_INICIATIVA_CERRADOS = frozenset({"Cerrado", "Cerrada", "Completado", "Cancelado"})
+
+
+async def run_iniciativas_vencidas(db: AsyncSession) -> int:
+    """Iniciativa con fecha_fin_estimada pasada y no cerrada."""
+    now = datetime.now(UTC)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if day_start.tzinfo is None:
+        day_start = day_start.replace(tzinfo=UTC)
+
+    result = await db.execute(
+        select(Iniciativa).where(
+            Iniciativa.deleted_at.is_(None),
+            Iniciativa.fecha_fin_estimada.isnot(None),
+            Iniciativa.fecha_fin_estimada < now,
+            ~Iniciativa.estado.in_(_INICIATIVA_CERRADOS),  # type: ignore[arg-type]
+        )
+    )
+    rows = list(result.scalars().all())
+    created = 0
+    for it in rows:
+        uid = it.user_id
+        urow = await db.execute(select(User).where(User.id == uid))
+        u = urow.scalar_one_or_none()
+        pr = u.preferences if u else None
+        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+            continue
+        prefix = f"[INICIATIVA] {it.id}"
+        if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
+            continue
+        await notificacion_svc.create(
+            db,
+            NotificacionCreate(
+                titulo=f"{prefix}: fecha estimada vencida — {it.titulo[:100]}",
+                cuerpo=f"Estado {it.estado!r}. Revisa la fecha_fin_estimada.",
+                leida=False,
+            ),
+            extra={"user_id": uid},
+        )
+        created += 1
+    if created:
+        await db.flush()
+        logger.info(
+            "notificacion.rules.iniciativa_vencida",
+            extra={"event": "notificacion.rules.iniciativa_vencida", "created": created},
+        )
+    return created
+
+
+_PLAN_CERRADOS = frozenset({"Cerrado", "Completado", "Cancelado", "Verificado"})
+
+
+async def run_planes_remediacion_vencidos(db: AsyncSession) -> int:
+    """Plan de remediación con fecha_limite pasada y estado abierto."""
+    now = datetime.now(UTC)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if day_start.tzinfo is None:
+        day_start = day_start.replace(tzinfo=UTC)
+
+    result = await db.execute(
+        select(PlanRemediacion).where(
+            PlanRemediacion.deleted_at.is_(None),
+            PlanRemediacion.fecha_limite < now,
+            ~PlanRemediacion.estado.in_(_PLAN_CERRADOS),  # type: ignore[arg-type]
+        )
+    )
+    rows = list(result.scalars().all())
+    created = 0
+    for pl in rows:
+        uid = pl.user_id
+        urow = await db.execute(select(User).where(User.id == uid))
+        u = urow.scalar_one_or_none()
+        pr = u.preferences if u else None
+        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+            continue
+        prefix = f"[PLAN_REM] {pl.id}"
+        if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
+            continue
+        await notificacion_svc.create(
+            db,
+            NotificacionCreate(
+                titulo=f"{prefix}: fecha límite vencida",
+                cuerpo=f"Estado {pl.estado!r}. Responsable indicado: {pl.responsable[:120]}",
+                leida=False,
+            ),
+            extra={"user_id": uid},
+        )
+        created += 1
+    if created:
+        await db.flush()
+        logger.info(
+            "notificacion.rules.plan_remediacion_vencido",
+            extra={"event": "notificacion.rules.plan_remediacion_vencido", "created": created},
+        )
+    return created
+
+
 async def run_all_notification_rules(db: AsyncSession) -> dict[str, int]:
     """Punto de entrada: ejecuta todas las reglas §14.3 (extensible), leyendo umbrales de admin."""
     u = await _leer_umbrales_notificacion(db)
@@ -231,8 +330,12 @@ async def run_all_notification_rules(db: AsyncSession) -> dict[str, int]:
         db,
         days_without_update=u["vulnerabilidad_inactiva_dias"],
     )
+    ini = await run_iniciativas_vencidas(db)
+    pr = await run_planes_remediacion_vencidos(db)
     return {
         "sla_riesgo_creadas": n,
         "tema_estancado_creadas": t,
         "vulnerabilidad_inactiva_creadas": v,
+        "iniciativa_vencida_creadas": ini,
+        "plan_remediacion_vencido_creadas": pr,
     }

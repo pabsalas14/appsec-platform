@@ -151,7 +151,8 @@ class TestReportValidationAndEnhancement:
 
         result = _validate_and_enhance_fiscal_report(existing_report, findings, events, "HIGH")
 
-        assert result["executive_summary"] == "Custom summary"
+        # Resúmenes cortos se enriquecen con contexto; se conserva el texto original al final
+        assert "Custom summary" in result["executive_summary"]
         assert result["key_findings"] == ["Finding 1"]
 
     def test_overrides_risk_assessment_with_calculated(self):
@@ -223,7 +224,7 @@ class TestFiscalAgentIntegration:
     """Integration tests for run_fiscal_real."""
 
     @pytest.mark.asyncio
-    async def test_empty_review_no_findings_no_events(self, db: AsyncSession):
+    async def test_empty_review_no_findings_no_events(self, async_db: AsyncSession):
         """Test fiscal agent with empty review (no findings, no events)."""
         # Mock DB queries to return empty lists
         with patch("app.services.scr_agents.scr_fiscal_agent.select") as mock_select:
@@ -243,7 +244,7 @@ class TestFiscalAgentIntegration:
             pass
 
     @pytest.mark.asyncio
-    async def test_llm_failure_falls_back_to_deterministic(self, db: AsyncSession):
+    async def test_llm_failure_falls_back_to_deterministic(self, async_db: AsyncSession):
         """Test fallback when LLM API fails."""
         # Create mock findings
         mock_findings = [
@@ -269,7 +270,7 @@ class TestFiscalAgentIntegration:
         assert mock_llm.generate is not None
 
     @pytest.mark.asyncio
-    async def test_invalid_json_from_llm_handled_gracefully(self, db: AsyncSession):
+    async def test_invalid_json_from_llm_handled_gracefully(self, async_db: AsyncSession):
         """Test graceful handling of invalid JSON from LLM."""
         mock_llm = AsyncMock()
         mock_response = MagicMock()
@@ -345,7 +346,11 @@ class TestReportSummaryGeneration:
             MagicMock(severidad="CRITICO", tipo_malicia="INJECTION"),
         ]
         events = [
-            MagicMock(nivel_riesgo="CRITICAL"),
+            MagicMock(
+                nivel_riesgo="CRITICAL",
+                event_ts=datetime(2024, 5, 1, 23, 0, 0),
+                archivo="src/auth/service.py",
+            ),
         ]
 
         report_data = _generate_enhanced_fallback_report(
@@ -353,11 +358,20 @@ class TestReportSummaryGeneration:
         )
 
         summary = report_data["executive_summary"]
-        # Should be non-empty and comprehensive
+        # Should be non-empty and comprehensive (informe en español)
         assert len(summary) > 50
+        s = summary.lower()
         assert any(
-            word in summary.lower()
-            for word in ["critical", "risk", "threat", "urgent", "immediate"]
+            w in s
+            for w in [
+                "crític",
+                "riesgo",
+                "hallazgo",
+                "compromiso",
+                "inmediat",
+                "critical",
+                "risk",
+            ]
         )
 
     def test_summary_mentions_key_details(self):

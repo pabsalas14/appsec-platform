@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
+import { getApiErrorMessage } from '@/lib/api-error';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,10 +43,10 @@ export function useCompareScan() {
         description: 'Análisis comparativo generado',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Error en comparación',
+        description: getApiErrorMessage(error, 'Error en comparación'),
         variant: 'destructive',
       });
     },

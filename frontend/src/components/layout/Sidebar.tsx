@@ -2,6 +2,7 @@
 
 import {
   AppWindow,
+  Bell,
   Briefcase,
   Bug,
   ChevronLeft,
@@ -50,6 +51,7 @@ const SECTIONS: NavSection[] = [
       { href: '/dashboards/executive', label: 'Dashboard ejecutivo', icon: LayoutDashboard },
       { href: '/madurez', label: 'Score de madurez', icon: TrendingUp },
       { href: '/dashboards', label: 'Índice de tableros', icon: LayoutDashboard },
+      { href: '/notificacions', label: 'Notificaciones', icon: Bell },
     ],
   },
   {

@@ -10,7 +10,7 @@ from io import StringIO
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -139,6 +139,46 @@ async def export_vulnerabilidades_csv(
             "Content-Disposition": 'attachment; filename="vulnerabilidades.csv"',
         },
     )
+
+
+@router.post("/import/{motor}")
+async def import_vulnerabilidades_bulk(
+    motor: str,
+    file: UploadFile = File(..., description="CSV UTF-8 con cabecera"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.VULNERABILITIES.IMPORT)),
+    default_repositorio_id: UUID | None = Query(None),
+    default_activo_web_id: UUID | None = Query(None),
+    default_servicio_id: UUID | None = Query(None),
+    default_aplicacion_movil_id: UUID | None = Query(None),
+):
+    """Importación masiva por motor (SAST, DAST, …). Una fila por hallazgo; activo por columnas o defaults."""
+    from app.services.vulnerabilidad_bulk_import import import_vulnerabilidades_from_csv
+
+    raw = await file.read()
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        text = raw.decode("latin-1", errors="replace")
+
+    out = await import_vulnerabilidades_from_csv(
+        db,
+        user_id=current_user.id,
+        motor_key=motor,
+        csv_text=text,
+        default_repositorio_id=default_repositorio_id,
+        default_activo_web_id=default_activo_web_id,
+        default_servicio_id=default_servicio_id,
+        default_aplicacion_movil_id=default_aplicacion_movil_id,
+    )
+    await audit_record(
+        db,
+        action="vulnerabilidad.import_bulk",
+        entity_type="vulnerabilidad",
+        entity_id=current_user.id,
+        metadata={"motor": motor.lower(), "created": out.get("created", 0), "error_rows": len(out.get("errors", []))},
+    )
+    return success(out)
 
 
 def _parse_created_after(s: str | None) -> datetime | None:

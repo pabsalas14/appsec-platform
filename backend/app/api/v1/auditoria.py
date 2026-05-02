@@ -18,7 +18,10 @@ from app.models.auditoria import Auditoria
 from app.models.user import User
 from app.schemas.auditoria import AuditoriaCreate, AuditoriaRead, AuditoriaUpdate
 from app.services.audit_service import record as audit_record
+from app.schemas.notificacion import NotificacionCreate
+from app.services.auditoria_estados import assert_auditoria_transition_allowed
 from app.services.auditoria_service import auditoria_svc
+from app.services.notificacion_service import notificacion_svc
 
 router = APIRouter()
 
@@ -114,7 +117,27 @@ async def update_auditoria(
     entity: Auditoria = Depends(require_ownership(auditoria_svc)),
 ):
     """Partially update an owned auditoria (404 if not owned)."""
+    if entity_in.estado is not None and entity_in.estado.strip() != (entity.estado or "").strip():
+        assert_auditoria_transition_allowed(
+            prev_raw=entity.estado or "",
+            next_raw=entity_in.estado,
+            actor=current_user,
+            owner_user_id=entity.user_id,
+        )
+
+    prev_estado = entity.estado
     updated = await auditoria_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
+    if entity_in.estado is not None and (prev_estado or "").strip() != (updated.estado or "").strip():
+        await notificacion_svc.create(
+            db,
+            NotificacionCreate(
+                titulo=f"[Auditoría] Cambio de estado: {updated.titulo[:120]}",
+                cuerpo=f"Estado {prev_estado!r} → {updated.estado!r}.",
+                leida=False,
+            ),
+            extra={"user_id": entity.user_id},
+        )
+        await db.flush()
     return success(AuditoriaRead.model_validate(updated).model_dump(mode="json"))
 
 

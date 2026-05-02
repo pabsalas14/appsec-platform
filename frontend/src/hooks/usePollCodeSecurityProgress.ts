@@ -49,7 +49,7 @@ export function usePollCodeSecurityProgress(
               onComplete?.();
               return;
             }
-          } catch (e) {
+          } catch (_e) {
             // Silent parse error
           }
         }

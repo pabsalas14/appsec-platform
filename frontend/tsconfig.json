@@ -25,6 +25,7 @@
     "vitest.setup.ts",
     "playwright.config.ts",
     "src/__tests__",
+    "__tests__",
     "e2e"
   ]
 }

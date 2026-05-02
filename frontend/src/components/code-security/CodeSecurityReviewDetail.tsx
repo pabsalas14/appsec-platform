@@ -77,8 +77,8 @@ export function CodeSecurityReviewDetail({ reviewId }: CodeSecurityReviewDetailP
     return <div className="p-6">Loading review...</div>;
   }
 
-  const isAnalyzing = progress?.status === 'ANALYZING';
-  const currentProgress = progress?.progress ?? review.progreso;
+  const isAnalyzing = review.estado === 'ANALYZING';
+  const currentProgress = progress?.progreso ?? review.progreso;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,7 +158,7 @@ export function CodeSecurityReviewDetail({ reviewId }: CodeSecurityReviewDetailP
               </div>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                {progress?.current_phase || 'Processing...'}
+                {progress?.actividad || progress?.agente_actual || 'Processing...'}
               </div>
             </div>
           </CardContent>

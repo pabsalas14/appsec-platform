@@ -182,19 +182,19 @@ export default function CodeSecurityReviewDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <p className="text-sm font-medium">Analysis in Progress</p>
-                  <p className="text-sm text-muted-foreground">{liveProgress?.progress ?? progress?.progress ?? review.progreso}%</p>
+                  <p className="text-sm text-muted-foreground">{liveProgress?.progress ?? progress?.progreso ?? review.progreso}%</p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all"
-                    style={{ width: `${liveProgress?.progress ?? progress?.progress ?? review.progreso}%` }}
+                    style={{ width: `${liveProgress?.progress ?? progress?.progreso ?? review.progreso}%` }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {liveProgress?.activity || progress?.activity || progress?.current_phase || 'Analizando…'}
+                  {liveProgress?.activity || progress?.actividad || progress?.agente_actual || 'Analizando…'}
                 </p>
-                {(liveProgress?.agent || progress?.agent) && (
-                  <p className="text-xs text-muted-foreground/80">Agente: {liveProgress?.agent || progress?.agent}</p>
+                {(liveProgress?.agent || progress?.agente_actual) && (
+                  <p className="text-xs text-muted-foreground/80">Agente: {liveProgress?.agent || progress?.agente_actual}</p>
                 )}
               </div>
             </CardContent>

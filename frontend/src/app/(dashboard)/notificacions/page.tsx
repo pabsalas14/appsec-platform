@@ -20,8 +20,10 @@ import {
   Button,
   Card,
   CardContent,
+  Label,
   PageHeader,
   PageWrapper,
+  Switch,
 } from '@/components/ui';
 import {
   useDeleteNotificacion,
@@ -29,6 +31,10 @@ import {
   useNotificacions,
   useUpdateNotificacion,
 } from '@/hooks/useNotificacions';
+import {
+  useUpdateUserNotificationPreferences,
+  useUserNotificationPreferences,
+} from '@/hooks/useUserNotificationPreferences';
 import { cn } from '@/lib/utils';
 import type { Notificacion } from '@/lib/schemas/notificacion.schema';
 
@@ -109,6 +115,8 @@ function NotifRow({ n, onMarkRead, onDelete }: {
 
 export default function NotificacionsPage() {
   const { data: items = [], isLoading, isError } = useNotificacions();
+  const { data: prefs, isLoading: prefsLoading } = useUserNotificationPreferences();
+  const updatePrefs = useUpdateUserNotificationPreferences();
   const markOne = useUpdateNotificacion();
   const markAll = useMarcarTodasNotificacionesLeidas();
   const deleteOne = useDeleteNotificacion();
@@ -164,6 +172,43 @@ export default function NotificacionsPage() {
           ) : undefined
         }
       />
+
+      <Card>
+        <CardContent className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <Label htmlFor="notif-auto" className="text-sm font-medium">
+              Notificaciones automáticas (reglas del sistema)
+            </Label>
+            <p className="text-xs text-muted-foreground max-w-xl">
+              Si las desactivas, no se crearán avisos generados por jobs (SLA, temas estancados,
+              planes de remediación vencidos, etc.). Las notificaciones ya recibidas no se borran.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {prefsLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <Switch
+                id="notif-auto"
+                checked={prefs?.notificaciones_automaticas ?? true}
+                onCheckedChange={(v) =>
+                  updatePrefs.mutate(
+                    { notificaciones_automaticas: v },
+                    {
+                      onSuccess: () =>
+                        toast.success(
+                          v ? 'Notificaciones automáticas activadas' : 'Notificaciones automáticas desactivadas',
+                        ),
+                      onError: () => toast.error('No se pudo actualizar la preferencia'),
+                    },
+                  )
+                }
+                disabled={updatePrefs.isPending}
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1 border-b pb-0">

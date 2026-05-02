@@ -19,6 +19,8 @@ export interface DashboardKPIs {
   high_findings: number;
   scanned_repos: number;
   avg_remediation_days: number;
+  /** Puntuación media 0–100 (cuando aplica) */
+  avg_risk_score?: number;
 }
 
 export interface DashboardCosts {

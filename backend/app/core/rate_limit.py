@@ -71,5 +71,5 @@ def clear_login_failures(key: str) -> None:
 def clear_auth_login_rate_window_for_username(username: str) -> None:
     """Quita el contador por ventana de ``enforce_rate_limit`` para ``auth.login``."""
     u = username.lower()
-    for host in ("127.0.0.1", "testclient", "localhost"):
+    for host in ("127.0.0.1", "testclient", "localhost", "unknown"):
         _windows.pop(f"auth.login:{host}:{u}", None)

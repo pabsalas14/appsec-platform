@@ -1,33 +1,22 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '@/services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export interface CodeSecurityReview {
-  id: string;
-  titulo: string;
-  descripcion?: string;
-  estado: 'PENDING' | 'ANALYZING' | 'COMPLETED' | 'FAILED';
-  progreso: number;
-  tipo_escaneo: string;
-  url_repositorio?: string;
-  rama_analizar: string;
-  findings_count: number;
-  events_count: number;
-  risk_score?: number;
-  created_at: string;
-  started_at?: string;
-  completed_at?: string;
-  agente_actual?: string;
-  actividad?: string;
-}
+import { api } from '@/lib/api';
+import type { CodeSecurityReview } from '@/types';
+import { scrDashboardAPI } from '@/services/scr-api';
 
-export interface CodeSecurityReviewsResponse {
-  reviews: CodeSecurityReview[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export {
+  useCodeSecurityReview,
+  useReviewEvents,
+  useReviewFindings,
+  useReviewProgress,
+  useReviewReport,
+} from '@/hooks/useCodeSecurityReview';
+
+type Envelope<T> = { status: string; data: T };
+
+export type { CodeSecurityReview };
 
 interface UseCodeSecurityReviewsOptions {
   skip?: number;
@@ -47,14 +36,46 @@ export function useCodeSecurityReviews(options: UseCodeSecurityReviewsOptions = 
       params.append('limit', String(limit));
       if (estado) params.append('estado', estado);
 
-      const response = await api.get<CodeSecurityReviewsResponse>(
-        `/api/v1/code_security_reviews?${params.toString()}`
+      const { data } = await api.get<Envelope<CodeSecurityReview[]>>(
+        `/code_security_reviews?${params.toString()}`
       );
-      return response.data;
+      return data.data;
     },
     enabled,
     staleTime: 30000,
     gcTime: 5 * 60 * 1000,
+  });
+}
+
+export function useSCRDashboard(days: number) {
+  return useQuery({
+    queryKey: ['scr-dashboard-kpis', days],
+    queryFn: () => scrDashboardAPI.getKPIs(days),
+  });
+}
+
+export function useSCRTrends(days: number) {
+  return useQuery({
+    queryKey: ['scr-dashboard-trends', days],
+    queryFn: () => scrDashboardAPI.getTrends(days),
+  });
+}
+
+export function useCreateCodeSecurityReview() {
+  return useMutation({
+    mutationFn: async (body: Record<string, unknown>) => {
+      const { data } = await api.post<Envelope<CodeSecurityReview>>('/code_security_reviews', body);
+      return data.data;
+    },
+  });
+}
+
+export function useAnalyzeCodeSecurityReview() {
+  return useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { data } = await api.post<Envelope<unknown>>(`/code_security_reviews/${reviewId}/analyze`);
+      return data.data;
+    },
   });
 }
 

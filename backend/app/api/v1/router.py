@@ -100,6 +100,7 @@ from app.api.v1 import (
     tema_emergente,
     tipo_prueba,
     uploads,
+    user_preferences,
     # ── Módulo 9 — Gestión de Vulnerabilidades ─────────────────────────────
     vulnerabilidad,
 )
@@ -121,6 +122,7 @@ api_router.include_router(navigation.router, prefix="/navigation", tags=["Naviga
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(user_preferences.router, tags=["User preferences"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
 api_router.include_router(catalogs.router, prefix="/catalogs", tags=["Catalogs"])
 api_router.include_router(agents_router, prefix="/agents", tags=["Agents"])

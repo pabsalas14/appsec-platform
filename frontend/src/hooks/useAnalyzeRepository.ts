@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { getApiErrorMessage } from '@/lib/api-error';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,10 +47,10 @@ export function useAnalyzeRepository() {
         queryKey: ['code-security-reviews'],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Error al crear análisis',
+        description: getApiErrorMessage(error, 'Error al crear análisis'),
         variant: 'destructive',
       });
     },

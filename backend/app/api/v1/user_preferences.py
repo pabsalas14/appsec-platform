@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from app.api.dependencies import get_current_user, get_db
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user, get_db
+from app.core.response import success
 from app.models.user import User
 from app.services.user_preferences_service import user_preferences_svc
 
-router = APIRouter(prefix="/api/v1/user-preferences", tags=["notifications"])
+router = APIRouter(prefix="/user-preferences", tags=["notifications"])
 
 
 class NotificationPreferencesResponse(BaseModel):
@@ -41,17 +42,22 @@ class EnableEmailChannelRequest(BaseModel):
     all_types: bool = Field(False, description="If true, enable all notification types")
 
 
-@router.get("", response_model=NotificationPreferencesResponse)
+def _prefs_envelope(raw: dict) -> dict:
+    payload = NotificationPreferencesResponse.model_validate(raw).model_dump(mode="json")
+    return success(payload)
+
+
+@router.get("")
 async def get_preferences(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get current user's notification preferences."""
     prefs = await user_preferences_svc.get_preferences(db, current_user.id)
-    return prefs
+    return _prefs_envelope(prefs)
 
 
-@router.patch("", response_model=NotificationPreferencesResponse)
+@router.patch("")
 async def update_preferences(
     payload: UpdatePreferencesRequest,
     db: AsyncSession = Depends(get_db),
@@ -63,13 +69,14 @@ async def update_preferences(
 
     if not prefs:
         # Return current if no updates
-        return await user_preferences_svc.get_preferences(db, current_user.id)
+        current = await user_preferences_svc.get_preferences(db, current_user.id)
+        return _prefs_envelope(current)
 
     updated = await user_preferences_svc.set_preferences(db, current_user.id, prefs)
-    return updated
+    return _prefs_envelope(updated)
 
 
-@router.post("/email/enable", response_model=NotificationPreferencesResponse)
+@router.post("/email/enable")
 async def enable_email_notifications(
     payload: EnableEmailChannelRequest,
     db: AsyncSession = Depends(get_db),
@@ -82,10 +89,10 @@ async def enable_email_notifications(
         notification_types=payload.notification_types,
         all_types=payload.all_types,
     )
-    return updated
+    return _prefs_envelope(updated)
 
 
-@router.post("/email/disable", response_model=NotificationPreferencesResponse)
+@router.post("/email/disable")
 async def disable_email_notifications(
     payload: EnableEmailChannelRequest,
     db: AsyncSession = Depends(get_db),
@@ -98,4 +105,4 @@ async def disable_email_notifications(
         notification_types=payload.notification_types,
         all_types=payload.all_types,
     )
-    return updated
+    return _prefs_envelope(updated)

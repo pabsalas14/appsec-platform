@@ -1,6 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { createElement, ReactNode } from 'react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
 import { useCodeSecurityReviews } from '@/hooks/useCodeSecurityReviews';
 
 describe('useCodeSecurityReviews Hook', () => {
@@ -10,9 +10,8 @@ describe('useCodeSecurityReviews Hook', () => {
 
   it('should return query object', () => {
     const queryClient = new QueryClient();
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: queryClient }, children);
 
     const { result } = renderHook(() => useCodeSecurityReviews(), { wrapper });
 

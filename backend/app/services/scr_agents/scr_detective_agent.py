@@ -94,10 +94,10 @@ FORensic_PATTERNS = {
 
 
 def _is_off_hours(commit_time: datetime) -> bool:
-    """Check if commit is during off-hours."""
+    """Check if commit is during off-hours (22:00–06:00; 06:00 es inicio laboral)."""
     commit_time_only = commit_time.time()
     off_start, off_end = FORensic_PATTERNS["TIMING_ANOMALIES"]["off_hours"]
-    return off_start <= commit_time_only or commit_time_only <= off_end
+    return commit_time_only >= off_start or commit_time_only < off_end
 
 
 def _is_weekend(commit_time: datetime) -> bool:

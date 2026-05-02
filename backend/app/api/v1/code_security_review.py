@@ -163,7 +163,7 @@ async def create_code_security_review(
         extra={
             "user_id": str(current_user.id),
             "titulo": entity_in.titulo,
-            "scan_type": entity_in.tipo_escaneo,
+            "scan_mode": entity_in.scan_mode,
             "url_repositorio": entity_in.url_repositorio,
         },
     )

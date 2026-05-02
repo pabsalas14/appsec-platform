@@ -53,13 +53,50 @@ from app.main import app
 # ``auth._login_limit_key`` usa ``{request.client.host}:{username}``. Según el
 # transport (ASGI directo vs proxy / Docker), el host puede ser ``127.0.0.1``,
 # ``testclient``, etc. Limpiamos todas las variantes habituales para tests.
-_LOGIN_LOCKOUT_HOST_CANDIDATES = ("127.0.0.1", "testclient", "localhost")
+# Debe alinear con ``auth._client_ip`` (p. ej. ``unknown`` si ``request.client`` es None).
+_LOGIN_LOCKOUT_HOST_CANDIDATES = ("127.0.0.1", "testclient", "localhost", "unknown")
 
 
 def _clear_login_lockout_for_username(username: str) -> None:
     u = username.lower()
     for host in _LOGIN_LOCKOUT_HOST_CANDIDATES:
         clear_login_failures(f"{host}:{u}")
+
+
+async def _wait_for_user_row(
+    session_factory: async_sessionmaker[AsyncSession], username: str
+) -> None:
+    """Garantiza visibilidad post-commit: el ASGI puede devolver 201 antes del commit."""
+    for attempt in range(100):
+        async with session_factory() as session:
+            r = await session.execute(
+                text("SELECT id FROM users WHERE username = CAST(:u AS VARCHAR)"),
+                {"u": username},
+            )
+            if r.scalar_one_or_none() is not None:
+                return
+        await asyncio.sleep(0.02 * min(attempt + 1, 8))
+    pytest.fail(f"user {username!r} not visible in DB after register (commit race)")
+
+
+async def _login_until_ok(client: AsyncClient, username: str, password: str) -> None:
+    """POST /auth/login con reintentos; alinea buckets de rate limit con los clears."""
+    login_payload = {"username": username, "password": password}
+    _clear_login_lockout_for_username(username)
+    last_login_resp: Response | None = None
+    for attempt in range(12):
+        resp = await client.post("/api/v1/auth/login", json=login_payload)
+        last_login_resp = resp
+        if resp.status_code == 200:
+            break
+        if resp.status_code in (401, 429):
+            _clear_login_lockout_for_username(login_payload["username"])
+            clear_auth_login_rate_window_for_username(login_payload["username"])
+        await asyncio.sleep(0.06 * (attempt + 1))
+
+    assert last_login_resp is not None
+    assert last_login_resp.status_code == 200, f"Login failed: {last_login_resp.text}"
+    await asyncio.sleep(0.08)
 
 
 # ─── Engine & session factory (session-scoped, loop-safe) ────────────────────
@@ -278,7 +315,11 @@ def _csrf_headers(client: AsyncClient) -> dict[str, str]:
     return {"X-CSRF-Token": token}
 
 
-async def _register_and_login(client: AsyncClient, username: str | None = None) -> None:
+async def _register_and_login(
+    client: AsyncClient,
+    session_factory: async_sessionmaker[AsyncSession],
+    username: str | None = None,
+) -> None:
     """Helper: register + login a disposable user into the client cookie jar."""
     unique = uuid.uuid4().hex[:8]
     username = username or f"testuser_{unique}"
@@ -290,41 +331,27 @@ async def _register_and_login(client: AsyncClient, username: str | None = None) 
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, f"Register failed: {resp.text}"
-    await asyncio.sleep(0.18)
+    await _wait_for_user_row(session_factory, payload["username"])
 
-    login_payload = {"username": payload["username"], "password": payload["password"]}
-    # Evita que reintentos por 401 transitorio acumulen lockout (429).
-    _clear_login_lockout_for_username(login_payload["username"])
-    last_login_resp: Response | None = None
-    for attempt in range(10):
-        resp = await client.post("/api/v1/auth/login", json=login_payload)
-        last_login_resp = resp
-        if resp.status_code == 200:
-            break
-        if resp.status_code == 401:
-            _clear_login_lockout_for_username(login_payload["username"])
-        elif resp.status_code == 429:
-            _clear_login_lockout_for_username(login_payload["username"])
-            clear_auth_login_rate_window_for_username(login_payload["username"])
-        # get_db() commits after dependency teardown; under load it can lag briefly.
-        await asyncio.sleep(0.06 * (attempt + 1))
-
-    assert last_login_resp is not None
-    assert last_login_resp.status_code == 200, f"Login failed: {last_login_resp.text}"
-    await asyncio.sleep(0.08)
+    await _login_until_ok(client, payload["username"], payload["password"])
 
 
 @pytest_asyncio.fixture
-async def auth_client(client: AsyncClient) -> AsyncClient:
+async def auth_client(
+    client: AsyncClient, _session_factory: async_sessionmaker[AsyncSession]
+) -> AsyncClient:
     """Register/login a test user and return the cookie-authenticated client."""
-    await _register_and_login(client)
+    await _register_and_login(client, _session_factory)
+    assert client.cookies.get("access_token"), "missing access_token cookie after login"
     return client
 
 
 @pytest_asyncio.fixture
-async def auth_headers(client: AsyncClient) -> dict[str, str]:
+async def auth_headers(
+    client: AsyncClient, _session_factory: async_sessionmaker[AsyncSession]
+) -> dict[str, str]:
     """Register/login a test user and return Bearer headers from the auth cookie."""
-    await _register_and_login(client)
+    await _register_and_login(client, _session_factory)
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after login"
     return {"Authorization": f"Bearer {token}"}
@@ -337,9 +364,11 @@ async def auth_csrf_headers(auth_client: AsyncClient) -> dict[str, str]:
 
 
 @pytest_asyncio.fixture
-async def other_auth_headers(client: AsyncClient) -> dict[str, str]:
+async def other_auth_headers(
+    client: AsyncClient, _session_factory: async_sessionmaker[AsyncSession]
+) -> dict[str, str]:
     """Second, independent authenticated user — used for IDOR/ownership tests."""
-    await _register_and_login(client)
+    await _register_and_login(client, _session_factory)
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after login"
     return {"Authorization": f"Bearer {token}"}
@@ -361,7 +390,7 @@ async def admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
-    await asyncio.sleep(0.05)
+    await _wait_for_user_row(_session_factory, username)
 
     async with _session_factory() as session:
         await session.execute(
@@ -370,13 +399,9 @@ async def admin_auth_headers(
         )
         await session.commit()
 
-    await asyncio.sleep(0.02)
+    await asyncio.sleep(0.12)
 
-    resp = await client.post(
-        "/api/v1/auth/login",
-        json={"username": username, "password": payload["password"]},
-    )
-    assert resp.status_code == 200, resp.text
+    await _login_until_ok(client, username, payload["password"])
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after admin login"
     return {"Authorization": f"Bearer {token}"}
@@ -398,7 +423,7 @@ async def super_admin_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
-    await asyncio.sleep(0.05)
+    await _wait_for_user_row(_session_factory, username)
 
     async with _session_factory() as session:
         await session.execute(
@@ -407,13 +432,9 @@ async def super_admin_auth_headers(
         )
         await session.commit()
 
-    await asyncio.sleep(0.02)
+    await asyncio.sleep(0.12)
 
-    resp = await client.post(
-        "/api/v1/auth/login",
-        json={"username": username, "password": payload["password"]},
-    )
-    assert resp.status_code == 200, resp.text
+    await _login_until_ok(client, username, payload["password"])
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after super_admin login"
     return {"Authorization": f"Bearer {token}"}
@@ -435,7 +456,7 @@ async def readonly_auth_headers(
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, resp.text
-    await asyncio.sleep(0.05)
+    await _wait_for_user_row(_session_factory, username)
 
     async with _session_factory() as session:
         await session.execute(
@@ -444,13 +465,9 @@ async def readonly_auth_headers(
         )
         await session.commit()
 
-    await asyncio.sleep(0.02)
+    await asyncio.sleep(0.12)
 
-    resp = await client.post(
-        "/api/v1/auth/login",
-        json={"username": username, "password": payload["password"]},
-    )
-    assert resp.status_code == 200, resp.text
+    await _login_until_ok(client, username, payload["password"])
     token = client.cookies.get("access_token")
     assert token, "Missing access_token cookie after readonly login"
     return {"Authorization": f"Bearer {token}"}

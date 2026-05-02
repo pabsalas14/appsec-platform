@@ -242,6 +242,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         + _CODE_SECURITY_OPS
         + [
             "vulnerabilities.approve",
+            "vulnerabilities.import",
             "releases.approve",
             "audit_logs.verify",
         ]
@@ -255,6 +256,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "vulnerabilities.view",
         "vulnerabilities.create",
         "vulnerabilities.edit",
+        "vulnerabilities.import",
         "vulnerabilities.export",
         "releases.view",
         "releases.create",
@@ -294,6 +296,7 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "vulnerabilities.view",
         "vulnerabilities.create",
         "vulnerabilities.edit",
+        "vulnerabilities.import",
         "releases.view",
         "releases.create",
         "releases.edit",
@@ -336,6 +339,12 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "code_security.view",
     ],
     "user": (
-        _VIEW_CODES + _CATALOG_MUTATION + _INVENTORY_BULK + _NOTIF_CORE + _PROGRAM_SAST_EXPORT + _CODE_SECURITY_OPS
+        _VIEW_CODES
+        + _CATALOG_MUTATION
+        + _INVENTORY_BULK
+        + _NOTIF_CORE
+        + _PROGRAM_SAST_EXPORT
+        + _CODE_SECURITY_OPS
+        + ["vulnerabilities.import"]
     ),
 }
