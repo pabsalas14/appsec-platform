@@ -44,7 +44,14 @@ Filtro organizacional: join real de vulnerabilidades a célula vía activos (ser
 
 **QA / UAT (dataset masivo desechable):** decisiones en [`docs/qa/DECISIONES_UAT.md`](docs/qa/DECISIONES_UAT.md); checklist en [`docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md`](docs/qa/UAT_AUDIT_CHECKLIST_2026-04-26.md). Carga única de **5.000** vulnerabilidades de prueba: `make seed` y luego `make seed-uat-volumen` (solo con base PostgreSQL desechable; ver `Makefile`).
 
-**Avance global (orientativo)**: ~**90%** — suite backend amplia en verde (pytest + cobertura 69.02%, 1,500+ líneas edge case tests); SCR module at **10/10 perfection** (security audit 92/100, load testing framework, migration validation, comprehensive logging); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión.
+**Avance global (orientativo)**: ~**89%** (auditoría integral del 2 may 2026) — suite backend amplia en verde (pytest + cobertura 69.02%, 1,500+ líneas edge case tests); SCR module at **10/10 perfection** (security audit 92/100, load testing framework, migration validation, comprehensive logging); frontend con ESLint, TypeScript, knip y build Next.js alineados con CI; jobs de drift de tipos y E2E como red de regresión. 
+
+**Auditoría Integral de 10 Módulos (2 May 2026):**
+- 📄 Reporte: `AUDITORIA_INTEGRAL_10_MODULOS_2026-05-02.md`
+- 📊 Score global: **8.9/10** (89% completitud)
+- ✅ Módulos robustos (>90%): Programs (95%), Initiatives (95%), Dashboard (98%), SCR (100%)
+- 🟡 Módulos con gaps (P0): Vulnerabilities (86% - falta importación), Operations (80% - nomenclatura), Notifications (75% - sin frontend)
+- 🎯 Roadmap: 3 semanas para alcanzar 98%+
 
 | Fase | Nombre | Estado | Fecha |
 |------|--------|--------|-------|
