@@ -94,7 +94,17 @@ export {
 } from './breadcrumb';
 
 // Glass components
-export { GlassCard, StatCard, GlassSurface, PageWrapper, PageHeader, EmptyState } from './glass';
+export {
+  GlassCard,
+  StatCard,
+  GlassSurface,
+  PageWrapper,
+  PageHeader,
+  PremiumPageHeader,
+  PremiumPanel,
+  premiumShellCardClass,
+  EmptyState,
+} from './glass';
 
 // Data table
 export {

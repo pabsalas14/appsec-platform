@@ -29,8 +29,9 @@ import {
   DialogTrigger,
   EmptyState,
   Input,
-  PageHeader,
+  PremiumPageHeader,
   PageWrapper,
+  premiumShellCardClass,
   Select,
 } from '@/components/ui';
 import { useCreateProject, useDeleteProject, useProjects, useUpdateProject } from '@/hooks/useProjects';
@@ -143,7 +144,9 @@ export default function ProjectsPage() {
 
   return (
     <PageWrapper className="space-y-6 p-6">
-      <PageHeader
+      <PremiumPageHeader
+        eyebrow="Workspace"
+        icon={FolderKanban}
         title="Projects"
         description="Entidad CRUD con relación a Tasks — demuestra el patrón de scaffold y navegación anidada."
       >
@@ -160,10 +163,10 @@ export default function ProjectsPage() {
             <ProjectForm onSuccess={() => setCreateOpen(false)} />
           </DialogContent>
         </Dialog>
-      </PageHeader>
+      </PremiumPageHeader>
 
       {isLoading && (
-        <Card>
+        <Card className={premiumShellCardClass}>
           <CardContent className="flex items-center justify-center py-12">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </CardContent>
@@ -186,7 +189,7 @@ export default function ProjectsPage() {
       {!isLoading && (projects?.length ?? 0) > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects?.map((project) => (
-            <Card key={project.id} className="relative">
+            <Card key={project.id} className={cn('relative', premiumShellCardClass)}>
               <CardContent className="space-y-3 p-5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

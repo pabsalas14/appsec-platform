@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { FileIcon, ImageIcon, Trash2, UploadCloud } from 'lucide-react';
+import { FileIcon, ImageIcon, Trash2, Upload, UploadCloud } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -11,8 +11,9 @@ import {
   Button,
   Card,
   CardContent,
-  PageHeader,
+  PremiumPageHeader,
   PageWrapper,
+  premiumShellCardClass,
 } from '@/components/ui';
 import { useDeleteUpload, useUploadFile, useUploads } from '@/hooks/useUploads';
 import { cn } from '@/lib/utils';
@@ -58,12 +59,14 @@ export default function UploadsPage() {
 
   return (
     <PageWrapper className="space-y-6 p-6">
-      <PageHeader
+      <PremiumPageHeader
+        eyebrow="Archivos"
+        icon={Upload}
         title="Uploads"
-        description="Drag & drop files or pick from disk. Per-user storage with type/size validation (images, PDFs, text up to 10 MB)."
+        description="Arrastra archivos o elige desde disco. Almacenamiento por usuario con validación de tipo y tamaño (imágenes, PDF, texto hasta 10 MB)."
       />
 
-      <Card>
+      <Card className={premiumShellCardClass}>
         <CardContent className="p-6">
           <div
             onDragOver={(e) => {

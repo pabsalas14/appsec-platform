@@ -33,8 +33,9 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
-  PageHeader,
+  PremiumPageHeader,
   PageWrapper,
+  premiumShellCardClass,
   Select,
   Textarea,
 } from '@/components/ui';
@@ -333,7 +334,9 @@ export default function ServiciosPage() {
 
   return (
     <PageWrapper className="space-y-6 p-6">
-      <PageHeader
+      <PremiumPageHeader
+        eyebrow="Catálogo BRD"
+        icon={Server}
         title="Servicios (catálogo)"
         description="Aplicación o servicio bajo una célula; base para liberaciones, revisiones y programas."
       >
@@ -359,9 +362,9 @@ export default function ServiciosPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </PageHeader>
+      </PremiumPageHeader>
 
-      <Card>
+      <Card className={premiumShellCardClass}>
         <CardContent className="p-4 space-y-4">
           <p className="text-sm text-muted-foreground">
             <Server className="inline h-4 w-4 mr-1 align-text-bottom" />

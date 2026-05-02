@@ -182,6 +182,80 @@ export function PageHeader({ title, description, action, children }: PageHeaderP
   );
 }
 
+/** Clases recomendadas para `Card` / tablas en módulos tipo catálogo (coherente con dashboards). */
+export const premiumShellCardClass =
+  'border-white/[0.08] bg-card/50 shadow-lg shadow-black/[0.08] backdrop-blur-md dark:bg-slate-950/40';
+
+/* ─────────────────────────────────────────────
+ * PremiumPageHeader — Cabecera tipo dashboard ejecutivo (eyebrow + gradiente suave)
+ * ───────────────────────────────────────────── */
+interface PremiumPageHeaderProps {
+  eyebrow: string;
+  title: string;
+  description?: string;
+  icon?: LucideIcon;
+  action?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+export function PremiumPageHeader({
+  eyebrow,
+  title,
+  description,
+  icon: Icon,
+  action,
+  children,
+  className,
+}: PremiumPageHeaderProps) {
+  const actionContent = action ?? children;
+  return (
+    <div
+      className={cn(
+        'relative mb-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-card via-card/90 to-primary/[0.09] p-6 shadow-lg shadow-black/15 backdrop-blur-md dark:from-slate-950/75 dark:via-slate-950/45 dark:to-primary/[0.12]',
+        className,
+      )}
+    >
+      <div
+        className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary/25 blur-3xl dark:bg-primary/20"
+        aria-hidden
+      />
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2 text-primary">
+            {Icon ? <Icon className="h-4 w-4 shrink-0" aria-hidden /> : null}
+            <span className="text-xs font-semibold tracking-[0.2em] uppercase">{eyebrow}</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">{title}</h1>
+          {description ? (
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          ) : null}
+        </div>
+        {actionContent ? (
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{actionContent}</div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type PremiumPanelProps = React.HTMLAttributes<HTMLDivElement>;
+
+/** Contenedor glass para filtros + tabla (anida bien dentro de PageWrapper). */
+export function PremiumPanel({ className, children, ...props }: PremiumPanelProps) {
+  return (
+    <div
+      className={cn(
+        'rounded-2xl border border-white/[0.06] bg-white/[0.02] p-1 shadow-inner shadow-black/10 backdrop-blur-sm dark:bg-white/[0.03]',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ─────────────────────────────────────────────
  * EmptyState — Illustrated empty state
  * ───────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Circle, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, ListTodo, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -34,8 +34,9 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
-  PageHeader,
+  PremiumPageHeader,
   PageWrapper,
+  premiumShellCardClass,
   Select,
 } from '@/components/ui';
 import { useProjects } from '@/hooks/useProjects';
@@ -172,7 +173,9 @@ export default function TasksPage() {
 
   return (
     <PageWrapper className="mx-auto max-w-6xl space-y-6 p-6">
-      <PageHeader
+      <PremiumPageHeader
+        eyebrow="Workspace"
+        icon={ListTodo}
         title="Tasks"
         description="AppSec CRUD demo — crear, editar, eliminar, cambiar estado y enlazar a proyectos."
       >
@@ -189,10 +192,10 @@ export default function TasksPage() {
             <TaskForm onSuccess={() => setCreateOpen(false)} />
           </DialogContent>
         </Dialog>
-      </PageHeader>
+      </PremiumPageHeader>
 
       {isLoading && (
-        <Card>
+        <Card className={premiumShellCardClass}>
           <CardContent className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </CardContent>
@@ -200,7 +203,7 @@ export default function TasksPage() {
       )}
 
       {isError && (
-        <Card>
+        <Card className={premiumShellCardClass}>
           <CardContent className="py-12 text-center text-destructive">
             Failed to load tasks. Make sure the backend is running.
           </CardContent>
@@ -208,7 +211,7 @@ export default function TasksPage() {
       )}
 
       {tasks && tasks.length === 0 && (
-        <Card>
+        <Card className={premiumShellCardClass}>
           <CardContent className="py-12 text-center text-muted-foreground">
             No tasks yet. Click <strong>New Task</strong> to create one.
           </CardContent>
@@ -216,6 +219,7 @@ export default function TasksPage() {
       )}
 
       {tasks && tasks.length > 0 && (
+        <Card className={cn(premiumShellCardClass, 'overflow-hidden border-0 p-0')}>
         <DataTable>
           <DataTableHead>
             <DataTableTh className="w-[40px]" />
@@ -329,6 +333,7 @@ export default function TasksPage() {
             ))}
           </DataTableBody>
         </DataTable>
+        </Card>
       )}
     </PageWrapper>
   );

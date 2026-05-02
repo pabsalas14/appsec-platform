@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { AlertCircle, Bell, CheckCircle2, DollarSign, Info, ListTodo, Users, XCircle } from 'lucide-react';
+import { AlertCircle, Bell, CheckCircle2, DollarSign, Info, ListTodo, Sparkles, Users, XCircle } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -46,6 +46,9 @@ import {
   MultiSelect,
   PageHeader,
   PageWrapper,
+  PremiumPageHeader,
+  PremiumPanel,
+  premiumShellCardClass,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -65,6 +68,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 function Section({
   title,
@@ -108,6 +112,32 @@ export default function KitchenSinkPage() {
           <p className="text-sm text-foreground">Body — foreground text</p>
           <p className="text-sm text-muted-foreground">Body — muted foreground</p>
           <p className="text-xs text-muted-foreground">Caption</p>
+        </div>
+      </Section>
+
+      {/* Premium module shell (catálogos / workspace — mismo lenguaje visual que dashboards) */}
+      <Section
+        title="Premium module shell"
+        description="PremiumPageHeader + PremiumPanel + premiumShellCardClass — usar en listados CRUD y hubs."
+      >
+        <div className="space-y-4">
+          <PremiumPageHeader
+            eyebrow="Ejemplo — AppSec"
+            icon={Sparkles}
+            title="Cabecera premium"
+            description="Eyebrow en mayúsculas, icono opcional, gradiente sutil y acciones a la derecha."
+            action={<Button size="sm">Acción demo</Button>}
+          />
+          <PremiumPanel className="p-4">
+            <div
+              className={cn(
+                'rounded-xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground',
+                premiumShellCardClass,
+              )}
+            >
+              Contenido dentro de <code className="text-xs">PremiumPanel</code> (filtros, tabla, formularios).
+            </div>
+          </PremiumPanel>
         </div>
       </Section>
 

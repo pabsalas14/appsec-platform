@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { GitBranch, Globe2, Package } from 'lucide-react';
 
-import { Card, CardContent, PageHeader, PageWrapper } from '@/components/ui';
+import { Card, CardContent, PremiumPageHeader, PremiumPanel, PageWrapper, premiumShellCardClass } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -27,12 +27,15 @@ const tabs = [
 export default function InventarioPage() {
   const [active, setActive] = useState<(typeof tabs)[number]['id']>('repos');
   return (
-    <PageWrapper>
-      <PageHeader
+    <PageWrapper className="space-y-6 p-6">
+      <PremiumPageHeader
+        eyebrow="Inventario BRD"
+        icon={Package}
         title="Inventario unificado"
-        description="Módulo BRD: pestañas para repositorios y activos web; el detalle completo de cada registro se abre en su módulo."
+        description="Pestañas para repositorios y activos web; el detalle completo de cada registro se abre en su módulo."
       />
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-border/60 pb-1">
+      <PremiumPanel className="p-4">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-border/40 pb-1">
         {tabs.map((t) => {
           const Icon = t.icon;
           return (
@@ -57,7 +60,7 @@ export default function InventarioPage() {
         if (active !== t.id) return null;
         const Icon = t.icon;
         return (
-          <Card key={t.id}>
+          <Card key={t.id} className={premiumShellCardClass}>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -78,6 +81,7 @@ export default function InventarioPage() {
           </Card>
         );
       })}
+      </PremiumPanel>
     </PageWrapper>
   );
 }
