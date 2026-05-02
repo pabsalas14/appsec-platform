@@ -775,6 +775,7 @@ async def run_seed(db: AsyncSession) -> None:
     """
     from app.seeds.demo_business_seed import seed_demo_business_data
     from app.seeds.navigation_seed import seed_navigation
+    from app.seeds.nocode_defaults_seed import seed_nocode_defaults
 
     admin = await _seed_admin(db)
     await _seed_roles(db)  # SEMANA 0: Crear 4 nuevos roles
@@ -788,6 +789,7 @@ async def run_seed(db: AsyncSession) -> None:
     await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
     await seed_demo_business_data(db, admin)
     await seed_navigation(db)
+    await seed_nocode_defaults(db, admin.id)
 
 
 async def seed() -> None:

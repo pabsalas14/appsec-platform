@@ -219,6 +219,9 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
 
           {isAdmin && (
             <CommandGroup heading="Admin">
+              <CommandItem onSelect={() => run(() => router.push('/admin'))}>
+                <Settings className="mr-2 h-4 w-4" /> Centro de administración
+              </CommandItem>
               <CommandItem onSelect={() => run(() => router.push('/admin/users'))}>
                 <Users className="mr-2 h-4 w-4" /> Users
               </CommandItem>

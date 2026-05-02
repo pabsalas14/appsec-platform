@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models.catalog import Catalog
+from app.models.module_view import ModuleView
 from app.models.role import Role
 from app.models.user import User
 from app.seed import run_seed
@@ -36,6 +37,17 @@ async def test_seed_creates_platform_roles(
     async with _session_factory() as db:
         result = await db.execute(select(Role).where(Role.name == "ciso"))
         assert result.scalar_one_or_none() is not None
+
+
+@pytest.mark.asyncio
+async def test_seed_inserts_nocode_defaults(
+    _session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    await _run_seed_in_test_session(_session_factory)
+    async with _session_factory() as db:
+        result = await db.execute(select(ModuleView))
+        rows = result.scalars().all()
+        assert len(rows) >= 1
 
 
 @pytest.mark.asyncio

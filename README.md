@@ -4,13 +4,22 @@
 
 ## 🚀 Estado de Desarrollo (Fases 0-9)
 
-**Última actualización**: 26 de abril de 2026
+**Última actualización**: 1 de mayo de 2026
 
-### Estado de validación local (26 abr 2026)
+### Estado de validación local (1 may 2026)
 
-- `make test`: **700 passed, 62 failed, 1 skipped, 1 error** (runtime ~16m55s).
-- Fallas concentradas en suites de módulos nuevos: `actualizacion_*`, `cierre_conclusion`, `evidencia_auditoria`, `hito_iniciativa`, `indicador_formula`, `madurez`, `plan_remediacion`, `okr_*`, y `test_bloque_b_filtro_guardado`.
-- `cd frontend && npm run lint`: no ejecuta en este entorno por dependencia faltante (`next: command not found`).
+- `docker compose config`: compose válido (el atributo `version` en el YAML es solo advertencia de obsolescencia).
+- Tras cambios en `backend/`, reconstruir la imagen: `docker compose build backend` (el servicio no monta el código en caliente).
+- `cd frontend && npm run lint`: **Next.js lint + `tsc --noEmit` sin errores** (recomendado antes de commit).
+- Tests en contenedor: ejecutar `make test` solo contra una **base desechable** (trunca `users` / `tasks` / `refresh_tokens` entre pruebas; ver `backend/tests/conftest.py`). Tras tocar el backend, `docker compose build backend` antes de pytest dentro del contenedor.
+- **Última corrida de referencia (suite completa):** el README anterior registraba **700 passed / 62 failed** en un entorno concreto; el proyecto incluye suites muy amplias — validar con `make test` local cuando la DB sea desechable.
+
+### Entregas operativas recientes (producto / no-code / SCR)
+
+- **Centro de administración** (`/admin`): hub con tarjetas hacia module views, campos, reglas, fórmulas, catálogos, dashboard builder, IA, usuarios, auditoría, integraciones SCR, etc. Las rutas profundas (`/admin/module-views`, …) siguen igual.
+- **Menú lateral**: tableros analíticos agrupados en sección colapsable; bloques BRD (organización, inventario, entrega, hallazgos, threat modeling) como subsecciones; la sección **Code Security (SCR)** se mantiene como hasta ahora.
+- **Seed `nocode_defaults`**: tras `make seed` aparecen datos demo de module views, custom field, validation rule, fórmula y AI rule (IDs deterministas).
+- **SCR**: el pipeline separa la transacción de preparación (`ANALYZING`) del trabajo pesado; el **progreso** se escribe con `persist_scr_review_progress_durable` para que el polling vea avance sin esperar el commit final.
 
 ### Dashboards AppSec (V2)
 

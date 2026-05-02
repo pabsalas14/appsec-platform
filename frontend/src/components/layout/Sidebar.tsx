@@ -2,41 +2,29 @@
 
 import {
   AppWindow,
-  Building2,
-  Bug,
   Briefcase,
+  Bug,
   ChevronLeft,
-  Globe2,
   ChevronRight,
   ClipboardList,
   FileSearch,
-  FolderKanban,
-  GitBranch,
   LayoutDashboard,
-  Layers,
-  Link2,
-  ListChecks,
-  ListTodo,
-  LineChart,
-  Package,
-  Server,
-  Target,
-  Workflow,
   Network,
   ScrollText,
+  Server,
   Settings,
   ShieldCheck,
-  Smartphone,
-  Upload,
+  Target,
+  TrendingUp,
   UserCircle,
   Users,
-  Plug,
+  FileWarning,
+  type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { CollapsibleNavSection, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSidebarState } from '@/hooks/useSidebarState';
 import { isBackofficeUser } from '@/lib/roles';
@@ -49,112 +37,68 @@ type NavItem = {
   adminOnly?: boolean;
 };
 
-type NavSection = {
-  title: string;
-  items: NavItem[];
-  adminOnly?: boolean;
-};
+type NavGroup = { title: string; items: NavItem[] };
+type NavSection =
+  | { title: string; items: NavItem[]; adminOnly?: boolean; groups?: undefined }
+  | { title: string; groups: NavGroup[]; adminOnly?: boolean; items?: undefined };
 
+/** Arquitectura menú v3 — navegación relacional; SCR se mantiene aparte (producto). */
 const SECTIONS: NavSection[] = [
   {
     title: 'Principal',
     items: [
-      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/tasks', label: 'Tasks', icon: ListTodo },
-      { href: '/projects', label: 'Projects', icon: FolderKanban },
-      { href: '/kanban', label: 'Kanban', icon: Layers },
-      { href: '/uploads', label: 'Uploads', icon: Upload },
-      { href: '/vulnerabilidads', label: 'Vulnerabilidades', icon: Bug },
-      { href: '/dashboards', label: 'Dashboards', icon: LayoutDashboard },
-      { href: '/indicadores', label: 'Indicadores (KPIs)', icon: LineChart },
-      { href: '/dashboards/executive', label: '1. Dashboard Ejecutivo', icon: LayoutDashboard },
-      { href: '/dashboards/team', label: '2. Dashboard Equipo', icon: Users },
-      { href: '/dashboards/programs', label: '3. Programas e Iniciativas', icon: Target },
-      { href: '/dashboards/vulnerabilities', label: '4. Vuln (Organizacional)', icon: ShieldCheck },
-      { href: '/dashboards/mast', label: '5. Concentrado (Motores)', icon: Bug },
-      { href: '/dashboards/releases', label: '6. Liberaciones (Tabla)', icon: ListChecks },
-      { href: '/dashboards/kanban', label: '7. Kanban Liberaciones', icon: FolderKanban },
-      { href: '/dashboards/emerging-themes', label: '8. Temas y Auditorías', icon: FileSearch },
-      { href: '/dashboards/okr', label: '9. Compromisos OKR', icon: Target },
-      { href: '/dashboards/plataforma', label: '10. Release Plataforma', icon: Server },
+      { href: '/dashboards/executive', label: 'Dashboard ejecutivo', icon: LayoutDashboard },
+      { href: '/madurez', label: 'Score de madurez', icon: TrendingUp },
+      { href: '/dashboards', label: 'Índice de tableros', icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: 'Organización e inventario',
+    items: [
+      { href: '/organizacion/jerarquia', label: 'Estructura organizacional', icon: Network },
+      { href: '/inventario', label: 'Inventario de activos', icon: Briefcase },
+    ],
+  },
+  {
+    title: 'Gestión de vulnerabilidades',
+    items: [
+      { href: '/dashboards/vulnerabilities', label: 'Concentrado de hallazgos', icon: ShieldCheck },
+      { href: '/plan_remediacions', label: 'Planes de remediación', icon: ClipboardList },
+      { href: '/programa_threat_modelings', label: 'Threat modeling', icon: Network },
+    ],
+  },
+  {
+    title: 'Operación y seguimiento',
+    items: [
+      { href: '/dashboards/releases', label: 'Liberaciones de servicio', icon: Server },
+      { href: '/dashboards/programs', label: 'Programas anuales', icon: Target },
+      { href: '/dashboards/emerging-themes', label: 'Temas emergentes y auditorías', icon: FileSearch },
+      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
+      { href: '/revision_terceros', label: 'Revisión de terceros', icon: FileWarning },
+    ],
+  },
+  {
+    title: 'Desempeño (OKR)',
+    items: [
+      { href: '/mis_compromisos', label: 'Mis compromisos', icon: UserCircle },
+      { href: '/dashboards/team', label: 'Mi equipo', icon: Users },
     ],
   },
   {
     title: 'Code Security (SCR)',
     items: [
-      { href: '/code_security_reviews', label: 'Reviews', icon: ShieldCheck },
-      { href: '/code_security_reviews/new', label: 'New Review', icon: FileSearch },
-      { href: '/code_security_reviews/history', label: 'History & Search', icon: ScrollText },
-    ],
-  },
-  {
-    title: 'Organización (BRD)',
-    items: [
-      { href: '/direccions', label: 'Direcciones', icon: Network },
-      { href: '/organizacion/jerarquia', label: 'Jerarquía (árbol)', icon: Network },
-      { href: '/subdireccions', label: 'Subdirecciones', icon: Building2 },
-      { href: '/gerencias', label: 'Gerencias', icon: Briefcase },
-      { href: '/organizacions', label: 'Organizaciones', icon: Globe2 },
-      { href: '/celulas', label: 'Células', icon: Users },
-    ],
-  },
-  {
-    title: 'Inventario (BRD)',
-    items: [
-      { href: '/inventario', label: 'Inventario (hub)', icon: Package },
-      { href: '/repositorios', label: 'Repositorios', icon: GitBranch },
-      { href: '/activo_webs', label: 'Activos web', icon: Link2 },
-    ],
-  },
-  {
-    title: 'Entrega y plan (BRD)',
-    items: [
-      { href: '/servicios', label: 'Servicios', icon: Server },
-      { href: '/service_releases', label: 'Liberaciones de servicio', icon: Package },
-      { href: '/etapa_releases', label: 'Etapas de liberación', icon: ListChecks },
-      { href: '/pipeline_releases', label: 'Pipelines', icon: Workflow },
-      { href: '/iniciativas', label: 'Iniciativas', icon: Target },
-    ],
-  },
-  {
-    title: 'Hallazgos (BRD)',
-    items: [
-      { href: '/hallazgo_sasts', label: 'Hallazgos SAST', icon: Bug },
-      { href: '/hallazgo_dasts', label: 'Hallazgos DAST', icon: Globe2 },
-      { href: '/hallazgo_masts', label: 'Hallazgos MAST', icon: Smartphone },
-      { href: '/hallazgo_pipelines', label: 'Hallazgos pipeline', icon: Workflow },
-      { href: '/hallazgo_terceros', label: 'Hallazgos tercero', icon: Building2 },
-      { href: '/hallazgo_auditorias', label: 'Hallazgos auditoría', icon: FileSearch },
-    ],
-  },
-  {
-    title: 'Threat modeling',
-    items: [
-      { href: '/programa_threat_modelings', label: 'Programas TM', icon: Network },
-      { href: '/sesion_threat_modelings', label: 'Sesiones TM', icon: ClipboardList },
+      { href: '/code_security_reviews/dashboard', label: 'Dashboard SCR', icon: LayoutDashboard },
+      { href: '/code_security_reviews/new', label: 'Nuevo escaneo', icon: FileSearch },
+      { href: '/code_security_reviews/findings', label: 'Hallazgos SCR', icon: Bug },
+      { href: '/code_security_reviews/history', label: 'Historial de escaneos', icon: ScrollText },
+      { href: '/code_security_reviews/forensic', label: 'Investigación forense', icon: Network },
+      { href: '/code_security_reviews/agents', label: 'Agentes', icon: ShieldCheck },
     ],
   },
   {
     title: 'Administración',
     adminOnly: true,
-    items: [
-      { href: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
-      { href: '/admin/roles', label: 'Roles', icon: ShieldCheck, adminOnly: true },
-      { href: '/admin/module-views', label: 'Module Views', icon: LayoutDashboard, adminOnly: true },
-      { href: '/admin/custom-fields', label: 'Custom Fields', icon: ClipboardList, adminOnly: true },
-      { href: '/admin/validation-rules', label: 'Validation Rules', icon: ListChecks, adminOnly: true },
-      { href: '/admin/formulas', label: 'Formulas', icon: LineChart, adminOnly: true },
-      { href: '/admin/catalogs', label: 'Catalogs', icon: ScrollText, adminOnly: true },
-      { href: '/admin/ai-rules', label: 'AI Builder', icon: ShieldCheck, adminOnly: true },
-      { href: '/admin/ia-config', label: 'IA Config', icon: Settings, adminOnly: true },
-      { href: '/admin/integrations', label: 'Integrations', icon: Plug, adminOnly: true },
-      { href: '/admin/risk-scoring', label: 'Risk Scoring', icon: ShieldCheck, adminOnly: true },
-      { href: '/dashboards/builder', label: 'Dashboard Builder', icon: LayoutDashboard, adminOnly: true },
-      { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
-      { href: '/admin/email-notifications', label: 'Email Notifications', icon: Upload, adminOnly: true },
-      { href: '/admin/operacion', label: 'Operación (BRD)', icon: LayoutDashboard, adminOnly: true },
-      { href: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
-    ],
+    items: [{ href: '/admin', label: 'Administración', icon: Settings, adminOnly: true }],
   },
   {
     title: 'Developer',
@@ -201,11 +145,27 @@ function SidebarLink({
   return content;
 }
 
+function isItemActive(pathname: string, href: string) {
+  return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebarState();
   const { data: user } = useCurrentUser();
   const isAdmin = isBackofficeUser(user?.role);
+
+  const renderItems = (items: NavItem[]) =>
+    items
+      .filter((i) => !i.adminOnly || isAdmin)
+      .map((item) => (
+        <SidebarLink
+          key={item.href}
+          item={item}
+          collapsed={collapsed}
+          active={isItemActive(pathname, item.href)}
+        />
+      ));
 
   return (
     <aside
@@ -216,7 +176,6 @@ export function Sidebar() {
       )}
       aria-label="Main navigation"
     >
-      {/* Brand */}
       <div
         className={cn(
           'flex h-14 items-center gap-2 border-b border-border px-4',
@@ -231,11 +190,49 @@ export function Sidebar() {
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-6 overflow-y-auto px-2 py-4">
         {SECTIONS.map((section) => {
           if (section.adminOnly && !isAdmin) return null;
-          const visibleItems = section.items.filter((i) => !i.adminOnly || isAdmin);
+
+          if (section.groups) {
+            const visibleGroups = section.groups
+              .map((g) => ({
+                ...g,
+                items: g.items.filter((i) => !i.adminOnly || isAdmin),
+              }))
+              .filter((g) => g.items.length > 0);
+            if (visibleGroups.length === 0) return null;
+
+            return (
+              <div key={section.title}>
+                {!collapsed && (
+                  <div className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground/80">
+                    {section.title}
+                  </div>
+                )}
+                {collapsed ? (
+                  <div className="space-y-0.5">
+                    {visibleGroups.flatMap((g) => g.items).map((item) => (
+                      <SidebarLink
+                        key={item.href}
+                        item={item}
+                        collapsed={collapsed}
+                        active={isItemActive(pathname, item.href)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  visibleGroups.map((g) => (
+                    <CollapsibleNavSection key={`${section.title}-${g.title}`} title={g.title} defaultOpen>
+                      {renderItems(g.items)}
+                    </CollapsibleNavSection>
+                  ))
+                )}
+              </div>
+            );
+          }
+
+          const visibleItems = section.items!.filter((i) => !i.adminOnly || isAdmin);
           if (visibleItems.length === 0) return null;
 
           return (
@@ -245,26 +242,12 @@ export function Sidebar() {
                   {section.title}
                 </div>
               )}
-              <div className="space-y-0.5">
-                {visibleItems.map((item) => (
-                  <SidebarLink
-                    key={item.href}
-                    item={item}
-                    collapsed={collapsed}
-                    active={
-                      item.href === '/'
-                        ? pathname === '/'
-                        : pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    }
-                  />
-                ))}
-              </div>
+              <div className="space-y-0.5">{renderItems(visibleItems)}</div>
             </div>
           );
         })}
       </nav>
 
-      {/* Collapse handle */}
       <button
         type="button"
         onClick={toggle}
