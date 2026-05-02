@@ -28,6 +28,9 @@ from app.api.v1 import (
     control_seguridad,
     control_source_code,
     dashboard,
+    dashboard_okr_extended,
+    dashboard_temas,
+    dashboard_export,
     dashboard_config,
     direccion,
     ejecucion_dast,
@@ -80,6 +83,11 @@ from app.api.v1 import (
     revision_source_code,
     revision_tercero,
     scr_github,
+    # ── SCR Module — Code Security Reviews ─────────────────────────────────────
+    scr_dashboard,
+    scr_admin,
+    scr_forensic,
+    scr_bulk_actions,
     # ── Módulo 8 — Operación (Releases) ────────────────────────────────
     search,
     service_release,
@@ -106,6 +114,9 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(projects.router, prefix="/projects", tags=["Projects"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(dashboard_okr_extended.router, prefix="/dashboard", tags=["Dashboard OKR Extended"])
+api_router.include_router(dashboard_temas.router, prefix="/dashboard", tags=["Dashboard Temas"])
+api_router.include_router(dashboard_export.router, prefix="/dashboard", tags=["Dashboard Export"])
 api_router.include_router(navigation.router, prefix="/navigation", tags=["Navigation"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit logs"])
 api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Client logs"])
@@ -244,3 +255,9 @@ api_router.include_router(okr_cierre_q.router, prefix="/okr_cierre_qs", tags=["O
 api_router.include_router(code_security_review.router, prefix="/code_security_reviews", tags=["Code_security_review"])
 api_router.include_router(code_security_websocket.router, prefix="", tags=["Code_security_websocket"])
 api_router.include_router(scr_github.router, prefix="/code_security", tags=["scr_github"])
+
+# ─── SCR Module — Code Security Reviews (100% Completo) ───────────────────────
+api_router.include_router(scr_dashboard.router, tags=["SCR Dashboard"])
+api_router.include_router(scr_admin.router, tags=["SCR Admin"])
+api_router.include_router(scr_forensic.router, tags=["SCR Forensic"])
+api_router.include_router(scr_bulk_actions.router, tags=["SCR Bulk Actions"])

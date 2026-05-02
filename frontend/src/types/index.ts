@@ -155,6 +155,14 @@ export interface CodeSecurityReview {
   repositorio_id: string | null;
   github_org_slug?: string | null;
   scan_batch_id?: string | null;
+  scr_config?: Record<string, unknown> | null;
+  agente_actual?: string | null;
+  actividad?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+  total_tokens_used?: number;
+  estimated_cost_usd?: number;
   created_at: string;
   updated_at: string;
 }
@@ -169,7 +177,18 @@ export interface CodeSecurityFinding {
   severidad: string;
   confianza: number;
   descripcion: string;
+  fingerprint?: string;
+  user_id?: string;
+  codigo_snippet?: string | null;
+  impacto?: string | null;
+  explotabilidad?: string | null;
+  remediacion_sugerida?: string | null;
+  asignado_a_id?: string | null;
+  assignee_email?: string | null;
+  assignee_name?: string | null;
   estado: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CodeSecurityEvent {
@@ -180,9 +199,16 @@ export interface CodeSecurityEvent {
   autor: string;
   archivo: string;
   accion: string;
+  mensaje_commit?: string | null;
   nivel_riesgo: string;
   indicadores: string[];
   descripcion?: string | null;
+  created_at?: string;
+}
+
+export interface RemediationStep {
+  orden: number;
+  paso: string;
 }
 
 export interface CodeSecurityReport {
@@ -191,8 +217,10 @@ export interface CodeSecurityReport {
   resumen_ejecutivo: string;
   desglose_severidad: Record<string, number>;
   narrativa_evolucion?: string | null;
-  pasos_remediacion: string[];
+  pasos_remediacion: RemediationStep[];
   puntuacion_riesgo_global: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // ─── AI Rules (FASE 8) ────────────────────────────────────────────────────────

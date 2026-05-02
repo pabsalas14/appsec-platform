@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCodeSecurityReviews } from '@/hooks/useCodeSecurityReviews';
+import { useCodeSecurityReviews, useSCRDashboard, useSCRTrends } from '@/hooks/useCodeSecurityReviews';
 import { cn } from '@/lib/utils';
 import { CodeSecurityReview } from '@/types';
+import { SCRDashboard } from '@/components/scr/SCRDashboard';
 import {
   LineChart,
   Line,
@@ -52,6 +53,8 @@ interface DashboardStats {
 export default function CodeSecurityReviewsDashboardPage() {
   const router = useRouter();
   const { data: reviewsData, isLoading } = useCodeSecurityReviews();
+  const { data: scrKpis } = useSCRDashboard(30);
+  const { data: scrTrends } = useSCRTrends(30);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   const reviews = (reviewsData || []) as CodeSecurityReview[];
@@ -60,8 +63,8 @@ export default function CodeSecurityReviewsDashboardPage() {
   const stats: DashboardStats = {
     total_reviews: reviews.length,
     active_analyses: reviews.filter((r) => r.estado === 'ANALYZING').length,
-    critical_findings: Math.floor(Math.random() * 50), // Placeholder - would come from findings endpoint
-    avg_risk_score: Math.floor(Math.random() * 100), // Placeholder - would come from aggregated data
+    critical_findings: scrKpis?.critical_findings ?? 0,
+    avg_risk_score: scrKpis?.avg_risk_score ?? 0,
     completed_this_week: reviews.filter((r) => {
       const createdDate = new Date(r.created_at);
       const weekAgo = new Date(new Date().setDate(new Date().getDate() - 7));
@@ -69,37 +72,33 @@ export default function CodeSecurityReviewsDashboardPage() {
     }).length,
   };
 
-  // Prepare chart data - Risk trend (last 7 days)
-  const last7Days: ChartDataPoint[] = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    return {
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      risk: Math.round(Math.random() * 80 + 20),
-      analyzed: Math.floor(Math.random() * 8 + 2),
-    };
-  });
+  const last7Days: ChartDataPoint[] = (scrTrends ?? []).slice(-7).map(
+    (point: { week: string; detected: number; resolved: number }) => ({
+      date: point.week,
+      risk: point.detected,
+      analyzed: point.resolved,
+    })
+  );
 
-  // Severity distribution - simulated data for now
   const severityData: SeverityDataPoint[] = [
     {
       name: 'Critical',
-      value: Math.floor(reviews.length * 0.15),
+      value: scrKpis?.critical_findings ?? 0,
       color: '#ef4444',
     },
     {
       name: 'High',
-      value: Math.floor(reviews.length * 0.25),
+      value: scrKpis?.high_findings ?? 0,
       color: '#f97316',
     },
     {
       name: 'Medium',
-      value: Math.floor(reviews.length * 0.35),
+      value: 0,
       color: '#eab308',
     },
     {
       name: 'Low',
-      value: Math.floor(reviews.length * 0.25),
+      value: 0,
       color: '#22c55e',
     },
   ];
@@ -162,6 +161,10 @@ export default function CodeSecurityReviewsDashboardPage() {
           >
             + New Review
           </Button>
+        </div>
+
+        <div className="mb-8">
+          <SCRDashboard />
         </div>
 
         {/* KPI Cards */}

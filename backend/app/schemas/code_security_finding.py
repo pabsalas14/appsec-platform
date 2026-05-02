@@ -47,6 +47,8 @@ class CodeSecurityFindingRead(BaseModel):
     remediacion_sugerida: str | None
     estado: str
     asignado_a_id: UUID | None
+    assignee_email: str | None = None
+    assignee_name: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -85,6 +87,26 @@ class CodeSecurityReportRead(BaseModel):
     puntuacion_riesgo_global: int
     created_at: datetime
     updated_at: datetime
+
+
+class ScrAnalysisMetricRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    review_id: UUID
+    user_id: UUID
+    agent: str
+    provider: str | None
+    model: str | None
+    started_at: datetime
+    completed_at: datetime
+    duration_ms: int
+    tokens_used: int
+    estimated_cost_usd: float
+    status: str
+    error: str | None
+    extra: dict | None
+    created_at: datetime
 
 
 class CodeSecurityFalsePositiveRead(BaseModel):

@@ -1,11 +1,4 @@
-"""
-Agentes SCR (Inspector, Detective, Fiscal) — prompts orientados a **malicia**, no secrets/SAST CWE genéricos.
-
-NOTA: La implementación REAL del Inspector Agent está en `scr_inspector_agent.py`.
-Este módulo proporciona stubs para fallback y testing.
-
-Fase 5-6: integración con `ia_provider` (real); stubs como fallback.
-"""
+"""Agentes SCR — utilidades compartidas y fallbacks sin datos simulados."""
 
 from __future__ import annotations
 
@@ -20,23 +13,9 @@ def fingerprint_for_finding(review_uuid: uuid.UUID, archivo: str, linea: int, ti
 
 
 async def run_inspector_stub(*, rutas_fuente: dict[str, str]) -> list[dict[str, Any]]:
-    """Stub Inspector: ejemplo de hallazgo de malicia (puerta trasera sintética)."""
-    _: dict[str, str] = rutas_fuente  # uso futuro: chunk LLM sobre archivos reales
-    return [
-        {
-            "archivo": "scratchpad/scr_placeholder.py",
-            "linea_inicio": 1,
-            "linea_fin": 3,
-            "tipo_malicia": "EXEC_ENV_BACKDOOR",
-            "severidad": "CRITICO",
-            "confianza": 0.62,
-            "descripcion": "Stub Inspector — patrón de malicia plausible (stub). Integrar prompts LLM en producción.",
-            "codigo_snippet": '# placeholder: os.environ["AUTHORIZED_IDS"] ...',
-            "impacto": "Ejecución de flujo sensible sin revisión igualitaria.",
-            "explotabilidad": "Requiere conocer variable de control interna.",
-            "remediacion_sugerida": "Revisión humana focalizada en intención y contexto organizacional.",
-        }
-    ]
+    """Fallback sin hallazgos ficticios."""
+    _: dict[str, str] = rutas_fuente
+    return []
 
 
 async def run_detective_stub(
@@ -44,27 +23,11 @@ async def run_detective_stub(
     inspector_rows: list[dict[str, Any]],
     commits: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    """Detective stub — correlación con commits reales (si existen) o sintética.
-
-    En producción, esto será reemplazado por análisis real de patrones forenses.
-    Por ahora, convierte commits reales a formato de eventos.
-    """
+    """Fallback determinístico: solo transforma commits reales, nunca inventa eventos."""
     _: list = inspector_rows
 
-    # Si no hay commits, retornar stub sintético
     if not commits:
-        return [
-            {
-                "commit_hash": "stub" + hashlib.sha256(b"d").hexdigest()[:8],
-                "autor": "scr-stub-detector@appsec.platform",
-                "archivo": "scratchpad/scr_placeholder.py",
-                "accion": "MODIFIED",
-                "mensaje_commit": "stub: ejemplo forense",
-                "nivel_riesgo": "ALTO",
-                "indicadores": ["OFF_HOURS", "STUB_DEMO"],
-                "descripcion": "Evento forense de demostración (sin Git real hasta fase siguiente).",
-            }
-        ]
+        return []
 
     # Usar commits reales: convertir a formato de eventos
     events = []

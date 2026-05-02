@@ -241,6 +241,26 @@ export interface paths {
         patch: operations["update_project_api_v1_projects__id__patch"];
         trace?: never;
     };
+    "/api/v1/dashboard/okr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Okr Base
+         * @description Dashboard OKR base - Vista Mis OKRs.
+         */
+        get: operations["get_dashboard_okr_base_api_v1_dashboard_okr_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/stats": {
         parameters: {
             query?: never;
@@ -401,6 +421,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/executive/drilldown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Executive Drilldown
+         * @description Drill-down desde dashboard ejecutivo - datos filtrados por tipo y filtro.
+         */
+        get: operations["dashboard_executive_drilldown_api_v1_dashboard_executive_drilldown_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/executive/export-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Executive Export Pdf
+         * @description Generar reporte PDF del dashboard ejecutivo.
+         */
+        get: operations["dashboard_executive_export_pdf_api_v1_dashboard_executive_export_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/programs": {
         parameters: {
             query?: never;
@@ -461,6 +521,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/team/{analista_id}/detalle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Team Analista Detalle
+         * @description Obtener detalle de un analista específico del equipo.
+         */
+        get: operations["dashboard_team_analista_detalle_api_v1_dashboard_team__analista_id__detalle_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/team/calificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dashboard Team Calificar
+         * @description Calificar el desempeño de un analista desde el dashboard.
+         */
+        post: operations["dashboard_team_calificar_api_v1_dashboard_team_calificar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/program-detail": {
         parameters: {
             query?: never;
@@ -510,7 +610,7 @@ export interface paths {
         };
         /**
          * Dashboard Releases Kanban
-         * @description Dashboard 7: Releases kanban grouped by status.
+         * @description Dashboard 7: Kanban view logic.
          */
         get: operations["dashboard_releases_kanban_api_v1_dashboard_releases_kanban_get"];
         put?: never;
@@ -550,7 +650,7 @@ export interface paths {
         };
         /**
          * Dashboard Temas Auditorias
-         * @description Dashboard 8 V2: temas emergentes + auditorías en un solo payload.
+         * @description Dashboard 8: Temas emergentes y auditorías consolidado.
          */
         get: operations["dashboard_temas_auditorias_api_v1_dashboard_temas_auditorias_get"];
         put?: never;
@@ -570,7 +670,7 @@ export interface paths {
         };
         /**
          * Dashboard Platform Release
-         * @description Dashboard 10 V2: versión y changelog de la plataforma.
+         * @description Dashboard 10: AppSec Platform internal releases.
          */
         get: operations["dashboard_platform_release_api_v1_dashboard_platform_release_get"];
         put?: never;
@@ -593,6 +693,191 @@ export interface paths {
          * @description Dashboard 3 helper: heatmap mensual de avance por programa (motor).
          */
         get: operations["dashboard_programs_heatmap_api_v1_dashboard_programs_heatmap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/okr/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Okr Team
+         * @description Dashboard OKR - Vista "Mi Equipo".
+         *     Muestra los compromisos de los reportes directos del usuario.
+         */
+        get: operations["get_dashboard_okr_team_api_v1_dashboard_okr_team_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/okr/global": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Okr Global
+         * @description Dashboard OKR - Vista Global.
+         *     Muestra el consolidado organizacional de OKRs.
+         */
+        get: operations["get_dashboard_okr_global_api_v1_dashboard_okr_global_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/okr/calificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calificar Okr
+         * @description Calificar el avance de un subcompromiso OKR.
+         *     Crea o actualiza la calificación.
+         */
+        post: operations["calificar_okr_api_v1_dashboard_okr_calificar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/okr/evolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Okr Evolution
+         * @description Obtener la evolución de avance por semana.
+         */
+        get: operations["get_okr_evolution_api_v1_dashboard_okr_evolution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/okr/drilldown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Okr Drilldown
+         * @description Drill-down from OKR dashboard - show compromisos en rango de avance.
+         */
+        get: operations["okr_drilldown_api_v1_dashboard_okr_drilldown_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/temas-auditorias/drilldown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Temas Auditorias Drilldown
+         * @description Drill-down desde KPIs de Temas/Auditorías.
+         *     Retorna los registros que компонент el número del KPI.
+         */
+        get: operations["temas_auditorias_drilldown_api_v1_dashboard_temas_auditorias_drilldown_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/temas/detalle/{tema_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tema Detalle
+         * @description Get detailed information for a tema emergente.
+         */
+        get: operations["tema_detalle_api_v1_dashboard_temas_detalle__tema_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/auditorias/detalle/{auditoria_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auditoria Detalle
+         * @description Get detailed information for an auditoría.
+         */
+        get: operations["auditoria_detalle_api_v1_dashboard_auditorias_detalle__auditoria_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard Export
+         * @description Export genérico para cualquier dashboard.
+         *     Permite exportar en diferentes formatos (json, csv).
+         */
+        get: operations["dashboard_export_api_v1_dashboard_export_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -777,6 +1062,58 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Agent Configs
+         * @description List agent configurations with optional filters.
+         */
+        get: operations["list_agent_configs_api_v1_agents_get"];
+        put?: never;
+        /**
+         * Create Agent Config
+         * @description Create a new agent configuration.
+         */
+        post: operations["create_agent_config_api_v1_agents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agents/{config_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Config
+         * @description Get a specific agent configuration by ID.
+         */
+        get: operations["get_agent_config_api_v1_agents__config_id__get"];
+        /**
+         * Update Agent Config
+         * @description Update an existing agent configuration.
+         */
+        put: operations["update_agent_config_api_v1_agents__config_id__put"];
+        post?: never;
+        /**
+         * Delete Agent Config
+         * @description Delete (deactivate) an agent configuration.
+         */
+        delete: operations["delete_agent_config_api_v1_agents__config_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2098,6 +2435,78 @@ export interface paths {
          * @description Configure widget visibility by role.
          */
         post: operations["configure_widget_api_v1_admin_dashboard_builder_dashboards__dashboard_id__config_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/risk-scoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Risk Scoring Configs
+         * @description List all risk scoring configurations.
+         */
+        get: operations["list_risk_scoring_configs_api_v1_admin_risk_scoring_get"];
+        put?: never;
+        /**
+         * Create Risk Scoring Config
+         * @description Create a new risk scoring configuration.
+         */
+        post: operations["create_risk_scoring_config_api_v1_admin_risk_scoring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/risk-scoring/{config_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Risk Scoring Config
+         * @description Get a specific risk scoring configuration.
+         */
+        get: operations["get_risk_scoring_config_api_v1_admin_risk_scoring__config_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Risk Scoring Config
+         * @description Delete a risk scoring configuration.
+         */
+        delete: operations["delete_risk_scoring_config_api_v1_admin_risk_scoring__config_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Risk Scoring Config
+         * @description Update a risk scoring configuration.
+         */
+        patch: operations["update_risk_scoring_config_api_v1_admin_risk_scoring__config_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/risk-scoring/{config_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Risk Scoring Config
+         * @description Activate a risk scoring configuration (deactivates others).
+         */
+        post: operations["activate_risk_scoring_config_api_v1_admin_risk_scoring__config_id__activate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3941,7 +4350,7 @@ export interface paths {
         post?: never;
         /**
          * Delete Programa Sast
-         * @description Delete an owned programa_sast (404 if not owned).
+         * @description Delete a owned programa_sast by ID (404 if not owned).
          */
         delete: operations["delete_programa_sast_api_v1_programa_sasts__id__delete"];
         options?: never;
@@ -3951,6 +4360,46 @@ export interface paths {
          * @description Partially update an owned programa_sast (404 if not owned).
          */
         patch: operations["update_programa_sast_api_v1_programa_sasts__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/programa_sasts/{id}/evidencia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Evidencia Programa
+         * @description Subir evidencia de actividad de programa SAST.
+         */
+        post: operations["upload_evidencia_programa_api_v1_programa_sasts__id__evidencia_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programa_sasts/{id}/evidencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Evidencias Programa
+         * @description Listar evidencias de un programa SAST.
+         */
+        get: operations["list_evidencias_programa_api_v1_programa_sasts__id__evidencias_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/actividad_mensual_sasts/config/scoring": {
@@ -6991,6 +7440,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/code_security_reviews/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Code Security Reviews
+         * @description Fase 3 — lista revisiones SCR del usuario actual.
+         */
+        get: operations["list_code_security_reviews_api_v1_code_security_reviews__get"];
+        put?: never;
+        /** Create Code Security Review */
+        post: operations["create_code_security_review_api_v1_code_security_reviews__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/code_security_reviews": {
         parameters: {
             query?: never;
@@ -7051,6 +7521,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/code_security_reviews/{review_id}/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Review Progress
+         * @description SSE — progreso en tiempo real (misma fuente que polling sobre la revisión).
+         */
+        get: operations["stream_review_progress_api_v1_code_security_reviews__review_id__stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/code_security_reviews/{review_id}/progress": {
         parameters: {
             query?: never;
@@ -7075,10 +7565,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Review Findings */
-        get: operations["list_review_findings_api_v1_code_security_reviews__review_id__findings_get"];
+        /**
+         * List Findings
+         * @description Lista hallazgos de una revisión con filtros y paginación.
+         */
+        get: operations["list_findings_api_v1_code_security_reviews__review_id__findings_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Finding
+         * @description Crea un nuevo hallazgo manualmente.
+         */
+        post: operations["create_finding_api_v1_code_security_reviews__review_id__findings_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7092,14 +7589,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Finding Detail
+         * @description Retorna detalles completos de un hallazgo específico.
+         */
+        get: operations["get_finding_detail_api_v1_code_security_reviews__review_id__findings__finding_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Finding
+         * @description Elimina un hallazgo (soft delete).
+         */
+        delete: operations["delete_finding_api_v1_code_security_reviews__review_id__findings__finding_id__delete"];
         options?: never;
         head?: never;
-        /** Patch Finding */
-        patch: operations["patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch"];
+        /**
+         * Update Finding
+         * @description Actualiza estado, asignación o notas de un hallazgo.
+         */
+        patch: operations["update_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch"];
         trace?: never;
     };
     "/api/v1/code_security_reviews/{review_id}/events": {
@@ -7109,8 +7617,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Review Events */
-        get: operations["list_review_events_api_v1_code_security_reviews__review_id__events_get"];
+        /**
+         * Get Forensic Events
+         * @description Retorna eventos forenses ordenados por timestamp (más recientes primero).
+         */
+        get: operations["get_forensic_events_api_v1_code_security_reviews__review_id__events_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7145,7 +7656,7 @@ export interface paths {
         };
         /**
          * Export Review Bundle
-         * @description Fase 8 — export JSON bundles; PDF pendiente librería dedicada.
+         * @description Fase 8 — export JSON or PDF bundles.
          */
         get: operations["export_review_bundle_api_v1_code_security_reviews__review_id__export_get"];
         put?: never;
@@ -7170,6 +7681,117 @@ export interface paths {
          * @description Fase 3/4 — crea lote por organización y encola análisis para cada repo visible.
          */
         post: operations["create_org_batch_placeholder_api_v1_code_security_reviews_batch_org_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/false-positive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Finding As False Positive
+         * @description Mark a finding as false positive for ML learning.
+         */
+        post: operations["mark_finding_as_false_positive_api_v1_code_security_reviews__review_id__findings__finding_id__false_positive_post"];
+        /**
+         * Unmark Finding As False Positive
+         * @description Remove false positive marking from a finding.
+         */
+        delete: operations["unmark_finding_as_false_positive_api_v1_code_security_reviews__review_id__findings__finding_id__false_positive_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/false-positives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List False Positives
+         * @description List all false positive markings for a review.
+         */
+        get: operations["list_false_positives_api_v1_code_security_reviews__review_id__false_positives_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/providers/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Providers Health
+         * @description Check health status of all LLM providers.
+         *
+         *     Returns which providers are configured and available for use.
+         *     This is called before analysis to ensure provider is available.
+         */
+        get: operations["check_providers_health_api_v1_code_security_reviews_providers_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/github/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Github Repositories
+         * @description List repositories for a GitHub user or organization.
+         *
+         *     Frontend calls this when creating a new scan to browse repositories.
+         */
+        get: operations["list_github_repositories_api_v1_code_security_reviews_github_repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/github/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Repository Branches
+         * @description List branches for a repository.
+         *
+         *     Frontend calls this when selecting a branch for analysis.
+         */
+        get: operations["list_repository_branches_api_v1_code_security_reviews_github_branches_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7221,6 +7843,727 @@ export interface paths {
         get: operations["list_github_org_repos_api_v1_code_security_github_orgs__org_slug__repos_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scr/dashboard/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scr Kpis
+         * @description Retorna KPIs de SCR: escaneos, hallazgos, repositorios.
+         */
+        get: operations["get_scr_kpis_api_v1_scr_dashboard_kpis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scr/dashboard/costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scr Costs
+         * @description Retorna análisis de costos de SCR.
+         */
+        get: operations["get_scr_costs_api_v1_scr_dashboard_costs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scr/dashboard/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scr Trends
+         * @description Retorna tendencias de detección vs resolución por semana.
+         */
+        get: operations["get_scr_trends_api_v1_scr_dashboard_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scr/dashboard/top-repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scr Top Repos
+         * @description Retorna top 5 repositorios con más hallazgos activos.
+         */
+        get: operations["get_scr_top_repos_api_v1_scr_dashboard_top_repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/llm-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Llm Providers
+         * @description Catálogo único de proveedores LLM soportados por SCR.
+         */
+        get: operations["list_llm_providers_api_v1_admin_scr_llm_providers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/llm-config/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** List Llm Models */
+        post: operations["list_llm_models_api_v1_admin_scr_llm_config_models_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/llm-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Llm Config
+         * @description Retorna configuración actual de proveedores LLM (sin secretos).
+         */
+        get: operations["get_llm_config_api_v1_admin_scr_llm_config_get"];
+        put?: never;
+        /**
+         * Set Llm Config
+         * @description Configura proveedor LLM y guarda en BD (alcance plataforma SCR, ``user_id`` NULL).
+         */
+        post: operations["set_llm_config_api_v1_admin_scr_llm_config_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/llm-config/test-connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Llm Connection
+         * @description Prueba conectividad al proveedor LLM con ``health_check``.
+         */
+        post: operations["test_llm_connection_api_v1_admin_scr_llm_config_test_connection_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Github Tokens
+         * @description Lista tokens GitHub/GitLab configurados (sin el secreto).
+         */
+        get: operations["list_github_tokens_api_v1_admin_scr_github_tokens_get"];
+        put?: never;
+        /**
+         * Add Github Token
+         * @description Agrega token GitHub (GitLab no soportado aún en BD SCR).
+         */
+        post: operations["add_github_token_api_v1_admin_scr_github_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Github Token
+         * @description Valida un PAT contra la API de GitHub.
+         */
+        post: operations["validate_github_token_api_v1_admin_scr_github_tokens_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Github Token
+         * @description Elimina (soft-delete) un token GitHub.
+         */
+        delete: operations["delete_github_token_api_v1_admin_scr_github_tokens__token_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Github Token
+         * @description Actualiza token GitHub (re-valida si cambia el secreto).
+         */
+        patch: operations["update_github_token_api_v1_admin_scr_github_tokens__token_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/{token_id}/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Repos For Github Token
+         * @description Lista repositorios accesibles por el token configurado.
+         */
+        get: operations["list_repos_for_github_token_api_v1_admin_scr_github_tokens__token_id__repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/{token_id}/orgs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Orgs For Github Token
+         * @description Lista organizaciones visibles por el token configurado.
+         */
+        get: operations["list_orgs_for_github_token_api_v1_admin_scr_github_tokens__token_id__orgs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/{token_id}/orgs/{org_slug}/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Org Repos For Github Token
+         * @description Lista repositorios de una organización usando el token configurado.
+         */
+        get: operations["list_org_repos_for_github_token_api_v1_admin_scr_github_tokens__token_id__orgs__org_slug__repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/github-tokens/{token_id}/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Branches For Github Token
+         * @description Lista ramas de un repositorio usando el token configurado.
+         */
+        get: operations["list_branches_for_github_token_api_v1_admin_scr_github_tokens__token_id__branches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/agents/{agent}/prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Prompt
+         * @description Retorna prompt configurado para un agente.
+         */
+        get: operations["get_agent_prompt_api_v1_admin_scr_agents__agent__prompts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Agent Prompt
+         * @description Actualiza prompt configurado para un agente.
+         */
+        patch: operations["update_agent_prompt_api_v1_admin_scr_agents__agent__prompts_patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/scr/agents/{agent}/test-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Agent Prompt
+         * @description Prueba un prompt contra código de muestra.
+         */
+        post: operations["test_agent_prompt_api_v1_admin_scr_agents__agent__test_prompt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/agents/{agent}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Stats
+         * @description Retorna estadísticas de uso de un agente.
+         */
+        get: operations["get_agent_stats_api_v1_admin_scr_agents__agent__stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/patterns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Detection Patterns
+         * @description Lista patrones de detección disponibles.
+         */
+        get: operations["list_detection_patterns_api_v1_admin_scr_patterns_get"];
+        put?: never;
+        /**
+         * Create Custom Pattern
+         * @description Crea un patrón de detección personalizado.
+         */
+        post: operations["create_custom_pattern_api_v1_admin_scr_patterns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/scr/patterns/{pattern_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Pattern
+         * @description Habilita o deshabilita un patrón de detección.
+         */
+        patch: operations["update_pattern_api_v1_admin_scr_patterns__pattern_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/events/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Forensic Events
+         * @description Busca eventos forenses por query, autor, archivo o rango de fechas.
+         */
+        get: operations["search_forensic_events_api_v1_code_security_reviews__review_id__events_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Forensic Timeline
+         * @description Retorna timeline de eventos forenses agrupados por período.
+         */
+        get: operations["get_forensic_timeline_api_v1_code_security_reviews__review_id__timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/forensic/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Forensic Summary
+         * @description Retorna resumen ejecutivo de investigación forense.
+         */
+        get: operations["get_forensic_summary_api_v1_code_security_reviews__review_id__forensic_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/author-analysis/{author}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analyze Author Activity
+         * @description Analiza actividad de un autor específico en el historial.
+         */
+        get: operations["analyze_author_activity_api_v1_code_security_reviews__review_id__author_analysis__author__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/anomalies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detect Anomalies
+         * @description Detecta anomalías en historial de commits (timing, author, pattern, etc).
+         */
+        get: operations["detect_anomalies_api_v1_code_security_reviews__review_id__anomalies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/commit/{commit_hash}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Commit Details
+         * @description Retorna detalles completos de un commit específico.
+         */
+        get: operations["get_commit_details_api_v1_code_security_reviews__review_id__commit__commit_hash__details_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Bulk Update Finding Status
+         * @description Actualiza estado de múltiples hallazgos en lote.
+         */
+        patch: operations["bulk_update_finding_status_api_v1_code_security_reviews__review_id__findings_bulk_status_patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Bulk Assign Findings
+         * @description Asigna múltiples hallazgos a un usuario específico.
+         */
+        patch: operations["bulk_assign_findings_api_v1_code_security_reviews__review_id__findings_bulk_assign_patch"];
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/false-positive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Mark False Positives
+         * @description Marca múltiples hallazgos como falsos positivos.
+         */
+        post: operations["bulk_mark_false_positives_api_v1_code_security_reviews__review_id__findings_bulk_false_positive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/remediation-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Bulk Remediation Plan
+         * @description Crea plan de remediación para múltiples hallazgos.
+         */
+        post: operations["create_bulk_remediation_plan_api_v1_code_security_reviews__review_id__findings_bulk_remediation_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Export Findings
+         * @description Exporta múltiples hallazgos en formato especificado.
+         */
+        post: operations["bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/bulk/status-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Bulk Status Report
+         * @description Retorna reporte consolidado del estado de todos los hallazgos.
+         */
+        get: operations["get_bulk_status_report_api_v1_code_security_reviews__review_id__findings_bulk_status_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/transition-state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transition Finding State
+         * @description Transiciona hallazgo a nuevo estado en workflow (con validación de transiciones válidas).
+         */
+        post: operations["transition_finding_state_api_v1_code_security_reviews__review_id__findings__finding_id__transition_state_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/remediation-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Finding Remediation Plan
+         * @description Retorna plan de remediación para un hallazgo específico.
+         */
+        get: operations["get_finding_remediation_plan_api_v1_code_security_reviews__review_id__findings__finding_id__remediation_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/code_security_reviews/{review_id}/findings/{finding_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Finding Comments
+         * @description Obtiene todos los comentarios de un hallazgo.
+         */
+        get: operations["get_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get"];
+        put?: never;
+        /**
+         * Add Finding Comment
+         * @description Agrega comentario a un hallazgo.
+         */
+        post: operations["add_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7670,6 +9013,158 @@ export interface components {
             /** Fuente */
             fuente?: string | null;
         };
+        /** AgentPromptConfigSchema */
+        AgentPromptConfigSchema: {
+            /** Agent */
+            agent: string;
+            /** System Prompt */
+            system_prompt: string;
+            /** Analysis Context */
+            analysis_context?: string | null;
+            /** Output Format */
+            output_format?: string | null;
+            /** Llm Config Id */
+            llm_config_id?: string | null;
+        };
+        /**
+         * AgenteConfigCreate
+         * @description Schema for creating agent configuration.
+         */
+        AgenteConfigCreate: {
+            /**
+             * Agente Tipo
+             * @description Tipo de agente: inspector, fiscal, detective
+             */
+            agente_tipo: string;
+            /**
+             * Usuario Id
+             * @description ID del usuario (opcional)
+             */
+            usuario_id?: string | null;
+            /**
+             * Revision Id
+             * @description ID de la revisión (opcional)
+             */
+            revision_id?: string | null;
+            /**
+             * Patrones Personalizados
+             * @description Patrones personalizados en formato {tipo: descripcion}
+             */
+            patrones_personalizados?: {
+                [key: string]: string;
+            } | null;
+            /**
+             * Prompt Sistema Personalizado
+             * @description Prompt del sistema personalizado
+             */
+            prompt_sistema_personalizado?: string | null;
+            /**
+             * Parametros Llm
+             * @description Parámetros de LLM personalizados
+             */
+            parametros_llm?: Record<string, never> | null;
+            /**
+             * Proveedor Preferido
+             * @description Proveedor LLM preferido
+             */
+            proveedor_preferido?: string | null;
+            /**
+             * Activo
+             * @description Si la configuración está activa
+             * @default true
+             */
+            activo: boolean;
+        };
+        /**
+         * AgenteConfigList
+         * @description Schema for listing agent configurations.
+         */
+        AgenteConfigList: {
+            /** Items */
+            items: components["schemas"]["AgenteConfigRead"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Size */
+            size: number;
+        };
+        /**
+         * AgenteConfigRead
+         * @description Schema for reading agent configuration.
+         */
+        AgenteConfigRead: {
+            /**
+             * Agente Tipo
+             * @description Tipo de agente: inspector, fiscal, detective
+             */
+            agente_tipo: string;
+            /**
+             * Usuario Id
+             * @description ID del usuario (opcional)
+             */
+            usuario_id?: string | null;
+            /**
+             * Revision Id
+             * @description ID de la revisión (opcional)
+             */
+            revision_id?: string | null;
+            /**
+             * Patrones Personalizados
+             * @description Patrones personalizados en formato {tipo: descripcion}
+             */
+            patrones_personalizados?: {
+                [key: string]: string;
+            } | null;
+            /**
+             * Prompt Sistema Personalizado
+             * @description Prompt del sistema personalizado
+             */
+            prompt_sistema_personalizado?: string | null;
+            /**
+             * Parametros Llm
+             * @description Parámetros de LLM personalizados
+             */
+            parametros_llm?: Record<string, never> | null;
+            /**
+             * Proveedor Preferido
+             * @description Proveedor LLM preferido
+             */
+            proveedor_preferido?: string | null;
+            /**
+             * Activo
+             * @description Si la configuración está activa
+             * @default true
+             */
+            activo: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Creado En */
+            creado_en: string;
+            /** Actualizado En */
+            actualizado_en: string;
+        };
+        /**
+         * AgenteConfigUpdate
+         * @description Schema for updating agent configuration.
+         */
+        AgenteConfigUpdate: {
+            /** Patrones Personalizados */
+            patrones_personalizados?: {
+                [key: string]: string;
+            } | null;
+            /** Prompt Sistema Personalizado */
+            prompt_sistema_personalizado?: string | null;
+            /** Parametros Llm */
+            parametros_llm?: Record<string, never> | null;
+            /** Proveedor Preferido */
+            proveedor_preferido?: string | null;
+            /** Activo */
+            activo?: boolean | null;
+        };
         /**
          * AmenazaCreate
          * @description Fields required to create an amenaza. score_total is calculated automatically.
@@ -7839,6 +9334,21 @@ export interface components {
             /** Notas */
             notas?: string | null;
         };
+        /** Body_bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post */
+        Body_bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post: {
+            /** Finding Ids */
+            finding_ids: string[];
+            /**
+             * Format
+             * @default json
+             */
+            format: string;
+            /**
+             * Include Code Snippets
+             * @default true
+             */
+            include_code_snippets: boolean;
+        };
         /** Body_create_upload_api_v1_uploads_post */
         Body_create_upload_api_v1_uploads_post: {
             /**
@@ -7945,6 +9455,33 @@ export interface components {
         Body_rechazar_excepcion_api_v1_excepcion_vulnerabilidads__id__rechazar_post: {
             /** Notas */
             notas?: string | null;
+        };
+        /** BulkAssignmentSchema */
+        BulkAssignmentSchema: {
+            /** Finding Ids */
+            finding_ids: string[];
+            /** Assignee Email */
+            assignee_email: string;
+            /** Priority */
+            priority?: string | null;
+        };
+        /** BulkFalsePositiveSchema */
+        BulkFalsePositiveSchema: {
+            /** Finding Ids */
+            finding_ids: string[];
+            /** Reason */
+            reason: string;
+            /** Feedback */
+            feedback?: string | null;
+        };
+        /** BulkStatusUpdateSchema */
+        BulkStatusUpdateSchema: {
+            /** Finding Ids */
+            finding_ids: string[];
+            /** New Status */
+            new_status: string;
+            /** Comment */
+            comment?: string | null;
         };
         /**
          * CatalogCreate
@@ -8118,12 +9655,53 @@ export interface components {
             /** Version */
             version?: string | null;
         };
+        /** CodeSecurityFindingCreateSchema */
+        CodeSecurityFindingCreateSchema: {
+            /**
+             * Review Id
+             * Format: uuid
+             */
+            review_id: string;
+            /** Archivo */
+            archivo: string;
+            /** Linea Inicio */
+            linea_inicio: number;
+            /** Linea Fin */
+            linea_fin: number;
+            /** Tipo Riesgo */
+            tipo_riesgo: string;
+            /** Severidad */
+            severidad: string;
+            /** Confianza */
+            confianza: number;
+            /** Descripcion */
+            descripcion: string;
+            /** Codigo Snippet */
+            codigo_snippet: string;
+            /** Impacto */
+            impacto: string;
+            /** Explotabilidad */
+            explotabilidad: string;
+            /** Remediacion Sugerida */
+            remediacion_sugerida?: string | null;
+        };
         /** CodeSecurityFindingUpdate */
         CodeSecurityFindingUpdate: {
             /** Estado */
             estado?: string | null;
             /** Asignado A Id */
             asignado_a_id?: string | null;
+        };
+        /** CodeSecurityFindingUpdateSchema */
+        CodeSecurityFindingUpdateSchema: {
+            /** Estado */
+            estado?: string | null;
+            /** Assignee Email */
+            assignee_email?: string | null;
+            /** Responsable Notas */
+            responsable_notas?: string | null;
+            /** Severidad */
+            severidad?: string | null;
         };
         /** CodeSecurityOrgBatchCreate */
         CodeSecurityOrgBatchCreate: {
@@ -8136,6 +9714,12 @@ export interface components {
              * @default main
              */
             rama_analizar: string;
+            /** Github Token Id */
+            github_token_id?: string | null;
+            /** Repo Urls */
+            repo_urls?: string[] | null;
+            /** Scr Config */
+            scr_config?: Record<string, never> | null;
         };
         /**
          * CodeSecurityReviewCreate
@@ -8172,6 +9756,11 @@ export interface components {
             github_org_slug?: string | null;
             /** Scan Batch Id */
             scan_batch_id?: string | null;
+            /**
+             * Scr Config
+             * @description llm_provider, llm_model, temperature, max_tokens
+             */
+            scr_config?: Record<string, never> | null;
         };
         /** CodeSecurityReviewUpdate */
         CodeSecurityReviewUpdate: {
@@ -8195,6 +9784,8 @@ export interface components {
             github_org_slug?: string | null;
             /** Scan Batch Id */
             scan_batch_id?: string | null;
+            /** Scr Config */
+            scr_config?: Record<string, never> | null;
         };
         /**
          * ConfiguracionIACreate
@@ -8627,6 +10218,8 @@ export interface components {
             name: string;
             /** Count */
             count: number;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * DashboardConfigCreate
@@ -8832,6 +10425,18 @@ export interface components {
             /** Overdue Count */
             overdue_count?: number | null;
             applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
+            /** Semaforo */
+            semaforo?: Record<string, never> | null;
+            /** Motores */
+            motores?: Record<string, never>[] | null;
+            /** Tendencia */
+            tendencia?: Record<string, never> | null;
+            /** Top Vulns */
+            top_vulns?: Record<string, never>[] | null;
+            /** Pipeline */
+            pipeline?: Record<string, never> | null;
+        } & {
+            [key: string]: unknown;
         };
         /** DashboardVulnerabilitiesSummaryRead */
         DashboardVulnerabilitiesSummaryRead: {
@@ -9472,6 +11077,27 @@ export interface components {
             /** Descripcion */
             descripcion?: string | null;
         };
+        /** GitHubTokenSchema */
+        GitHubTokenSchema: {
+            /** Platform */
+            platform: string;
+            /** Token */
+            token: string;
+            /**
+             * Token Type
+             * @default personal
+             */
+            token_type: string;
+            /** Organization */
+            organization?: string | null;
+            /** Permissions */
+            permissions?: string[] | null;
+            /**
+             * Label
+             * @default SCR GitHub
+             */
+            label: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -9999,6 +11625,40 @@ export interface components {
             /** Custom Fields */
             custom_fields?: Record<string, never> | null;
         };
+        /** LLMProviderConfigSchema */
+        LLMProviderConfigSchema: {
+            /** Provider */
+            provider: string;
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /** Model */
+            model: string;
+            /**
+             * Temperature
+             * @default 0.3
+             */
+            temperature: number;
+            /**
+             * Max Tokens
+             * @default 4096
+             */
+            max_tokens: number;
+            /**
+             * Timeout Seconds
+             * @default 300
+             */
+            timeout_seconds: number;
+            /** Base Url */
+            base_url?: string | null;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -10341,6 +12001,38 @@ export interface components {
             cuerpo?: string | null;
             /** Leida */
             leida?: boolean | null;
+        };
+        /**
+         * OkrCalificacionCreate
+         * @description Schema for creating a calificación.
+         */
+        OkrCalificacionCreate: {
+            /**
+             * Avance
+             * @description Porcentaje de avance (0-100)
+             */
+            avance: number;
+            /**
+             * Comentario
+             * @description Comentario del evaluador
+             */
+            comentario?: string | null;
+            /**
+             * Evidencia
+             * @description Evidencia de avance
+             */
+            evidencia?: string | null;
+            /**
+             * Subcompromiso Id
+             * Format: uuid
+             * @description ID del subcompromiso a calificar
+             */
+            subcompromiso_id: string;
+            /**
+             * Quarter
+             * @description Quarter (Q1, Q2, Q3, Q4)
+             */
+            quarter: string;
         };
         /**
          * OkrCategoriaCreate
@@ -11014,6 +12706,15 @@ export interface components {
             /** Color */
             color?: string | null;
         };
+        /** PromptTestSchema */
+        PromptTestSchema: {
+            /** Agent */
+            agent: string;
+            /** Code Snippet */
+            code_snippet: string;
+            /** Context */
+            context?: Record<string, never> | null;
+        };
         /**
          * ReglaSoDCreate
          * @description Fields required to create a ReglaSoD. user_id is set from auth context.
@@ -11251,6 +12952,81 @@ export interface components {
             responsable_revision?: string | null;
             /** Observaciones */
             observaciones?: string | null;
+        };
+        /** RiskScoringConfigCreate */
+        RiskScoringConfigCreate: {
+            /** Nombre Config */
+            nombre_config: string;
+            /**
+             * Weight Hidden Commits
+             * @default 10
+             */
+            weight_hidden_commits: number;
+            /**
+             * Weight Timing Anomalies
+             * @default 15
+             */
+            weight_timing_anomalies: number;
+            /**
+             * Weight Critical Files
+             * @default 20
+             */
+            weight_critical_files: number;
+            /**
+             * Weight Mass Changes
+             * @default 15
+             */
+            weight_mass_changes: number;
+            /**
+             * Weight Author Anomalies
+             * @default 15
+             */
+            weight_author_anomalies: number;
+            /**
+             * Weight Rapid Succession
+             * @default 10
+             */
+            weight_rapid_succession: number;
+            /**
+             * Weight Force Push
+             * @default 25
+             */
+            weight_force_push: number;
+            /**
+             * Weight Dependency Changes
+             * @default 20
+             */
+            weight_dependency_changes: number;
+            /**
+             * Weight External Merges
+             * @default 15
+             */
+            weight_external_merges: number;
+        };
+        /** RiskScoringConfigUpdate */
+        RiskScoringConfigUpdate: {
+            /** Nombre Config */
+            nombre_config?: string | null;
+            /** Weight Hidden Commits */
+            weight_hidden_commits?: number | null;
+            /** Weight Timing Anomalies */
+            weight_timing_anomalies?: number | null;
+            /** Weight Critical Files */
+            weight_critical_files?: number | null;
+            /** Weight Mass Changes */
+            weight_mass_changes?: number | null;
+            /** Weight Author Anomalies */
+            weight_author_anomalies?: number | null;
+            /** Weight Rapid Succession */
+            weight_rapid_succession?: number | null;
+            /** Weight Force Push */
+            weight_force_push?: number | null;
+            /** Weight Dependency Changes */
+            weight_dependency_changes?: number | null;
+            /** Weight External Merges */
+            weight_external_merges?: number | null;
+            /** Activa */
+            activa?: boolean | null;
         };
         /** RoleCreate */
         RoleCreate: {
@@ -12594,6 +14370,47 @@ export interface operations {
             };
         };
     };
+    get_dashboard_okr_base_api_v1_dashboard_okr_get: {
+        parameters: {
+            query?: {
+                /** @description Año del OKR */
+                year?: number | null;
+                /** @description Quarter */
+                quarter?: number | null;
+                direccion_id?: string | null;
+                subdireccion_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dashboard_stats_api_v1_dashboard_stats_get: {
         parameters: {
             query?: never;
@@ -12637,6 +14454,12 @@ export interface operations {
                 organizacion_id?: string | null;
                 celula_id?: string | null;
                 repositorio_id?: string | null;
+                engines?: string[] | null;
+                severities?: string[] | null;
+                statuses?: string[] | null;
+                sla?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -12902,6 +14725,87 @@ export interface operations {
             };
         };
     };
+    dashboard_executive_drilldown_api_v1_dashboard_executive_drilldown_get: {
+        parameters: {
+            query: {
+                /** @description Tipo: vulnerabilidades, programas, auditorias, temas */
+                tipo: string;
+                /** @description Filtro: severidad, estado, fuente */
+                filtro: string;
+                /** @description Valor del filtro */
+                valor: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_executive_export_pdf_api_v1_dashboard_executive_export_pdf_get: {
+        parameters: {
+            query?: {
+                direccion_id?: string | null;
+                subdireccion_id?: string | null;
+                gerencia_id?: string | null;
+                organizacion_id?: string | null;
+                celula_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dashboard_programs_api_v1_dashboard_programs_get: {
         parameters: {
             query?: {
@@ -13020,6 +14924,80 @@ export interface operations {
             };
         };
     };
+    dashboard_team_analista_detalle_api_v1_dashboard_team__analista_id__detalle_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                analista_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_team_calificar_api_v1_dashboard_team_calificar_post: {
+        parameters: {
+            query: {
+                analista_id: string;
+                calificacion: number;
+                comentario?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dashboard_program_detail_api_v1_dashboard_program_detail_get: {
         parameters: {
             query?: {
@@ -13102,12 +15080,7 @@ export interface operations {
     };
     dashboard_releases_kanban_api_v1_dashboard_releases_kanban_get: {
         parameters: {
-            query?: {
-                subdireccion_id?: string | null;
-                gerencia_id?: string | null;
-                organizacion_id?: string | null;
-                celula_id?: string | null;
-            };
+            query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
@@ -13262,6 +15235,352 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardEnvelopeProgramsHeatmapRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_okr_team_api_v1_dashboard_okr_team_get: {
+        parameters: {
+            query?: {
+                /** @description Año del OKR */
+                year?: number | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_okr_global_api_v1_dashboard_okr_global_get: {
+        parameters: {
+            query?: {
+                /** @description Año del OKR */
+                year?: number | null;
+                /** @description Filtrar por dirección */
+                direccion_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calificar_okr_api_v1_dashboard_okr_calificar_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OkrCalificacionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_okr_evolution_api_v1_dashboard_okr_evolution_get: {
+        parameters: {
+            query?: {
+                /** @description Quarter (Q1, Q2, Q3, Q4) */
+                quarter?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    okr_drilldown_api_v1_dashboard_okr_drilldown_get: {
+        parameters: {
+            query?: {
+                /** @description Avance mínimo */
+                min_avance?: number;
+                /** @description Avance máximo */
+                max_avance?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    temas_auditorias_drilldown_api_v1_dashboard_temas_auditorias_drilldown_get: {
+        parameters: {
+            query: {
+                /** @description Tipo: 'tema' o 'auditoria' */
+                tipo: string;
+                /** @description Filtro: 'estado', 'tipo', 'severidad', 'auditor' */
+                filtro: string;
+                /** @description Valor del filtro */
+                valor: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tema_detalle_api_v1_dashboard_temas_detalle__tema_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                tema_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auditoria_detalle_api_v1_dashboard_auditorias_detalle__auditoria_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                auditoria_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_export_api_v1_dashboard_export_get: {
+        parameters: {
+            query: {
+                /** @description Tipo: okr, vulnerabilidades, auditorias, temas, programas */
+                type: string;
+                /** @description Formato: json, csv */
+                format?: string;
+                /** @description Año para filtrar */
+                year?: number | null;
+                /** @description Quarter (Q1, Q2, Q3, Q4) */
+                quarter?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -13628,6 +15947,199 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_agent_configs_api_v1_agents_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by agent type */
+                agente_tipo?: string | null;
+                /** @description Filter by user ID */
+                usuario_id?: string | null;
+                /** @description Filter by review ID */
+                revision_id?: string | null;
+                /** @description Number of records to skip */
+                skip?: number;
+                /** @description Number of records to return */
+                limit?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgenteConfigList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_agent_config_api_v1_agents_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgenteConfigCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgenteConfigRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_config_api_v1_agents__config_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgenteConfigRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_agent_config_api_v1_agents__config_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgenteConfigUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgenteConfigRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_agent_config_api_v1_agents__config_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -17379,6 +19891,226 @@ export interface operations {
                 "application/json": components["schemas"]["DashboardConfigCreate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_risk_scoring_configs_api_v1_admin_risk_scoring_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_risk_scoring_config_api_v1_admin_risk_scoring_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskScoringConfigCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_risk_scoring_config_api_v1_admin_risk_scoring__config_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_risk_scoring_config_api_v1_admin_risk_scoring__config_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_risk_scoring_config_api_v1_admin_risk_scoring__config_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskScoringConfigUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_risk_scoring_config_api_v1_admin_risk_scoring__config_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                config_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -22586,6 +25318,81 @@ export interface operations {
                 "application/json": components["schemas"]["ProgramaSastUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_evidencia_programa_api_v1_programa_sasts__id__evidencia_post: {
+        parameters: {
+            query: {
+                programa_id: string;
+                evidencia_url: string;
+                descripcion?: string | null;
+                actividad_id?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_evidencias_programa_api_v1_programa_sasts__id__evidencias_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -32294,6 +35101,78 @@ export interface operations {
             };
         };
     };
+    list_code_security_reviews_api_v1_code_security_reviews__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_code_security_review_api_v1_code_security_reviews__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_code_security_reviews_api_v1_code_security_reviews_get: {
         parameters: {
             query?: never;
@@ -32347,7 +35226,7 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -32506,6 +35385,40 @@ export interface operations {
             };
         };
     };
+    stream_review_progress_api_v1_code_security_reviews__review_id__stream_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     review_progress_api_v1_code_security_reviews__review_id__progress_get: {
         parameters: {
             query?: never;
@@ -32540,14 +35453,24 @@ export interface operations {
             };
         };
     };
-    list_review_findings_api_v1_code_security_reviews__review_id__findings_get: {
+    list_findings_api_v1_code_security_reviews__review_id__findings_get: {
         parameters: {
-            query?: never;
+            query?: {
+                skip?: number;
+                limit?: number;
+                severidad?: string | null;
+                estado?: string | null;
+                tipo_riesgo?: string | null;
+                sort_by?: string;
+                sort_order?: string;
+            };
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
             };
-            path?: never;
+            path: {
+                review_id: string;
+            };
             cookie?: {
                 access_token?: string | null;
             };
@@ -32574,7 +35497,7 @@ export interface operations {
             };
         };
     };
-    patch_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch: {
+    create_finding_api_v1_code_security_reviews__review_id__findings_post: {
         parameters: {
             query?: never;
             header?: {
@@ -32582,7 +35505,7 @@ export interface operations {
                 authorization?: string | null;
             };
             path: {
-                finding_id: string;
+                review_id: string;
             };
             cookie?: {
                 access_token?: string | null;
@@ -32590,7 +35513,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CodeSecurityFindingUpdate"];
+                "application/json": components["schemas"]["CodeSecurityFindingCreateSchema"];
             };
         };
         responses: {
@@ -32614,14 +35537,135 @@ export interface operations {
             };
         };
     };
-    list_review_events_api_v1_code_security_reviews__review_id__events_get: {
+    get_finding_detail_api_v1_code_security_reviews__review_id__findings__finding_id__get: {
         parameters: {
             query?: never;
             header?: {
                 /** @description Bearer <token> */
                 authorization?: string | null;
             };
-            path?: never;
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_finding_api_v1_code_security_reviews__review_id__findings__finding_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_finding_api_v1_code_security_reviews__review_id__findings__finding_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeSecurityFindingUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_forensic_events_api_v1_code_security_reviews__review_id__events_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                severity?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
             cookie?: {
                 access_token?: string | null;
             };
@@ -32685,7 +35729,7 @@ export interface operations {
     export_review_bundle_api_v1_code_security_reviews__review_id__export_get: {
         parameters: {
             query?: {
-                /** @description Por ahora solo json (PDF fase 8). */
+                /** @description Format: json or pdf */
                 format?: string;
             };
             header?: {
@@ -32736,6 +35780,224 @@ export interface operations {
                 "application/json": components["schemas"]["CodeSecurityOrgBatchCreate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_finding_as_false_positive_api_v1_code_security_reviews__review_id__findings__finding_id__false_positive_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmark_finding_as_false_positive_api_v1_code_security_reviews__review_id__findings__finding_id__false_positive_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_false_positives_api_v1_code_security_reviews__review_id__false_positives_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_providers_health_api_v1_code_security_reviews_providers_health_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_github_repositories_api_v1_code_security_reviews_github_repos_get: {
+        parameters: {
+            query: {
+                /** @description GitHub username or org slug */
+                username: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_repository_branches_api_v1_code_security_reviews_github_branches_get: {
+        parameters: {
+            query: {
+                /** @description GitHub repository URL */
+                repo_url: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -32834,6 +36096,1550 @@ export interface operations {
             };
             path: {
                 org_slug: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scr_kpis_api_v1_scr_dashboard_kpis_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scr_costs_api_v1_scr_dashboard_costs_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scr_trends_api_v1_scr_dashboard_trends_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scr_top_repos_api_v1_scr_dashboard_top_repos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_llm_providers_api_v1_admin_scr_llm_providers_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_llm_models_api_v1_admin_scr_llm_config_models_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProviderConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_llm_config_api_v1_admin_scr_llm_config_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_llm_config_api_v1_admin_scr_llm_config_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProviderConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_llm_connection_api_v1_admin_scr_llm_config_test_connection_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProviderConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_github_tokens_api_v1_admin_scr_github_tokens_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_github_token_api_v1_admin_scr_github_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GitHubTokenSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_github_token_api_v1_admin_scr_github_tokens_validate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GitHubTokenSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_github_token_api_v1_admin_scr_github_tokens__token_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_github_token_api_v1_admin_scr_github_tokens__token_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GitHubTokenSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_repos_for_github_token_api_v1_admin_scr_github_tokens__token_id__repos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_orgs_for_github_token_api_v1_admin_scr_github_tokens__token_id__orgs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_org_repos_for_github_token_api_v1_admin_scr_github_tokens__token_id__orgs__org_slug__repos_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+                org_slug: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_branches_for_github_token_api_v1_admin_scr_github_tokens__token_id__branches_get: {
+        parameters: {
+            query: {
+                /** @description GitHub repository URL */
+                repo_url: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                token_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_prompt_api_v1_admin_scr_agents__agent__prompts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                agent: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_agent_prompt_api_v1_admin_scr_agents__agent__prompts_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                agent: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentPromptConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_agent_prompt_api_v1_admin_scr_agents__agent__test_prompt_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                agent: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptTestSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_stats_api_v1_admin_scr_agents__agent__stats_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                agent: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_detection_patterns_api_v1_admin_scr_patterns_get: {
+        parameters: {
+            query?: {
+                agent?: string;
+                category?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_custom_pattern_api_v1_admin_scr_patterns_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_pattern_api_v1_admin_scr_patterns__pattern_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                pattern_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": boolean;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_forensic_events_api_v1_code_security_reviews__review_id__events_search_get: {
+        parameters: {
+            query: {
+                query: string;
+                author?: string | null;
+                file_pattern?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_forensic_timeline_api_v1_code_security_reviews__review_id__timeline_get: {
+        parameters: {
+            query?: {
+                granularity?: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_forensic_summary_api_v1_code_security_reviews__review_id__forensic_summary_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_author_activity_api_v1_code_security_reviews__review_id__author_analysis__author__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                author: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detect_anomalies_api_v1_code_security_reviews__review_id__anomalies_get: {
+        parameters: {
+            query?: {
+                anomaly_type?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_commit_details_api_v1_code_security_reviews__review_id__commit__commit_hash__details_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                commit_hash: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_update_finding_status_api_v1_code_security_reviews__review_id__findings_bulk_status_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkStatusUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_assign_findings_api_v1_code_security_reviews__review_id__findings_bulk_assign_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignmentSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_mark_false_positives_api_v1_code_security_reviews__review_id__findings_bulk_false_positive_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkFalsePositiveSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_bulk_remediation_plan_api_v1_code_security_reviews__review_id__findings_bulk_remediation_plan_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Body_bulk_export_findings_api_v1_code_security_reviews__review_id__findings_bulk_export_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_bulk_status_report_api_v1_code_security_reviews__review_id__findings_bulk_status_report_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transition_finding_state_api_v1_code_security_reviews__review_id__findings__finding_id__transition_state_post: {
+        parameters: {
+            query: {
+                new_state: string;
+                reason?: string | null;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_finding_remediation_plan_api_v1_code_security_reviews__review_id__findings__finding_id__remediation_plan_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_finding_comments_api_v1_code_security_reviews__review_id__findings__finding_id__comments_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_finding_comment_api_v1_code_security_reviews__review_id__findings__finding_id__comments_post: {
+        parameters: {
+            query: {
+                comment: string;
+            };
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                review_id: string;
+                finding_id: string;
             };
             cookie?: {
                 access_token?: string | null;

@@ -1,139 +1,69 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+'use client';
 
-import api from '@/lib/api';
-import type {
-  CodeSecurityEvent,
-  CodeSecurityFinding,
-  CodeSecurityReport,
-  CodeSecurityReview,
-} from '@/types';
-import type {
-  CodeSecurityOrgBatchCreate,
-  CodeSecurityReviewCreate,
-  CodeSecurityReviewUpdate,
-} from '@/lib/schemas/code_security_review.schema';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '@/services/api';
 
-type Envelope<T> = { status: 'success'; data: T };
+export interface CodeSecurityReview {
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  estado: 'PENDING' | 'ANALYZING' | 'COMPLETED' | 'FAILED';
+  progreso: number;
+  tipo_escaneo: string;
+  url_repositorio?: string;
+  rama_analizar: string;
+  findings_count: number;
+  events_count: number;
+  risk_score?: number;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  agente_actual?: string;
+  actividad?: string;
+}
 
-const KEY = ['code_security_reviews'] as const;
+export interface CodeSecurityReviewsResponse {
+  reviews: CodeSecurityReview[];
+  total: number;
+  skip: number;
+  limit: number;
+}
 
-export function useCodeSecurityReviews() {
+interface UseCodeSecurityReviewsOptions {
+  skip?: number;
+  limit?: number;
+  estado?: string;
+  enabled?: boolean;
+}
+
+export function useCodeSecurityReviews(options: UseCodeSecurityReviewsOptions = {}) {
+  const { skip = 0, limit = 20, estado, enabled = true } = options;
+
   return useQuery({
-    queryKey: KEY,
+    queryKey: ['code-security-reviews', skip, limit, estado],
     queryFn: async () => {
-      const { data } = await api.get<Envelope<CodeSecurityReview[]>>('/code_security_reviews/');
-      return data.data;
-    },
-  });
-}
+      const params = new URLSearchParams();
+      params.append('skip', String(skip));
+      params.append('limit', String(limit));
+      if (estado) params.append('estado', estado);
 
-export function useCodeSecurityReview(reviewId?: string) {
-  return useQuery({
-    queryKey: [...KEY, reviewId],
-    enabled: Boolean(reviewId),
-    queryFn: async () => {
-      const { data } = await api.get<Envelope<CodeSecurityReview>>(`/code_security_reviews/${reviewId}`);
-      return data.data;
-    },
-  });
-}
-
-export function useCreateCodeSecurityReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: CodeSecurityReviewCreate) => {
-      const { data } = await api.post<Envelope<CodeSecurityReview>>('/code_security_reviews/', payload);
-      return data.data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export function useUpdateCodeSecurityReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...payload }: CodeSecurityReviewUpdate & { id: string }) => {
-      const { data } = await api.patch<Envelope<CodeSecurityReview>>(`/code_security_reviews/${id}`, payload);
-      return data.data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export function useDeleteCodeSecurityReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/code_security_reviews/${id}`);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export function useAnalyzeCodeSecurityReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.post(`/code_security_reviews/${id}/analyze`);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
-}
-
-export function useReviewProgress(reviewId?: string) {
-  return useQuery({
-    queryKey: ['code_security_reviews', reviewId, 'progress'],
-    enabled: Boolean(reviewId),
-    queryFn: async () => {
-      const { data } = await api.get<Envelope<{ progress: number; status: string; current_phase: string }>>(
-        `/code_security_reviews/${reviewId}/progress`
+      const response = await api.get<CodeSecurityReviewsResponse>(
+        `/api/v1/code_security_reviews?${params.toString()}`
       );
-      return data.data;
+      return response.data;
     },
-    refetchInterval: 2500,
+    enabled,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 
-export function useReviewFindings(reviewId?: string) {
-  return useQuery({
-    queryKey: ['code_security_reviews', reviewId, 'findings'],
-    enabled: Boolean(reviewId),
-    queryFn: async () => {
-      const { data } = await api.get<Envelope<CodeSecurityFinding[]>>(`/code_security_reviews/${reviewId}/findings`);
-      return data.data;
-    },
-  });
-}
-
-export function useReviewEvents(reviewId?: string) {
-  return useQuery({
-    queryKey: ['code_security_reviews', reviewId, 'events'],
-    enabled: Boolean(reviewId),
-    queryFn: async () => {
-      const { data } = await api.get<Envelope<CodeSecurityEvent[]>>(`/code_security_reviews/${reviewId}/events`);
-      return data.data;
-    },
-  });
-}
-
-export function useReviewReport(reviewId?: string) {
-  return useQuery({
-    queryKey: ['code_security_reviews', reviewId, 'report'],
-    enabled: Boolean(reviewId),
-    queryFn: async () => {
-      const { data } = await api.get<Envelope<CodeSecurityReport>>(`/code_security_reviews/${reviewId}/report`);
-      return data.data;
-    },
-  });
-}
-
-export function useCreateOrgBatchCodeSecurityReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: CodeSecurityOrgBatchCreate) => {
-      const { data } = await api.post('/code_security_reviews/batch/org', payload);
-      return data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  });
+export function useCodeSecurityReviewsInvalidate() {
+  const queryClient = useQueryClient();
+  return {
+    invalidate: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['code-security-reviews'],
+      }),
+  };
 }

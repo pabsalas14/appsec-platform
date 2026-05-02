@@ -20,7 +20,7 @@ services:
     command: >
       sh -c "
         echo '📦 Running migrations...' &&
-        alembic upgrade head &&
+        alembic upgrade heads &&
         if [ \"$$RUN_SEED\" = 'true' ]; then
           echo '🌱 Running seed...' &&
           python -m app.seed;

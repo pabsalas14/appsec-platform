@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { CodeSecurityFinding } from '@/types';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 const SEVERITY_COLORS = {
   CRITICO: 'bg-red-100 text-red-800 border-red-200',
@@ -55,6 +56,20 @@ export function CodeSecurityFindingsTable({ findings, reviewId }: { findings: Co
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['code_security_reviews', reviewId, 'findings'] });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ findingId, estado }: { findingId: string; estado: string }) => {
+      await api.patch(`/code_security_reviews/${reviewId}/findings/${findingId}`, { estado });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['code_security_reviews', reviewId, 'findings'] });
+      queryClient.invalidateQueries({ queryKey: ['findings', reviewId] });
+      toast.success('Estatus actualizado');
+    },
+    onError: () => {
+      toast.error('No se pudo actualizar el estatus');
     },
   });
 
@@ -162,8 +177,9 @@ export function CodeSecurityFindingsTable({ findings, reviewId }: { findings: Co
                 </Badge>
                 <RadixSelect
                   value={finding.estado}
-                  onValueChange={(_value: string) => {
-                    // TODO: Update finding status through API
+                  onValueChange={(value: string) => {
+                    if (!reviewId) return;
+                    updateStatusMutation.mutate({ findingId: finding.id, estado: value });
                   }}
                 >
                   <SelectTrigger className="w-32">

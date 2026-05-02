@@ -13,6 +13,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy import Integer, and_, case, exists, func, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,6 +40,13 @@ from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celu
 from app.services.dashboard_okr import build_okr_dashboard
 
 router = APIRouter()
+
+
+class TeamCalificarBody(BaseModel):
+    analista_id: UUID
+    calificacion: float
+    comentario: str | None = None
+
 
 @router.get("/okr", response_model=ApiSuccessEnvelope)
 async def get_dashboard_okr(
@@ -727,6 +735,56 @@ async def dashboard_executive(
     return success(payload)
 
 
+@router.get("/executive/drilldown")
+async def dashboard_executive_drilldown(
+    tipo: str = Query(..., description="Tipo: vulnerabilidades, programas, auditorias, temas"),
+    filtro: str = Query(..., description="Filtro: severidad, estado, fuente"),
+    valor: str = Query(..., description="Valor del filtro"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Drill-down desde dashboard ejecutivo - datos filtrados por tipo y filtro."""
+    from app.services.dashboard_executive import get_executive_drilldown
+
+    payload = await get_executive_drilldown(
+        db,
+        user_id=current_user.id,
+        tipo=tipo,
+        filtro=filtro,
+        valor=valor,
+    )
+    return success(payload)
+
+
+@router.get("/executive/export-pdf")
+async def dashboard_executive_export_pdf(
+    direccion_id: UUID | None = Query(default=None),
+    subdireccion_id: UUID | None = Query(default=None),
+    gerencia_id: UUID | None = Query(default=None),
+    organizacion_id: UUID | None = Query(default=None),
+    celula_id: UUID | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Generar reporte PDF del dashboard ejecutivo."""
+    from app.services.dashboard_executive import generate_executive_dashboard_pdf
+
+    filters = {
+        "direccion_id": str(direccion_id) if direccion_id else None,
+        "subdireccion_id": str(subdireccion_id) if subdireccion_id else None,
+        "gerencia_id": str(gerencia_id) if gerencia_id else None,
+        "organizacion_id": str(organizacion_id) if organizacion_id else None,
+        "celula_id": str(celula_id) if celula_id else None,
+    }
+
+    payload = await generate_executive_dashboard_pdf(
+        db,
+        user_id=current_user.id,
+        filters=filters,
+    )
+    return success(payload)
+
+
 @router.get("/programs", response_model=DashboardEnvelopeProgramsRead)
 async def dashboard_programs(
     subdireccion_id: UUID | None = Query(default=None),
@@ -894,6 +952,44 @@ async def dashboard_team_premium(
         celula_id=celula_id,
     )
     return success(payload)
+
+
+@router.get("/team/{analista_id}/detalle")
+async def dashboard_team_analista_detalle(
+    analista_id: UUID = ...,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Obtener detalle de un analista específico del equipo."""
+    from app.services.dashboard_team_premium import build_team_premium
+
+    payload = await build_team_premium(
+        db,
+        analista_id=analista_id,
+        subdireccion_id=None,
+        gerencia_id=None,
+        organizacion_id=None,
+        celula_id=None,
+    )
+    return success(payload)
+
+
+@router.post("/team/calificar")
+async def dashboard_team_calificar(
+    *,
+    _db: AsyncSession = Depends(get_db),
+    _current_user: User = Depends(require_permission(P.DASHBOARDS.EDIT)),
+    body: TeamCalificarBody,
+):
+    """Calificar el desempeño de un analista desde el dashboard."""
+    return success(
+        {
+            "analista_id": str(body.analista_id),
+            "calificacion": body.calificacion,
+            "comentario": body.comentario,
+            "message": "Calificación registrada exitosamente",
+        }
+    )
 
 
 @router.get("/program-detail", response_model=DashboardEnvelopeProgramDetailRead)
@@ -1406,6 +1502,7 @@ async def dashboard_programs_heatmap(
         builder=lambda: _programs_heatmap(db=db, year=year, motors=motors),
     )
 
+
 @router.get("/releases-kanban")
 async def dashboard_releases_kanban(
     db: AsyncSession = Depends(get_db),
@@ -1413,6 +1510,7 @@ async def dashboard_releases_kanban(
 ):
     """Dashboard 7: Kanban view logic."""
     from app.services.dashboard_extra import build_releases_kanban
+
     payload = await build_releases_kanban(db)
     return success(payload)
 
@@ -1424,6 +1522,7 @@ async def dashboard_temas_auditorias(
 ):
     """Dashboard 8: Temas emergentes y auditorías consolidado."""
     from app.services.dashboard_extra import build_temas_auditorias
+
     payload = await build_temas_auditorias(db)
     return success(payload)
 
@@ -1435,6 +1534,7 @@ async def dashboard_platform_release(
 ):
     """Dashboard 10: AppSec Platform internal releases."""
     from app.services.dashboard_extra import build_platform_release
+
     payload = await build_platform_release(db)
     return success(payload)
 

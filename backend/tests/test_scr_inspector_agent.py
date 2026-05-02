@@ -7,8 +7,8 @@ import pytest
 
 from app.services.ia_provider import AIProviderType
 from app.services.scr_inspector_agent import (
-    MALICIOUS_PATTERNS,
-    PATTERN_SEVERITY,
+    DEFAULT_MALICIOUS_PATTERNS,
+    DEFAULT_PATTERN_SEVERITY,
     run_inspector_real,
     run_inspector_stub,
     _build_inspector_prompt,
@@ -21,10 +21,10 @@ class TestInspectorPromptGeneration:
 
     def test_system_prompt_contains_patterns(self):
         """Verify system prompt includes all malicious patterns."""
-        prompt = _build_inspector_system_prompt()
+        prompt = _build_inspector_system_prompt(DEFAULT_MALICIOUS_PATTERNS)
 
         assert "EXEC_ENV_BACKDOOR" in prompt
-        assert "INJECTION_VULNERABILITY" in prompt
+        assert "DATA_EXFILTRATION" in prompt
         assert "LOGIC_BOMB" in prompt
         assert "JSON" in prompt  # Expects JSON response
 
@@ -46,26 +46,20 @@ class TestInspectorStub:
     """Test Inspector Stub (fallback)."""
 
     @pytest.mark.asyncio
-    async def test_stub_returns_finding(self):
-        """Verify stub returns a valid finding."""
+    async def test_stub_returns_no_synthetic_findings(self):
+        """Verify fallback does not invent findings."""
         source = {"test.py": "import os\nos.system('rm -rf/')"}
 
         findings = await run_inspector_stub(rutas_fuente=source)
 
-        assert len(findings) == 1
-        finding = findings[0]
-        assert finding["tipo_malicia"] == "EXEC_ENV_BACKDOOR"
-        assert finding["severidad"] == "CRITICO"
-        assert finding["confianza"] == 0.62
-        assert finding["estado"] == "DETECTED"
+        assert findings == []
 
     @pytest.mark.asyncio
     async def test_stub_empty_source(self):
         """Verify stub handles empty source."""
         findings = await run_inspector_stub(rutas_fuente={})
 
-        assert len(findings) == 1  # Still returns example
-        assert findings[0]["tipo_malicia"] == "EXEC_ENV_BACKDOOR"
+        assert findings == []
 
 
 class TestInspectorReal:
@@ -74,9 +68,7 @@ class TestInspectorReal:
     @pytest.mark.asyncio
     async def test_real_inspector_with_mock_llm(self):
         """Test real inspector with mocked LLM provider."""
-        source = {
-            "backdoor.py": "import os\nif os.getenv('ADMIN_MODE'):\n    exec(input())"
-        }
+        source = {"backdoor.py": "import os\nif os.getenv('ADMIN_MODE'):\n    exec(input())"}
 
         mock_response_data = {
             "findings": [
@@ -110,6 +102,7 @@ class TestInspectorReal:
             findings = await run_inspector_real(
                 rutas_fuente=source,
                 provider=AIProviderType.ANTHROPIC,
+                api_key_override="sk-test-mock",
             )
 
         assert len(findings) == 1
@@ -122,13 +115,11 @@ class TestInspectorReal:
 
     @pytest.mark.asyncio
     async def test_real_inspector_json_parse_error_fallback(self):
-        """Verify fallback to stub on JSON parse error."""
+        """Verify invalid JSON does not create synthetic findings."""
         source = {"test.py": "bad code"}
 
         mock_llm = AsyncMock()
-        mock_llm.generate = AsyncMock(
-            return_value=MagicMock(content="Invalid JSON response")
-        )
+        mock_llm.generate = AsyncMock(return_value=MagicMock(content="Invalid JSON response"))
 
         with patch(
             "app.services.scr_inspector_agent.get_ai_provider",
@@ -137,15 +128,14 @@ class TestInspectorReal:
             findings = await run_inspector_real(
                 rutas_fuente=source,
                 provider=AIProviderType.ANTHROPIC,
+                api_key_override="sk-test-mock",
             )
 
-        # Should fallback to stub
-        assert len(findings) == 1
-        assert findings[0]["tipo_malicia"] == "EXEC_ENV_BACKDOOR"
+        assert findings == []
 
     @pytest.mark.asyncio
     async def test_real_inspector_no_api_key_fallback(self):
-        """Verify fallback to stub when API key is missing."""
+        """Verify missing API key does not create synthetic findings."""
         source = {"test.py": "import os"}
 
         with patch.dict("os.environ", {}, clear=True):
@@ -154,16 +144,12 @@ class TestInspectorReal:
                 provider=AIProviderType.ANTHROPIC,
             )
 
-        # Should fallback to stub
-        assert len(findings) == 1
-        assert findings[0]["tipo_malicia"] == "EXEC_ENV_BACKDOOR"
+        assert findings == []
 
     @pytest.mark.asyncio
     async def test_real_inspector_multiple_findings(self):
         """Test LLM detecting multiple malicious patterns."""
-        source = {
-            "suspect.py": "import os\nexec(input())\nif DEBUG:\n    print(SECRET)"
-        }
+        source = {"suspect.py": "import os\nexec(input())\nif DEBUG:\n    print(SECRET)"}
 
         mock_response_data = {
             "findings": [
@@ -182,7 +168,7 @@ class TestInspectorReal:
                     "archivo": "suspect.py",
                     "linea_inicio": 4,
                     "linea_fin": 4,
-                    "tipo_malicia": "HARDCODED_SECRETS",
+                    "tipo_malicia": "DATA_EXFILTRATION",
                     "confianza": 0.85,
                     "descripcion": "Hardcoded secret in code",
                     "codigo_snippet": "print(SECRET)",
@@ -193,9 +179,7 @@ class TestInspectorReal:
         }
 
         mock_llm = AsyncMock()
-        mock_llm.generate = AsyncMock(
-            return_value=MagicMock(content=json.dumps(mock_response_data))
-        )
+        mock_llm.generate = AsyncMock(return_value=MagicMock(content=json.dumps(mock_response_data)))
 
         with patch(
             "app.services.scr_inspector_agent.get_ai_provider",
@@ -204,20 +188,21 @@ class TestInspectorReal:
             findings = await run_inspector_real(
                 rutas_fuente=source,
                 provider=AIProviderType.ANTHROPIC,
+                api_key_override="sk-test-mock",
             )
 
         assert len(findings) == 2
         assert findings[0]["tipo_malicia"] == "EXEC_ENV_BACKDOOR"
         assert findings[0]["severidad"] == "CRITICO"
-        assert findings[1]["tipo_malicia"] == "HARDCODED_SECRETS"
-        assert findings[1]["severidad"] == "ALTO"
+        assert findings[1]["tipo_malicia"] == "DATA_EXFILTRATION"
+        assert findings[1]["severidad"] == "CRITICO"
 
     @pytest.mark.asyncio
     async def test_pattern_severity_mapping(self):
         """Verify all patterns have severity levels."""
-        for pattern in MALICIOUS_PATTERNS.keys():
-            assert pattern in PATTERN_SEVERITY, f"Pattern {pattern} has no severity mapping"
-            assert PATTERN_SEVERITY[pattern] in [
+        for pattern in DEFAULT_MALICIOUS_PATTERNS.keys():
+            assert pattern in DEFAULT_PATTERN_SEVERITY, f"Pattern {pattern} has no severity mapping"
+            assert DEFAULT_PATTERN_SEVERITY[pattern] in [
                 "BAJO",
                 "MEDIO",
                 "ALTO",
@@ -232,9 +217,7 @@ class TestInspectorReal:
         mock_response_data = {"findings": []}
 
         mock_llm = AsyncMock()
-        mock_llm.generate = AsyncMock(
-            return_value=MagicMock(content=json.dumps(mock_response_data))
-        )
+        mock_llm.generate = AsyncMock(return_value=MagicMock(content=json.dumps(mock_response_data)))
 
         with patch(
             "app.services.scr_inspector_agent.get_ai_provider",
@@ -243,6 +226,7 @@ class TestInspectorReal:
             findings = await run_inspector_real(
                 rutas_fuente=source,
                 provider=AIProviderType.ANTHROPIC,
+                api_key_override="sk-test-mock",
             )
 
         assert len(findings) == 0
@@ -269,9 +253,7 @@ class TestInspectorReal:
         }
 
         mock_llm = AsyncMock()
-        mock_llm.generate = AsyncMock(
-            return_value=MagicMock(content=json.dumps(mock_response_data))
-        )
+        mock_llm.generate = AsyncMock(return_value=MagicMock(content=json.dumps(mock_response_data)))
 
         with patch(
             "app.services.scr_inspector_agent.get_ai_provider",
@@ -280,6 +262,7 @@ class TestInspectorReal:
             findings = await run_inspector_real(
                 rutas_fuente=source,
                 provider=AIProviderType.ANTHROPIC,
+                api_key_override="sk-test-mock",
             )
 
         finding = findings[0]

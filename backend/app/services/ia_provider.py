@@ -5,7 +5,6 @@ Multi-provider support: Ollama, Anthropic, OpenAI, OpenRouter
 
 import asyncio
 import json
-import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -17,9 +16,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.ia_config import IAConfigRead, IAProvider
+from app.core.logging import logger
 from app.services.json_setting import get_json_setting
-
-logger = logging.getLogger(__name__)
 
 
 class AIProviderType(StrEnum):
@@ -28,6 +26,9 @@ class AIProviderType(StrEnum):
     OPENAI = "openai"
     OPENROUTER = "openrouter"
     LITELLM = "litellm"
+    LMSTUDIO = "lmstudio"
+    GEMINI = "gemini"
+    NVIDIA_NIM = "nvidia_nim"
 
 
 class AIResponse(BaseModel):
@@ -35,6 +36,8 @@ class AIResponse(BaseModel):
 
     content: str
     tokens_used: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
     provider: str
     timestamp: Any
 
@@ -66,6 +69,7 @@ class AIProvider(ABC):
     def __init__(self, timeout_seconds: int = 30, max_retries: int = 3):
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
+        self.last_health_error: str | None = None
 
     @abstractmethod
     async def generate(
@@ -103,7 +107,8 @@ class AIProvider(ABC):
 
         for attempt in range(retries):
             try:
-                return await asyncio.wait_for(coro, timeout=self.timeout_seconds)
+                next_coro = coro() if callable(coro) else coro
+                return await asyncio.wait_for(next_coro, timeout=self.timeout_seconds)
             except TimeoutError:
                 logger.warning(f"Attempt {attempt + 1} timeout - provider took > {self.timeout_seconds}s")
                 if attempt == retries - 1:
@@ -159,12 +164,14 @@ class OllamaProvider(AIProvider):
             data = response.json()
             return AIResponse(
                 content=data.get("response", ""),
-                tokens_used=data.get("eval_count"),
+                tokens_used=(data.get("prompt_eval_count") or 0) + (data.get("eval_count") or 0),
+                input_tokens=data.get("prompt_eval_count"),
+                output_tokens=data.get("eval_count"),
                 provider="ollama",
                 timestamp=None,
             )
 
-        return await self._retry_with_backoff(call())
+        return await self._retry_with_backoff(call)
 
     async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
         """Classify using Ollama"""
@@ -199,14 +206,18 @@ class AnthropicProvider(AIProvider):
     def __init__(
         self,
         api_key: str,
-        model: str = "claude-opus",
+        model: str = "claude-sonnet-4-5",
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.api_key = api_key
         self.model = model
         self.client = httpx.AsyncClient(
-            headers={"x-api-key": api_key},
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
             timeout=self.timeout_seconds,
         )
 
@@ -234,14 +245,19 @@ class AnthropicProvider(AIProvider):
             )
             response.raise_for_status()
             data = response.json()
+            usage = data.get("usage", {})
+            input_tokens = usage.get("input_tokens")
+            output_tokens = usage.get("output_tokens")
             return AIResponse(
                 content=data["content"][0]["text"],
-                tokens_used=data.get("usage", {}).get("output_tokens"),
+                tokens_used=(input_tokens or 0) + (output_tokens or 0),
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
                 provider="anthropic",
                 timestamp=None,
             )
 
-        return await self._retry_with_backoff(call())
+        return await self._retry_with_backoff(call)
 
     async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
         """Classify using Anthropic"""
@@ -274,9 +290,32 @@ class AnthropicProvider(AIProvider):
                 json=payload,
                 timeout=5,
             )
-            return response.status_code == 200
+            if response.status_code != 200:
+                message = response.text[:300]
+                if response.status_code == 404 and "not_found_error" in message:
+                    self.last_health_error = (
+                        f"Anthropic respondió HTTP 404: el modelo '{self.model}' no está disponible para esta API key. "
+                        "Selecciona un modelo vigente como claude-sonnet-4-5 o claude-sonnet-4-20250514."
+                    )
+                else:
+                    self.last_health_error = f"Anthropic respondió HTTP {response.status_code}: {message}"
+                logger.warning(
+                    "anthropic.health_check_failed",
+                    extra={
+                        "event": "anthropic.health_check_failed",
+                        "status_code": response.status_code,
+                        "body": message,
+                    },
+                )
+                return False
+            self.last_health_error = None
+            return True
         except Exception as e:
-            logger.error(f"Anthropic health check failed: {e}")
+            self.last_health_error = f"No se pudo conectar con Anthropic: {e}"
+            logger.error(
+                "anthropic.health_check_error",
+                extra={"event": "anthropic.health_check_error", "error": str(e)},
+            )
             return False
 
 
@@ -287,11 +326,13 @@ class OpenAIProvider(AIProvider):
         self,
         api_key: str,
         model: str = "gpt-4",
+        base_url: str = "https://api.openai.com/v1",
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.api_key = api_key
         self.model = model
+        self.base_url = base_url.rstrip("/")
         self.client = httpx.AsyncClient(
             headers={"Authorization": f"Bearer {api_key}"},
             timeout=self.timeout_seconds,
@@ -320,19 +361,24 @@ class OpenAIProvider(AIProvider):
 
         async def call():
             response = await self.client.post(
-                "https://api.openai.com/v1/chat/completions",
+                f"{self.base_url}/chat/completions",
                 json=payload,
             )
             response.raise_for_status()
             data = response.json()
+            usage = data.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens")
+            completion_tokens = usage.get("completion_tokens")
             return AIResponse(
                 content=data["choices"][0]["message"]["content"],
-                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                tokens_used=usage.get("total_tokens") or ((prompt_tokens or 0) + (completion_tokens or 0)),
+                input_tokens=prompt_tokens,
+                output_tokens=completion_tokens,
                 provider="openai",
                 timestamp=None,
             )
 
-        return await self._retry_with_backoff(call())
+        return await self._retry_with_backoff(call)
 
     async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
         """Classify using OpenAI"""
@@ -354,7 +400,7 @@ class OpenAIProvider(AIProvider):
 
         try:
             response = await self.client.get(
-                "https://api.openai.com/v1/models",
+                f"{self.base_url}/models",
                 timeout=5,
             )
             return response.status_code == 200
@@ -369,11 +415,13 @@ class OpenRouterProvider(AIProvider):
         self,
         api_key: str,
         model: str = "gpt-3.5-turbo",
+        base_url: str = "https://openrouter.ai/api/v1",
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.api_key = api_key
         self.model = model
+        self.base_url = base_url.rstrip("/")
         self.client = httpx.AsyncClient(
             headers={"Authorization": f"Bearer {api_key}"},
             timeout=self.timeout_seconds,
@@ -402,19 +450,24 @@ class OpenRouterProvider(AIProvider):
 
         async def call():
             response = await self.client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                f"{self.base_url}/chat/completions",
                 json=payload,
             )
             response.raise_for_status()
             data = response.json()
+            usage = data.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens")
+            completion_tokens = usage.get("completion_tokens")
             return AIResponse(
                 content=data["choices"][0]["message"]["content"],
-                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                tokens_used=usage.get("total_tokens") or ((prompt_tokens or 0) + (completion_tokens or 0)),
+                input_tokens=prompt_tokens,
+                output_tokens=completion_tokens,
                 provider="openrouter",
                 timestamp=None,
             )
 
-        return await self._retry_with_backoff(call())
+        return await self._retry_with_backoff(call)
 
     async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
         """Classify using OpenRouter"""
@@ -433,7 +486,7 @@ class OpenRouterProvider(AIProvider):
 
         try:
             response = await self.client.get(
-                "https://openrouter.ai/api/v1/models",
+                f"{self.base_url}/models",
                 timeout=5,
             )
             return response.status_code == 200
@@ -486,14 +539,19 @@ class LiteLLMProvider(AIProvider):
             response = await self.client.post("/chat/completions", json=payload)
             response.raise_for_status()
             data = response.json()
+            usage = data.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens")
+            completion_tokens = usage.get("completion_tokens")
             return AIResponse(
                 content=data["choices"][0]["message"]["content"],
-                tokens_used=data.get("usage", {}).get("completion_tokens"),
+                tokens_used=usage.get("total_tokens") or ((prompt_tokens or 0) + (completion_tokens or 0)),
+                input_tokens=prompt_tokens,
+                output_tokens=completion_tokens,
                 provider="litellm",
                 timestamp=None,
             )
 
-        return await self._retry_with_backoff(call())
+        return await self._retry_with_backoff(call)
 
     async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
         """Classify using LiteLLM"""
@@ -522,6 +580,111 @@ class LiteLLMProvider(AIProvider):
             return False
 
 
+class OpenAICompatibleProvider(OpenAIProvider):
+    """Proveedor compatible con la API OpenAI (LM Studio, NVIDIA NIM, proxies locales)."""
+
+    provider_name = "openai_compatible"
+
+    async def generate(
+        self,
+        prompt: str,
+        system: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+    ) -> AIResponse:
+        response = await super().generate(prompt, system=system, temperature=temperature, max_tokens=max_tokens)
+        response.provider = self.provider_name
+        return response
+
+
+class LMStudioProvider(OpenAICompatibleProvider):
+    provider_name = "lmstudio"
+
+    def __init__(self, api_key: str = "", model: str = "local-model", base_url: str = "http://localhost:1234/v1", **kwargs):
+        super().__init__(api_key=api_key, model=model, base_url=base_url, **kwargs)
+
+
+class NvidiaNimProvider(OpenAICompatibleProvider):
+    provider_name = "nvidia_nim"
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "meta/llama-3.1-70b-instruct",
+        base_url: str = "https://integrate.api.nvidia.com/v1",
+        **kwargs,
+    ):
+        super().__init__(api_key=api_key, model=model, base_url=base_url, **kwargs)
+
+
+class GeminiProvider(AIProvider):
+    """Proveedor Gemini nativo."""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "gemini-2.0-flash",
+        base_url: str = "https://generativelanguage.googleapis.com/v1",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url.rstrip("/")
+        self.client = httpx.AsyncClient(timeout=self.timeout_seconds)
+
+    async def generate(
+        self,
+        prompt: str,
+        system: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+    ) -> AIResponse:
+        parts = []
+        if system:
+            parts.append({"text": system})
+        parts.append({"text": prompt})
+        payload = {
+            "contents": [{"role": "user", "parts": parts}],
+            "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens or 1024},
+        }
+
+        async def call():
+            response = await self.client.post(
+                f"{self.base_url}/models/{self.model}:generateContent",
+                params={"key": self.api_key},
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            usage = data.get("usageMetadata", {})
+            return AIResponse(
+                content=content,
+                tokens_used=usage.get("totalTokenCount") or ((usage.get("promptTokenCount") or 0) + (usage.get("candidatesTokenCount") or 0)),
+                input_tokens=usage.get("promptTokenCount"),
+                output_tokens=usage.get("candidatesTokenCount"),
+                provider="gemini",
+                timestamp=None,
+            )
+
+        return await self._retry_with_backoff(call)
+
+    async def classify(self, text: str, categories: list[str]) -> dict[str, Any]:
+        response = await self.generate(
+            prompt=f"Classify: {text}\nCategories: {', '.join(categories)}\nAnswer:",
+            temperature=0.1,
+        )
+        return {"classification": response.content.strip().lower(), "provider": "gemini"}
+
+    async def health_check(self) -> bool:
+        try:
+            response = await self.client.get(f"{self.base_url}/models", params={"key": self.api_key}, timeout=5)
+            return response.status_code == 200
+        except Exception:
+            return False
+
+
 def get_ai_provider(
     provider_type: AIProviderType,
     **kwargs,
@@ -534,6 +697,9 @@ def get_ai_provider(
         AIProviderType.OPENAI: OpenAIProvider,
         AIProviderType.OPENROUTER: OpenRouterProvider,
         AIProviderType.LITELLM: LiteLLMProvider,
+        AIProviderType.LMSTUDIO: LMStudioProvider,
+        AIProviderType.GEMINI: GeminiProvider,
+        AIProviderType.NVIDIA_NIM: NvidiaNimProvider,
     }
 
     provider_class = providers.get(provider_type)

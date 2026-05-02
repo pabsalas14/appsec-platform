@@ -93,6 +93,7 @@ class _Programs:
 class _Dashboards:
     VIEW = "dashboards.view"
     EXPORT = "dashboards.export"
+    EDIT = "dashboards.edit"
 
 
 class _Admin:
@@ -335,11 +336,6 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "code_security.view",
     ],
     "user": (
-        _VIEW_CODES
-        + _CATALOG_MUTATION
-        + _INVENTORY_BULK
-        + _NOTIF_CORE
-        + _PROGRAM_SAST_EXPORT
-        + _CODE_SECURITY_OPS
+        _VIEW_CODES + _CATALOG_MUTATION + _INVENTORY_BULK + _NOTIF_CORE + _PROGRAM_SAST_EXPORT + _CODE_SECURITY_OPS
     ),
 }

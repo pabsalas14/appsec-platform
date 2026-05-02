@@ -2,6 +2,7 @@
 
 import re
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -9,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class CodeSecurityReviewBase(BaseModel):
     titulo: str = Field(..., min_length=1, max_length=255)
-    estado: str = Field(default="PENDING", description="PENDING | ANALYZING | COMPLETED | FAILED")
+    estado: str = Field(default="PENDING", description="PENDING | ANALYZING | COMPLETED | FAILED | CANCELLED")
     descripcion: str | None = Field(None, max_length=1000)
     progreso: int = Field(default=0, ge=0, le=100)
     rama_analizar: str = Field(..., min_length=1, max_length=255)
@@ -21,6 +22,10 @@ class CodeSecurityReviewBase(BaseModel):
     repositorio_id: UUID | None = None
     github_org_slug: str | None = Field(None, max_length=255)
     scan_batch_id: UUID | None = None
+    scr_config: dict[str, Any] | None = Field(
+        default=None,
+        description="llm_provider, llm_model, temperature, max_tokens",
+    )
 
     @field_validator("titulo")
     @classmethod
@@ -34,7 +39,6 @@ class CodeSecurityReviewBase(BaseModel):
     def validate_rama_analizar(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("Branch name cannot be empty")
-        # Basic validation for branch names (allow alphanumeric, hyphens, underscores, slashes)
         if not re.match(r"^[a-zA-Z0-9._/-]+$", v):
             raise ValueError("Invalid branch name format")
         return v.strip()
@@ -47,7 +51,6 @@ class CodeSecurityReviewBase(BaseModel):
         v = v.strip()
         if not v:
             return None
-        # Basic URL validation for Git repositories
         url_pattern = r"^https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)$"
         if not re.match(url_pattern, v):
             raise ValueError("Invalid repository URL format")
@@ -64,7 +67,7 @@ class CodeSecurityReviewBase(BaseModel):
     @field_validator("estado")
     @classmethod
     def validate_estado(cls, v: str) -> str:
-        valid_states = {"PENDING", "ANALYZING", "COMPLETED", "FAILED"}
+        valid_states = {"PENDING", "ANALYZING", "COMPLETED", "FAILED", "CANCELLED"}
         if v not in valid_states:
             raise ValueError(f"Invalid estado. Must be one of: {', '.join(valid_states)}")
         return v
@@ -77,26 +80,9 @@ class CodeSecurityReviewBase(BaseModel):
         v = v.strip()
         if not v:
             return None
-        # GitHub org/username validation
         if not re.match(r"^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$", v):
             raise ValueError("Invalid GitHub organization/username format")
         return v
-
-
-class CodeSecurityReviewBase(BaseModel):
-    titulo: str
-    estado: str = Field(default="PENDING", description="PENDING | ANALYZING | COMPLETED | FAILED")
-    descripcion: str | None = None
-    progreso: int = 0
-    rama_analizar: str
-    url_repositorio: str | None = None
-    scan_mode: str = Field(
-        ...,
-        description="PUBLIC_URL | REPO_TOKEN | BRANCH_TARGET | ORG_BATCH",
-    )
-    repositorio_id: UUID | None = None
-    github_org_slug: str | None = None
-    scan_batch_id: UUID | None = None
 
 
 class CodeSecurityReviewCreate(CodeSecurityReviewBase):
@@ -114,6 +100,7 @@ class CodeSecurityReviewUpdate(BaseModel):
     repositorio_id: UUID | None = None
     github_org_slug: str | None = None
     scan_batch_id: UUID | None = None
+    scr_config: dict[str, Any] | None = None
 
 
 class CodeSecurityReviewRead(CodeSecurityReviewBase):
@@ -121,6 +108,13 @@ class CodeSecurityReviewRead(CodeSecurityReviewBase):
 
     id: UUID
     user_id: UUID
+    agente_actual: str | None = None
+    actividad: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: int | None = None
+    total_tokens_used: int = 0
+    estimated_cost_usd: float = 0
     created_at: datetime
     updated_at: datetime
 
@@ -135,6 +129,9 @@ class CodeSecurityOrgBatchCreate(BaseModel):
     github_org_slug: str = Field(..., min_length=1, max_length=255)
     titulo: str = Field(..., min_length=3, max_length=255)
     rama_analizar: str = Field(default="main", min_length=1, max_length=255)
+    github_token_id: UUID | None = None
+    repo_urls: list[str] | None = None
+    scr_config: dict[str, Any] | None = None
 
 
 class CodeSecurityOrgBatchResponse(BaseModel):

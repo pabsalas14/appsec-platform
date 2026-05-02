@@ -34,6 +34,7 @@ apscheduler==3.10.4
 
 # Infrastructure & Cache
 redis>=5.0.0
+celery[redis]>=5.4.0
 aiosmtplib>=3.0.0
 
 # Observability

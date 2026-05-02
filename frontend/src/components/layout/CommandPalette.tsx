@@ -256,7 +256,7 @@ export function CommandPalette({ children }: { children?: ReactNode }) {
                 <ScrollText className="mr-2 h-4 w-4" /> Audit Logs
               </CommandItem>
               <CommandItem onSelect={() => run(() => router.push('/admin/settings'))}>
-                <Settings className="mr-2 h-4 w-4" /> Settings
+                <Settings className="mr-2 h-4 w-4" /> Configuración del sistema
               </CommandItem>
             </CommandGroup>
           )}

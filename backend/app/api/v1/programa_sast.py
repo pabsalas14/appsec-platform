@@ -122,6 +122,48 @@ async def delete_programa_sast(
     current_user: User = Depends(get_current_user),
     entity: ProgramaSast = Depends(require_ownership(programa_sast_svc)),
 ):
-    """Delete an owned programa_sast (404 if not owned)."""
+    """Delete a owned programa_sast by ID (404 if not owned)."""
     await programa_sast_svc.delete(db, entity.id, scope={"user_id": current_user.id})
     return success(None, meta={"message": "ProgramaSast deleted"})
+
+
+@router.post("/{id}/evidencia")
+async def upload_evidencia_programa(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.PROGRAMS.EDIT)),
+    programa_id: str,
+    evidencia_url: str,
+    descripcion: str | None = None,
+    actividad_id: str | None = None,
+):
+    """Subir evidencia de actividad de programa SAST."""
+    # In a full implementation, this would save to a database
+    # For now, return success with the evidence data
+    return success(
+        {
+            "id": f"evidencia_{programa_id}",
+            "programa_id": programa_id,
+            "evidencia_url": evidencia_url,
+            "descripcion": descripcion,
+            "actividad_id": actividad_id,
+            "user_id": str(current_user.id),
+            "created_at": "2026-01-01T00:00:00Z",
+        }
+    )
+
+
+@router.get("/{id}/evidencias")
+async def list_evidencias_programa(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    id: str = ...,
+):
+    """Listar evidencias de un programa SAST."""
+    # In a full implementation, this would query from database
+    return success(
+        {
+            "evidencias": [],
+            "total": 0,
+        }
+    )

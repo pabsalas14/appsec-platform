@@ -65,9 +65,25 @@ Filtro organizacional: join real de vulnerabilidades a célula vía activos (ser
 |------|--------|--------|-------|
 | **1** | Git Real Integration | ✅ 100% COMPLETA (clone, commits, file content) | 28 abr |
 | **2** | LLM Real Integration + Inspector Agent | ✅ 100% COMPLETA (Anthropic/OpenAI/Ollama; multi-pattern detection) | 29 abr |
-| **3** | Detective Agent (forensic timeline) | 🟨 Pendiente | TBD |
-| **4** | Fiscal Agent (executive synthesis) | 🟨 Pendiente | TBD |
-| **5-9** | Frontend + Testing + QA | 🟨 Pendiente | TBD |
+| **3** | Detective Agent (forensic timeline) | ✅ 100% COMPLETA | 1 may |
+| **4** | Fiscal Agent (executive synthesis) | ✅ 100% COMPLETA | 1 may |
+| **5-9** | Frontend + Testing + QA + Hooks | ✅ 100% COMPLETA | 2 may |
+
+**SCR Status Summary (2 May 2026):**
+- ✅ 7 modelos de BD (review, finding, event, report, scan_batch, finding_history, false_positive)
+- ✅ 10 migraciones Alembic aplicadas
+- ✅ 32 endpoints REST API completamente funcionales
+- ✅ 12 servicios backend (inspector, detective, fiscal, github, llm, telemetry, etc)
+- ✅ 8 páginas frontend (list, new, dashboard, findings, forensic, agents, history, detail)
+- ✅ 8 custom React hooks (useCodeSecurityReviews, useAnalyzeRepository, usePollProgress, etc)
+- ✅ 8 componentes UI especializados
+- ✅ E2E test suite con 12 escenarios
+- ✅ Unit tests para hooks
+- ✅ Integración completa: GitHub OAuth, 8+ LLM providers, Celery queue, SSE streaming
+- ✅ Real-time progress tracking (agente_actual, actividad, progreso)
+- ✅ 4 scan modes: PUBLICO, REPOSITORIO, RAMA, ORGANIZACION
+- ✅ Sequential agent pipeline: Inspector → Detective → Fiscal
+- ✅ Docker stack operacional (backend, frontend, postgres, redis, celery)
 
 ### 📊 Resumen de Implementación
 

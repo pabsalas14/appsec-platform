@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import json
-import logging
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, WebSocketDisconnect, WebSocket, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.core.logging import logger
 from app.models.code_security_review import CodeSecurityReview
 from app.models.code_security_event import CodeSecurityEvent
-from app.services.code_security_review_service import code_security_review_svc
+from app.models.user import User
 from sqlalchemy import desc, select
 
 router = APIRouter()
@@ -28,8 +28,27 @@ async def get_connection_manager() -> dict[str, list[WebSocket]]:
     return active_connections
 
 
+async def _get_owned_review(db: AsyncSession, review_id: str, user_id: uuid.UUID) -> CodeSecurityReview | None:
+    try:
+        rid = uuid.UUID(str(review_id))
+    except ValueError:
+        return None
+    return await db.scalar(
+        select(CodeSecurityReview).where(
+            CodeSecurityReview.id == rid,
+            CodeSecurityReview.user_id == user_id,
+            CodeSecurityReview.deleted_at.is_(None),
+        )
+    )
+
+
 @router.websocket("/ws/reviews/{review_id}/progress")
-async def websocket_review_progress(websocket: WebSocket, review_id: str, db: AsyncSession = Depends(get_db)):
+async def websocket_review_progress(
+    websocket: WebSocket,
+    review_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     WebSocket endpoint for real-time analysis progress updates.
 
@@ -42,14 +61,14 @@ async def websocket_review_progress(websocket: WebSocket, review_id: str, db: As
     """
     try:
         # Verify review exists and user has access
-        review = await code_security_review_svc.get(db, review_id)
+        review = await _get_owned_review(db, review_id, current_user.id)
         if not review:
             await websocket.close(code=4004, reason="Review not found")
             return
 
         # Accept the connection
         await websocket.accept()
-        logger.info(f"WebSocket connected for review {review_id}")
+        logger.info("scr.websocket.progress_connected", extra={"event": "scr.websocket.progress_connected", "review_id": review_id})
 
         # Add to active connections
         if review_id not in active_connections:
@@ -78,7 +97,10 @@ async def websocket_review_progress(websocket: WebSocket, review_id: str, db: As
 
                 # Handle client requesting status refresh
                 elif message.get("type") == "get_status":
-                    review = await code_security_review_svc.get(db, review_id)
+                    review = await _get_owned_review(db, review_id, current_user.id)
+                    if not review:
+                        await websocket.close(code=4004, reason="Review not found")
+                        return
                     await websocket.send_json({
                         "type": "status_response",
                         "estado": review.estado,
@@ -86,7 +108,7 @@ async def websocket_review_progress(websocket: WebSocket, review_id: str, db: As
                     })
 
         except WebSocketDisconnect:
-            logger.info(f"WebSocket disconnected for review {review_id}")
+            logger.info("scr.websocket.progress_disconnected", extra={"event": "scr.websocket.progress_disconnected", "review_id": review_id})
             if review_id in active_connections:
                 active_connections[review_id].remove(websocket)
                 if not active_connections[review_id]:
@@ -96,22 +118,27 @@ async def websocket_review_progress(websocket: WebSocket, review_id: str, db: As
             await websocket.send_json({"type": "error", "message": "Invalid JSON"})
 
         except Exception as e:
-            logger.error(f"WebSocket error for review {review_id}: {str(e)}")
+            logger.error("scr.websocket.progress_error", extra={"event": "scr.websocket.progress_error", "review_id": review_id, "error": str(e)[:200]})
             await websocket.send_json({
                 "type": "error",
                 "message": "Internal server error"
             })
 
     except Exception as e:
-        logger.error(f"WebSocket connection error: {str(e)}")
+        logger.error("scr.websocket.progress_connection_error", extra={"event": "scr.websocket.progress_connection_error", "error": str(e)[:200]})
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except Exception:
             pass
 
 
 @router.websocket("/ws/reviews/{review_id}/events")
-async def websocket_review_events(websocket: WebSocket, review_id: str, db: AsyncSession = Depends(get_db)):
+async def websocket_review_events(
+    websocket: WebSocket,
+    review_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     WebSocket endpoint for forensic event streaming.
 
@@ -122,13 +149,13 @@ async def websocket_review_events(websocket: WebSocket, review_id: str, db: Asyn
     """
     try:
         # Verify review exists
-        review = await code_security_review_svc.get(db, review_id)
+        review = await _get_owned_review(db, review_id, current_user.id)
         if not review:
             await websocket.close(code=4004, reason="Review not found")
             return
 
         await websocket.accept()
-        logger.info(f"WebSocket events connected for review {review_id}")
+        logger.info("scr.websocket.events_connected", extra={"event": "scr.websocket.events_connected", "review_id": review_id})
 
         # Add to active connections
         if review_id not in active_connections:
@@ -155,8 +182,8 @@ async def websocket_review_events(websocket: WebSocket, review_id: str, db: Asyn
                     # Fetch latest events from DB
                     stmt = (
                         select(CodeSecurityEvent)
-                        .where(CodeSecurityEvent.review_id == review_id)
-                        .order_by(desc(CodeSecurityEvent.timestamp))
+                        .where(CodeSecurityEvent.review_id == review.id)
+                        .order_by(desc(CodeSecurityEvent.event_ts))
                         .limit(50)
                     )
                     result = await db.execute(stmt)
@@ -167,7 +194,7 @@ async def websocket_review_events(websocket: WebSocket, review_id: str, db: Asyn
                         "events": [
                             {
                                 "id": str(e.id),
-                                "timestamp": e.timestamp.isoformat(),
+                                "timestamp": e.event_ts.isoformat(),
                                 "commit_hash": e.commit_hash,
                                 "autor": e.autor,
                                 "archivo": e.archivo,
@@ -180,21 +207,21 @@ async def websocket_review_events(websocket: WebSocket, review_id: str, db: Asyn
                     })
 
         except WebSocketDisconnect:
-            logger.info(f"WebSocket events disconnected for review {review_id}")
+            logger.info("scr.websocket.events_disconnected", extra={"event": "scr.websocket.events_disconnected", "review_id": review_id})
             if review_id in active_connections:
                 active_connections[review_id].remove(websocket)
                 if not active_connections[review_id]:
                     del active_connections[review_id]
 
         except Exception as e:
-            logger.error(f"WebSocket events error: {str(e)}")
+            logger.error("scr.websocket.events_error", extra={"event": "scr.websocket.events_error", "review_id": review_id, "error": str(e)[:200]})
             await websocket.send_json({
                 "type": "error",
                 "message": "Stream error"
             })
 
     except Exception as e:
-        logger.error(f"WebSocket events connection error: {str(e)}")
+        logger.error("scr.websocket.events_connection_error", extra={"event": "scr.websocket.events_connection_error", "error": str(e)[:200]})
 
 
 async def broadcast_progress(review_id: str, progress: int, status: str = None, phase: str = None) -> None:
@@ -223,14 +250,14 @@ async def broadcast_progress(review_id: str, progress: int, status: str = None, 
         try:
             await websocket.send_json(message)
         except Exception as e:
-            logger.warning(f"Failed to send progress update: {str(e)}")
+            logger.warning("scr.websocket.progress_send_failed", extra={"event": "scr.websocket.progress_send_failed", "error": str(e)[:200]})
             disconnected.append(websocket)
 
     # Remove disconnected clients
     for ws in disconnected:
         try:
             active_connections[review_id].remove(ws)
-        except:
+        except ValueError:
             pass
 
 
@@ -253,13 +280,13 @@ async def broadcast_event(review_id: str, event_data: dict[str, Any]) -> None:
         try:
             await websocket.send_json(message)
         except Exception as e:
-            logger.warning(f"Failed to send event: {str(e)}")
+            logger.warning("scr.websocket.event_send_failed", extra={"event": "scr.websocket.event_send_failed", "error": str(e)[:200]})
             disconnected.append(websocket)
 
     for ws in disconnected:
         try:
             active_connections[review_id].remove(ws)
-        except:
+        except ValueError:
             pass
 
 
@@ -282,14 +309,14 @@ async def broadcast_completion(review_id: str, report_data: dict[str, Any]) -> N
         try:
             await websocket.send_json(message)
         except Exception as e:
-            logger.warning(f"Failed to send completion: {str(e)}")
+            logger.warning("scr.websocket.completion_send_failed", extra={"event": "scr.websocket.completion_send_failed", "error": str(e)[:200]})
             disconnected.append(websocket)
 
     # Close all connections
     for ws in active_connections[review_id]:
         try:
             await ws.close(code=1000, reason="Analysis complete")
-        except:
+        except Exception:
             pass
 
     del active_connections[review_id]

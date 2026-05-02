@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -54,6 +54,14 @@ class CodeSecurityReview(SoftDeleteMixin, Base):
     # Configuration (LLM provider, temperature, etc)
     scr_config: Mapped[dict | None] = mapped_column(JSONB(), nullable=True, server_default=text("'{}'::jsonb"))
 
+    agente_actual: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    actividad: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    total_tokens_used: Mapped[int] = mapped_column(Integer(), nullable=False, server_default=text("0"))
+    estimated_cost_usd: Mapped[float] = mapped_column(Float(), nullable=False, server_default=text("0"))
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -72,4 +80,7 @@ class CodeSecurityReview(SoftDeleteMixin, Base):
     )
     report: Mapped["CodeSecurityReport | None"] = relationship(
         "CodeSecurityReport", back_populates="review", uselist=False, lazy="noload"
+    )
+    analysis_metrics: Mapped[list["ScrAnalysisMetric"]] = relationship(
+        "ScrAnalysisMetric", back_populates="review", lazy="noload"
     )

@@ -42,9 +42,25 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 from app.config import settings
-from app.core.rate_limit import reset_rate_limit_state
+from app.core.rate_limit import (
+    clear_auth_login_rate_window_for_username,
+    clear_login_failures,
+    reset_rate_limit_state,
+)
 from app.database import get_db
 from app.main import app
+
+# ``auth._login_limit_key`` usa ``{request.client.host}:{username}``. Según el
+# transport (ASGI directo vs proxy / Docker), el host puede ser ``127.0.0.1``,
+# ``testclient``, etc. Limpiamos todas las variantes habituales para tests.
+_LOGIN_LOCKOUT_HOST_CANDIDATES = ("127.0.0.1", "testclient", "localhost")
+
+
+def _clear_login_lockout_for_username(username: str) -> None:
+    u = username.lower()
+    for host in _LOGIN_LOCKOUT_HOST_CANDIDATES:
+        clear_login_failures(f"{host}:{u}")
+
 
 # ─── Engine & session factory (session-scoped, loop-safe) ────────────────────
 
@@ -243,7 +259,7 @@ class _DrainingAsyncClient(AsyncClient):
         # ASGITransport puede entregar el cuerpo antes de que FastAPI ejecute el
         # teardown de Depends (commit tras ``yield`` en get_db). Sin ceder el
         # loop, register→login en el mismo cliente ve 401 intermitente.
-        for _ in range(8):
+        for _ in range(20):
             await asyncio.sleep(0)
         return r
 
@@ -274,20 +290,28 @@ async def _register_and_login(client: AsyncClient, username: str | None = None) 
 
     resp = await client.post("/api/v1/auth/register", json=payload)
     assert resp.status_code == 201, f"Register failed: {resp.text}"
-    await asyncio.sleep(0.05)
+    await asyncio.sleep(0.18)
 
     login_payload = {"username": payload["username"], "password": payload["password"]}
+    # Evita que reintentos por 401 transitorio acumulen lockout (429).
+    _clear_login_lockout_for_username(login_payload["username"])
     last_login_resp: Response | None = None
-    for attempt in range(8):
+    for attempt in range(10):
         resp = await client.post("/api/v1/auth/login", json=login_payload)
         last_login_resp = resp
         if resp.status_code == 200:
             break
+        if resp.status_code == 401:
+            _clear_login_lockout_for_username(login_payload["username"])
+        elif resp.status_code == 429:
+            _clear_login_lockout_for_username(login_payload["username"])
+            clear_auth_login_rate_window_for_username(login_payload["username"])
         # get_db() commits after dependency teardown; under load it can lag briefly.
-        await asyncio.sleep(0.05 * (attempt + 1))
+        await asyncio.sleep(0.06 * (attempt + 1))
 
     assert last_login_resp is not None
     assert last_login_resp.status_code == 200, f"Login failed: {last_login_resp.text}"
+    await asyncio.sleep(0.08)
 
 
 @pytest_asyncio.fixture

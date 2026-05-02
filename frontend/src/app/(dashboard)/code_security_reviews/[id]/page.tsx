@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCodeSecurityReview, useReviewProgress, useReviewFindings, useReviewEvents, useReviewReport } from '@/hooks/useCodeSecurityReviews';
@@ -9,18 +10,31 @@ import { CodeSecurityFindingsTable } from '@/components/code-security/CodeSecuri
 import { ForensicTimeline } from '@/components/code-security/ForensicTimeline';
 import { ExecutiveReportViewer } from '@/components/code-security/ExecutiveReportViewer';
 import { RiskScoreGauge } from '@/components/code-security/RiskScoreGauge';
+import { api } from '@/lib/api';
+import { logger } from '@/lib/logger';
+import { formatDuration, formatUsd } from '@/lib/scr-format';
 import { cn } from '@/lib/utils';
 
 type TabType = 'findings' | 'timeline' | 'report' | 'summary';
 
+type LiveProgress = {
+  progress: number;
+  agent?: string | null;
+  activity?: string | null;
+  estado?: string;
+};
+
 export default function CodeSecurityReviewDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const reviewId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<TabType>('summary');
+  const [findingSearch, setFindingSearch] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string | null>(null);
   const [riskTypeFilter, setRiskTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [liveProgress, setLiveProgress] = useState<LiveProgress | null>(null);
 
   // Fetch data
   const { data: review, isLoading: reviewLoading } = useCodeSecurityReview(reviewId);
@@ -32,8 +46,51 @@ export default function CodeSecurityReviewDetailPage() {
   const isAnalyzing = review?.estado === 'ANALYZING';
   const isComplete = review?.estado === 'COMPLETED';
 
+  async function cancelScan() {
+    try {
+      await api.post(`/code_security_reviews/${reviewId}/cancel`);
+      toast.success('Escaneo cancelado');
+      window.location.reload();
+    } catch (error) {
+      logger.error('scr.review.cancel_failed', { error: String(error), reviewId });
+      toast.error('No se pudo cancelar el escaneo');
+    }
+  }
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'summary' || tab === 'findings' || tab === 'timeline' || tab === 'report') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!reviewId || !isAnalyzing) {
+      return;
+    }
+
+    const source = new EventSource(`/api/v1/code_security_reviews/${reviewId}/stream`, { withCredentials: true });
+    source.onmessage = (event) => {
+      try {
+        setLiveProgress(JSON.parse(event.data) as LiveProgress);
+      } catch {
+        setLiveProgress(null);
+      }
+    };
+    source.onerror = () => {
+      source.close();
+    };
+
+    return () => source.close();
+  }, [isAnalyzing, reviewId]);
+
   // Filter findings
   const filteredFindings = findings?.filter((f) => {
+    if (findingSearch.trim()) {
+      const query = findingSearch.toLowerCase();
+      const searchable = [f.tipo_malicia, f.archivo, f.descripcion].join(' ').toLowerCase();
+      if (!searchable.includes(query)) return false;
+    }
     if (severityFilter && f.severidad !== severityFilter) return false;
     if (riskTypeFilter && f.tipo_malicia !== riskTypeFilter) return false;
     if (statusFilter && f.estado !== statusFilter) return false;
@@ -49,10 +106,10 @@ export default function CodeSecurityReviewDetailPage() {
   };
 
   const tabs: { id: TabType; label: string; icon: string; count?: number }[] = [
-    { id: 'summary', label: 'Summary', icon: '📊' },
-    { id: 'findings', label: 'Findings', icon: '🔍', count: stats.total },
+    { id: 'summary', label: 'Resumen', icon: '📊' },
+    { id: 'findings', label: 'Hallazgos', icon: '🔍', count: stats.total },
     { id: 'timeline', label: 'Timeline', icon: '⏱️', count: events?.length },
-    { id: 'report', label: 'Report', icon: '📄' },
+    { id: 'report', label: 'Reporte', icon: '📄' },
   ];
 
   if (reviewLoading) {
@@ -80,6 +137,23 @@ export default function CodeSecurityReviewDetailPage() {
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">{review.titulo}</h1>
               <p className="text-muted-foreground">{review.descripcion}</p>
+              {isComplete && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button onClick={() => window.location.href = `/api/v1/code_security_reviews/${reviewId}/export?format=json`}>
+                    Exportar JSON
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.href = `/api/v1/code_security_reviews/${reviewId}/export?format=pdf`}>
+                    Reporte PDF
+                  </Button>
+                </div>
+              )}
+              {isAnalyzing && (
+                <div className="mt-4">
+                  <Button variant="outline" onClick={() => void cancelScan()}>
+                    Cancelar escaneo
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="text-right">
               <div className={cn(
@@ -108,17 +182,20 @@ export default function CodeSecurityReviewDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <p className="text-sm font-medium">Analysis in Progress</p>
-                  <p className="text-sm text-muted-foreground">{progress?.progress || review.progreso}%</p>
+                  <p className="text-sm text-muted-foreground">{liveProgress?.progress ?? progress?.progress ?? review.progreso}%</p>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all"
-                    style={{ width: `${progress?.progress || review.progreso}%` }}
+                    style={{ width: `${liveProgress?.progress ?? progress?.progress ?? review.progreso}%` }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Phase: {progress?.current_phase || 'analyzing'}
+                  {liveProgress?.activity || progress?.activity || progress?.current_phase || 'Analizando…'}
                 </p>
+                {(liveProgress?.agent || progress?.agent) && (
+                  <p className="text-xs text-muted-foreground/80">Agente: {liveProgress?.agent || progress?.agent}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -159,15 +236,15 @@ export default function CodeSecurityReviewDetailPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2 border-white/[0.1] bg-white/[0.02]">
                   <CardHeader>
-                    <CardTitle>Risk Assessment</CardTitle>
-                    <CardDescription>Overall security risk score</CardDescription>
+                    <CardTitle>Evaluación de Riesgo</CardTitle>
+                    <CardDescription>Puntuación global del escaneo</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {report ? (
                       <RiskScoreGauge score={report.puntuacion_riesgo_global || 0} />
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
-                        Analysis not complete - report pending
+                        Análisis no completado - reporte pendiente
                       </div>
                     )}
                   </CardContent>
@@ -179,7 +256,26 @@ export default function CodeSecurityReviewDetailPage() {
                     <CardContent className="pt-6">
                       <div className="text-center">
                         <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-                        <p className="text-sm text-muted-foreground">Total Findings</p>
+                        <p className="text-sm text-muted-foreground">Hallazgos totales</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-white/[0.1] bg-white/[0.02]">
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-lg font-semibold text-foreground">{formatDuration(review.duration_ms)}</p>
+                          <p className="text-xs text-muted-foreground">Duración</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-foreground">{review.total_tokens_used ?? 0}</p>
+                          <p className="text-xs text-muted-foreground">Tokens</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-foreground">{formatUsd(review.estimated_cost_usd)}</p>
+                          <p className="text-xs text-muted-foreground">Costo</p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -217,20 +313,20 @@ export default function CodeSecurityReviewDetailPage() {
               {report && (
                 <Card className="border-white/[0.1] bg-white/[0.02]">
                   <CardHeader>
-                    <CardTitle>Key Information</CardTitle>
+                    <CardTitle>Información Clave</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Executive Summary</p>
+                      <p className="text-sm text-muted-foreground mb-1">Resumen Ejecutivo</p>
                       <p className="text-foreground">{report.resumen_ejecutivo}</p>
                     </div>
                     {report.pasos_remediacion && report.pasos_remediacion.length > 0 && (
                       <div>
-                        <p className="text-sm text-muted-foreground mb-2">Remediation Steps</p>
+                        <p className="text-sm text-muted-foreground mb-2">Pasos de Remediación</p>
                         <ol className="list-decimal list-inside space-y-1">
                           {report.pasos_remediacion.map((step, idx) => (
                             <li key={idx} className="text-sm text-foreground">
-                              {step}
+                              {typeof step === 'string' ? step : JSON.stringify(step)}
                             </li>
                           ))}
                         </ol>
@@ -248,18 +344,27 @@ export default function CodeSecurityReviewDetailPage() {
               {/* Filters */}
               <Card className="border-white/[0.1] bg-white/[0.02]">
                 <CardHeader>
-                  <CardTitle className="text-lg">Filters</CardTitle>
+                  <CardTitle className="text-lg">Filtros</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="text-sm font-medium block mb-2">Severity</label>
+                      <label className="text-sm font-medium block mb-2">Búsqueda</label>
+                      <input
+                        value={findingSearch}
+                        onChange={(e) => setFindingSearch(e.target.value)}
+                        placeholder="Archivo, patrón, descripción..."
+                        className="w-full px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium block mb-2">Severidad</label>
                       <select
                         value={severityFilter || ''}
                         onChange={(e) => setSeverityFilter(e.target.value || null)}
                         className="w-full px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       >
-                        <option value="">All Severities</option>
+                        <option value="">Todas</option>
                         <option value="CRITICO">Critical</option>
                         <option value="ALTO">High</option>
                         <option value="MEDIO">Medium</option>
@@ -268,13 +373,13 @@ export default function CodeSecurityReviewDetailPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium block mb-2">Type</label>
+                      <label className="text-sm font-medium block mb-2">Tipo</label>
                       <select
                         value={riskTypeFilter || ''}
                         onChange={(e) => setRiskTypeFilter(e.target.value || null)}
                         className="w-full px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       >
-                        <option value="">All Types</option>
+                        <option value="">Todos</option>
                         <option value="BACKDOOR">Backdoor</option>
                         <option value="INJECTION">Injection</option>
                         <option value="LOGIC_BOMB">Logic Bomb</option>
@@ -284,13 +389,13 @@ export default function CodeSecurityReviewDetailPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium block mb-2">Status</label>
+                      <label className="text-sm font-medium block mb-2">Estatus</label>
                       <select
                         value={statusFilter || ''}
                         onChange={(e) => setStatusFilter(e.target.value || null)}
                         className="w-full px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       >
-                        <option value="">All Statuses</option>
+                        <option value="">Todos</option>
                         <option value="DETECTED">Detected</option>
                         <option value="IN_REVIEW">In Review</option>
                         <option value="IN_CORRECTION">In Correction</option>

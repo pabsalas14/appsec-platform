@@ -10,6 +10,7 @@ from app.models.okr_compromiso import OkrCompromiso
 from app.models.okr_subcompromiso import OkrSubcompromiso
 from app.models.okr_revision_q import OkrRevisionQ
 
+
 async def build_okr_dashboard(
     db: AsyncSession,
     *,
@@ -22,53 +23,44 @@ async def build_okr_dashboard(
     Construye el payload real para el Dashboard de OKRs (Simulador de Cascada).
     Extrae el score global, compromisos en riesgo y el heatmap de células.
     """
-    
+
     current_year = year or datetime.now(UTC).year
-    
+
     # 1. Total Score Global de Jefatura (Promedio de avances reportados)
-    stmt_promedio = select(func.avg(OkrRevisionQ.avance_reportado)).where(
-        OkrRevisionQ.deleted_at.is_(None)
-    )
+    stmt_promedio = select(func.avg(OkrRevisionQ.avance_reportado)).where(OkrRevisionQ.deleted_at.is_(None))
     result_promedio = await db.execute(stmt_promedio)
     score_global_raw = result_promedio.scalar() or 0.0
     score_global = round(score_global_raw, 1)
 
     # 2. Compromisos en Riesgo (Avance < 50%)
     stmt_riesgo = select(func.count(OkrRevisionQ.id)).where(
-        OkrRevisionQ.avance_reportado < 50.0,
-        OkrRevisionQ.deleted_at.is_(None)
+        OkrRevisionQ.avance_reportado < 50.0, OkrRevisionQ.deleted_at.is_(None)
     )
     result_riesgo = await db.execute(stmt_riesgo)
     riesgo_count = result_riesgo.scalar() or 0
 
     # 3. Heatmap Organizacional
     # Agruparemos por nombre_objetivo del compromiso
-    stmt_heatmap = select(
-        OkrCompromiso.nombre_objetivo,
-        func.avg(OkrRevisionQ.avance_reportado).label('promedio'),
-        func.count(OkrRevisionQ.id).label('total')
-    ).select_from(
-        OkrCompromiso
-    ).join(
-        OkrSubcompromiso, OkrSubcompromiso.compromiso_id == OkrCompromiso.id
-    ).join(
-        OkrRevisionQ, OkrRevisionQ.subcompromiso_id == OkrSubcompromiso.id
-    ).where(
-        OkrCompromiso.deleted_at.is_(None),
-        OkrRevisionQ.deleted_at.is_(None)
-    ).group_by(OkrCompromiso.nombre_objetivo)
-    
+    stmt_heatmap = (
+        select(
+            OkrCompromiso.nombre_objetivo,
+            func.avg(OkrRevisionQ.avance_reportado).label("promedio"),
+            func.count(OkrRevisionQ.id).label("total"),
+        )
+        .select_from(OkrCompromiso)
+        .join(OkrSubcompromiso, OkrSubcompromiso.compromiso_id == OkrCompromiso.id)
+        .join(OkrRevisionQ, OkrRevisionQ.subcompromiso_id == OkrSubcompromiso.id)
+        .where(OkrCompromiso.deleted_at.is_(None), OkrRevisionQ.deleted_at.is_(None))
+        .group_by(OkrCompromiso.nombre_objetivo)
+    )
+
     heatmap_res = await db.execute(stmt_heatmap)
     heatmap_data = []
     rezago_count = 0
     for row in heatmap_res:
         resp = row.nombre_objetivo or "Sin Asignar"
         prom = round(row.promedio or 0.0, 1)
-        heatmap_data.append({
-            "name": resp,
-            "score": prom,
-            "commitments": row.total
-        })
+        heatmap_data.append({"name": resp, "score": prom, "commitments": row.total})
         if prom < 60.0:
             rezago_count += 1
 
@@ -76,11 +68,37 @@ async def build_okr_dashboard(
         "kpis": {
             "score_global": score_global,
             "en_riesgo": riesgo_count,
-            "celulas_rezago": rezago_count
+            "celulas_rezago": rezago_count,
+            "programs_advancement": score_global,
+            "critical_vulns": riesgo_count,
+            "active_releases": 0,
+            "emerging_themes": rezago_count,
+            "audits": 0,
+            "initiatives_active": 0,
+            "initiatives_advancement": score_global,
         },
+        "kpi_sub": {
+            "critical_by_fuente": [],
+            "emerging_stale_7d": 0,
+            "releases_sla_riesgo": 0,
+            "releases_riesgo_pct": 0,
+            "audits_not_completed": 0,
+        },
+        "kpi_trends": {
+            "avance_cierre_pp": 0,
+            "volumen_severidad_delta": 0,
+        },
+        "risk_level": "BAJO" if score_global >= 70 else "MEDIO" if score_global >= 40 else "ALTO",
+        "security_posture": int(score_global),
+        "trend_months": 6,
+        "trend_data": [],
+        "top_repos": [],
+        "sla_status": [
+            {"status": "ok", "label": "Cumpliendo", "count": 0, "percentage": 100},
+            {"status": "warning", "label": "En riesgo", "count": 0, "percentage": 0},
+            {"status": "critical", "label": "Vencido", "count": 0, "percentage": 0},
+        ],
+        "audits": [],
         "heatmap": heatmap_data,
-        "simulator": {
-            "base_score": score_global,
-            "nodes": heatmap_data
-        }
+        "simulator": {"base_score": score_global, "nodes": heatmap_data},
     }

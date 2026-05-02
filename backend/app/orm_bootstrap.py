@@ -83,6 +83,9 @@ def import_all_orm() -> None:
     import app.models.repositorio
     import app.models.revision_source_code
     import app.models.revision_tercero
+    import app.models.scr_github_token
+    import app.models.scr_analysis_metric
+    import app.models.scr_llm_configuration
     import app.models.role
     import app.models.service_release
     import app.models.servicio

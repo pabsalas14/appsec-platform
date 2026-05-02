@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,19 +13,46 @@ import httpx
 from app.config import settings
 from app.core.exceptions import BadRequestException
 from app.core.logging import logger
+from app.services.scr_github_context import get_scr_github_bearer_override
 
 _GITHUB_API = "https://api.github.com"
 
 
-def _auth_headers() -> dict[str, str]:
-    token = settings.SCR_GITHUB_TOKEN.strip()
+def _resolve_github_bearer() -> str | None:
+    override = get_scr_github_bearer_override()
+    if override and override.strip():
+        return override.strip()
+    env_tok = settings.SCR_GITHUB_TOKEN.strip()
+    return env_tok or None
+
+
+def _auth_headers(*, require_token: bool = True) -> dict[str, str]:
+    token = _resolve_github_bearer()
+    if require_token and not token:
+        raise BadRequestException(
+            "Sin token GitHub: configura uno en Administración → SCR o define SCR_GITHUB_TOKEN."
+        )
     if not token:
-        raise BadRequestException("SCR_GITHUB_TOKEN no configurado.")
+        return {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
     return {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
+
+
+def _clone_url_with_auth(repo_url: str) -> str:
+    """Inserta x-access-token para clones HTTPS de GitHub cuando hay PAT."""
+    tok = _resolve_github_bearer()
+    if not tok:
+        return repo_url
+    u = repo_url.strip()
+    if not u.lower().startswith("https://github.com/"):
+        return repo_url
+    return u.replace("https://github.com/", f"https://x-access-token:{tok}@github.com/", 1)
 
 
 async def list_accessible_repos(limit: int = 100) -> list[dict[str, Any]]:
@@ -91,9 +119,10 @@ async def clone_and_read_repo(repo_url: str, branch: str = "main", max_files: in
 
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
+            clone_src = _clone_url_with_auth(repo_url)
             # Clone con depth=1 para rapidez
             subprocess.run(
-                ["git", "clone", "--depth=1", "--branch", branch, "--single-branch", repo_url, tmpdir],
+                ["git", "clone", "--depth=1", "--branch", branch, "--single-branch", clone_src, tmpdir],
                 timeout=60,
                 check=True,
                 capture_output=True,
@@ -166,16 +195,43 @@ async def get_commits(repo_url: str, branch: str = "main", limit: int = 100) -> 
             raise BadRequestException(f"No se pudieron obtener commits para {repo}")
         commits = resp.json()
 
+        details_by_sha: dict[str, dict[str, Any]] = {}
+        for commit in commits[: min(limit, 50)]:
+            sha = commit.get("sha")
+            if not sha:
+                continue
+            detail_resp = await client.get(
+                f"{_GITHUB_API}/repos/{owner}/{repo}/commits/{sha}",
+                headers=_auth_headers(),
+            )
+            if detail_resp.status_code < 400:
+                details_by_sha[sha] = detail_resp.json()
+
     result = []
     for c in commits:
+        sha = c.get("sha", "")
+        detail = details_by_sha.get(sha, {})
+        files = detail.get("files") or []
+        file_names = [str(item.get("filename")) for item in files if item.get("filename")]
+        lines_changed = sum(int(item.get("changes") or 0) for item in files)
+        timestamp_raw = c.get("commit", {}).get("author", {}).get("date", "")
+        try:
+            timestamp = datetime.fromisoformat(str(timestamp_raw).replace("Z", "+00:00"))
+        except ValueError:
+            timestamp = datetime.now(UTC)
         result.append(
             {
-                "commit_hash": c.get("sha", "")[:40],
+                "commit_hash": sha[:40],
+                "hash": sha[:40],
                 "autor": c.get("commit", {}).get("author", {}).get("name", "unknown"),
+                "author": c.get("commit", {}).get("author", {}).get("name", "unknown"),
                 "autor_email": c.get("commit", {}).get("author", {}).get("email", ""),
-                "timestamp": c.get("commit", {}).get("author", {}).get("date", ""),
+                "timestamp": timestamp,
                 "mensaje": c.get("commit", {}).get("message", "")[:500],
+                "message": c.get("commit", {}).get("message", "")[:500],
                 "url": c.get("html_url", ""),
+                "files": file_names,
+                "lines_changed": lines_changed,
             }
         )
 
@@ -303,3 +359,50 @@ async def list_repository_branches(repo_url: str, limit: int = 100) -> list[dict
         )
 
     return result
+
+
+async def validate_github_personal_access_token(token: str) -> dict[str, Any]:
+    """
+    Valida un PAT contra ``api.github.com`` sin usar el ContextVar SCR ni ``SCR_GITHUB_TOKEN``.
+    """
+    t = (token or "").strip()
+    if len(t) < 10:
+        return {
+            "valid": False,
+            "message": "Formato de token inválido",
+            "user": None,
+            "organizations": None,
+            "repos_count": None,
+            "expiration_date": None,
+        }
+
+    headers = {
+        "Authorization": f"Bearer {t}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=25.0) as client:
+        ur = await client.get(f"{_GITHUB_API}/user", headers=headers)
+        if ur.status_code >= 400:
+            return {
+                "valid": False,
+                "message": f"GitHub respondió {ur.status_code}",
+                "user": None,
+                "organizations": None,
+                "repos_count": None,
+                "expiration_date": None,
+            }
+        u = ur.json()
+        or_resp = await client.get(f"{_GITHUB_API}/user/orgs", headers=headers, params={"per_page": 100})
+        orgs: list[str] = []
+        if or_resp.status_code < 400:
+            orgs = [str(r.get("login")) for r in or_resp.json() if r.get("login")]
+
+    return {
+        "valid": True,
+        "message": "Token válido",
+        "user": u.get("login"),
+        "organizations": orgs,
+        "repos_count": int(u.get("public_repos") or 0),
+        "expiration_date": None,
+    }

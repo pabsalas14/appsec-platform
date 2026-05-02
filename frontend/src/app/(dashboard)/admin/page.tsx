@@ -112,8 +112,8 @@ const OPS_CARDS: HubCard[] = [
   },
   {
     href: '/admin/settings',
-    title: 'Settings',
-    description: 'Ajustes globales JSON y banderas de sistema.',
+    title: 'Configuración del sistema',
+    description: 'Claves runtime agrupadas, búsqueda y vista técnica (JSON). Relacionado con Operación BRD.',
     icon: Settings,
   },
   {

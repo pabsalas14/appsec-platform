@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 from typing import Any, Dict
 
@@ -13,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import logger
 from app.models.agente_config import AgenteConfig
 from app.services.ia_provider import AIProviderType, get_ai_provider
+from app.services.scr_json import parse_llm_json
+from app.services.scr_llm_catalog import ANTHROPIC_DEFAULT_MODEL, LLM_PROVIDER_CATALOG, default_base_url, normalize_model
 
 DEFAULT_MALICIOUS_PATTERNS = {
     "EXEC_ENV_BACKDOOR": "Ejecución oculta vía variables de entorno o configuración",
@@ -57,18 +58,34 @@ IMPORTANTE:
 - Confianza: 0.9+ si es evidencia clara, 0.6-0.9 si hay indicadores fuertes, <0.6 si es sospecha"""
 
 
-def _build_inspector_prompt(code_chunks: list[tuple[str, str]]) -> str:
+def _chunk_source_files(source_files: dict[str, str], *, max_chunk_chars: int = 12000, max_chunks: int = 50) -> list[tuple[str, str]]:
+    chunks: list[tuple[str, str]] = []
+    for filepath, content in source_files.items():
+        if filepath.startswith("_"):
+            continue
+        text = content or ""
+        if not text.strip():
+            continue
+        for start in range(0, len(text), max_chunk_chars):
+            suffix = "" if start == 0 else f"#parte-{(start // max_chunk_chars) + 1}"
+            chunks.append((f"{filepath}{suffix}", text[start : start + max_chunk_chars]))
+            if len(chunks) >= max_chunks:
+                return chunks
+    return chunks
+
+
+def _build_inspector_prompt(code_chunks: list[tuple[str, str]], analysis_context: str | None = None, output_format: str | None = None) -> str:
     """Construye el prompt para análisis de código."""
     files_text = "\n\n".join(
-        f"--- Archivo: {filepath} ---\n{content[:1000]}..."  # Primeros 1000 chars
-        if len(content) > 1000
-        else f"--- Archivo: {filepath} ---\n{content}"
+        f"--- Archivo: {filepath} ---\n{content}"
         for filepath, content in code_chunks
     )
 
     return f"""Analiza el siguiente código en busca de patrones maliciosos:
 
 {files_text}
+
+{analysis_context or ""}
 
 Responde en JSON con esta estructura:
 {{
@@ -85,7 +102,8 @@ Responde en JSON con esta estructura:
       "explotabilidad": "..."
     }}
   ]
-}}"""
+}}
+{output_format or ""}"""
 
 
 async def run_inspector_real(
@@ -93,9 +111,13 @@ async def run_inspector_real(
     rutas_fuente: dict[str, str],
     db: AsyncSession | None = None,
     provider: AIProviderType = AIProviderType.ANTHROPIC,
-    model: str = "claude-opus-4-1",
+    model: str = ANTHROPIC_DEFAULT_MODEL,
     temperature: float = 0.3,
     max_tokens: int = 4096,
+    timeout_seconds: int = 120,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
+    usage_out: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Inspector Agent real — Detecta patrones maliciosos usando LLM."""
 
@@ -104,10 +126,15 @@ async def run_inspector_real(
         return []
 
     try:
-        code_chunks = [(filepath, content) for filepath, content in list(rutas_fuente.items())[:5]]
+        max_chunks = int(os.getenv("SCR_INSPECTOR_MAX_CHUNKS", "50"))
+        max_chunk_chars = int(os.getenv("SCR_INSPECTOR_MAX_CHARS_PER_CHUNK", "12000"))
+        code_chunks = _chunk_source_files(rutas_fuente, max_chunk_chars=max_chunk_chars, max_chunks=max_chunks)
 
         patterns = DEFAULT_MALICIOUS_PATTERNS.copy()
         pattern_severity = DEFAULT_PATTERN_SEVERITY.copy()
+        system_prompt_override = None
+        analysis_context = None
+        output_format = None
 
         if db is not None:
             stmt = (
@@ -122,38 +149,57 @@ async def run_inspector_real(
 
             if config and config.patrones_personalizados:
                 patterns.update(config.patrones_personalizados)
+            if config and config.prompt_sistema_personalizado:
+                system_prompt_override = config.prompt_sistema_personalizado
+            if config and config.parametros_llm:
+                for disabled_pattern in config.parametros_llm.get("disabled_patterns") or []:
+                    patterns.pop(str(disabled_pattern), None)
+                analysis_context = config.parametros_llm.get("analysis_context")
+                output_format = config.parametros_llm.get("output_format")
+
+        model = normalize_model(provider.value, model)
 
         if provider == AIProviderType.ANTHROPIC:
-            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+            api_key = (api_key_override or "").strip() or os.getenv("ANTHROPIC_API_KEY", "")
             if not api_key:
                 logger.warning(
                     "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": "anthropic"}
                 )
-                return await run_inspector_stub(rutas_fuente=rutas_fuente)
+                return []
 
             llm_provider = get_ai_provider(
                 provider,
                 api_key=api_key,
                 model=model,
+                timeout_seconds=timeout_seconds,
             )
         elif provider == AIProviderType.OLLAMA:
             llm_provider = get_ai_provider(
                 provider,
-                base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+                base_url=base_url_override or os.getenv("OLLAMA_BASE_URL", default_base_url(provider.value) or "http://localhost:11434"),
                 model=model,
+                timeout_seconds=timeout_seconds,
             )
         else:
-            api_key = os.getenv(f"{provider.upper()}_API_KEY", "")
-            if not api_key:
+            env_name = f"{provider.value.upper()}_API_KEY"
+            api_key = (api_key_override or "").strip() or os.getenv(env_name, "")
+            requires_api_key = bool(LLM_PROVIDER_CATALOG.get(provider.value, {}).get("requires_api_key"))
+            if requires_api_key and not api_key:
                 logger.warning(
                     "scr.inspector.no_api_key", extra={"event": "scr.inspector.no_api_key", "provider": provider}
                 )
-                return await run_inspector_stub(rutas_fuente=rutas_fuente)
+                return []
 
-            llm_provider = get_ai_provider(provider, api_key=api_key, model=model)
+            kwargs = {"model": model, "timeout_seconds": timeout_seconds}
+            if api_key:
+                kwargs["api_key"] = api_key
+            base_url = base_url_override or default_base_url(provider.value)
+            if base_url:
+                kwargs["base_url"] = base_url
+            llm_provider = get_ai_provider(provider, **kwargs)
 
-        system_prompt = _build_inspector_system_prompt(patterns)
-        user_prompt = _build_inspector_prompt(code_chunks)
+        system_prompt = system_prompt_override or _build_inspector_system_prompt(patterns)
+        user_prompt = _build_inspector_prompt(code_chunks, analysis_context=analysis_context, output_format=output_format)
 
         logger.info(
             "scr.inspector.llm_call",
@@ -171,16 +217,25 @@ async def run_inspector_real(
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        if usage_out is not None:
+            usage_out.update(
+                {
+                    "tokens_used": response.tokens_used or 0,
+                    "input_tokens": response.input_tokens or 0,
+                    "output_tokens": response.output_tokens or 0,
+                    "provider": response.provider or provider.value,
+                    "model": model,
+                }
+            )
 
-        try:
-            result = json.loads(response.content)
-            findings_raw = result.get("findings", [])
-        except json.JSONDecodeError:
+        result = parse_llm_json(response.content, default={})
+        findings_raw = result.get("findings", []) if isinstance(result, dict) else []
+        if not isinstance(result, dict):
             logger.error(
                 "scr.inspector.json_parse_error",
                 extra={"event": "scr.inspector.json_parse_error", "content": response.content[:200]},
             )
-            return await run_inspector_stub(rutas_fuente=rutas_fuente)
+            raise ValueError("Inspector no devolvió JSON válido")
 
         findings = []
         for finding in findings_raw:
@@ -219,25 +274,10 @@ async def run_inspector_real(
 
     except Exception as e:
         logger.error("scr.inspector.error", extra={"event": "scr.inspector.error", "error": str(e)[:200]})
-        return await run_inspector_stub(rutas_fuente=rutas_fuente)
+        return []
 
 
 async def run_inspector_stub(*, rutas_fuente: dict[str, str]) -> list[dict[str, Any]]:
-    """Stub Inspector: Fallback cuando LLM no está disponible."""
+    """Fallback sin datos simulados: no genera hallazgos ficticios."""
     _: dict[str, str] = rutas_fuente
-    return [
-        {
-            "archivo": "scratchpad/scr_placeholder.py",
-            "linea_inicio": 1,
-            "linea_fin": 3,
-            "tipo_malicia": "EXEC_ENV_BACKDOOR",
-            "severidad": "CRITICO",
-            "confianza": 0.62,
-            "descripcion": "Stub Inspector — patrón de malicia plausible (stub). Integrar prompts LLM en producción.",
-            "codigo_snippet": '# placeholder: os.environ["AUTHORIZED_IDS"] ...',
-            "impacto": "Ejecución de flujo sensible sin revisión igualitaria.",
-            "explotabilidad": "Requiere conocer variable de control interna.",
-            "remediacion_sugerida": "Revisión humana focalizada en intención y contexto organizacional.",
-            "estado": "DETECTED",
-        }
-    ]
+    return []

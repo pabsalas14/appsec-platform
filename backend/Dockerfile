@@ -6,6 +6,7 @@ ENV PYTHONPATH=/app
 
 # System deps (includes WeasyPrint requirements + Tesseract OCR for CMDB image import)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
     build-essential libpq-dev curl \
     libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
     libcairo2 libffi-dev shared-mime-info fonts-dejavu-core \

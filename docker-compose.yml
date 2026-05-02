@@ -33,8 +33,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-framework}:${POSTGRES_PASSWORD:-framework_secret}@postgres:5432/${POSTGRES_DB:-framework}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://redis:6379/0}"
+      CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://redis:6379/0}"
       ENV: "${ENV:-dev}"
       SECRET_KEY: "${SECRET_KEY:?SECRET_KEY must be set}"
       APPSEC_MASTER_KEY: "${APPSEC_MASTER_KEY:?APPSEC_MASTER_KEY must be set}"
@@ -50,6 +54,10 @@ services:
       SLA_ALERT_DAYS: "${SLA_ALERT_DAYS:-5}"
       SSE_ENABLED: "${SSE_ENABLED:-true}"
       SSE_KEEPALIVE_INTERVAL: "${SSE_KEEPALIVE_INTERVAL:-30}"
+      SCR_GITHUB_TOKEN: "${SCR_GITHUB_TOKEN:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
     ports:
       - "8000:8000"
     volumes:
@@ -58,7 +66,7 @@ services:
     command: >
       sh -c "
         echo '📦 Running migrations...' &&
-        alembic upgrade head &&
+        alembic upgrade heads &&
         if [ \"$$RUN_SEED\" = 'true' ]; then
           echo '🌱 Running seed...' &&
           python -m app.seed;
@@ -68,6 +76,49 @@ services:
         echo '🚀 Starting server in DEV mode...' &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
+
+  # ──────────────────────────────────
+  # Redis — broker Celery (cola SCR y otras tareas)
+  # ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: framework_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # ──────────────────────────────────
+  # Celery worker — pipeline SCR (Inspector → Detective → Fiscal)
+  # ──────────────────────────────────
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: framework_celery
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-framework}:${POSTGRES_PASSWORD:-framework_secret}@postgres:5432/${POSTGRES_DB:-framework}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://redis:6379/0}"
+      CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://redis:6379/0}"
+      ENV: "${ENV:-dev}"
+      SECRET_KEY: "${SECRET_KEY:?SECRET_KEY must be set}"
+      APPSEC_MASTER_KEY: "${APPSEC_MASTER_KEY:?APPSEC_MASTER_KEY must be set}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:?ADMIN_EMAIL must be set}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
+      SCR_GITHUB_TOKEN: "${SCR_GITHUB_TOKEN:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    working_dir: /app
+    command: celery -A celery_app worker --loglevel=info
 
   # ──────────────────────────────────
   # Frontend - Next.js TypeScript

@@ -194,7 +194,7 @@ def _build_html_report(
     <div class="section">
         <h2>Executive Summary</h2>
         <div class="executive-summary">
-            {report.resumen_ejecutivo.replace(chr(10), "<br>") if report.resumen_ejecutivo else "No executive summary available."}
+            {_escape_html(report.resumen_ejecutivo).replace(chr(10), "<br>") if report.resumen_ejecutivo else "No executive summary available."}
         </div>
     </div>
 
@@ -220,7 +220,7 @@ def _build_html_report(
         </div>
     </div>
 
-    {'<div class="section"><h2>Attack Evolution Narrative</h2><div class="narrative">' + (report.narrativa_evolucion.replace(chr(10), "<br>") if report.narrativa_evolucion else "No narrative available.") + "</div></div>" if report.narrativa_evolucion else ""}
+    {'<div class="section"><h2>Attack Evolution Narrative</h2><div class="narrative">' + (_escape_html(report.narrativa_evolucion).replace(chr(10), "<br>") if report.narrativa_evolucion else "No narrative available.") + "</div></div>" if report.narrativa_evolucion else ""}
 
     {'<div class="section"><h2>Key Findings</h2>' + findings_html + "</div>" if findings_html else ""}
 
@@ -269,3 +269,127 @@ async def generate_pdf_report(
     pdf_bytes = await loop.run_in_executor(ThreadPoolExecutor(), _generate_pdf_sync)
 
     return pdf_bytes
+
+
+def _severity_summary(findings: list[CodeSecurityFinding]) -> dict[str, int]:
+    return {
+        "CRITICO": sum(1 for finding in findings if finding.severidad == "CRITICO"),
+        "ALTO": sum(1 for finding in findings if finding.severidad == "ALTO"),
+        "MEDIO": sum(1 for finding in findings if finding.severidad == "MEDIO"),
+        "BAJO": sum(1 for finding in findings if finding.severidad == "BAJO"),
+    }
+
+
+def _comparison_key(finding: CodeSecurityFinding) -> str:
+    return "|".join(
+        [
+            finding.archivo or "",
+            str(finding.linea_inicio or 0),
+            str(finding.linea_fin or 0),
+            finding.tipo_malicia or "",
+            (finding.codigo_snippet or "")[:120],
+        ]
+    )
+
+
+def _build_comparison_html(
+    base_review: CodeSecurityReview,
+    target_review: CodeSecurityReview,
+    base_findings: list[CodeSecurityFinding],
+    target_findings: list[CodeSecurityFinding],
+) -> str:
+    base_counts = _severity_summary(base_findings)
+    target_counts = _severity_summary(target_findings)
+    base_fingerprints = {_comparison_key(finding) for finding in base_findings}
+    target_fingerprints = {_comparison_key(finding) for finding in target_findings}
+    resolved = len(base_fingerprints - target_fingerprints)
+    introduced = len(target_fingerprints - base_fingerprints)
+    persisted = len(base_fingerprints & target_fingerprints)
+
+    rows = ""
+    for severity in ("CRITICO", "ALTO", "MEDIO", "BAJO"):
+        delta = target_counts[severity] - base_counts[severity]
+        rows += f"""
+        <tr>
+            <td>{severity}</td>
+            <td>{base_counts[severity]}</td>
+            <td>{target_counts[severity]}</td>
+            <td>{delta:+d}</td>
+        </tr>
+        """
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Comparación SCR</title>
+    <style>
+        @page {{ size: A4; margin: 2cm; }}
+        body {{ font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 11pt; }}
+        h1 {{ color: #1a56db; margin-bottom: 4px; }}
+        .subtitle {{ color: #6b7280; margin-bottom: 24px; }}
+        .grid {{ display: flex; gap: 12px; margin: 18px 0; }}
+        .card {{ flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; background: #f9fafb; }}
+        .metric {{ font-size: 24pt; font-weight: bold; color: #1a56db; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 16px; }}
+        th, td {{ border: 1px solid #d1d5db; padding: 8px; text-align: left; }}
+        th {{ background: #eff6ff; color: #1e40af; }}
+        .repo {{ font-family: monospace; font-size: 9pt; color: #4b5563; }}
+        .footer {{ margin-top: 32px; border-top: 1px solid #d1d5db; padding-top: 10px; color: #6b7280; font-size: 9pt; }}
+    </style>
+</head>
+<body>
+    <h1>Comparación de Escaneos SCR</h1>
+    <div class="subtitle">Generado: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>
+
+    <div class="grid">
+        <div class="card">
+            <strong>Escaneo base</strong>
+            <div>{_escape_html(base_review.titulo)}</div>
+            <div class="repo">{_escape_html(base_review.url_repositorio or "N/A")}</div>
+            <div>{base_review.created_at.strftime("%Y-%m-%d %H:%M")}</div>
+        </div>
+        <div class="card">
+            <strong>Escaneo comparado</strong>
+            <div>{_escape_html(target_review.titulo)}</div>
+            <div class="repo">{_escape_html(target_review.url_repositorio or "N/A")}</div>
+            <div>{target_review.created_at.strftime("%Y-%m-%d %H:%M")}</div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card"><div class="metric">{resolved}</div><div>Hallazgos resueltos</div></div>
+        <div class="card"><div class="metric">{introduced}</div><div>Hallazgos nuevos</div></div>
+        <div class="card"><div class="metric">{persisted}</div><div>Hallazgos persistentes</div></div>
+    </div>
+
+    <h2>Delta por severidad</h2>
+    <table>
+        <thead><tr><th>Severidad</th><th>Base</th><th>Comparado</th><th>Delta</th></tr></thead>
+        <tbody>{rows}</tbody>
+    </table>
+
+    <div class="footer">AppSec Platform - Code Security Review</div>
+</body>
+</html>"""
+
+
+async def generate_pdf_comparison(
+    base_review: CodeSecurityReview,
+    target_review: CodeSecurityReview,
+    base_findings: list[CodeSecurityFinding],
+    target_findings: list[CodeSecurityFinding],
+) -> bytes:
+    """Generate a comparison PDF for two SCR scans."""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _generate_pdf_sync() -> bytes:
+        html_content = _build_comparison_html(base_review, target_review, base_findings, target_findings)
+        return HTML(string=html_content).write(
+            presentational_hints=True,
+            optimize_size=("fonts", "images"),
+        )
+
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(ThreadPoolExecutor(), _generate_pdf_sync)

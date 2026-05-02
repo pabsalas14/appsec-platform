@@ -1,366 +1,501 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
+import { logger } from '@/lib/logger';
+import { useAnalyzeCodeSecurityReview, useCreateCodeSecurityReview } from '@/hooks/useCodeSecurityReviews';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  PageHeader,
+  PageWrapper,
+  Select,
+  Textarea,
+} from '@/components/ui';
 
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/Input';
-import { useCreateCodeSecurityReview } from '@/hooks/useCodeSecurityReviews';
-import { cn } from '@/lib/utils';
-import { CodeSecurityRepositorySelector } from '@/components/code-security/CodeSecurityRepositorySelector';
-import { CodeSecurityBranchPicker } from '@/components/code-security/CodeSecurityBranchPicker';
-import { CodeSecurityLLMConfig } from '@/components/code-security/CodeSecurityLLMConfig';
+type ScanMode = 'PUBLIC_URL' | 'REPO_TOKEN' | 'BRANCH_TARGET' | 'ORG_BATCH';
+type WizardStep = 1 | 2 | 3;
 
-type Step = 1 | 2 | 3 | 4;
+type GitHubToken = {
+  id: string;
+  label: string;
+  user: string | null;
+  organizations: string[];
+  repos_count: number;
+};
 
-const STEPS: { number: Step; title: string; description: string }[] = [
-  {
-    number: 1,
-    title: 'Select Repository',
-    description: 'Choose the repository to scan',
-  },
-  {
-    number: 2,
-    title: 'Choose Branch',
-    description: 'Select the branch to analyze',
-  },
-  {
-    number: 3,
-    title: 'Configure Analysis',
-    description: 'Set LLM provider and scan options',
-  },
-  {
-    number: 4,
-    title: 'Review & Submit',
-    description: 'Confirm settings and start analysis',
-  },
+type Repository = {
+  name?: string;
+  full_name?: string;
+  url?: string;
+  html_url?: string;
+  default_branch?: string;
+  visibility?: string;
+};
+
+type Branch = { name: string; is_default?: boolean };
+type Envelope<T> = { status: 'success'; data: T };
+
+const MODES: { value: ScanMode; title: string; description: string }[] = [
+  { value: 'PUBLIC_URL', title: 'Público', description: 'URL pública; la rama se define en alcance.' },
+  { value: 'REPO_TOKEN', title: 'Repositorio', description: 'Elige un repo privado desde un token guardado.' },
+  { value: 'BRANCH_TARGET', title: 'Rama', description: 'Elige repo y rama específica desde el token.' },
+  { value: 'ORG_BATCH', title: 'Organización', description: 'Elige organización y 1..N repositorios.' },
 ];
+
+function repoUrl(repo: Repository): string {
+  return repo.html_url ?? repo.url ?? '';
+}
+
+function repoName(repo: Repository): string {
+  return repo.full_name ?? repo.name ?? repoUrl(repo);
+}
 
 export default function NewCodeSecurityReviewPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [titulo, setTitulo] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedRepoUrl, setSelectedRepoUrl] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('main');
-  const [llmProvider, setLlmProvider] = useState('anthropic');
-  const [scanMode, setScanMode] = useState('PUBLIC_URL');
-  const [repoToken, setRepoToken] = useState('');
-
   const createReview = useCreateCodeSecurityReview();
-  const isLoading = createReview.isPending;
+  const analyzeReview = useAnalyzeCodeSecurityReview();
 
-  const handleNext = () => {
-    // Validate current step
-    if (currentStep === 1 && !selectedRepoUrl) {
-      toast.error('Please select a repository');
+  const [isOpen, setIsOpen] = useState(true);
+  const [step, setStep] = useState<WizardStep>(1);
+  const [scanMode, setScanMode] = useState<ScanMode>('PUBLIC_URL');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [publicUrl, setPublicUrl] = useState('');
+  const [branch, setBranch] = useState('main');
+  const [tokens, setTokens] = useState<GitHubToken[]>([]);
+  const [selectedTokenId, setSelectedTokenId] = useState('');
+  const [repos, setRepos] = useState<Repository[]>([]);
+  const [selectedRepoUrl, setSelectedRepoUrl] = useState('');
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [orgs, setOrgs] = useState<string[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState('');
+  const [selectedOrgRepos, setSelectedOrgRepos] = useState<string[]>([]);
+  const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
+
+  const selectedToken = useMemo(
+    () => tokens.find((token) => token.id === selectedTokenId),
+    [selectedTokenId, tokens]
+  );
+  const selectedRepo = useMemo(
+    () => repos.find((repo) => repoUrl(repo) === selectedRepoUrl),
+    [repos, selectedRepoUrl]
+  );
+  const selectedBranch = scanMode === 'REPO_TOKEN' ? selectedRepo?.default_branch ?? 'main' : branch || 'main';
+  const isSubmitting = createReview.isPending || analyzeReview.isPending;
+
+  useEffect(() => {
+    async function loadTokens() {
+      try {
+        const response = await api.get<Envelope<{ tokens: GitHubToken[] }>>('/admin/scr/github-tokens');
+        const rows = response.data.data.tokens ?? [];
+        setTokens(rows);
+        setSelectedTokenId(rows[0]?.id ?? '');
+      } catch (error) {
+        logger.error('scr.new_scan.tokens_failed', { error: String(error) });
+      toast.error(getApiErrorMessage(error, 'No se pudieron cargar los tokens configurados'));
+      }
+    }
+
+    void loadTokens();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedTokenId || scanMode === 'PUBLIC_URL') {
+      setRepos([]);
+      setOrgState('');
       return;
     }
-    if (currentStep === 2 && !selectedBranch) {
-      toast.error('Please select a branch');
+
+    async function loadTokenScope() {
+      try {
+        setIsLoadingGitHub(true);
+        const reposResponse = await api.get<Envelope<{ repos: Repository[] }>>(
+          `/admin/scr/github-tokens/${selectedTokenId}/repos`
+        );
+        setRepos(reposResponse.data.data.repos ?? []);
+        if (scanMode === 'ORG_BATCH') {
+          const orgsResponse = await api.get<Envelope<{ orgs: string[] }>>(
+            `/admin/scr/github-tokens/${selectedTokenId}/orgs`
+          );
+          setOrgs(orgsResponse.data.data.orgs ?? []);
+        }
+      } catch (error) {
+        logger.error('scr.new_scan.github_scope_failed', { error: String(error), tokenId: selectedTokenId });
+        toast.error(getApiErrorMessage(error, 'No se pudo cargar el alcance del token'));
+      } finally {
+        setIsLoadingGitHub(false);
+      }
+    }
+
+    void loadTokenScope();
+  }, [scanMode, selectedTokenId]);
+
+  useEffect(() => {
+    if (!selectedTokenId || !selectedRepoUrl || scanMode !== 'BRANCH_TARGET') {
+      setBranches([]);
       return;
     }
-    if (currentStep === 3 && !llmProvider) {
-      toast.error('Please select an LLM provider');
+
+    async function loadBranches() {
+      try {
+        setIsLoadingGitHub(true);
+        const response = await api.get<Envelope<{ branches: Branch[] }>>(
+          `/admin/scr/github-tokens/${selectedTokenId}/branches`,
+          { params: { repo_url: selectedRepoUrl } }
+        );
+        const rows = response.data.data.branches ?? [];
+        setBranches(rows);
+        setBranch(rows.find((row) => row.is_default)?.name ?? selectedRepo?.default_branch ?? rows[0]?.name ?? 'main');
+      } catch (error) {
+        logger.error('scr.new_scan.branches_failed', { error: String(error), repoUrl: selectedRepoUrl });
+        toast.error(getApiErrorMessage(error, 'No se pudieron cargar ramas'));
+      } finally {
+        setIsLoadingGitHub(false);
+      }
+    }
+
+    void loadBranches();
+  }, [scanMode, selectedRepo?.default_branch, selectedRepoUrl, selectedTokenId]);
+
+  useEffect(() => {
+    if (!selectedTokenId || !selectedOrg || scanMode !== 'ORG_BATCH') {
       return;
     }
 
-    if (currentStep < 4) {
-      setCurrentStep((currentStep + 1) as Step);
+    async function loadOrgRepos() {
+      try {
+        setIsLoadingGitHub(true);
+        const response = await api.get<Envelope<{ repos: Repository[] }>>(
+          `/admin/scr/github-tokens/${selectedTokenId}/orgs/${selectedOrg}/repos`
+        );
+        const rows = response.data.data.repos ?? [];
+        setRepos(rows);
+        setSelectedOrgRepos(rows.map(repoUrl).filter(Boolean));
+      } catch (error) {
+        logger.error('scr.new_scan.org_repos_failed', { error: String(error), org: selectedOrg });
+        toast.error(getApiErrorMessage(error, 'No se pudieron cargar repositorios de la organización'));
+      } finally {
+        setIsLoadingGitHub(false);
+      }
     }
-  };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as Step);
-    }
-  };
+    void loadOrgRepos();
+  }, [scanMode, selectedOrg, selectedTokenId]);
 
-  const handleSubmit = async () => {
-    if (!titulo.trim()) {
-      toast.error('Please enter a scan title');
+  function setOrgState(nextOrg: string) {
+    setSelectedOrg(nextOrg);
+    setSelectedOrgRepos([]);
+  }
+
+  function canGoNext(): boolean {
+    if (step === 1) return Boolean(title.trim());
+    if (step === 2 && scanMode === 'PUBLIC_URL') return Boolean(publicUrl.trim());
+    if (step === 2 && scanMode === 'REPO_TOKEN') return Boolean(selectedTokenId && selectedRepoUrl);
+    if (step === 2 && scanMode === 'BRANCH_TARGET') return Boolean(selectedTokenId && selectedRepoUrl && branch);
+    if (step === 2 && scanMode === 'ORG_BATCH') return Boolean(selectedTokenId && selectedOrg && selectedOrgRepos.length > 0);
+    return true;
+  }
+
+  function toggleOrgRepo(url: string) {
+    setSelectedOrgRepos((current) =>
+      current.includes(url) ? current.filter((item) => item !== url) : [...current, url]
+    );
+  }
+
+  async function handleSubmit() {
+    if (!canGoNext()) {
+      toast.error('Completa los campos requeridos');
       return;
     }
 
-    const reviewData: {
-      titulo: string;
-      descripcion: string | null;
-      url_repositorio: string;
-      rama_analizar: string;
-      scan_mode: 'PUBLIC_URL' | 'REPO_TOKEN' | 'BRANCH_TARGET' | 'ORG_BATCH';
-      scr_config: {
-        llm_provider: string;
-        temperature: number;
-        max_tokens: number;
-      };
-      repo_token?: string;
-    } = {
-      titulo: titulo.trim(),
-      descripcion: description.trim() || null,
-      url_repositorio: selectedRepoUrl,
-      rama_analizar: selectedBranch,
-      scan_mode: scanMode as 'PUBLIC_URL' | 'REPO_TOKEN' | 'BRANCH_TARGET' | 'ORG_BATCH',
-      scr_config: {
-        llm_provider: llmProvider,
+    try {
+      const scrConfig = {
+        github_token_id: selectedTokenId || undefined,
+        llm_provider: 'agent-assigned',
         temperature: 0.3,
         max_tokens: 4096,
-      },
-      ...(scanMode === 'REPO_TOKEN' && { repo_token: repoToken }),
-    };
+      };
 
-    createReview.mutate(reviewData, {
-      onSuccess: (data: { id: string }) => {
-        toast.success('Scan created! Starting analysis...');
-        // Redirect to the detail page
-        router.push(`/code_security_reviews/${data.id}`);
-      },
-      onError: (error: { message: string }) => {
-        toast.error(error.message || 'Failed to create scan');
-      },
-    });
-  };
+      if (scanMode === 'ORG_BATCH') {
+        await api.post('/code_security_reviews/batch/org', {
+          titulo: title.trim(),
+          github_org_slug: selectedOrg,
+          rama_analizar: selectedBranch,
+          github_token_id: selectedTokenId,
+          repo_urls: selectedOrgRepos,
+          scr_config: scrConfig,
+        });
+        toast.success('Lote de escaneos encolado');
+        router.push('/code_security_reviews');
+        return;
+      }
+
+      const created = await createReview.mutateAsync({
+        titulo: title.trim(),
+        descripcion: description.trim() || null,
+        url_repositorio: scanMode === 'PUBLIC_URL' ? publicUrl.trim() : selectedRepoUrl,
+        rama_analizar: selectedBranch,
+        scan_mode: scanMode,
+        scr_config: scrConfig,
+      });
+      await analyzeReview.mutateAsync(created.id);
+      toast.success('Escaneo encolado');
+      router.push(`/code_security_reviews/${created.id}`);
+    } catch (error) {
+      logger.error('scr.new_scan.submit_failed', { error: String(error), scanMode });
+      toast.error(getApiErrorMessage(error, 'No se pudo iniciar el escaneo'));
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/5 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">New Code Security Scan</h1>
-          <p className="text-muted-foreground">
-            Analyze your repository for malicious code patterns, backdoors, and security threats
-          </p>
-        </div>
+    <PageWrapper className="space-y-6 p-6">
+      <PageHeader
+        title="Nuevo Escaneo SCR"
+        description="Flujo guiado basado en las integraciones configuradas. Los LLM se asignan en Agentes."
+      />
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center gap-2">
-            {STEPS.map((step, idx) => (
-              <div key={step.number} className="flex items-center flex-1">
+      <Card>
+        <CardHeader>
+          <CardTitle>Crear escaneo guiado</CardTitle>
+          <CardDescription>
+            Selecciona el tipo de escaneo y avanza en un wizard. No se ingresan tokens ni API keys en esta pantalla.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1 text-sm text-muted-foreground">
+            <p>GitHub configurado: {tokens.length} token(s) disponibles.</p>
+            <p>LLM: se toma de la configuración de cada agente Inspector, Detective y Fiscal.</p>
+          </div>
+          <Button onClick={() => setIsOpen(true)}>Abrir wizard</Button>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent size="xl" className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuevo Escaneo SCR</DialogTitle>
+            <DialogDescription>
+              Paso {step} de 3: {step === 1 ? 'configuración' : step === 2 ? 'alcance' : 'confirmación'}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mb-6 grid grid-cols-3 gap-2">
+            {(['Configuración', 'Alcance', 'Confirmación'] as const).map((label, index) => {
+              const current = index + 1;
+              return (
                 <div
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all',
-                    currentStep >= step.number
-                      ? 'bg-primary text-white'
-                      : 'bg-muted text-muted-foreground'
-                  )}
+                  key={label}
+                  className={`rounded-full px-3 py-2 text-center text-xs font-semibold ${
+                    step >= current ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}
                 >
-                  {step.number}
+                  {current}. {label}
                 </div>
-                {idx < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      'flex-1 h-0.5 mx-2 transition-all',
-                      currentStep > step.number ? 'bg-primary' : 'bg-muted'
-                    )}
-                  />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <div className="mt-4 flex justify-between">
-            {STEPS.map((step) => (
-              <div key={step.number} className="flex-1">
-                <p
-                  className={cn(
-                    'text-xs font-medium',
-                    currentStep === step.number ? 'text-primary' : 'text-muted-foreground'
-                  )}
-                >
-                  {step.title}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Step Content */}
-        <Card className="border-white/[0.1] bg-white/[0.02] backdrop-blur-xl mb-8">
-          <CardHeader>
-            <CardTitle>{STEPS[currentStep - 1].title}</CardTitle>
-            <CardDescription>{STEPS[currentStep - 1].description}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Step 1: Repository Selection */}
-            {currentStep === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    Select a Repository
-                  </label>
-                  <CodeSecurityRepositorySelector
-                    selectedUrl={selectedRepoUrl}
-                    onSelect={(url: string, repo: { name: string }) => {
-                      setSelectedRepoUrl(url);
-                      setTitulo(`${repo.name} Security Review`);
+          {step === 1 && (
+            <div className="space-y-5">
+              <div className="grid gap-3 md:grid-cols-4">
+                {MODES.map((mode) => (
+                  <button
+                    key={mode.value}
+                    type="button"
+                    onClick={() => {
+                      setScanMode(mode.value);
+                      setSelectedRepoUrl('');
+                      setBranches([]);
+                      setOrgState('');
                     }}
-                  />
-                </div>
-                {selectedRepoUrl && (
-                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="text-sm text-green-700 dark:text-green-400">
-                      ✓ Repository selected: {selectedRepoUrl}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 2: Branch Selection */}
-            {currentStep === 2 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    Select Branch
-                  </label>
-                  <CodeSecurityBranchPicker
-                    repositoryUrl={selectedRepoUrl}
-                    selectedBranch={selectedBranch}
-                    onSelect={setSelectedBranch}
-                  />
-                </div>
-                {selectedBranch && (
-                  <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-sm text-blue-700 dark:text-blue-400">
-                      ✓ Branch selected: {selectedBranch}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 3: Configuration */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    Scan Mode
-                  </label>
-                  <select
-                    value={scanMode}
-                    onChange={(e) => setScanMode(e.target.value as 'PUBLIC_URL' | 'REPO_TOKEN')}
-                    className="w-full px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={`rounded-xl border p-4 text-left transition ${
+                      scanMode === mode.value ? 'border-primary bg-primary/10 shadow-lg' : 'border-border bg-card hover:bg-muted/50'
+                    }`}
                   >
-                    <option value="PUBLIC_URL">Public Repository (no auth)</option>
-                    <option value="REPO_TOKEN">With GitHub Token</option>
-                  </select>
-                  {scanMode === 'REPO_TOKEN' && (
+                    <p className="font-semibold">{mode.title}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{mode.description}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nombre del escaneo</Label>
+                  <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ej. Auditoría Q2 pagos" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Descripción</Label>
+                  <Textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-5">
+              {scanMode === 'PUBLIC_URL' ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>URL pública del repositorio</Label>
                     <Input
-                      type="password"
-                      placeholder="GitHub personal access token"
-                      value={repoToken}
-                      onChange={(e) => setRepoToken(e.target.value)}
-                      className="mt-3"
+                      value={publicUrl}
+                      onChange={(event) => setPublicUrl(event.target.value)}
+                      placeholder="https://github.com/org/repo"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rama</Label>
+                    <Input value={branch} onChange={(event) => setBranch(event.target.value)} placeholder="main" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Integración GitHub configurada</Label>
+                    <Select
+                      value={selectedTokenId}
+                      onChange={(event) => setSelectedTokenId(event.target.value)}
+                      placeholder="Selecciona un token configurado"
+                      options={tokens.map((token) => ({
+                        value: token.id,
+                        label: `${token.label} - ${token.user ?? 'sin usuario'} (${token.repos_count} repos)`,
+                      }))}
+                    />
+                    {selectedToken && (
+                      <p className="text-xs text-emerald-400">
+                        Validado como {selectedToken.user ?? 'usuario desconocido'} · {selectedToken.organizations.length} orgs ·{' '}
+                        {selectedToken.repos_count} repos
+                      </p>
+                    )}
+                  </div>
+
+                  {scanMode === 'ORG_BATCH' ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Organización</Label>
+                        <Select
+                          value={selectedOrg}
+                          onChange={(event) => setOrgState(event.target.value)}
+                          placeholder="Selecciona organización"
+                          options={orgs.map((org) => ({ value: org, label: org }))}
+                        />
+                      </div>
+                      <div className="max-h-80 space-y-2 overflow-auto rounded-xl border border-border p-3">
+                        {repos.map((repo) => {
+                          const url = repoUrl(repo);
+                          return (
+                            <label
+                              key={url}
+                              className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition ${
+                                selectedOrgRepos.includes(url) ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/40'
+                              }`}
+                            >
+                              <input type="checkbox" checked={selectedOrgRepos.includes(url)} onChange={() => toggleOrgRepo(url)} />
+                              <span className="text-sm">{repoName(repo)}</span>
+                            </label>
+                          );
+                        })}
+                        {repos.length === 0 && (
+                          <p className="p-4 text-center text-sm text-muted-foreground">
+                            {isLoadingGitHub ? 'Cargando repositorios...' : 'Selecciona una organización para cargar repositorios.'}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Repositorio</Label>
+                      <Select
+                        value={selectedRepoUrl}
+                        onChange={(event) => {
+                          setSelectedRepoUrl(event.target.value);
+                          setBranch(repos.find((repo) => repoUrl(repo) === event.target.value)?.default_branch ?? 'main');
+                        }}
+                        placeholder={isLoadingGitHub ? 'Cargando repos...' : 'Selecciona repositorio'}
+                        options={repos.map((repo) => ({ value: repoUrl(repo), label: `${repoName(repo)} (${repo.visibility})` }))}
+                      />
+                    </div>
+                  )}
+
+                  {scanMode === 'BRANCH_TARGET' && (
+                    <div className="space-y-2">
+                      <Label>Rama</Label>
+                      <Select
+                        value={branch}
+                        onChange={(event) => setBranch(event.target.value)}
+                        placeholder="Selecciona rama"
+                        options={branches.map((row) => ({
+                          value: row.name,
+                          label: row.is_default ? `${row.name} (default)` : row.name,
+                        }))}
+                      />
+                    </div>
+                  )}
+                  {scanMode === 'ORG_BATCH' && (
+                    <div className="space-y-2">
+                      <Label>Rama base para el lote</Label>
+                      <Input value={branch} onChange={(event) => setBranch(event.target.value)} placeholder="main" />
+                      <p className="text-xs text-muted-foreground">
+                        Se usará como rama por defecto para los repos seleccionados.
+                      </p>
+                    </div>
                   )}
                 </div>
+              )}
+            </div>
+          )}
 
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    LLM Provider
-                  </label>
-                  <CodeSecurityLLMConfig
-                    selectedProvider={llmProvider}
-                    onSelect={setLlmProvider}
-                  />
-                </div>
-              </div>
-            )}
+          {step === 3 && (
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4 text-sm">
+              <SummaryRow label="Modo" value={MODES.find((mode) => mode.value === scanMode)?.title ?? scanMode} />
+              <SummaryRow label="Título" value={title || 'Sin título'} />
+              <SummaryRow label="Repositorio/URL" value={scanMode === 'PUBLIC_URL' ? publicUrl : selectedRepoUrl || `${selectedOrgRepos.length} repos`} />
+              <SummaryRow label="Rama" value={selectedBranch} />
+              <SummaryRow label="Token" value={selectedToken?.label ?? 'No aplica'} />
+              <SummaryRow label="LLM" value="Asignado por agente en Agentes SCR" />
+            </div>
+          )}
 
-            {/* Step 4: Review */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    Scan Title
-                  </label>
-                  <Input
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                    placeholder="e.g., Q2 Security Audit"
-                  />
-                  {!titulo && (
-                    <p className="text-xs text-amber-600 mt-2">
-                      ⚠ This field is required
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add notes about this scan..."
-                    className="w-full h-24 px-3 py-2 rounded-md bg-white/[0.05] border border-white/[0.1] text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                <div className="p-4 rounded-lg bg-white/[0.05] border border-white/[0.1] space-y-3">
-                  <h3 className="font-semibold text-foreground">Summary</h3>
-                  <dl className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Repository:</dt>
-                      <dd className="font-mono text-foreground text-xs">{selectedRepoUrl}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Branch:</dt>
-                      <dd className="font-mono text-foreground">{selectedBranch}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Scan Mode:</dt>
-                      <dd className="text-foreground">{scanMode}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">LLM Provider:</dt>
-                      <dd className="text-foreground capitalize">{llmProvider}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 1 || isLoading}
-          >
-            ← Previous
-          </Button>
-
-          <div className="flex gap-3">
-            {currentStep < 4 ? (
-              <Button onClick={handleNext} disabled={isLoading} className="min-w-32">
-                Next →
+          <DialogFooter>
+            <Button variant="outline" onClick={() => (step === 1 ? router.push('/code_security_reviews') : setStep((step - 1) as WizardStep))}>
+              {step === 1 ? 'Cancelar' : 'Anterior'}
+            </Button>
+            {step < 3 ? (
+              <Button disabled={!canGoNext() || isLoadingGitHub} onClick={() => setStep((step + 1) as WizardStep)}>
+                Siguiente
               </Button>
             ) : (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                  disabled={isLoading}
-                >
-                  Back to Start
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !titulo.trim()}
-                  className="min-w-32 bg-green-600 hover:bg-green-700"
-                >
-                  {isLoading ? 'Creating...' : 'Start Scan'}
-                </Button>
-              </>
+              <Button disabled={isSubmitting || !canGoNext()} onClick={handleSubmit}>
+                {isSubmitting ? 'Encolando...' : 'Iniciar escaneo'}
+              </Button>
             )}
-          </div>
-        </div>
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </PageWrapper>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-border py-2 last:border-b-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="max-w-[60%] truncate font-medium">{value}</span>
     </div>
   );
 }

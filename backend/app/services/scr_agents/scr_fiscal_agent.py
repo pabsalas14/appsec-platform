@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
+from app.models.agente_config import AgenteConfig
 from app.models.code_security_event import CodeSecurityEvent
 from app.models.code_security_finding import CodeSecurityFinding
 from app.models.code_security_report import CodeSecurityReport
-from app.services.ia_provider import AIProviderType, get_ai_provider
+from app.services.scr_json import normalize_fiscal_report, parse_llm_json
+from app.services.scr_llm_catalog import ANTHROPIC_DEFAULT_MODEL
+from app.services.scr_llm_runtime import ScrLlmRuntime, get_ai_provider_for_scr_runtime
 
 
 def _build_fiscal_system_prompt() -> str:
@@ -107,17 +109,20 @@ async def run_fiscal_real(
     review_id: str,
     review_title: str,
     db: AsyncSession,
+    llm: ScrLlmRuntime | None = None,
+    usage_out: dict[str, Any] | None = None,
 ) -> CodeSecurityReport:
     """Run Fiscal Agent with LLM-powered executive report generation.
 
     Uses LLM to synthesize technical findings into business-focused executive reports
     with attack narratives, risk assessments, and actionable recommendations.
-    Falls back to enhanced stub when LLM is unavailable.
+    Falls back to a deterministic report based only on persisted findings/events when LLM is unavailable.
 
     Args:
         review_id: UUID of the code security review
         review_title: Title of the review
         db: Database session
+        llm: Runtime LLM desde BD (SCR) o None para env
 
     Returns:
         Created CodeSecurityReport instance
@@ -153,18 +158,48 @@ async def run_fiscal_real(
     else:
         # Try LLM-powered analysis first
         try:
-            ai_provider = get_ai_provider(AIProviderType.ANTHROPIC)
-            system_prompt = _build_fiscal_system_prompt()
+            ai_provider = get_ai_provider_for_scr_runtime(llm, env_fallback_model=ANTHROPIC_DEFAULT_MODEL)
+            temperature = llm.temperature if llm else 0.3
+            max_tokens_llm = min(2000, llm.max_tokens) if llm else 2000
+            config = await db.scalar(
+                select(AgenteConfig)
+                .where(
+                    AgenteConfig.agente_tipo == "fiscal",
+                    AgenteConfig.usuario_id.is_(None),
+                    AgenteConfig.revision_id.is_(None),
+                    AgenteConfig.activo.is_(True),
+                )
+                .order_by(AgenteConfig.actualizado_en.desc())
+            )
+            params = (config.parametros_llm or {}) if config else {}
+            system_prompt = config.prompt_sistema_personalizado if config and config.prompt_sistema_personalizado else _build_fiscal_system_prompt()
             user_prompt = _build_fiscal_user_prompt(findings, events, review_title)
+            if params.get("analysis_context"):
+                user_prompt += f"\n\nCONTEXTO CONFIGURADO:\n{params['analysis_context']}"
+            if params.get("output_format"):
+                user_prompt += f"\n\nFORMATO CONFIGURADO:\n{params['output_format']}"
 
             response = await ai_provider.generate(
                 prompt=user_prompt,
                 system=system_prompt,
-                max_tokens=2000,
-                temperature=0.3,
+                max_tokens=max_tokens_llm,
+                temperature=temperature,
             )
+            if usage_out is not None:
+                usage_out.update(
+                    {
+                        "tokens_used": response.tokens_used or 0,
+                        "input_tokens": response.input_tokens or 0,
+                        "output_tokens": response.output_tokens or 0,
+                        "provider": response.provider or (llm.provider.value if llm else None),
+                        "model": llm.model if llm else None,
+                    }
+                )
 
-            report_data = json.loads(response.content.strip())
+            parsed_report = parse_llm_json(response.content, default={})
+            if not isinstance(parsed_report, dict):
+                raise ValueError("Fiscal no devolvió JSON válido")
+            report_data = normalize_fiscal_report(parsed_report)
 
             # Validate and enhance LLM response
             report_data = _validate_and_enhance_fiscal_report(report_data, findings, events, overall_risk)
@@ -176,18 +211,19 @@ async def run_fiscal_real(
 
     report = CodeSecurityReport(
         review_id=review_id,
-        titulo=f"Reporte Ejecutivo - {review_title}",
         resumen_ejecutivo=report_data["executive_summary"],
-        evaluacion_riesgo=report_data["risk_assessment"],
-        narrativa_ataque=report_data["attack_narrative"],
-        hallazgos_clave=report_data["key_findings"],
-        recomendaciones=report_data["recommendations"],
-        nivel_confianza=report_data["confidence_level"],
-        metadata={
-            "findings_count": len(findings),
-            "events_count": len(events),
-            "generated_at": datetime.now().isoformat(),
+        desglose_severidad={
+            "CRITICO": sum(1 for f in findings if f.severidad == "CRITICO"),
+            "ALTO": sum(1 for f in findings if f.severidad == "ALTO"),
+            "MEDIO": sum(1 for f in findings if f.severidad == "MEDIO"),
+            "BAJO": sum(1 for f in findings if f.severidad == "BAJO"),
         },
+        narrativa_evolucion=report_data["attack_narrative"],
+        pasos_remediacion=report_data["recommendations"],
+        puntuacion_riesgo_global={"CRITICAL": 95, "HIGH": 75, "MEDIUM": 45, "LOW": 15}.get(
+            report_data["risk_assessment"],
+            0,
+        ),
     )
 
     db.add(report)
@@ -229,7 +265,7 @@ def _validate_and_enhance_fiscal_report(
     # Enhance attack narrative if too short
     if len(report_data["attack_narrative"]) < 50:
         report_data["attack_narrative"] = (
-            f"Análisis cronológico de {len(commits)} commits reveló patrones de actividad "
+            f"Análisis cronológico de {len(events)} eventos reveló patrones de actividad "
             f"{'sospechosa' if overall_risk in ['HIGH', 'CRITICAL'] else 'normal'}. "
             f"Se identificaron eventos en horarios inusuales, modificaciones a archivos críticos "
             f"y patrones que podrían indicar actividad maliciosa coordinada."
@@ -327,14 +363,16 @@ def _generate_enhanced_fallback_report(
     # Add critical findings first
     critical_findings = [f for f in findings if f.severidad == "CRITICO"]
     for finding in critical_findings[:5]:
-        key_findings.append(f"[CRÍTICO] {f.tipo_malicia} en {f.archivo}: {f.descripcion[:100]}...")
+        key_findings.append(
+            f"[CRÍTICO] {finding.tipo_malicia} en {finding.archivo}: {finding.descripcion[:100]}..."
+        )
 
     # Add high findings
     high_findings = [f for f in findings if f.severidad == "ALTO"]
     for finding in high_findings[:3]:
         if len(key_findings) >= 10:
             break
-        key_findings.append(f"[ALTO] {f.tipo_malicia} en {f.archivo}: {f.descripcion[:100]}...")
+        key_findings.append(f"[ALTO] {finding.tipo_malicia} en {finding.archivo}: {finding.descripcion[:100]}...")
 
     # Add some medium findings if we need more
     if len(key_findings) < 5:
@@ -342,7 +380,9 @@ def _generate_enhanced_fallback_report(
         for finding in medium_findings[:2]:
             if len(key_findings) >= 10:
                 break
-            key_findings.append(f"[MEDIO] {f.tipo_malicia} en {f.archivo}: {f.descripcion[:100]}...")
+            key_findings.append(
+                f"[MEDIO] {finding.tipo_malicia} en {finding.archivo}: {finding.descripcion[:100]}..."
+            )
 
     # Ensure we have at least some findings
     if not key_findings and findings:

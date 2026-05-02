@@ -430,3 +430,110 @@ async def build_executive_dashboard(
             repositorio_id=repositorio_id,
         ),
     }
+
+
+def _parse_uuid_opt(value: str | None) -> UUID | None:
+    if not value:
+        return None
+    try:
+        return UUID(value)
+    except ValueError:
+        return None
+
+
+async def generate_executive_dashboard_pdf(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    filters: dict[str, str | None],
+) -> dict:
+    """Payload JSON para la UI de exportación PDF del dashboard ejecutivo (metadatos + KPIs)."""
+    _ = user_id
+    payload = await build_executive_dashboard(
+        db,
+        direccion_id=_parse_uuid_opt(filters.get("direccion_id")),
+        subdireccion_id=_parse_uuid_opt(filters.get("subdireccion_id")),
+        gerencia_id=_parse_uuid_opt(filters.get("gerencia_id")),
+        organizacion_id=_parse_uuid_opt(filters.get("organizacion_id")),
+        celula_id=_parse_uuid_opt(filters.get("celula_id")),
+        repositorio_id=None,
+        trend_months=6,
+        ref_month=None,
+        audits_offset=0,
+        audits_limit=10,
+        audits_solo_activas=True,
+    )
+    return {
+        "kpis": payload["kpis"],
+        "applied_filters": payload["applied_filters"],
+        "generated_at": payload["generated_at"],
+    }
+
+
+async def get_executive_drilldown(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    tipo: str,
+    filtro: str,
+    valor: str,
+) -> dict:
+    """Listados filtrados alineados con los KPIs del dashboard ejecutivo."""
+    _ = user_id
+    t = (tipo or "").strip().lower()
+    fv = (filtro or "").strip().lower()
+    vv = (valor or "").strip()
+
+    scope = vulnerabilidad_en_celulas_o_repo(
+        direccion_id=None,
+        subdireccion_id=None,
+        gerencia_id=None,
+        organizacion_id=None,
+        celula_id=None,
+        repositorio_id=None,
+    )
+    vbase = [Vulnerabilidad.deleted_at.is_(None)]
+    if scope is not None:
+        vbase.append(scope)
+
+    if t == "vulnerabilidades":
+        q = select(Vulnerabilidad).where(*vbase)
+        if fv == "severidad":
+            q = q.where(Vulnerabilidad.severidad.ilike(vv))
+        elif fv == "estado":
+            q = q.where(Vulnerabilidad.estado.ilike(vv))
+        elif fv == "fuente":
+            q = q.where(Vulnerabilidad.fuente.ilike(vv))
+        rows = (await db.execute(q.limit(100))).scalars().all()
+        items = [
+            {
+                "id": str(v.id),
+                "severidad": v.severidad,
+                "estado": v.estado,
+                "fuente": v.fuente,
+            }
+            for v in rows
+        ]
+        return {"tipo": "vulnerabilidades", "items": items, "total": len(items), "filtro": fv, "valor": vv}
+
+    if t == "programas":
+        items = [{"motor": m, "estado": "activo"} for m in FIVE_MOTORS]
+        return {"tipo": "programas", "items": items, "total": len(items), "filtro": fv, "valor": vv}
+
+    if t == "auditorias":
+        q = select(Auditoria).where(Auditoria.deleted_at.is_(None))
+        if fv == "estado":
+            q = q.where(Auditoria.estado.ilike(f"%{vv}%"))
+        rows = (await db.execute(q.limit(100))).scalars().all()
+        items = [{"id": str(a.id), "nombre": a.titulo, "estado": a.estado, "tipo": a.tipo} for a in rows]
+        return {"tipo": "auditorias", "items": items, "total": len(items), "filtro": fv, "valor": vv}
+
+    if t == "temas":
+        q = select(TemaEmergente).where(TemaEmergente.deleted_at.is_(None))
+        if fv == "estado":
+            q = q.where(TemaEmergente.estado.ilike(f"%{vv}%"))
+        rows = (await db.execute(q.limit(100))).scalars().all()
+        items = [{"id": str(x.id), "titulo": x.titulo, "estado": x.estado} for x in rows]
+        return {"tipo": "temas", "items": items, "total": len(items), "filtro": fv, "valor": vv}
+
+    return {"tipo": t or "unknown", "items": [], "total": 0, "filtro": fv, "valor": vv, "error": "unrecognized_tipo"}

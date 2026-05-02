@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, time
+import uuid
+from datetime import UTC, datetime, time
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import logger
+from app.models.agente_config import AgenteConfig
 from app.models.code_security_event import CodeSecurityEvent
-from app.services.ia_provider import AIProviderType, get_ai_provider
+from app.services.scr_json import parse_llm_json
+from app.services.scr_llm_runtime import ScrLlmRuntime, get_ai_provider_for_scr_runtime
+from app.services.scr_llm_catalog import ANTHROPIC_DEFAULT_MODEL
 
 
 # Patrones de riesgo forense
@@ -67,6 +72,17 @@ def _is_weekend(commit_time: datetime) -> bool:
     return commit_time.weekday() >= 5  # Saturday = 5, Sunday = 6
 
 
+def _commit_timestamp(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str) and value:
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.now(UTC)
+    return datetime.now(UTC)
+
+
 def _matches_hidden_commit(message: str, file_path: str) -> bool:
     """Check if commit message is suspiciously generic for critical file."""
     if not any(crit in file_path.lower() for crit in FORensic_PATTERNS["HIDDEN_COMMITS"]["critical_files"]):
@@ -116,13 +132,13 @@ async def run_detective_agent(
     events = []
 
     # Sort commits by timestamp (oldest first)
-    sorted_commits = sorted(commits, key=lambda c: c["timestamp"])
+    sorted_commits = sorted(commits, key=lambda c: _commit_timestamp(c.get("timestamp")))
 
     # Track author activity for anomalies
     author_file_history = {}
 
     for i, commit in enumerate(sorted_commits):
-        commit_time = commit["timestamp"]
+        commit_time = _commit_timestamp(commit.get("timestamp"))
         author = commit["author"]
         message = commit.get("message", "")
         files = commit.get("files", [])
@@ -221,6 +237,8 @@ async def run_detective_real(
     inspector_findings: list[dict[str, Any]],
     commits: list[dict[str, Any]],
     db: AsyncSession,
+    llm: ScrLlmRuntime | None = None,
+    usage_out: dict[str, Any] | None = None,
 ) -> list[CodeSecurityEvent]:
     """Run Detective Agent with LLM-powered forensic analysis of Git timeline.
 
@@ -232,6 +250,7 @@ async def run_detective_real(
         inspector_findings: List of findings from Inspector Agent
         commits: List of commit data from Git
         db: Database session
+        llm: Runtime LLM resuelto desde BD (SCR) o None para env
 
     Returns:
         List of created CodeSecurityEvent instances
@@ -241,7 +260,12 @@ async def run_detective_real(
     # Try LLM-powered analysis first
     try:
         events = await _run_detective_with_llm(
-            review_id=review_id, inspector_findings=inspector_findings, commits=commits, db=db
+            review_id=review_id,
+            inspector_findings=inspector_findings,
+            commits=commits,
+            db=db,
+            llm=llm,
+            usage_out=usage_out,
         )
         logger.info("detective_real.llm_success", extra={"review_id": review_id, "events_count": len(events)})
         return events
@@ -260,6 +284,8 @@ async def _run_detective_with_llm(
     inspector_findings: list[dict[str, Any]],
     commits: list[dict[str, Any]],
     db: AsyncSession,
+    llm: ScrLlmRuntime | None = None,
+    usage_out: dict[str, Any] | None = None,
 ) -> list[CodeSecurityEvent]:
     """Run Detective Agent using LLM for advanced pattern detection."""
 
@@ -279,11 +305,24 @@ async def _run_detective_with_llm(
             }
         )
 
-    # Get AI provider
-    ai_provider = get_ai_provider(AIProviderType.ANTHROPIC)
+    ai_provider = get_ai_provider_for_scr_runtime(llm, env_fallback_model=ANTHROPIC_DEFAULT_MODEL)
+    temperature = llm.temperature if llm else 0.3
+    max_tokens_llm = min(2000, llm.max_tokens) if llm else 2000
+
+    config = await db.scalar(
+        select(AgenteConfig)
+        .where(
+            AgenteConfig.agente_tipo == "detective",
+            AgenteConfig.usuario_id.is_(None),
+            AgenteConfig.revision_id.is_(None),
+            AgenteConfig.activo.is_(True),
+        )
+        .order_by(AgenteConfig.actualizado_en.desc())
+    )
+    params = (config.parametros_llm or {}) if config else {}
 
     # Build system prompt for forensic analysis
-    system_prompt = """Eres un experto en análisis forense de código especializado en detectar patrones maliciosos en el historial de Git.
+    default_system_prompt = """Eres un experto en análisis forense de código especializado en detectar patrones maliciosos en el historial de Git.
 Tu rol es analizar el timeline de commits para identificar indicadores de compromiso, incluyendo:
 
 PATRONES DE RIESGO FORENSE:
@@ -318,6 +357,7 @@ FORMATO DE RESPUESTA (JSON array):
     "description": "Commit en horario fuera de laboral modificando archivos de autenticación con mensaje genérico 'fix bug'"
   }
 ]"""
+    system_prompt = config.prompt_sistema_personalizado if config and config.prompt_sistema_personalizado else default_system_prompt
 
     # Build user prompt with commit data and inspector findings context
     findings_summary = []
@@ -343,25 +383,40 @@ INSTRUCCIONES:
 Analiza los commits anteriores en busca de patrones forenses indicativos de actividad maliciosa.
 Considera tanto los commits individuales como patrones temporales y de autoría.
 Correla con los hallazgos técnicos cuando sea relevante.
-Responde con un array JSON de eventos forenses detectados."""
+{params.get("analysis_context") or ""}
+Responde con un array JSON de eventos forenses detectados.
+{params.get("output_format") or ""}"""
 
     # Call LLM for analysis
     response = await ai_provider.generate(
         prompt=user_prompt,
         system=system_prompt,
-        temperature=0.3,
-        max_tokens=2000,
+        temperature=temperature,
+        max_tokens=max_tokens_llm,
     )
+    if usage_out is not None:
+        usage_out.update(
+            {
+                "tokens_used": response.tokens_used or 0,
+                "input_tokens": response.input_tokens or 0,
+                "output_tokens": response.output_tokens or 0,
+                "provider": response.provider or (llm.provider.value if llm else None),
+                "model": llm.model if llm else None,
+            }
+        )
 
     # Parse LLM response
-    try:
-        llm_result = json.loads(response.content.strip())
-        if not isinstance(llm_result, list):
-            llm_result = []
-    except json.JSONDecodeError as e:
+    parsed = parse_llm_json(response.content, default=[])
+    if isinstance(parsed, dict):
+        llm_result = parsed.get("events") or []
+    elif isinstance(parsed, list):
+        llm_result = parsed
+    else:
+        llm_result = []
+    if not isinstance(llm_result, list):
         logger.error(
             "detective_real.json_parse_error",
-            extra={"review_id": review_id, "error": str(e), "content": response.content[:200]},
+            extra={"review_id": review_id, "content": response.content[:200]},
         )
         llm_result = []
 
@@ -371,12 +426,24 @@ Responde con un array JSON de eventos forenses detectados."""
         try:
             # Validate required fields
             commit_hash = event_data.get("commit_hash", "")
-            author = event_data.get("author", "unknown")
-            timestamp_str = event_data.get("timestamp", "")
-            files_affected = event_data.get("files_affected", [])
-            risk_level = event_data.get("risk_level", "MEDIUM")
-            indicators = event_data.get("indicators", [])
-            description = event_data.get("description", "")
+            author = event_data.get("author") or event_data.get("autor") or "unknown"
+            timestamp_str = event_data.get("timestamp") or event_data.get("fecha") or ""
+            file_value = event_data.get("archivo")
+            files_affected = event_data.get("files_affected") or ([file_value] if file_value else [])
+            risk_level = event_data.get("risk_level") or event_data.get("nivel_riesgo") or "MEDIUM"
+            indicators = event_data.get("indicators") or event_data.get("indicadores") or []
+            description = event_data.get("description") or event_data.get("descripcion") or ""
+
+            if not files_affected:
+                matched_commit = next(
+                    (
+                        commit
+                        for commit in commits_summary
+                        if str(commit.get("hash", "")).startswith(str(commit_hash)[:12])
+                    ),
+                    None,
+                )
+                files_affected = list(matched_commit.get("files") or []) if matched_commit else []
 
             # Skip if missing essential data
             if not commit_hash or not author or not files_affected:
@@ -394,12 +461,12 @@ Responde con un array JSON de eventos forenses detectados."""
             # Create event for each affected file
             for file_path in files_affected:
                 event = CodeSecurityEvent(
-                    review_id=review_id,
+                    review_id=uuid.UUID(str(review_id)),
                     event_ts=event_ts,
                     commit_hash=commit_hash[:64],  # Limit length
                     autor=author[:512],
                     archivo=file_path[:1024],
-                    accion="modified",
+                    accion=str(event_data.get("accion") or "modified")[:32],
                     mensaje_commit=event_data.get("message", "")[:200] if event_data.get("message") else None,
                     nivel_riesgo=risk_level,
                     indicadores=indicators,
@@ -415,5 +482,9 @@ Responde con un array JSON de eventos forenses detectados."""
             continue
 
     logger.info("detective_real.llm_analysis_complete", extra={"review_id": review_id, "events_from_llm": len(events)})
+
+    if events:
+        db.add_all(events)
+        await db.flush()
 
     return events

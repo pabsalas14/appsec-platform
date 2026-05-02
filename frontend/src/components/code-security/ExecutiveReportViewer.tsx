@@ -130,12 +130,12 @@ export function ExecutiveReportViewer({ report }: ExecutiveReportViewerProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {report.pasos_remediacion.map((step, index) => (
-                <div key={index} className="flex items-start gap-3">
+              {report.pasos_remediacion.map((step) => (
+                <div key={step.orden} className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
-                    {index + 1}
+                    {step.orden}
                   </div>
-                  <p className="text-sm leading-relaxed">{step}</p>
+                  <p className="text-sm leading-relaxed">{step.paso}</p>
                 </div>
               ))}
             </div>

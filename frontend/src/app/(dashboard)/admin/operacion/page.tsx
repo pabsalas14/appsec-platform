@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Loader2, Save } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -213,6 +214,12 @@ export default function AdminOperacionPage() {
         title="Operación (liberaciones y flujos)"
         description="C1–C3: `flujo.transiciones_liberacion` y `kanban.liberacion` en almacenamiento; la UI de liberaciones y el dashboard de kanban leen la misma configuración."
       />
+      <p className="-mt-4 mb-2 text-xs text-muted-foreground">
+        ¿Vista técnica completa y búsqueda?{' '}
+        <Link href="/admin/settings" className="font-medium text-primary underline-offset-4 hover:underline">
+          Configuración del sistema
+        </Link>
+      </p>
 
       <Card>
         <CardHeader>
