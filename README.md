@@ -173,7 +173,7 @@ Múltiples dominios exponen `GET .../export.csv` con permiso de export y registr
 ## Verificación de calidad (gate local)
 
 1. Tras cambios en **`backend/`**: `docker compose build backend` antes de `make test` si el contenedor no monta código actualizado en tu flujo.
-2. **`make test`** — suite grande (~15–40 min según máquina); usar BD desechable.
+2. **`make test`** — suite grande (~15–40 min según máquina); usar BD desechable. **Referencia CI local (may 2026):** 918 passed, 1 skipped en imagen Docker reconstruida.
 3. **`cd frontend && npm run lint`**
 4. **`make types`** si cambió OpenAPI.
 
