@@ -45,6 +45,38 @@ ALLOWED_CONTENT_TYPES = {
     "application/zip",
 }
 
+# Extensions blocked regardless of declared content-type (executable/script files).
+# This is defence-in-depth: even if someone spoofs the MIME type, the filename
+# extension check will reject known dangerous executables and scripts.
+_BLOCKED_EXTENSIONS: frozenset[str] = frozenset(
+    {
+        # Windows executables and scripts
+        ".exe", ".bat", ".cmd", ".com", ".pif", ".scr", ".vbs", ".vbe",
+        ".js", ".jse", ".ws", ".wsf", ".wsc", ".wsh", ".ps1", ".ps1xml",
+        ".ps2", ".ps2xml", ".psc1", ".psc2", ".msh", ".msh1", ".msh2",
+        ".mshxml", ".msh1xml", ".msh2xml", ".msi", ".msp", ".mst",
+        # Unix/Linux executables and scripts
+        ".sh", ".bash", ".zsh", ".ksh", ".csh", ".tcsh", ".fish",
+        ".run", ".bin",
+        # Other risky types
+        ".jar", ".class", ".dll", ".so", ".dylib",
+        ".reg", ".inf", ".lnk", ".url",
+    }
+)
+
+
+def _check_blocked_extension(filename: str) -> None:
+    """Raise ValidationException if the filename has a blocked extension."""
+    if not filename:
+        return
+    # Handle compound extensions like .tar.gz — check the last suffix
+    suffix = Path(filename).suffix.lower()
+    if suffix in _BLOCKED_EXTENSIONS:
+        raise ValidationException(
+            f"File extension '{suffix}' is not allowed for security reasons. "
+            "Executable and script files are blocked."
+        )
+
 _MAGIC = {
     "application/pdf": [b"%PDF-"],
     "image/png": [b"\x89PNG\r\n\x1a\n"],
@@ -142,6 +174,9 @@ async def create_upload(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Block dangerous file extensions before reading file contents
+    _check_blocked_extension(file.filename or "")
+
     content_type = file.content_type or "application/octet-stream"
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise ValidationException(f"Unsupported content type: {content_type}")
