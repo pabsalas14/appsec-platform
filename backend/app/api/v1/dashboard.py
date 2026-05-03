@@ -1680,3 +1680,114 @@ async def _programs_heatmap(
             )
         heatmap[motor] = months
     return heatmap
+
+
+# ── Historical comparison endpoint ───────────────────────────────────────────
+
+
+@router.get("/programs/historical-comparison")
+async def dashboard_programs_historical_comparison(
+    years: str = Query(
+        default="",
+        description="Comma-separated years to compare (e.g. '2023,2024,2025'). "
+        "Defaults to last 3 years if empty.",
+    ),
+    program_type: str = Query(
+        default="all",
+        description="Program type filter: all | sast | dast | source_code | threat_modeling",
+    ),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission(P.DASHBOARDS.VIEW)),
+):
+    """Historical comparison of security programs across years.
+
+    Returns program counts, completion rates, and vulnerability resolution
+    metrics for each year, enabling year-over-year trend analysis.
+    """
+    from sqlalchemy import Integer, cast, func, select
+
+    from app.models.programa_dast import ProgramaDast
+    from app.models.programa_sast import ProgramaSast
+    from app.models.programa_source_code import ProgramaSourceCode
+    from app.models.programa_threat_modeling import ProgramaThreatModeling
+
+    now = datetime.now(UTC)
+    if years.strip():
+        try:
+            requested_years = sorted({int(y.strip()) for y in years.split(",") if y.strip()})
+        except ValueError:
+            from app.core.exceptions import ValidationException
+            raise ValidationException("El parámetro 'years' debe ser años enteros separados por comas")
+    else:
+        requested_years = [now.year - 2, now.year - 1, now.year]
+
+    # Limit to 5 years max
+    requested_years = requested_years[-5:]
+
+    program_models: list[tuple[str, type]] = []
+    if program_type in ("all", "sast"):
+        program_models.append(("SAST", ProgramaSast))
+    if program_type in ("all", "dast"):
+        program_models.append(("DAST", ProgramaDast))
+    if program_type in ("all", "source_code"):
+        program_models.append(("Source Code", ProgramaSourceCode))
+    if program_type in ("all", "threat_modeling"):
+        program_models.append(("Threat Modeling", ProgramaThreatModeling))
+
+    if not program_models:
+        from app.core.exceptions import ValidationException
+        raise ValidationException(
+            "program_type inválido. Usa: all, sast, dast, source_code, threat_modeling"
+        )
+
+    result: dict[str, list[dict]] = {}
+
+    for tipo, Model in program_models:
+        year_data: list[dict] = []
+        for year in requested_years:
+            # Count programs by estado for this year
+            counts_q = await db.execute(
+                select(
+                    Model.estado,
+                    func.count(Model.id).label("total"),
+                )
+                .where(
+                    Model.deleted_at.is_(None),
+                    Model.ano == year,
+                    Model.user_id == current_user.id,
+                )
+                .group_by(Model.estado)
+            )
+            by_state: dict[str, int] = {}
+            total_programs = 0
+            for row in counts_q.all():
+                by_state[row.estado] = row.total
+                total_programs += row.total
+
+            completados = by_state.get("Completado", 0)
+            completion_rate = round((completados / total_programs * 100), 1) if total_programs else 0.0
+
+            year_data.append(
+                {
+                    "year": year,
+                    "total": total_programs,
+                    "by_estado": by_state,
+                    "completion_rate": completion_rate,
+                    "completados": completados,
+                    "activos": by_state.get("Activo", 0),
+                    "cancelados": by_state.get("Cancelado", 0),
+                }
+            )
+        result[tipo] = year_data
+
+    return success(
+        {
+            "years": requested_years,
+            "program_type": program_type,
+            "comparison": result,
+        },
+        meta={
+            "years_count": len(requested_years),
+            "types_compared": [t for t, _ in program_models],
+        },
+    )
