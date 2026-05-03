@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission, validate_fk_exists
 from app.api.deps_ownership import require_ownership
+from app.core.csv_duplicate_detector import detect_duplicates
 from app.core.inventory_csv import (
     activo_web_row_to_create,
     activo_web_template_body,
@@ -83,9 +84,23 @@ async def import_activo_webs_csv(
     text = raw.decode("utf-8-sig")
     rows = read_csv_dict_rows(text)
     err_list: list[dict] = []
+    warnings: list[str] = []
     created = 0
     seen_urls: dict[str, int] = {}
-    existing = {str(x.url) for x in await activo_web_svc.list(db, filters={"user_id": current_user.id})}
+    existing_assets = await activo_web_svc.list(db, filters={"user_id": current_user.id})
+    existing = {str(x.url) for x in existing_assets}
+
+    # Semantic duplicate detection
+    dup_report = detect_duplicates(
+        rows,
+        key_fields=["nombre", "url"],
+        threshold=0.85,
+        existing_values={
+            "nombre": [a.nombre for a in existing_assets],
+            "url": [str(a.url) for a in existing_assets],
+        },
+    )
+    warnings.extend(dup_report.to_warnings())
 
     for line_no, d in enumerate(rows, start=2):
         parsed, perr = activo_web_row_to_create(d, row=line_no)
@@ -135,11 +150,14 @@ async def import_activo_webs_csv(
     meta = {
         "import_row_errors": len(err_list),
         "sha256": digest,
+        "duplicate_warnings": len(warnings),
     }
     if err_list:
         meta["import_errors"] = err_list
+    if warnings:
+        meta["duplicate_warnings_detail"] = warnings
     return success(
-        {"created": created, "errors": err_list},
+        {"created": created, "errors": err_list, "warnings": warnings},
         meta=meta,
     )
 
