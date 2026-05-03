@@ -1,7 +1,7 @@
 """SavedWidget schemas — Pydantic v2 for Query Builder (Fase 1)."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -57,6 +57,16 @@ class SavedWidgetUpdate(BaseModel):
     chart_type: str | None = None
 
 
+class WidgetPermissions(BaseModel):
+    """Granular widget-level access control."""
+
+    visibility: Literal["private", "shared", "public"] = "private"
+    shared_with_roles: list[str] = Field(default_factory=list, description="Role names with view access")
+    shared_with_user_ids: list[UUID] = Field(default_factory=list, description="User UUIDs with view access")
+    can_edit_roles: list[str] = Field(default_factory=list, description="Role names with edit access")
+    can_edit_user_ids: list[UUID] = Field(default_factory=list, description="User UUIDs with edit access")
+
+
 class SavedWidgetRead(SavedWidgetBase):
     """Full SavedWidget representation returned from the API."""
 
@@ -67,5 +77,6 @@ class SavedWidgetRead(SavedWidgetBase):
     preview_data: dict[str, Any] | None = None
     row_count: int | None = None
     last_executed_at: datetime | None = None
+    widget_permissions: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime

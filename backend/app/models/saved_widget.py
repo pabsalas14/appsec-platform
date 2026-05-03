@@ -68,6 +68,20 @@ class SavedWidget(SoftDeleteMixin, Base):
         index=True,
     )
 
+    # Granular widget-level permissions (JSONB):
+    # {
+    #   "visibility": "private" | "shared" | "public",
+    #   "shared_with_roles": ["admin", "analyst"],
+    #   "shared_with_user_ids": ["<uuid>", ...],
+    #   "can_edit_roles": ["admin"],
+    #   "can_edit_user_ids": []
+    # }
+    widget_permissions: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="Granular access control: visibility, shared_with_roles, shared_with_user_ids",
+    )
+
     # ─── Timestamps (SoftDeleteMixin provides deleted_at, deleted_by) ───
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

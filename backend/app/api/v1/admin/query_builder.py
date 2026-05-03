@@ -10,7 +10,7 @@ from app.core.logging import logger
 from app.core.response import paginated, success
 from app.models.saved_widget import SavedWidget
 from app.models.user import User
-from app.schemas.saved_widget import SavedWidgetCreate, SavedWidgetRead, SavedWidgetUpdate
+from app.schemas.saved_widget import SavedWidgetCreate, SavedWidgetRead, SavedWidgetUpdate, WidgetPermissions
 from app.services.base import BaseService
 from app.services.query_builder_service import QueryBuilderService
 
@@ -307,3 +307,86 @@ async def delete_widget(
     except Exception as e:
         logger.exception(f"Delete widget error: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {e!s}") from e
+
+
+@router.put("/widgets/{widget_id}/permissions")
+async def set_widget_permissions(
+    widget_id: str,
+    permissions: WidgetPermissions,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Set granular access permissions for a widget.
+
+    Only the widget owner can modify permissions. Supports:
+    - visibility: private | shared | public
+    - shared_with_roles: role names with view access
+    - shared_with_user_ids: specific user UUIDs with view access
+    - can_edit_roles: roles with edit access
+    - can_edit_user_ids: specific users with edit access
+    """
+    import uuid
+
+    try:
+        widget_uuid = uuid.UUID(widget_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid widget ID") from e
+
+    widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+    if not widget:
+        raise HTTPException(status_code=404, detail="Widget not found")
+    if widget.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the widget owner can modify permissions")
+
+    widget.widget_permissions = permissions.model_dump(mode="json")
+    await db.flush()
+    await db.refresh(widget)
+    return success(SavedWidgetRead.model_validate(widget))
+
+
+@router.get("/widgets/{widget_id}/permissions")
+async def get_widget_permissions(
+    widget_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get current permission settings for a widget.
+
+    Widget owner and users/roles with explicit access can view permissions.
+    """
+    import uuid
+
+    try:
+        widget_uuid = uuid.UUID(widget_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid widget ID") from e
+
+    widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+    if not widget:
+        raise HTTPException(status_code=404, detail="Widget not found")
+
+    # Owner always has access; others need to be in shared list
+    perms = widget.widget_permissions or {}
+    visibility = perms.get("visibility", "private")
+    shared_ids = [str(uid) for uid in perms.get("shared_with_user_ids", [])]
+    edit_ids = [str(uid) for uid in perms.get("can_edit_user_ids", [])]
+
+    is_owner = widget.user_id == current_user.id
+    has_access = (
+        is_owner
+        or visibility == "public"
+        or str(current_user.id) in shared_ids
+        or str(current_user.id) in edit_ids
+    )
+
+    if not has_access:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    defaults = WidgetPermissions()
+    return success(
+        {
+            "widget_id": widget_id,
+            "permissions": perms or defaults.model_dump(mode="json"),
+            "is_owner": is_owner,
+        }
+    )
