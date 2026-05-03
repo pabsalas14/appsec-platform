@@ -10,6 +10,7 @@ from app.models.actualizacion_tema import ActualizacionTema
 from app.models.user import User
 from app.schemas.actualizacion_tema import ActualizacionTemaCreate, ActualizacionTemaRead, ActualizacionTemaUpdate
 from app.services.actualizacion_tema_service import actualizacion_tema_svc
+from app.services.mention_service import notify_mentions
 
 router = APIRouter()
 
@@ -38,8 +39,22 @@ async def create_actualizacion_tema(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create a new actualizacion tema for the current user."""
+    """Create a new actualizacion tema for the current user.
+
+    Parses @mentions in 'contenido' and sends in-app notifications to mentioned users.
+    """
     entity = await actualizacion_tema_svc.create(db, entity_in, extra={"user_id": current_user.id})
+
+    # Process @mentions in the update content
+    await notify_mentions(
+        db,
+        text=entity_in.contenido,
+        author_id=current_user.id,
+        context_title=entity_in.titulo,
+        entity_type="actualizacion_tema",
+        entity_id=entity.id,
+    )
+
     return success(ActualizacionTemaRead.model_validate(entity).model_dump(mode="json"))
 
 
