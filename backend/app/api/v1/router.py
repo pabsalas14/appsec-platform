@@ -48,6 +48,7 @@ from app.api.v1 import (
     filtro_guardado,
     # ── Módulo 2 — Panel de Administración (transversal) ──────────────────────
     flujo_estatus,
+    ia,
     gerencia,
     hallazgo_auditoria,
     hallazgo_dast,
@@ -127,6 +128,7 @@ api_router.include_router(client_logs.router, prefix="/client-logs", tags=["Clie
 api_router.include_router(email_template.router, prefix="/email-templates", tags=["Email templates"])
 api_router.include_router(email_logs.router, prefix="/email-logs", tags=["Email logs"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(ia.router, prefix="/ia", tags=["IA"])
 api_router.include_router(user_preferences.router, tags=["User preferences"])
 api_router.include_router(search.router, prefix="/search", tags=["Search"])
 api_router.include_router(

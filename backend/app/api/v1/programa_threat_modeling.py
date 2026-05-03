@@ -13,6 +13,7 @@ from app.schemas.programa_threat_modeling import (
     ProgramaThreatModelingRead,
     ProgramaThreatModelingUpdate,
 )
+from app.services.audit_service import record as audit_record
 from app.services.programa_threat_modeling_service import programa_threat_modeling_svc
 
 router = APIRouter()
@@ -68,3 +69,33 @@ async def delete_programa_threat_modeling(
     """Delete an owned programa_threat_modeling (404 if not owned)."""
     await programa_threat_modeling_svc.delete(db, entity.id, scope={"user_id": current_user.id})
     return success(None, meta={"message": "ProgramaThreatModeling deleted"})
+
+
+@router.post("/{id}/clonar", status_code=201)
+async def clonar_programa_threat_modeling(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ProgramaThreatModeling = Depends(require_ownership(programa_threat_modeling_svc)),
+):
+    """Clona un programa Threat Modeling existente con sus metadatos (sin sesiones).
+
+    El clon se crea con el mismo activo/servicio, descripción y estado,
+    incrementando el año en 1 y marcando el nombre con '(Copia)'.
+    """
+    clone_in = ProgramaThreatModelingCreate(
+        activo_web_id=entity.activo_web_id,
+        servicio_id=entity.servicio_id,
+        nombre=f"{entity.nombre} (Copia)",
+        ano=entity.ano + 1,
+        descripcion=entity.descripcion,
+        estado="Activo",
+    )
+    clone = await programa_threat_modeling_svc.create(db, clone_in, extra={"user_id": current_user.id})
+    await audit_record(
+        db,
+        action="programa_threat_modeling.clonar",
+        entity_type="programa_threat_modeling",
+        entity_id=clone.id,
+        metadata={"fuente_id": str(entity.id), "nombre_clon": clone.nombre},
+    )
+    return success(ProgramaThreatModelingRead.model_validate(clone).model_dump(mode="json"))

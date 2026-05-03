@@ -127,6 +127,36 @@ async def delete_programa_sast(
     return success(None, meta={"message": "ProgramaSast deleted"})
 
 
+@router.post("/{id}/clonar", status_code=201)
+async def clonar_programa_sast(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ProgramaSast = Depends(require_ownership(programa_sast_svc)),
+):
+    """Clona un programa SAST existente con sus metadatos (sin actividades).
+
+    El clon se crea con el mismo repositorio, descripción y metadatos del motor,
+    incrementando el año en 1 y marcando el nombre con '(Copia)'.
+    """
+    clone_in = ProgramaSastCreate(
+        repositorio_id=entity.repositorio_id,
+        nombre=f"{entity.nombre} (Copia)",
+        ano=entity.ano + 1,
+        descripcion=entity.descripcion,
+        estado="Activo",
+        metadatos_motor=entity.metadatos_motor,
+    )
+    clone = await programa_sast_svc.create(db, clone_in, extra={"user_id": current_user.id})
+    await audit_record(
+        db,
+        action="programa_sast.clonar",
+        entity_type="programa_sast",
+        entity_id=clone.id,
+        metadata={"fuente_id": str(entity.id), "nombre_clon": clone.nombre},
+    )
+    return success(ProgramaSastRead.model_validate(clone).model_dump(mode="json"))
+
+
 @router.post("/{id}/evidencia")
 async def upload_evidencia_programa(
     *,

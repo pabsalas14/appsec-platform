@@ -12,6 +12,7 @@ from app.core.response import paginated, success
 from app.models.programa_source_code import ProgramaSourceCode
 from app.models.user import User
 from app.schemas.programa_source_code import ProgramaSourceCodeCreate, ProgramaSourceCodeRead, ProgramaSourceCodeUpdate
+from app.services.audit_service import record as audit_record
 from app.services.programa_source_code_service import programa_source_code_svc
 
 router = APIRouter()
@@ -135,3 +136,33 @@ async def delete_programa_source_code(
     """Delete an owned programa_source_code (404 if not owned)."""
     await programa_source_code_svc.delete(db, entity.id, scope={"user_id": current_user.id})
     return success(None, meta={"message": "ProgramaSourceCode deleted"})
+
+
+@router.post("/{id}/clonar", status_code=201)
+async def clonar_programa_source_code(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ProgramaSourceCode = Depends(require_ownership(programa_source_code_svc)),
+):
+    """Clona un programa Source Code existente con sus metadatos (sin revisiones).
+
+    El clon se crea con el mismo repositorio, descripción y metadatos,
+    incrementando el año en 1 y marcando el nombre con '(Copia)'.
+    """
+    clone_in = ProgramaSourceCodeCreate(
+        repositorio_id=entity.repositorio_id,
+        nombre=f"{entity.nombre} (Copia)",
+        ano=entity.ano + 1,
+        descripcion=entity.descripcion,
+        estado="Activo",
+        metadatos_motor=entity.metadatos_motor,
+    )
+    clone = await programa_source_code_svc.create(db, clone_in, extra={"user_id": current_user.id})
+    await audit_record(
+        db,
+        action="programa_source_code.clonar",
+        entity_type="programa_source_code",
+        entity_id=clone.id,
+        metadata={"fuente_id": str(entity.id), "nombre_clon": clone.nombre},
+    )
+    return success(ProgramaSourceCodeRead.model_validate(clone).model_dump(mode="json"))

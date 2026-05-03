@@ -125,3 +125,33 @@ async def delete_programa_dast(
     """Delete an owned programa_dast (404 if not owned)."""
     await programa_dast_svc.delete(db, entity.id, scope={"user_id": current_user.id})
     return success(None, meta={"message": "ProgramaDast deleted"})
+
+
+@router.post("/{id}/clonar", status_code=201)
+async def clonar_programa_dast(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    entity: ProgramaDast = Depends(require_ownership(programa_dast_svc)),
+):
+    """Clona un programa DAST existente con sus metadatos (sin ejecuciones).
+
+    El clon se crea con el mismo activo web, descripción y metadatos,
+    incrementando el año en 1 y marcando el nombre con '(Copia)'.
+    """
+    clone_in = ProgramaDastCreate(
+        activo_web_id=entity.activo_web_id,
+        nombre=f"{entity.nombre} (Copia)",
+        ano=entity.ano + 1,
+        descripcion=entity.descripcion,
+        estado="Activo",
+        metadatos_motor=entity.metadatos_motor,
+    )
+    clone = await programa_dast_svc.create(db, clone_in, extra={"user_id": current_user.id})
+    await audit_record(
+        db,
+        action="programa_dast.clonar",
+        entity_type="programa_dast",
+        entity_id=clone.id,
+        metadata={"fuente_id": str(entity.id), "nombre_clon": clone.nombre},
+    )
+    return success(ProgramaDastRead.model_validate(clone).model_dump(mode="json"))
