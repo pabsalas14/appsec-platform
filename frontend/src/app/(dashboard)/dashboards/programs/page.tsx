@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 
 import { apiClient } from '@/lib/api';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -48,11 +49,18 @@ interface ProgramBreakdown {
   completion_percentage: number;
 }
 
+interface AnnualProgramDisplay {
+  order: string[];
+  labels: Record<string, string>;
+  colors: Record<string, string>;
+}
+
 interface ProgramsResponse {
   total_programs: number;
   avg_completion: number;
   programs_at_risk: number;
   program_breakdown: ProgramBreakdown[];
+  annual_display: AnnualProgramDisplay;
 }
 
 interface HeatmapEntry {
@@ -64,6 +72,8 @@ interface HeatmapEntry {
 
 interface HeatmapResponse {
   heatmap: Record<string, HeatmapEntry[]>;
+  year?: number;
+  annual_display?: AnnualProgramDisplay;
 }
 
 /** Programación anual por motor (MAST queda fuera: indicadores + ejecuciones mensuales). */
@@ -83,6 +93,12 @@ const PROGRAM_COLORS: Record<string, string> = {
   SCA: '#a855f7',
   CDS: '#10b981',
   MDA: '#f59e0b',
+};
+
+const FALLBACK_ANNUAL_DISPLAY: AnnualProgramDisplay = {
+  order: [...PROGRAM_TYPES],
+  labels: { ...PROGRAM_LABELS },
+  colors: { ...PROGRAM_COLORS },
 };
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -127,19 +143,23 @@ function MiniHeatmap({ months, color }: { months: HeatmapEntry[]; color: string 
 
 function ProgramCard({
   program,
+  displayTitle,
+  accentColor,
   data,
   heatmap,
   onClick,
   selected,
 }: {
   program: string;
+  displayTitle: string;
+  accentColor: string;
   data: ProgramBreakdown | undefined;
   heatmap: HeatmapEntry[];
   onClick: () => void;
   selected: boolean;
 }) {
   const pct = data?.completion_percentage ?? 0;
-  const color = PROGRAM_COLORS[program] ?? '#6b7280';
+  const color = accentColor;
   const status = getStatusLabel(pct);
   const currentMonth = heatmap[heatmap.length - 1]?.value ?? 0;
   return (
@@ -158,7 +178,7 @@ function ProgramCard({
           <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
             Programa
           </div>
-          <h3 className="text-sm font-bold truncate">{PROGRAM_LABELS[program] ?? program}</h3>
+          <h3 className="text-sm font-bold truncate">{displayTitle}</h3>
         </div>
         <Badge variant="outline" className={cn('text-[9px]', status.cls)}>
           {status.label}
@@ -193,17 +213,21 @@ function ProgramCard({
 
 function ProgramDetailPanel({
   program,
+  displayTitle,
+  accentColor,
   data,
   heatmap,
   onClose,
 }: {
   program: string;
+  displayTitle: string;
+  accentColor: string;
   data: ProgramBreakdown | undefined;
   heatmap: HeatmapEntry[];
   onClose: () => void;
 }) {
   const pct = data?.completion_percentage ?? 0;
-  const color = PROGRAM_COLORS[program] ?? '#6b7280';
+  const color = accentColor;
   const trendData = heatmap.map((m) => ({
     month: MONTH_NAMES[m.month - 1],
     avance: m.value,
@@ -218,7 +242,7 @@ function ProgramDetailPanel({
           <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
             Detalle del Programa
           </div>
-          <CardTitle className="text-base">{PROGRAM_LABELS[program] ?? program}</CardTitle>
+          <CardTitle className="text-base">{displayTitle}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Análisis del programa de seguridad seleccionado.
           </p>
@@ -315,6 +339,7 @@ function ProgramDetailPanel({
 
 export default function ProgramsDashboardPage() {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const { data: me } = useCurrentUser();
 
   const { data: programsData, isLoading: programsLoading } = useQuery({
     queryKey: ['dashboard-programs'],
@@ -335,13 +360,23 @@ export default function ProgramsDashboardPage() {
 
   const isLoading = programsLoading || heatmapLoading;
 
+  const annualDisplay =
+    programsData?.annual_display ?? heatmapData?.annual_display ?? FALLBACK_ANNUAL_DISPLAY;
+  const programOrder =
+    annualDisplay.order?.length > 0 ? annualDisplay.order : FALLBACK_ANNUAL_DISPLAY.order;
+
+  const labelFor = (code: string) =>
+    annualDisplay.labels[code] ?? PROGRAM_LABELS[code] ?? code;
+  const colorFor = (code: string) =>
+    annualDisplay.colors[code] ?? PROGRAM_COLORS[code] ?? '#6b7280';
+
   const findProgram = (p: string) =>
     programsData?.program_breakdown?.find((b) => b.program === p);
   const heatmapFor = (p: string) => heatmapData?.heatmap?.[p] ?? [];
 
   const monthlyChart = MONTH_NAMES.map((name, idx) => {
     const entry: Record<string, string | number> = { month: name, meta: 100 };
-    for (const ptype of PROGRAM_TYPES) {
+    for (const ptype of programOrder) {
       const m = heatmapData?.heatmap?.[ptype]?.find((h) => h.month === idx + 1);
       if (m) entry[ptype] = m.value;
     }
@@ -363,6 +398,18 @@ export default function ProgramsDashboardPage() {
           </h1>
           <p className="text-xs text-muted-foreground">
             Avance anual por motor (SAST…MDA). Operación móvil MAST: menú lateral → Indicadores / Ejecuciones MAST.
+            {me?.role === 'admin' || me?.role === 'super_admin' ? (
+              <>
+                {' '}
+                <Link
+                  href="/admin/settings"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Editar nombres y colores
+                </Link>{' '}
+                (Configuración → programas.anuales.display).
+              </>
+            ) : null}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -387,16 +434,18 @@ export default function ProgramsDashboardPage() {
         <div className="space-y-4 min-w-0">
           {isLoading ? (
             <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: programOrder.length || 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-56" />
               ))}
             </div>
           ) : (
             <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {PROGRAM_TYPES.map((program) => (
+              {programOrder.map((program) => (
                 <ProgramCard
                   key={program}
                   program={program}
+                  displayTitle={labelFor(program)}
+                  accentColor={colorFor(program)}
                   data={findProgram(program)}
                   heatmap={heatmapFor(program)}
                   selected={selectedProgram === program}
@@ -485,15 +534,15 @@ export default function ProgramsDashboardPage() {
                         />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="meta" stroke="#888" strokeDasharray="5 5" dot={false} name="Meta" />
-                        {PROGRAM_TYPES.map((p) => (
+                        {programOrder.map((p) => (
                           <Line
                             key={p}
                             type="monotone"
                             dataKey={p}
-                            stroke={PROGRAM_COLORS[p]}
+                            stroke={colorFor(p)}
                             strokeWidth={2}
-                            dot={{ fill: PROGRAM_COLORS[p], r: 2 }}
-                            name={p}
+                            dot={{ fill: colorFor(p), r: 2 }}
+                            name={labelFor(p)}
                           />
                         ))}
                       </LineChart>
@@ -520,18 +569,21 @@ export default function ProgramsDashboardPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-                    {['SAST', 'DAST', 'Threat Modeling', 'Source Code'].map((label, idx) => {
-                      const programs = ['SAST', 'DAST', 'SAST', 'DAST'];
-                      const heatmapEntries = idx < 2 ? (heatmapData?.heatmap?.[programs[idx]] ?? []) : [];
+                    {programOrder.slice(0, 4).map((code) => {
+                      const heatmapEntries = heatmapData?.heatmap?.[code] ?? [];
                       const monthData = (heatmapEntries || []).map((h: HeatmapEntry) => ({
                         month: h.month,
                         value: h.value ?? 0,
                       }));
                       return (
-                        <div key={label}>
+                        <div key={code}>
                           <HistoricoMensualGrid
-                            months={monthData.length > 0 ? monthData : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, value: 0 }))}
-                            title={label}
+                            months={
+                              monthData.length > 0
+                                ? monthData
+                                : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, value: 0 }))
+                            }
+                            title={labelFor(code)}
                             className="p-3 rounded-lg border border-border/50 bg-card/30"
                           />
                         </div>
@@ -550,6 +602,8 @@ export default function ProgramsDashboardPage() {
               <div className="h-full px-4 py-6">
                 <ProgramDetailPanel
                   program={selectedProgram}
+                  displayTitle={labelFor(selectedProgram)}
+                  accentColor={colorFor(selectedProgram)}
                   data={findProgram(selectedProgram)}
                   heatmap={heatmapFor(selectedProgram)}
                   onClose={() => setSelectedProgram(null)}

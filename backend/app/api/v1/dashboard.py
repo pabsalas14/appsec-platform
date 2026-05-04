@@ -28,6 +28,7 @@ from app.models.task import Task
 from app.models.user import User
 from app.schemas.audit_log import AuditLogRead
 from app.schemas.dashboard import (
+    AnnualProgramDisplayRead,
     DashboardEnvelopeProgramDetailRead,
     DashboardEnvelopeProgramsHeatmapRead,
     DashboardEnvelopeProgramsRead,
@@ -42,6 +43,7 @@ from app.services.vulnerability_scope import (
 )
 
 from app.services.dashboard_okr import build_okr_dashboard
+from app.services.annual_program_display import get_annual_program_display
 
 router = APIRouter()
 
@@ -807,6 +809,9 @@ async def dashboard_programs(
         celula_id=celula_id,
         repositorio_id=None,
     )
+    annual_display_raw = await get_annual_program_display(db)
+    annual_display = AnnualProgramDisplayRead.model_validate(annual_display_raw)
+
     rows = await _cached_payload(
         "programs-rows",
         user_id=current_user.id,
@@ -830,6 +835,7 @@ async def dashboard_programs(
                 "avg_completion": 0,
                 "programs_at_risk": 0,
                 "program_breakdown": [],
+                "annual_display": annual_display.model_dump(mode="json"),
                 "applied_filters": _hierarchy_filter_dict(
                     subdireccion_id=subdireccion_id,
                     gerencia_id=gerencia_id,
@@ -864,6 +870,7 @@ async def dashboard_programs(
             "avg_completion": int(sum(completion_values) / total_programs),
             "programs_at_risk": at_risk,
             "program_breakdown": breakdown,
+            "annual_display": annual_display.model_dump(mode="json"),
             "applied_filters": _hierarchy_filter_dict(
                 subdireccion_id=subdireccion_id,
                 gerencia_id=gerencia_id,
@@ -1506,13 +1513,21 @@ async def dashboard_programs_heatmap(
     now = datetime.now(UTC)
     year = now.year
     motors = list(ANNUAL_PROGRAM_MOTORS)
+    annual_display_raw = await get_annual_program_display(db)
+    annual_display = AnnualProgramDisplayRead.model_validate(annual_display_raw)
     heatmap = await _cached_payload(
         "programs-heatmap",
         user_id=current_user.id,
         params={"year": year},
         builder=lambda: _programs_heatmap(db=db, year=year, motors=motors),
     )
-    return success({"heatmap": heatmap})
+    return success(
+        {
+            "heatmap": heatmap,
+            "year": year,
+            "annual_display": annual_display.model_dump(mode="json"),
+        }
+    )
 
 
 @router.get("/temas-auditorias")

@@ -37,11 +37,20 @@ class DashboardProgramsBreakdownRead(BaseModel):
     completion_percentage: int
 
 
+class AnnualProgramDisplayRead(BaseModel):
+    """Etiquetas y colores del dashboard de programas anuales (claves = códigos de motor)."""
+
+    order: list[str]
+    labels: dict[str, str]
+    colors: dict[str, str]
+
+
 class DashboardProgramsDataRead(BaseModel):
     total_programs: int
     avg_completion: int
     programs_at_risk: int
     program_breakdown: list[DashboardProgramsBreakdownRead]
+    annual_display: AnnualProgramDisplayRead
     applied_filters: HierarchyFiltersRead | None = None
 
 
@@ -66,6 +75,7 @@ class DashboardHeatmapCellRead(BaseModel):
 class DashboardProgramsHeatmapDataRead(BaseModel):
     heatmap: dict[str, list[DashboardHeatmapCellRead]]
     year: int
+    annual_display: AnnualProgramDisplayRead
 
 
 class DashboardEngineStatRead(BaseModel):

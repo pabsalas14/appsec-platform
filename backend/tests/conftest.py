@@ -67,7 +67,7 @@ async def _wait_for_user_row(
     session_factory: async_sessionmaker[AsyncSession], username: str
 ) -> None:
     """Garantiza visibilidad post-commit: el ASGI puede devolver 201 antes del commit."""
-    for attempt in range(100):
+    for attempt in range(200):
         async with session_factory() as session:
             r = await session.execute(
                 text("SELECT id FROM users WHERE username = CAST(:u AS VARCHAR)"),
@@ -75,7 +75,7 @@ async def _wait_for_user_row(
             )
             if r.scalar_one_or_none() is not None:
                 return
-        await asyncio.sleep(0.02 * min(attempt + 1, 8))
+        await asyncio.sleep(0.02 * min(attempt + 1, 10))
     pytest.fail(f"user {username!r} not visible in DB after register (commit race)")
 
 

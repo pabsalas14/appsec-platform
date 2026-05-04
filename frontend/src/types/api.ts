@@ -10849,6 +10849,19 @@ export interface components {
             /** Completion Percentage */
             completion_percentage: number;
         };
+        /** AnnualProgramDisplayRead */
+        AnnualProgramDisplayRead: {
+            /** Order */
+            order: string[];
+            /** Labels */
+            labels: {
+                [key: string]: string;
+            };
+            /** Colors */
+            colors: {
+                [key: string]: string;
+            };
+        };
         /** DashboardProgramsDataRead */
         DashboardProgramsDataRead: {
             /** Total Programs */
@@ -10859,6 +10872,8 @@ export interface components {
             programs_at_risk: number;
             /** Program Breakdown */
             program_breakdown: components["schemas"]["DashboardProgramsBreakdownRead"][];
+            /** Annual Display */
+            annual_display: components["schemas"]["AnnualProgramDisplayRead"];
             applied_filters?: components["schemas"]["HierarchyFiltersRead"] | null;
         };
         /** DashboardProgramsHeatmapDataRead */
@@ -10869,6 +10884,8 @@ export interface components {
             };
             /** Year */
             year: number;
+            /** Annual Display */
+            annual_display: components["schemas"]["AnnualProgramDisplayRead"];
         };
         /** DashboardTeamAnalystRead */
         DashboardTeamAnalystRead: {

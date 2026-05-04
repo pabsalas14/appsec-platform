@@ -14,6 +14,7 @@ import {
   PremiumPageHeader,
   PageWrapper,
   premiumShellCardClass,
+  Skeleton,
 } from '@/components/ui';
 import { useDeleteUpload, useUploadFile, useUploads } from '@/hooks/useUploads';
 import { cn } from '@/lib/utils';
@@ -48,9 +49,9 @@ export default function UploadsPage() {
       for (const file of Array.from(fileList)) {
         try {
           await uploadMut.mutateAsync(file);
-          toast.success(`${file.name} uploaded`);
+          toast.success(`${file.name} subido correctamente`);
         } catch {
-          toast.error(`Failed to upload ${file.name}`);
+          toast.error(`No se pudo subir ${file.name}`);
         }
       }
     },
@@ -68,7 +69,7 @@ export default function UploadsPage() {
       <PremiumPageHeader
         eyebrow="Archivos"
         icon={Upload}
-        title="Uploads"
+        title="Carga de archivos"
         description="Arrastra archivos o elige desde disco. Almacenamiento por usuario con validación de tipo y tamaño (imágenes, PDF, texto hasta 10 MB)."
       />
 
@@ -91,10 +92,10 @@ export default function UploadsPage() {
           >
             <UploadCloud className="h-10 w-10 text-muted-foreground" />
             <div className="text-sm font-medium text-foreground">
-              Drag & drop files here, or click to browse
+              Arrastra archivos aquí o haz clic para elegir
             </div>
             <div className="text-xs text-muted-foreground">
-              Images, PDFs, plain text, JSON, zip — max 10 MB per file
+              Imágenes, PDF, texto plano, JSON, zip — máx. 10 MB por archivo
             </div>
             <input
               ref={inputRef}
@@ -108,10 +109,24 @@ export default function UploadsPage() {
       </Card>
 
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Loading…</div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="h-40 w-full rounded-none" />
+              <CardContent className="space-y-2 p-3">
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-5 w-14" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="ml-auto h-8 w-24" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : files.length === 0 ? (
         <div className="rounded-lg border border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-          No uploads yet
+          Aún no hay archivos subidos
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -160,7 +175,7 @@ export default function UploadsPage() {
                     onClick={() => deleteMut.mutate(attachment.id)}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
-                    Delete
+                    Eliminar
                   </Button>
                 </div>
               </CardContent>

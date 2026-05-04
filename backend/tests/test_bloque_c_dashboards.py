@@ -107,6 +107,10 @@ async def test_dashboard_programs_endpoint(client: AsyncClient, auth_headers: di
     assert "avg_completion" in data["data"]
     assert "programs_at_risk" in data["data"]
     assert "program_breakdown" in data["data"]
+    ad = data["data"]["annual_display"]
+    assert "order" in ad and isinstance(ad["order"], list)
+    assert "labels" in ad and isinstance(ad["labels"], dict)
+    assert "colors" in ad and isinstance(ad["colors"], dict)
 
 
 @pytest.mark.asyncio

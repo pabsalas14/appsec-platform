@@ -1,8 +1,10 @@
 """Query Builder router — endpoints for dynamic query creation (Fase 1)."""
 
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -22,6 +24,16 @@ saved_widget_svc = BaseService[SavedWidget, SavedWidgetCreate, SavedWidgetUpdate
     owner_field="user_id",
     audit_action_prefix="saved_widget",
 )
+
+
+async def _fetch_saved_widget(db: AsyncSession, widget_uuid: uuid.UUID) -> SavedWidget | None:
+    """Carga por PK sin filtro de dueño; el router comprueba acceso (evita IDOR)."""
+    stmt = select(SavedWidget).where(
+        SavedWidget.id == widget_uuid,
+        SavedWidget.deleted_at.is_(None),
+    )
+    res = await db.execute(stmt)
+    return res.scalar_one_or_none()
 
 
 @router.post("/validate")
@@ -154,16 +166,12 @@ async def save_widget(
         if not validation["valid"]:
             raise HTTPException(status_code=400, detail=f"Invalid query config: {validation['errors']}")
 
-        # Create the widget
         widget = await saved_widget_svc.create(
-            db=db,
-            actor_id=current_user.id,
-            data=data,
-            user_id=current_user.id,  # Override to ensure ownership
+            db,
+            data,
+            extra={"user_id": current_user.id},
         )
-
-        result = await saved_widget_svc.get_by_id(db=db, id=widget.id)
-        return success(SavedWidgetRead.model_validate(result))
+        return success(SavedWidgetRead.model_validate(widget))
 
     except HTTPException:
         raise
@@ -181,16 +189,13 @@ async def list_widgets(
 ):
     """List all saved widgets for the current user."""
     try:
-        widgets = await saved_widget_svc.list(
+        all_for_user = await saved_widget_svc.list(
             db=db,
-            skip=skip,
-            limit=limit,
-            user_id=current_user.id,  # Filter to current user
+            filters={"user_id": current_user.id},
         )
-
-        total = await saved_widget_svc.count(db=db, user_id=current_user.id)
-
-        items = [SavedWidgetRead.model_validate(w) for w in widgets]
+        total = len(all_for_user)
+        page_rows = all_for_user[skip : skip + limit]
+        items = [SavedWidgetRead.model_validate(w) for w in page_rows]
         page = (skip // limit) + 1 if limit else 1
         return paginated(items, page=page, page_size=limit, total=total)
 
@@ -207,10 +212,8 @@ async def get_widget(
 ):
     """Get a specific widget by ID."""
     try:
-        import uuid
-
         widget_uuid = uuid.UUID(widget_id)
-        widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+        widget = await _fetch_saved_widget(db, widget_uuid)
 
         if not widget:
             raise HTTPException(status_code=404, detail="Widget not found")
@@ -239,10 +242,8 @@ async def update_widget(
 ):
     """Update a widget configuration."""
     try:
-        import uuid
-
         widget_uuid = uuid.UUID(widget_id)
-        widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+        widget = await _fetch_saved_widget(db, widget_uuid)
 
         if not widget:
             raise HTTPException(status_code=404, detail="Widget not found")
@@ -258,12 +259,11 @@ async def update_widget(
             if not validation["valid"]:
                 raise HTTPException(status_code=400, detail=f"Invalid query config: {validation['errors']}")
 
-        # Update the widget
         updated = await saved_widget_svc.update(
-            db=db,
-            actor_id=current_user.id,
-            id=widget_uuid,
-            data=data,
+            db,
+            widget_uuid,
+            data,
+            scope={"user_id": current_user.id},
         )
 
         return success(SavedWidgetRead.model_validate(updated))
@@ -285,10 +285,8 @@ async def delete_widget(
 ):
     """Delete a widget (soft delete)."""
     try:
-        import uuid
-
         widget_uuid = uuid.UUID(widget_id)
-        widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+        widget = await _fetch_saved_widget(db, widget_uuid)
 
         if not widget:
             raise HTTPException(status_code=404, detail="Widget not found")
@@ -296,7 +294,12 @@ async def delete_widget(
         if widget.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
 
-        await saved_widget_svc.delete(db=db, actor_id=current_user.id, id=widget_uuid)
+        await saved_widget_svc.delete(
+            db,
+            widget_uuid,
+            scope={"user_id": current_user.id},
+            actor_id=current_user.id,
+        )
 
         return success({"message": "Widget deleted"})
 
@@ -325,14 +328,12 @@ async def set_widget_permissions(
     - can_edit_roles: roles with edit access
     - can_edit_user_ids: specific users with edit access
     """
-    import uuid
-
     try:
         widget_uuid = uuid.UUID(widget_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid widget ID") from e
 
-    widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+    widget = await _fetch_saved_widget(db, widget_uuid)
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
     if widget.user_id != current_user.id:
@@ -354,14 +355,12 @@ async def get_widget_permissions(
 
     Widget owner and users/roles with explicit access can view permissions.
     """
-    import uuid
-
     try:
         widget_uuid = uuid.UUID(widget_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid widget ID") from e
 
-    widget = await saved_widget_svc.get_by_id(db=db, id=widget_uuid)
+    widget = await _fetch_saved_widget(db, widget_uuid)
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
 

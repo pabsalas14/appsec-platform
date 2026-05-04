@@ -412,6 +412,8 @@ class TestDashboardPrograms:
         data = response.json()
         assert "total_programs" in data["data"]
         assert "avg_completion" in data["data"]
+        ad = data["data"]["annual_display"]
+        assert "order" in ad and "labels" in ad and "colors" in ad
 
     @pytest.mark.asyncio
     async def test_programs_breakdown(self, client: AsyncClient, auth_headers: dict, vulnerabilities_data):
@@ -419,6 +421,7 @@ class TestDashboardPrograms:
         response = await client.get("/api/v1/dashboard/programs", headers=auth_headers)
         data = response.json()
         assert "program_breakdown" in data["data"]
+        assert "annual_display" in data["data"]
 
 
 class TestDashboardProgramDetail:
@@ -762,6 +765,7 @@ class TestErrorHandling:
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data["data"]["program_breakdown"], list)
+        assert "annual_display" in data["data"]
 
 
 # ─── ENVELOPE RESPONSE TESTS ─────────────────────────────────────────────────

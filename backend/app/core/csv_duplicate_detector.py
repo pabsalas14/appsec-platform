@@ -195,11 +195,13 @@ def deduplicate_rows(
     """
     report = detect_duplicates(rows, key_fields, threshold=threshold)
 
-    # Build set of row indices that duplicate an earlier row
+    # Build set of row indices that duplicate an earlier row (keep first occurrence).
+    # Within-batch hits use row_index=i, matched_index=j with i<j (see detect_duplicates).
+    # Against-DB hits use negative matched_index — those rows are only flagged, not removed.
     duplicate_row_indices: set[int] = set()
     for hit in report.hits:
-        if hit.matched_index >= 0 and hit.matched_index < hit.row_index:
-            duplicate_row_indices.add(hit.row_index)
+        if hit.matched_index >= 0 and hit.row_index < hit.matched_index:
+            duplicate_row_indices.add(hit.matched_index)
 
     deduped = [r for i, r in enumerate(rows) if i not in duplicate_row_indices]
     return deduped, report

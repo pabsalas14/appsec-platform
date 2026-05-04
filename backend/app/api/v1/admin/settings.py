@@ -73,6 +73,27 @@ DEFAULT_SETTINGS: list[dict] = [
         "value": ["SAST", "DAST", "SCA", "Threat Modeling", "Source Code Security", "Servicios Regulados"],
         "description": "Tipos de programas anuales (sin MAST: MAST es captura mensual / indicadores + hallazgos en tableros de vulnerabilidades). Editable vía admin.",
     },
+    {
+        "key": "programas.anuales.display",
+        "value": {
+            "order": ["SAST", "DAST", "SCA", "CDS", "MDA"],
+            "labels": {
+                "SAST": "Seguridad en Aplicaciones (SAST)",
+                "DAST": "Pruebas Dinámicas (DAST)",
+                "SCA": "Análisis de Composición (SCA)",
+                "CDS": "Defensa de Código (CDS)",
+                "MDA": "Análisis Móvil (MDA)",
+            },
+            "colors": {
+                "SAST": "#3b82f6",
+                "DAST": "#ef4444",
+                "SCA": "#a855f7",
+                "CDS": "#10b981",
+                "MDA": "#f59e0b",
+            },
+        },
+        "description": "Textos y colores del dashboard Consolidado de Programas (códigos SAST/DAST/… fijos; solo cambia presentación). Editar en Admin → Configuración o JSON.",
+    },
     # ── 2. Estatus de vulnerabilidades (D1) ───────────────────────────────────
     {
         "key": "catalogo.estatus_vulnerabilidad",

@@ -28,6 +28,7 @@ import {
   TabsTrigger,
   premiumShellCardClass,
 } from '@/components/ui';
+import { AnnualProgramDisplayEditor } from '@/components/admin/AnnualProgramDisplayEditor';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useSystemSettings, useUpsertSystemSetting } from '@/hooks/useSystemSettings';
 import { cn } from '@/lib/utils';
@@ -222,6 +223,11 @@ function sortCategories(cats: string[]): string[] {
 }
 
 function renderEditor(setting: SystemSetting, value: unknown, onChange: (v: unknown) => void) {
+  if (setting.key === 'programas.anuales.display' && typeof value === 'string') {
+    return (
+      <AnnualProgramDisplayEditor jsonText={value} onJsonChange={(next) => onChange(next)} />
+    );
+  }
   if (setting.key === 'sla.por_motor' && typeof value === 'string') {
     return (
       <SlaPorMotorGridEditor jsonText={value} onJsonChange={(next) => onChange(next)} />
