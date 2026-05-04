@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { ClipboardList, Loader2 } from 'lucide-react';
 
@@ -33,7 +34,15 @@ export default function AuditoriasTableroPage() {
     <PageWrapper className="space-y-6 p-0">
       <PageHeader
         title="Auditorías"
-        description="Resumen por estado. Alta, edición y listado en la pestaña Registros."
+        description={
+          <>
+            Resumen por estado. Alta, edición y listado en la pestaña Registros. Los{' '}
+            <Link href="/plan_remediacions" className="font-medium text-primary underline-offset-4 hover:underline">
+              planes de remediación
+            </Link>{' '}
+            son acciones de cierre ligadas a cada auditoría (módulo aparte para tablero y seguimiento).
+          </>
+        }
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>

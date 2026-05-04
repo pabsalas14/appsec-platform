@@ -217,7 +217,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !sesOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -265,7 +265,7 @@ export default function AmenazasPage() {
       <PageHeader title="Amenazas (TM)" description="Modelado de amenazas con puntuación DREAD por sesión.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!sesOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nueva
             </Button>
           </DialogTrigger>

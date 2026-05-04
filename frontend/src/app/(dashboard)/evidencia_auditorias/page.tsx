@@ -120,7 +120,7 @@ export default function EvidenciaAuditoriasPage() {
       <PageHeader title="Evidencias de Auditoría" description="Archivos y documentos de evidencia vinculados a auditorías (SHA-256 verificado).">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!auditoriaOpts.length}><Plus className="mr-2 h-4 w-4" />Registrar evidencia</Button>
+            <Button onClick={resetAndOpen}><Plus className="mr-2 h-4 w-4" />Registrar evidencia</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Registrar evidencia de auditoría</DialogTitle></DialogHeader>

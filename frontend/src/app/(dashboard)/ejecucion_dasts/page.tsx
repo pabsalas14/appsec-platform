@@ -185,7 +185,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !pdOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -225,7 +225,7 @@ export default function EjecucionDastsPage() {
       <PageHeader title="Ejecuciones DAST" description="Ciclos de prueba dinámica por programa.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!pdOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nueva
             </Button>
           </DialogTrigger>

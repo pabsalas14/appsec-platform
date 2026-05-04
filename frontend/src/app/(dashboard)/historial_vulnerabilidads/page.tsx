@@ -144,7 +144,7 @@ function CreateForm({ vOpts, onSuccess }: { vOpts: { value: string; label: strin
             Cerrar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !vOpts.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Registrar
         </Button>
@@ -189,7 +189,7 @@ export default function HistorialVulnerabilidadsPage() {
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!vOpts.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nueva entrada
             </Button>

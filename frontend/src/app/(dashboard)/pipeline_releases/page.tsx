@@ -135,8 +135,6 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions, activoOpti
     });
   });
 
-  const canCreate = repoOptions.length > 0 || activoOptions.length > 0;
-
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <div>
@@ -271,7 +269,7 @@ function PipelineCreateForm({ onSuccess, repoOptions, releaseOptions, activoOpti
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !canCreate}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Crear
         </Button>
@@ -603,7 +601,7 @@ export default function PipelineReleasesPage() {
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!repoOptions.length && !activoOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nueva
             </Button>

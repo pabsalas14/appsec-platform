@@ -151,7 +151,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !celOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -195,7 +195,7 @@ export default function AplicacionMovilsPage() {
       <PageHeader title="Aplicaciones móviles" description="Inventario de apps por célula.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!celOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nueva
             </Button>
           </DialogTrigger>

@@ -197,7 +197,7 @@ function FormFields({ initial, onSuccess, vOpts }: { initial?: AceptacionRiesgo 
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !vOpts.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -237,7 +237,7 @@ export default function AceptacionRiesgosPage() {
       <PageHeader title="Aceptación de riesgo" description="Aceptación formal vinculada a vulnerabilidad.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!vOpts.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nuevo
             </Button>
           </DialogTrigger>

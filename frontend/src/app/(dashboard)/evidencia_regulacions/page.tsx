@@ -199,7 +199,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !regOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -252,7 +252,7 @@ export default function EvidenciaRegulacionsPage() {
       <PageHeader title="Evidencias de regulación" description="Evidencias en el marco de un registro de cumplimiento.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!regOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nueva
             </Button>
           </DialogTrigger>

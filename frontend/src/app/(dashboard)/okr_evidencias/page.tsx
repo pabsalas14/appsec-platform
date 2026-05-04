@@ -1,23 +1,35 @@
 'use client';
 
+import { Paperclip } from 'lucide-react';
+
+import { OkrRegistryListPage } from '@/components/okr/OkrRegistryListPage';
 import { useOkrEvidencias } from '@/hooks/useOkrEvidencias';
+import type { OkrEvidencia } from '@/lib/schemas/okr_evidencia.schema';
+import { formatDate } from '@/lib/utils';
 
 export default function OkrEvidenciasPage() {
   const { data, isLoading, error } = useOkrEvidencias();
 
-  if (isLoading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error loading okr_evidencias</div>;
-
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">OkrEvidencias</h1>
-      <ul className="space-y-2">
-        {data?.map((item) => (
-          <li key={item.id} className="border rounded px-3 py-2">
-            <pre className="text-xs">{JSON.stringify(item, null, 2)}</pre>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <OkrRegistryListPage<OkrEvidencia>
+      title="Evidencias OKR"
+      description="Adjuntos o enlaces asociados a una revisión trimestral."
+      emptyIcon={Paperclip}
+      emptyTitle="Sin evidencias"
+      emptyDescription="Las evidencias se adjuntan al reportar avance en revisiones trimestrales."
+      isLoading={isLoading}
+      error={error}
+      errorFallback="Error al cargar evidencias OKR."
+      data={data}
+      columns={[
+        { id: 'tipo', header: 'Tipo', cell: (r) => r.tipo_evidencia },
+        {
+          id: 'nom',
+          header: 'Archivo / URL',
+          cell: (r) => r.nombre_archivo ?? r.url_evidencia ?? '—',
+        },
+        { id: 'fecha', header: 'Registro', cell: (r) => formatDate(r.created_at) },
+      ]}
+    />
   );
 }

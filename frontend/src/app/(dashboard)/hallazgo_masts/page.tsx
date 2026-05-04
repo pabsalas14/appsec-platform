@@ -224,7 +224,7 @@ export default function HallazgoMastsPage() {
       <PageHeader title="Hallazgos MAST" description="Vinculados a una ejecución de análisis móvil.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!ejecucionOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo
             </Button>

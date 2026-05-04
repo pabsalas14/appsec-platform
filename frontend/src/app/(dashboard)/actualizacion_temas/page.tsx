@@ -115,7 +115,7 @@ export default function ActualizacionTemasPage() {
       <PageHeader title="Actualizaciones de Temas Emergentes" description="Seguimiento de novedades asociadas a temas de seguridad emergentes.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!temaOpts.length}><Plus className="mr-2 h-4 w-4" />Nueva actualización</Button>
+            <Button onClick={resetAndOpen}><Plus className="mr-2 h-4 w-4" />Nueva actualización</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Nueva actualización de tema</DialogTitle></DialogHeader>

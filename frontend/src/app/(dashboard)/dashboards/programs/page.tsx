@@ -8,7 +8,6 @@ import {
   Activity,
   AlertCircle,
   ChevronRight,
-  Smartphone,
   Target,
   TrendingUp,
   X,
@@ -26,7 +25,7 @@ import {
 
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/Badge';
@@ -363,8 +362,7 @@ export default function ProgramsDashboardPage() {
             Dashboard de Programas Anuales
           </h1>
           <p className="text-xs text-muted-foreground">
-            Avance anual por motor (SAST…MDA). MAST no es programa anual: usar Indicadores y Ejecuciones móviles; los
-            hallazgos MAST siguen en los tableros de vulnerabilidades.
+            Avance anual por motor (SAST…MDA). Operación móvil MAST: menú lateral → Indicadores / Ejecuciones MAST.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -384,54 +382,6 @@ export default function ProgramsDashboardPage() {
           )}
         </div>
       </div>
-
-      <Card className="border-dashboard-border bg-dashboard-surface/90">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Smartphone className="h-5 w-5 text-primary shrink-0" />
-            MAST (móvil) — operación mensual
-          </CardTitle>
-          <CardDescription className="text-xs leading-relaxed">
-            No forma parte del ciclo de programas anuales. Captura KPIs mes a mes en{' '}
-            <Link href="/indicadores" className="font-medium text-primary underline-offset-4 hover:underline">
-              Indicadores
-            </Link>
-            , registra ejecuciones en{' '}
-            <Link href="/ejecucion_masts" className="font-medium text-primary underline-offset-4 hover:underline">
-              Ejecuciones MAST
-            </Link>
-            . Si cargas hallazgos con fuente MAST, aparecen en{' '}
-            <Link href="/dashboards/vulnerabilities" className="font-medium text-primary underline-offset-4 hover:underline">
-              Dashboard de vulnerabilidades
-            </Link>{' '}
-            y en{' '}
-            <Link href="/vulnerabilidads/registros?fuente=MAST" className="font-medium text-primary underline-offset-4 hover:underline">
-              Registros filtrados por MAST
-            </Link>
-            .
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2 pt-0">
-          <Link
-            href="/indicadores"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
-          >
-            Indicadores
-          </Link>
-          <Link
-            href="/ejecucion_masts"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
-          >
-            Ejecuciones MAST
-          </Link>
-          <Link
-            href="/vulnerabilidads/registros?fuente=MAST"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
-          >
-            Hallazgos MAST
-          </Link>
-        </CardContent>
-      </Card>
 
       <div className="grid gap-4 grid-cols-1">
         <div className="space-y-4 min-w-0">

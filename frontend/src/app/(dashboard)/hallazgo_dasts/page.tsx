@@ -238,7 +238,7 @@ export default function HallazgoDastsPage() {
       <PageHeader title="Hallazgos DAST" description="Vinculados a una ejecución DAST del programa.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!ejecucionOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo
             </Button>

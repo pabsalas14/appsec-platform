@@ -92,7 +92,13 @@ export default function PlanRemediacionsPage() {
     <form className="space-y-3" onSubmit={form.handleSubmit(onSubmit)}>
       <div>
         <label className="text-sm font-medium">Auditoría *</label>
-        <Select className="mt-1" value={form.watch('auditoria_id')} onChange={(e) => form.setValue('auditoria_id', e.target.value, { shouldValidate: true })} options={auditoriaOpts} />
+        <Select
+          className="mt-1"
+          value={form.watch('auditoria_id')}
+          onChange={(e) => form.setValue('auditoria_id', e.target.value, { shouldValidate: true })}
+          options={auditoriaOpts}
+          placeholder={auditoriaOpts.length ? 'Selecciona una auditoría' : undefined}
+        />
       </div>
       <div>
         <label className="text-sm font-medium">Descripción *</label>
@@ -130,14 +136,34 @@ export default function PlanRemediacionsPage() {
 
   return (
     <PageWrapper className="space-y-6 p-6">
-      <PageHeader title="Planes de Remediación" description="Planes de acción asociados a auditorías de seguridad.">
+      <PageHeader
+        title="Planes de Remediación"
+        description="Planes de acción asociados a auditorías de seguridad: priorizan hallazgos, responsables y fechas para cerrar brechas detectadas en una auditoría concreta."
+      >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!auditoriaOpts.length}><Plus className="mr-2 h-4 w-4" />Nuevo plan</Button>
+            <Button onClick={resetAndOpen}>
+              <Plus className="mr-2 h-4 w-4" />Nuevo plan
+            </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Nuevo plan de remediación</DialogTitle></DialogHeader>
-            {dialogForm}
+            {auditoriaOpts.length > 0 ? (
+              dialogForm
+            ) : (
+              <div className="space-y-3 text-sm">
+                <p className="text-muted-foreground">
+                  Cada plan debe estar vinculado a una <strong>auditoría</strong>. Registra primero una auditoría y vuelve
+                  aquí.
+                </p>
+                <Link
+                  href="/auditorias/registros"
+                  className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Ir a registros de auditorías
+                </Link>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </PageHeader>

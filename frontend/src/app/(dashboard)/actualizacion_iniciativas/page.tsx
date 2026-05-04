@@ -110,7 +110,7 @@ export default function ActualizacionIniciativasPage() {
       <PageHeader title="Actualizaciones de Iniciativas" description="Registro de avances y novedades de las iniciativas de seguridad.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!iniciativaOpts.length}><Plus className="mr-2 h-4 w-4" />Nueva actualización</Button>
+            <Button onClick={resetAndOpen}><Plus className="mr-2 h-4 w-4" />Nueva actualización</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Nueva actualización</DialogTitle></DialogHeader>

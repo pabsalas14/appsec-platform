@@ -203,7 +203,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !regOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -255,7 +255,7 @@ export default function EstadoCumplimientosPage() {
       <PageHeader title="Estado de cumplimiento" description="Evaluación por registro (y control opcional).">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!regOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nuevo
             </Button>
           </DialogTrigger>

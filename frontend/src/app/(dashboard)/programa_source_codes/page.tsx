@@ -208,7 +208,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !repoOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -251,7 +251,7 @@ export default function ProgramaSourceCodesPage() {
       <PageHeader title="Programas (código)" description="Programas de revisión de código por repositorio.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!repoOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nuevo
             </Button>
           </DialogTrigger>

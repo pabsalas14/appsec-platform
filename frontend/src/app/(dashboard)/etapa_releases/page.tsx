@@ -218,7 +218,7 @@ function EtapaCreateForm({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !form.watch('service_release_id')}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Crear
         </Button>
@@ -385,7 +385,7 @@ export default function EtapaReleasesPage() {
       >
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!releaseOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Nueva
             </Button>

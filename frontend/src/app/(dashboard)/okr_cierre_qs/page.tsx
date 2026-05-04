@@ -1,23 +1,35 @@
 'use client';
 
+import { Flag } from 'lucide-react';
+
+import { OkrRegistryListPage } from '@/components/okr/OkrRegistryListPage';
 import { useOkrCierreQs } from '@/hooks/useOkrCierreQs';
+import type { OkrCierreQ } from '@/lib/schemas/okr_cierre_q.schema';
+import { formatDate } from '@/lib/utils';
 
 export default function OkrCierreQsPage() {
   const { data, isLoading, error } = useOkrCierreQs();
 
-  if (isLoading) return <div className="p-6">Loading…</div>;
-  if (error) return <div className="p-6 text-red-600">Error loading okr_cierre_qs</div>;
-
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">OkrCierreQs</h1>
-      <ul className="space-y-2">
-        {data?.map((item) => (
-          <li key={item.id} className="border rounded px-3 py-2">
-            <pre className="text-xs">{JSON.stringify(item, null, 2)}</pre>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <OkrRegistryListPage<OkrCierreQ>
+      title="Cierres trimestrales OKR"
+      description="Retroalimentación de cierre por plan y trimestre."
+      emptyIcon={Flag}
+      emptyTitle="Sin cierres"
+      emptyDescription="Los cierres se registran al finalizar el trimestre en el flujo MBO."
+      isLoading={isLoading}
+      error={error}
+      errorFallback="Error al cargar cierres trimestrales OKR."
+      data={data}
+      columns={[
+        { id: 'q', header: 'Trimestre', cell: (r) => r.quarter },
+        {
+          id: 'retro',
+          header: 'Retroalimentación',
+          cell: (r) => <span className="line-clamp-2 text-muted-foreground">{r.retroalimentacion_general}</span>,
+        },
+        { id: 'cerr', header: 'Cerrado', cell: (r) => formatDate(r.cerrado_at) },
+      ]}
+    />
   );
 }

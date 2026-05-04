@@ -212,7 +212,7 @@ function FormFields({
             Cancelar
           </Button>
         </DialogClose>
-        <Button type="submit" disabled={pending || !progOptions.length}>
+        <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? 'Guardar' : 'Crear'}
         </Button>
@@ -274,7 +274,7 @@ export default function ActividadMensualSastsPage() {
       <PageHeader title="Actividad mensual SAST" description="Métricas agregadas por mes y programa SAST.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!progOptions.length}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" /> Nuevo
             </Button>
           </DialogTrigger>

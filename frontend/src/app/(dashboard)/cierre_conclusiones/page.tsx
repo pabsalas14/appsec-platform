@@ -119,7 +119,7 @@ export default function CierreConclusionesPagina() {
       <PageHeader title="Cierres y Conclusiones" description="Documentación de cierres y aprendizajes de temas emergentes.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!temaOpts.length}><Plus className="mr-2 h-4 w-4" />Nuevo cierre</Button>
+            <Button onClick={resetAndOpen}><Plus className="mr-2 h-4 w-4" />Nuevo cierre</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Nuevo cierre / conclusión</DialogTitle></DialogHeader>

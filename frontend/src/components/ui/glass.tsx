@@ -165,7 +165,7 @@ export function PageWrapper({ children, className }: PageWrapperProps) {
  * ───────────────────────────────────────────── */
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   action?: React.ReactNode; // action buttons (alias)
   children?: React.ReactNode; // action buttons
 }
@@ -176,8 +176,8 @@ export function PageHeader({ title, description, action, children }: PageHeaderP
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
       <div>
         <h1 className="text-2xl font-bold text-dashboard-onStrong">{title}</h1>
-        {description && (
-          <p className="text-sm text-dashboard-muted mt-1">{description}</p>
+        {description != null && description !== '' && (
+          <div className="text-sm text-dashboard-muted mt-1">{description}</div>
         )}
       </div>
       {actionContent && <div className="flex items-center gap-3">{actionContent}</div>}

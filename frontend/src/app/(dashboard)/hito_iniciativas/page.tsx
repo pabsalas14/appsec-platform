@@ -144,7 +144,7 @@ export default function HitoIniciativasPage() {
       <PageHeader title="Hitos de Iniciativas" description="Milestones y fechas clave de las iniciativas de seguridad.">
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetAndOpen} disabled={!iniciativaOpts.length}><Plus className="mr-2 h-4 w-4" />Nuevo hito</Button>
+            <Button onClick={resetAndOpen}><Plus className="mr-2 h-4 w-4" />Nuevo hito</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Nuevo hito</DialogTitle></DialogHeader>
