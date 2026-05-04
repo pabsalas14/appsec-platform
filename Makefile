@@ -14,11 +14,12 @@
 #   make shell-db     — Open psql in postgres container
 #   make test         — Run backend tests
 #   make clean        — Stop containers and remove volumes (⚠ destructive)
-#   make seed         — Re-run seed (restarts backend with RUN_SEED=true)
+#   make seed         — Full seed (admin + demo data)
+#   make seed-admin   — Admin user only (or promote by ADMIN_EMAIL)
 # ──────────────────────────────────────────────────────────────────────
 
 .PHONY: up up-prod down restart build logs logs-back logs-front \
-        status stats shell-back shell-db test test-cov clean seed seed-uat-volumen help \
+        status stats shell-back shell-db test test-cov clean seed seed-admin seed-uat-volumen help \
         new-entity types lint test-e2e
 
 # Colors
@@ -124,8 +125,11 @@ types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI 
 
 # ──────────────────── Maintenance ────────────────────
 
-seed: ## Re-run seed (restarts backend with RUN_SEED=true)
+seed: ## Full seed: admin + catálogos y datos demo (idempotente)
 	docker compose exec backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
+
+seed-admin: ## Solo usuario admin (usa ADMIN_EMAIL/ADMIN_PASSWORD; promueve si ya registraste con ese email)
+	docker compose exec backend python -c "import asyncio; from app.seed import seed_admin_only; asyncio.run(seed_admin_only())"
 
 # UAT: carga 5.000 vulnerabilidades de prueba (solo BD desechable; requiere `make seed` antes).
 # Ejecuta con: make seed-uat-volumen

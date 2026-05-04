@@ -29,7 +29,9 @@ Flujo resumido: **Navegador → Nginx (:80) →** `{ /api/* → FastAPI ; /* →
 git clone <url> appsec-platform && cd appsec-platform
 cp .env.example .env   # SECRET_KEY, APPSEC_MASTER_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, …
 make up
-make seed    # opcional: usuario admin + datos demo (según seed)
+# opcional — usuario admin:
+make seed-admin   # solo admin/promoción por ADMIN_EMAIL (sin datos demo)
+# make seed       # admin + datos demo completos
 ```
 
 | URL | Uso |
@@ -38,7 +40,7 @@ make seed    # opcional: usuario admin + datos demo (según seed)
 | http://127.0.0.1:8000/openapi.json | Esquema OpenAPI (también útil para `make types`) |
 | http://127.0.0.1:8000/docs | Swagger (según entorno; ver ADR-0013) |
 
-**Usuario inicial:** credenciales `ADMIN_EMAIL` / `ADMIN_PASSWORD` del `.env` tras `make seed`.
+**Usuario admin:** define `ADMIN_EMAIL` y `ADMIN_PASSWORD` en `.env`. Tras **`make seed-admin`** se crea el usuario `admin` con ese email, **o** si ya te registraste públicamente con el mismo `ADMIN_EMAIL`, esa cuenta pasa a rol admin (sigues entrando con tu `username` y, si activaste `SEED_FORCE_ADMIN_PASSWORD`, con `ADMIN_PASSWORD`).
 
 ---
 
@@ -73,7 +75,8 @@ Compose principal: [`docker-compose.yml`](docker-compose.yml). En desarrollo se 
 | `make up` | Stack con override de desarrollo (hot-reload) |
 | `make up-prod` | Stack sin override (imagen backend “cerrada”) |
 | `make down` / `make restart` | Parar / reiniciar |
-| `make seed` | Vuelve a ejecutar seeding (admin demo) |
+| `make seed-admin` | Solo admin (o promoción por `ADMIN_EMAIL`); **no** carga datos demo |
+| `make seed` | Seed completo (admin + catálogos + datos demo) |
 | `make test` | Pytest **dentro del contenedor backend** — ⚠ trunca tablas de usuario en la BD objetivo; usar BD desechable |
 | `make types` | Regenera `frontend/src/types/api.ts` desde `http://127.0.0.1:8000/openapi.json` |
 | `make clean` | Destructivo: borra volúmenes |

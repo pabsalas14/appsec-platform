@@ -31,6 +31,11 @@ class TooManyRequestsException(HTTPException):
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
 
 
+class ServiceUnavailableException(HTTPException):
+    def __init__(self, detail: str = "Service unavailable"):
+        super().__init__(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=detail)
+
+
 class ValidationException(HTTPException):
     def __init__(self, detail: str = "Validation error"):
         # 422 explícito evita depredación de alias HTTP_422_UNPROCESSABLE_ENTITY (Starlette/FastAPI recientes)

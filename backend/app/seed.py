@@ -6,7 +6,8 @@ Seguro de ejecutar múltiples veces — nunca sobreescribe datos existentes.
 
 Usage:
     python -m app.seed
-    make seed
+    make seed                    # admin + catálogos y datos demo
+    make seed-admin              # solo usuario admin (o promover por ADMIN_EMAIL)
 """
 
 import asyncio
@@ -39,7 +40,14 @@ from app.models.user import User
 
 
 async def _seed_admin(db) -> User:
-    """Create the initial admin user if it doesn't exist. Returns the user."""
+    """Create the initial admin user if it doesn't exist. Returns the user.
+
+    If a user already registered (p. ej. vía ``/auth/register``) con el mismo
+    ``ADMIN_EMAIL`` que en configuración, se promueve a ``role=admin`` en lugar
+    de fallar por email duplicado. El login sigue siendo su ``username`` actual.
+    Con ``SEED_FORCE_ADMIN_PASSWORD=true`` también se reestablece la contraseña
+    al valor de ``ADMIN_PASSWORD`` (mismo criterio que el usuario ``admin``).
+    """
     result = await db.execute(select(User).where(User.username == "admin"))
     existing = result.scalar_one_or_none()
 
@@ -58,6 +66,26 @@ async def _seed_admin(db) -> User:
             extra={"event": "seed.admin_exists", "user_id": str(existing.id)},
         )
         return existing
+
+    result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL))
+    by_email = result.scalar_one_or_none()
+    if by_email:
+        if settings.SEED_FORCE_ADMIN_PASSWORD:
+            validate_password_strength(settings.ADMIN_PASSWORD, username=by_email.username)
+            by_email.hashed_password = hash_password(settings.ADMIN_PASSWORD)
+        if by_email.role != "admin":
+            by_email.role = "admin"
+        await db.flush()
+        await db.refresh(by_email)
+        logger.info(
+            "seed.admin_promoted",
+            extra={
+                "event": "seed.admin_promoted",
+                "user_id": str(by_email.id),
+                "username": by_email.username,
+            },
+        )
+        return by_email
 
     validate_password_strength(settings.ADMIN_PASSWORD, username="admin")
     admin = User(
@@ -1024,6 +1052,16 @@ async def seed() -> None:
         await run_seed(db)
 
     logger.info("seed.complete", extra={"event": "seed.complete"})
+
+
+async def seed_admin_only() -> None:
+    """Solo crea o promueve el usuario admin; no inserta datos demo ni catálogos."""
+    logger.info("seed_admin_only.start", extra={"event": "seed_admin_only.start"})
+
+    async with async_session() as db, db.begin():
+        await _seed_admin(db)
+
+    logger.info("seed_admin_only.complete", extra={"event": "seed_admin_only.complete"})
 
 
 if __name__ == "__main__":
