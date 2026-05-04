@@ -27,6 +27,15 @@
     --input: 234 15% 88%;
     --ring: 351 80% 52%;
     --radius: 0.75rem;
+
+    /* Dashboard «dark ops» (superficies densas; ver ADR-0018) — modo claro */
+    --dashboard-canvas: 220 14% 96%;
+    --dashboard-surface: 220 16% 94%;
+    --dashboard-elevated: 220 14% 92%;
+    --dashboard-border: 220 12% 82%;
+    --dashboard-accent: 346 78% 52%;
+    --dashboard-muted: 220 9% 42%;
+    --dashboard-on-strong: 234 40% 12%;
   }
 
   /* ── Dark theme ── */
@@ -51,6 +60,15 @@
     --input: 234 20% 18%;
     --ring: 351 80% 59%;
     --radius: 0.75rem;
+
+    /* Dashboard «dark ops» — modo oscuro (valores alineados al Kanban/Vuln legacy) */
+    --dashboard-canvas: 234 32% 8%;
+    --dashboard-surface: 228 28% 12%;
+    --dashboard-elevated: 228 26% 14%;
+    --dashboard-border: 228 22% 26%;
+    --dashboard-accent: 346 78% 56%;
+    --dashboard-muted: 215 16% 47%;
+    --dashboard-on-strong: 214 32% 91%;
   }
 
   * {
@@ -261,5 +279,14 @@
       hsl(var(--primary) / 0.08) 0%,
       transparent 60%
     );
+  }
+
+  /* ── Dashboard dark ops (layout denso) ── */
+  .dashboard-kpi-value {
+    @apply text-2xl font-bold tabular-nums tracking-tight text-foreground;
+  }
+
+  .dashboard-section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
   }
 }

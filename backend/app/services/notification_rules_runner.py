@@ -21,6 +21,29 @@ from app.services.json_setting import get_json_setting
 from app.services.notificacion_service import notificacion_svc
 
 
+_RULE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
+    "iniciativa_fecha_fin_vencida": ("iniciativa_fecha_fin_vencida", "iniciativa_vencida"),
+    "plan_remediacion_fecha_limite_vencida": (
+        "plan_remediacion_fecha_limite_vencida",
+        "plan_remediacion_vencido",
+    ),
+}
+
+
+def _user_wants_rule(pr: object | None, *, rule_key: str) -> bool:
+    """Respeta `notificaciones_automaticas` y claves anidadas en `preferences.notifications`."""
+    if not isinstance(pr, dict):
+        return True
+    if pr.get("notificaciones_automaticas") is False:
+        return False
+    nested = pr.get("notifications")
+    if isinstance(nested, dict):
+        for k in _RULE_KEY_ALIASES.get(rule_key, (rule_key,)):
+            if nested.get(k) is False:
+                return False
+    return True
+
+
 async def _already_sent_recently(
     db: AsyncSession,
     *,
@@ -86,7 +109,7 @@ async def run_notification_rules_sla_riesgo(
         urow = await db.execute(select(User).where(User.id == uid))
         u = urow.scalar_one_or_none()
         pr = u.preferences if u else None
-        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+        if not _user_wants_rule(pr, rule_key="sla_vulnerabilidad"):
             continue
         prefix = f"[SLA] Vulnerabilidad {v.id}"
         if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
@@ -149,7 +172,7 @@ async def run_tema_emergente_estancado(
         urow = await db.execute(select(User).where(User.id == uid))
         u = urow.scalar_one_or_none()
         pr = u.preferences if u else None
-        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+        if not _user_wants_rule(pr, rule_key="tema_estancado"):
             continue
         prefix = f"[TEMA] {t.id}"
         if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
@@ -197,7 +220,7 @@ async def run_vulnerabilidad_inactiva(
         urow = await db.execute(select(User).where(User.id == uid))
         u = urow.scalar_one_or_none()
         pr = u.preferences if u else None
-        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+        if not _user_wants_rule(pr, rule_key="vulnerabilidad_inactiva"):
             continue
         prefix = f"[INACTIVA] {v.id}"
         if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
@@ -243,7 +266,7 @@ async def run_iniciativas_vencidas(db: AsyncSession) -> int:
         urow = await db.execute(select(User).where(User.id == uid))
         u = urow.scalar_one_or_none()
         pr = u.preferences if u else None
-        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+        if not _user_wants_rule(pr, rule_key="iniciativa_fecha_fin_vencida"):
             continue
         prefix = f"[INICIATIVA] {it.id}"
         if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):
@@ -291,7 +314,7 @@ async def run_planes_remediacion_vencidos(db: AsyncSession) -> int:
         urow = await db.execute(select(User).where(User.id == uid))
         u = urow.scalar_one_or_none()
         pr = u.preferences if u else None
-        if isinstance(pr, dict) and pr.get("notificaciones_automaticas") is False:
+        if not _user_wants_rule(pr, rule_key="plan_remediacion_fecha_limite_vencida"):
             continue
         prefix = f"[PLAN_REM] {pl.id}"
         if await _already_sent_recently(db, user_id=uid, prefix=prefix, since=day_start):

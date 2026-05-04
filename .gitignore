@@ -43,6 +43,7 @@ docker-compose.local.yml
 
 # ── Local tooling ───────────────────────────────────────────────────────
 .claude/
+.claude/**
 
 # ── Uploads (dev volume) ───────────────────────────────────────────────
 backend/uploads/

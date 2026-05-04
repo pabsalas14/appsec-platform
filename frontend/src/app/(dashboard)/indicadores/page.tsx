@@ -1,8 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { LineChart, RefreshCw, Info } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  CartesianGrid,
+  Line,
+  LineChart as RechartsLine,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import {
   Button,
@@ -16,6 +27,7 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
+  Input,
 } from '@/components/ui';
 import api from '@/lib/api';
 import { logger } from '@/lib/logger';
@@ -34,6 +46,7 @@ type CalcRow = { code: string; nombre: string; value: number; status: string };
 const ALL_MOTORS = '__all__';
 
 export default function IndicadoresPage() {
+  const searchParams = useSearchParams();
   const [formulas, setFormulas] = useState<FormulaRow[]>([]);
   const [madurez, setMadurez] = useState<{ score: number; max: number } | null>(null);
   const [calcs, setCalcs] = useState<Record<string, CalcRow | null>>({});
@@ -41,6 +54,19 @@ export default function IndicadoresPage() {
   const [calculating, setCalculating] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [motor, setMotor] = useState<string>(ALL_MOTORS);
+
+  const [manualCode, setManualCode] = useState('');
+  const [manualPeriod, setManualPeriod] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [manualVal, setManualVal] = useState('');
+  const [manualNotes, setManualNotes] = useState('');
+  const [manualSaving, setManualSaving] = useState(false);
+
+  const [trendCode, setTrendCode] = useState('');
+  const [trendSeries, setTrendSeries] = useState<{ period: string; value: number; manual: boolean }[]>([]);
+  const [trendLoading, setTrendLoading] = useState(false);
 
   const loadFormulas = useCallback(async () => {
     setLoading(true);
@@ -64,6 +90,11 @@ export default function IndicadoresPage() {
     void loadFormulas();
   }, [loadFormulas]);
 
+  useEffect(() => {
+    const m = searchParams.get('motor')?.trim();
+    if (m) setMotor(m);
+  }, [searchParams]);
+
   const motors = useMemo(() => {
     const s = new Set((formulas ?? []).map((f) => (f.motor || 'General').trim() || 'General'));
     return Array.from(s).sort();
@@ -75,6 +106,41 @@ export default function IndicadoresPage() {
   }, [formulas, motor]);
 
   const filteredKey = useMemo(() => filtered.map((f) => f.code).join(','), [filtered]);
+
+  useEffect(() => {
+    if (filtered.length === 0) return;
+    if (!manualCode || !filtered.some((f) => f.code === manualCode)) {
+      setManualCode(filtered[0].code);
+    }
+    if (!trendCode || !filtered.some((f) => f.code === trendCode)) {
+      setTrendCode(filtered[0].code);
+    }
+  }, [filteredKey, filtered, manualCode, trendCode]);
+
+  useEffect(() => {
+    if (!trendCode) return;
+    let cancelled = false;
+    (async () => {
+      setTrendLoading(true);
+      try {
+        const r = await api.get<{
+          data: { series?: { period: string; value: number; manual: boolean }[] };
+        }>(`/indicadores/${encodeURIComponent(trendCode)}/trend?months=12`);
+        if (cancelled) return;
+        setTrendSeries(r.data?.data?.series ?? []);
+      } catch (e) {
+        if (!cancelled) {
+          logger.error('indicadores.trend', { e });
+          setTrendSeries([]);
+        }
+      } finally {
+        if (!cancelled) setTrendLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [trendCode]);
 
   useEffect(() => {
     if (filtered.length === 0) return;
@@ -259,22 +325,115 @@ export default function IndicadoresPage() {
 
         <TabsContent value="manual">
           <Card>
-            <CardContent className="pt-6 text-sm text-muted-foreground">
-              <p>
-                Próxima iteración: formulario mensual para indicadores <strong>tipo 2</strong> (KRI y métricas no
-                derivadas). Persistencia por (indicador, periodo).
-              </p>
+            <CardContent className="space-y-4 pt-6">
+              {filtered.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay indicadores en el motor seleccionado.</p>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Captura manual por <span className="font-mono">(código, YYYY-MM)</span>. Se guarda vía{' '}
+                    <span className="font-mono">PUT /indicadores/&#123;code&#125;/manual/&#123;periodo&#125;</span>.
+                  </p>
+                  <div className="grid max-w-xl gap-3">
+                    <Select
+                      label="Indicador"
+                      value={manualCode}
+                      onChange={(e) => setManualCode(e.target.value)}
+                      options={filtered.map((f) => ({ value: f.code, label: `${f.code} — ${f.nombre}` }))}
+                    />
+                    <Input
+                      label="Periodo (YYYY-MM)"
+                      value={manualPeriod}
+                      onChange={(e) => setManualPeriod(e.target.value)}
+                      placeholder="2026-04"
+                    />
+                    <Input
+                      label="Valor numérico"
+                      type="number"
+                      step="any"
+                      value={manualVal}
+                      onChange={(e) => setManualVal(e.target.value)}
+                    />
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-muted-foreground" htmlFor="manual-notes">
+                        Notas (opcional)
+                      </label>
+                      <textarea
+                        id="manual-notes"
+                        className="min-h-[72px] w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-foreground"
+                        value={manualNotes}
+                        onChange={(e) => setManualNotes(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      disabled={manualSaving || !manualCode || !manualPeriod}
+                      onClick={async () => {
+                        const v = parseFloat(manualVal);
+                        if (Number.isNaN(v)) {
+                          toast.error('Valor numérico inválido');
+                          return;
+                        }
+                        setManualSaving(true);
+                        try {
+                          await api.put(`/indicadores/${encodeURIComponent(manualCode)}/manual/${encodeURIComponent(manualPeriod)}`, {
+                            valor: v,
+                            notas: manualNotes.trim() || null,
+                          });
+                          toast.success('Valor guardado');
+                          logger.info('indicadores.manual.save', { code: manualCode, period: manualPeriod });
+                          void loadFormulas();
+                        } catch (e) {
+                          toast.error(extractErrorMessage(e, 'No se pudo guardar'));
+                          logger.error('indicadores.manual.save.failed', { e });
+                        } finally {
+                          setManualSaving(false);
+                        }
+                      }}
+                    >
+                      {manualSaving ? 'Guardando…' : 'Guardar captura'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="history">
           <Card>
-            <CardContent className="pt-6 text-sm text-muted-foreground">
-              <p>
-                Vista 12M: se conectará a <span className="font-mono">/indicadores/{'{code}'}/trend</span> y a series
-                por periodo en cuanto el backend materialice historial.
-              </p>
+            <CardContent className="space-y-4 pt-6">
+              {filtered.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay indicadores en el motor seleccionado.</p>
+              ) : (
+                <>
+                  <div className="max-w-xs">
+                    <Select
+                      label="Indicador para serie 12M"
+                      value={trendCode}
+                      onChange={(e) => setTrendCode(e.target.value)}
+                      options={filtered.map((f) => ({ value: f.code, label: `${f.code} — ${f.nombre}` }))}
+                    />
+                  </div>
+                  {trendLoading ? (
+                    <p className="text-sm text-muted-foreground">Cargando serie…</p>
+                  ) : trendSeries.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin datos de serie.</p>
+                  ) : (
+                    <div className="h-72 w-full max-w-4xl">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsLine data={trendSeries} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
+                          <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <RechartsTooltip />
+                          <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                        </RechartsLine>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

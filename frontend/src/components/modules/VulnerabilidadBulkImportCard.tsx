@@ -73,9 +73,12 @@ function MotorImportPanel({ motor, label }: { motor: string; label: string }) {
         throw new Error('Respuesta inesperada');
       }
       const created = data.data?.created ?? 0;
+      const skipped = (data.data as { skipped_duplicates?: number })?.skipped_duplicates ?? 0;
       const errs = data.data?.errors?.length ?? 0;
-      toast.success(`Importación completada: ${created} fila(s) creadas.${errs ? ` ${errs} advertencias.` : ''}`);
-      logger.info('vulnerabilidad.import.ui.success', { motor, created, errors: errs });
+      toast.success(
+        `Importación: ${created} creadas.${skipped ? ` ${skipped} omitidas (duplicado).` : ''}${errs ? ` ${errs} filas con error.` : ''}`,
+      );
+      logger.info('vulnerabilidad.import.ui.success', { motor, created, skipped, errors: errs });
       await qc.invalidateQueries({ queryKey: ['vulnerabilidads'] });
     } catch (e) {
       logger.error('vulnerabilidad.import.ui.failed', { motor, error: e });

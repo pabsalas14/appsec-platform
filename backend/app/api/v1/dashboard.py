@@ -35,7 +35,11 @@ from app.schemas.dashboard import (
     DashboardEnvelopeVulnerabilitiesRead,
 )
 from app.schemas.executive_dashboard_read import ApiSuccessEnvelope
-from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
+from app.services.vulnerability_scope import (
+    ANNUAL_PROGRAM_MOTORS,
+    VULNERABILITY_MOTOR_CODES,
+    vulnerabilidad_en_celulas_o_repo,
+)
 
 from app.services.dashboard_okr import build_okr_dashboard
 
@@ -1188,7 +1192,11 @@ async def dashboard_concentrado(
     """Dashboard 5: Concentrado (motores V2, severidad, apilado)."""
     from app.models.vulnerabilidad import Vulnerabilidad
 
-    base = [Vulnerabilidad.deleted_at.is_(None), Vulnerabilidad.fuente.in_(FIVE_MOTORS)]
+    base = [
+        Vulnerabilidad.deleted_at.is_(None),
+        Vulnerabilidad.user_id == current_user.id,
+        Vulnerabilidad.fuente.in_(VULNERABILITY_MOTOR_CODES),
+    ]
 
     motors_result = await db.execute(
         select(
@@ -1224,7 +1232,7 @@ async def dashboard_concentrado(
         .group_by(Vulnerabilidad.fuente)
     )
 
-    order = {m: i for i, m in enumerate(FIVE_MOTORS)}
+    order = {m: i for i, m in enumerate(VULNERABILITY_MOTOR_CODES)}
     motors: list[dict] = []
     for row in motors_result.all():
         total = int(row.total or 0)
@@ -1275,7 +1283,10 @@ async def dashboard_concentrado(
             await db.execute(
                 select(func.count())
                 .select_from(Vulnerabilidad)
-                .where(Vulnerabilidad.deleted_at.is_(None), Vulnerabilidad.estado != "Cerrada")
+                .where(
+                    *base,
+                    Vulnerabilidad.estado != "Cerrada",
+                )
             )
         ).scalar()
         or 0
@@ -1284,7 +1295,7 @@ async def dashboard_concentrado(
     estados = (
         await db.execute(
             select(Vulnerabilidad.estado, func.count(Vulnerabilidad.id).label("count"))
-            .where(Vulnerabilidad.deleted_at.is_(None))
+            .where(*base)
             .group_by(Vulnerabilidad.estado)
         )
     ).all()
@@ -1494,13 +1505,14 @@ async def dashboard_programs_heatmap(
     """Dashboard 3 helper: heatmap mensual de avance por programa (motor)."""
     now = datetime.now(UTC)
     year = now.year
-    motors = ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]
+    motors = list(ANNUAL_PROGRAM_MOTORS)
     heatmap = await _cached_payload(
         "programs-heatmap",
         user_id=current_user.id,
         params={"year": year},
         builder=lambda: _programs_heatmap(db=db, year=year, motors=motors),
     )
+    return success({"heatmap": heatmap})
 
 
 @router.get("/temas-auditorias")
@@ -1594,6 +1606,7 @@ async def _program_rows(*, db: AsyncSession, hierarchy_filter) -> list[list[obje
             )
             .where(
                 Vulnerabilidad.deleted_at.is_(None),
+                Vulnerabilidad.fuente.in_(ANNUAL_PROGRAM_MOTORS),
                 *([hierarchy_filter] if hierarchy_filter is not None else []),
             )
             .group_by(Vulnerabilidad.fuente)

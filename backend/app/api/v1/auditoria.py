@@ -8,6 +8,7 @@ from io import StringIO
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -17,6 +18,7 @@ from app.core.response import success
 from app.models.auditoria import Auditoria
 from app.models.user import User
 from app.schemas.auditoria import AuditoriaCreate, AuditoriaRead, AuditoriaUpdate
+from app.schemas.notification_preferences import read_prefs_from_user
 from app.services.audit_service import record as audit_record
 from app.schemas.notificacion import NotificacionCreate
 from app.services.auditoria_estados import assert_auditoria_transition_allowed
@@ -128,16 +130,19 @@ async def update_auditoria(
     prev_estado = entity.estado
     updated = await auditoria_svc.update(db, entity.id, entity_in, scope={"user_id": current_user.id})
     if entity_in.estado is not None and (prev_estado or "").strip() != (updated.estado or "").strip():
-        await notificacion_svc.create(
-            db,
-            NotificacionCreate(
-                titulo=f"[Auditoría] Cambio de estado: {updated.titulo[:120]}",
-                cuerpo=f"Estado {prev_estado!r} → {updated.estado!r}.",
-                leida=False,
-            ),
-            extra={"user_id": entity.user_id},
-        )
-        await db.flush()
+        owner_row = await db.execute(select(User).where(User.id == entity.user_id))
+        owner = owner_row.scalar_one_or_none()
+        if owner is None or read_prefs_from_user(owner.preferences).auditoria_estado:
+            await notificacion_svc.create(
+                db,
+                NotificacionCreate(
+                    titulo=f"[Auditoría] Cambio de estado: {updated.titulo[:120]}",
+                    cuerpo=f"Estado {prev_estado!r} → {updated.estado!r}.",
+                    leida=False,
+                ),
+                extra={"user_id": entity.user_id},
+            )
+            await db.flush()
     return success(AuditoriaRead.model_validate(updated).model_dump(mode="json"))
 
 

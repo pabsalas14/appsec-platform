@@ -29,6 +29,7 @@ from app.models.vulnerabilidad import Vulnerabilidad
 from app.models.email_template import EmailTemplate
 from app.models.email_log import EmailLog
 from app.models.indicador_formula import IndicadorFormula
+from app.models.indicador_valor_manual import IndicadorValorManual
 from app.models.formula import Formula
 from app.models.regla_so_d import ReglaSoD
 
@@ -62,6 +63,7 @@ __all__ = [
     "EmailTemplate",
     "EmailLog",
     "IndicadorFormula",
+    "IndicadorValorManual",
     "Formula",
     "ReglaSoD",
 ]

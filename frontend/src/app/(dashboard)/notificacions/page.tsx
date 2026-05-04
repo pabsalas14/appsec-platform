@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Bell, Check, CheckCheck, Loader2, Trash2 } from 'lucide-react';
@@ -23,6 +24,12 @@ import {
   Label,
   PageHeader,
   PageWrapper,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
   Switch,
 } from '@/components/ui';
 import {
@@ -48,33 +55,40 @@ function timeAgo(dateStr: string) {
   }
 }
 
-function NotifRow({ n, onMarkRead, onDelete }: {
+function NotifRow({ n, onMarkRead, onDelete, onOpenDetail }: {
   n: Notificacion;
   onMarkRead: (n: Notificacion) => void;
   onDelete: (id: string) => void;
+  onOpenDetail: (n: Notificacion) => void;
 }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 px-5 py-4 border-b border-border/60 last:border-b-0 transition-colors hover:bg-muted/40',
+        'flex items-start gap-3 px-5 py-4 border-b border-dashboard-border/50 last:border-b-0 transition-colors',
         !n.leida && 'bg-primary/[0.03]',
       )}
     >
-      <div className="mt-1 shrink-0">
-        {n.leida ? (
-          <Bell className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <span className="mt-0.5 inline-flex h-2 w-2 rounded-full bg-primary" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={cn('text-sm', !n.leida && 'font-semibold')}>{n.titulo}</p>
-        {n.cuerpo && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.cuerpo}</p>
-        )}
-        <p className="text-[11px] text-muted-foreground/70 mt-1">{timeAgo(n.created_at)}</p>
-      </div>
-      <div className="flex gap-1 shrink-0">
+      <button
+        type="button"
+        className="flex flex-1 min-w-0 items-start gap-3 text-left rounded-md -m-1 p-1 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => onOpenDetail(n)}
+      >
+        <div className="mt-1 shrink-0">
+          {n.leida ? (
+            <Bell className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <span className="mt-0.5 inline-flex h-2 w-2 rounded-full bg-primary" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={cn('text-sm text-dashboard-onStrong', !n.leida && 'font-semibold')}>{n.titulo}</p>
+          {n.cuerpo && (
+            <p className="text-xs text-dashboard-muted mt-0.5 line-clamp-2">{n.cuerpo}</p>
+          )}
+          <p className="text-[11px] text-dashboard-muted/80 mt-1">{timeAgo(n.created_at)}</p>
+        </div>
+      </button>
+      <div className="flex gap-1 shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
         {!n.leida && (
           <Button
             variant="ghost"
@@ -121,6 +135,7 @@ export default function NotificacionsPage() {
   const markAll = useMarcarTodasNotificacionesLeidas();
   const deleteOne = useDeleteNotificacion();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [detail, setDetail] = useState<Notificacion | null>(null);
 
   const unreadCount = items.filter((n) => !n.leida).length;
 
@@ -144,7 +159,10 @@ export default function NotificacionsPage() {
 
   const handleDelete = (id: string) => {
     deleteOne.mutate(id, {
-      onSuccess: () => toast.success('Notificación eliminada'),
+      onSuccess: () => {
+        toast.success('Notificación eliminada');
+        setDetail((d) => (d?.id === id ? null : d));
+      },
       onError: () => toast.error('No se pudo eliminar'),
     });
   };
@@ -155,21 +173,29 @@ export default function NotificacionsPage() {
         title="Centro de Notificaciones"
         description="Alertas del sistema: SLA, actividades, temas emergentes y más."
         action={
-          unreadCount > 0 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkAll}
-              disabled={markAll.isPending}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/notificacions/preferences"
+              className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
             >
-              {markAll.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <CheckCheck className="h-4 w-4 mr-2" />
-              )}
-              Marcar todas como leídas
-            </Button>
-          ) : undefined
+              Preferencias
+            </Link>
+            {unreadCount > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMarkAll}
+                disabled={markAll.isPending}
+              >
+                {markAll.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                )}
+                Marcar todas como leídas
+              </Button>
+            ) : null}
+          </div>
         }
       />
 
@@ -211,7 +237,7 @@ export default function NotificacionsPage() {
       </Card>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 border-b pb-0">
+      <div className="flex items-center gap-1 border-b border-dashboard-border/60 pb-0">
         {(['all', 'unread', 'read'] as FilterType[]).map((f) => (
           <button
             key={f}
@@ -268,10 +294,44 @@ export default function NotificacionsPage() {
                 n={n}
                 onMarkRead={handleMarkRead}
                 onDelete={handleDelete}
+                onOpenDetail={setDetail}
               />
             ))}
         </CardContent>
       </Card>
+
+      <Sheet open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
+        <SheetContent className="border-dashboard-border bg-dashboard-surface sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="text-dashboard-onStrong pr-8">{detail?.titulo}</SheetTitle>
+            <SheetDescription className="text-dashboard-muted">
+              {detail ? timeAgo(detail.created_at) : null}
+              {detail && !detail.leida ? ' · No leída' : ''}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 text-sm text-dashboard-onStrong whitespace-pre-wrap">
+            {detail?.cuerpo?.trim() ? detail.cuerpo : 'Sin texto adicional.'}
+          </div>
+          <SheetFooter className="mt-8 flex-col gap-2 sm:flex-row sm:justify-end">
+            {detail && !detail.leida ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  handleMarkRead(detail);
+                  setDetail({ ...detail, leida: true });
+                }}
+                disabled={markOne.isPending}
+              >
+                Marcar como leída
+              </Button>
+            ) : null}
+            <Button type="button" variant="outline" className="border-dashboard-border" onClick={() => setDetail(null)}>
+              Cerrar
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {!isLoading && filtered.length > 0 && (
         <p className="text-xs text-muted-foreground text-center">

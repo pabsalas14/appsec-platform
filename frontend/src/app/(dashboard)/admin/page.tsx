@@ -3,6 +3,7 @@
 import {
   BookOpen,
   ClipboardList,
+  GitBranch,
   LayoutDashboard,
   LineChart,
   Plug,
@@ -66,6 +67,12 @@ const BUILDER_CARDS: HubCard[] = [
     icon: BookOpen,
   },
   {
+    href: '/admin/status-flow',
+    title: 'Status flow',
+    description: 'Grafo visual de transiciones FlujoEstatus (validación runtime en vulnerabilidades).',
+    icon: GitBranch,
+  },
+  {
     href: '/dashboards/builder',
     title: 'Dashboard builder',
     description: 'Widgets, layout y fuentes de datos de tableros.',
@@ -115,6 +122,12 @@ const OPS_CARDS: HubCard[] = [
     title: 'Audit logs',
     description: 'Trazabilidad de cambios con filtros en URL.',
     icon: ScrollText,
+  },
+  {
+    href: '/admin/audit-overview',
+    title: 'Audit overview',
+    description: 'Checklist interactivo por módulo (UAT / demo 44 checks).',
+    icon: ClipboardList,
   },
   {
     href: '/admin/settings',

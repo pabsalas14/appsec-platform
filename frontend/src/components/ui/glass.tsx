@@ -147,7 +147,10 @@ interface PageWrapperProps {
 export function PageWrapper({ children, className }: PageWrapperProps) {
   return (
     <motion.div
-      className={cn('', className)}
+      className={cn(
+        'min-h-0 bg-dashboard-canvas text-dashboard-onStrong antialiased',
+        className,
+      )}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -172,9 +175,9 @@ export function PageHeader({ title, description, action, children }: PageHeaderP
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        <h1 className="text-2xl font-bold text-dashboard-onStrong">{title}</h1>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm text-dashboard-muted mt-1">{description}</p>
         )}
       </div>
       {actionContent && <div className="flex items-center gap-3">{actionContent}</div>}

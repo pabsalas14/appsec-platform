@@ -7005,10 +7005,46 @@ export interface paths {
         };
         /**
          * Trend Indicador
-         * @description E1.3 / F1: serie de puntos para gráficos. v1: repite el valor actual (sin serie histórica materializada).
+         * @description E1.3 / F1: serie para gráficos.
+         *     - Si ``months`` está definido: últimos N meses; valor manual si existe, si no el calculado hoy.
+         *     - Si no: compatibilidad v1 por días (mismo valor).
          */
         get: operations["trend_indicador_api_v1_indicadores__code__trend_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicadores/{code}/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Indicador Manual */
+        get: operations["list_indicador_manual_api_v1_indicadores__code__manual_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/indicadores/{code}/manual/{periodo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert Indicador Manual */
+        put: operations["upsert_indicador_manual_api_v1_indicadores__code__manual__periodo__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -7291,6 +7327,24 @@ export interface paths {
          * @description Update a changelog entry — super_admin only.
          */
         patch: operations["update_changelog_entrada_api_v1_changelog_entradas__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/notificacions/preferences/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Notification Preferences Me */
+        get: operations["get_notification_preferences_me_api_v1_notificacions_preferences_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Notification Preferences Me */
+        patch: operations["patch_notification_preferences_me_api_v1_notificacions_preferences_me_patch"];
         trace?: never;
     };
     "/api/v1/notificacions": {
@@ -12102,6 +12156,16 @@ export interface components {
             /** Periodicidad */
             periodicidad?: string | null;
         };
+        /** IndicadorManualUpsert */
+        IndicadorManualUpsert: {
+            /**
+             * Valor
+             * @description Valor numérico del periodo
+             */
+            valor: number;
+            /** Notas */
+            notas?: string | null;
+        };
         /**
          * IniciativaCreate
          * @description Fields required to create a iniciativa. user_id is set from auth context.
@@ -12531,6 +12595,23 @@ export interface components {
             cuerpo?: string | null;
             /** Leida */
             leida?: boolean | null;
+        };
+        /** NotificationPreferencesPatch */
+        NotificationPreferencesPatch: {
+            /** Notificaciones Automaticas */
+            notificaciones_automaticas?: boolean | null;
+            /** Sla Vulnerabilidad */
+            sla_vulnerabilidad?: boolean | null;
+            /** Tema Estancado */
+            tema_estancado?: boolean | null;
+            /** Vulnerabilidad Inactiva */
+            vulnerabilidad_inactiva?: boolean | null;
+            /** Iniciativa Fecha Fin Vencida */
+            iniciativa_fecha_fin_vencida?: boolean | null;
+            /** Plan Remediacion Fecha Limite Vencida */
+            plan_remediacion_fecha_limite_vencida?: boolean | null;
+            /** Auditoria Estado */
+            auditoria_estado?: boolean | null;
         };
         /**
          * OkrCalificacionCreate
@@ -34078,8 +34159,10 @@ export interface operations {
     trend_indicador_api_v1_indicadores__code__trend_get: {
         parameters: {
             query?: {
-                /** @description Días hacia atrás; serie v1 = mismo valor (evolución detallada en backlog). */
+                /** @description Días hacia atrás (si no se usa months). */
                 days?: number;
+                /** @description Meses hacia atrás (YYYY-MM). Mezcla capturas manuales y valor calculado actual. */
+                months?: number | null;
             };
             header?: {
                 /** @description Bearer <token> */
@@ -34093,6 +34176,83 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_indicador_manual_api_v1_indicadores__code__manual_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upsert_indicador_manual_api_v1_indicadores__code__manual__periodo__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path: {
+                code: string;
+                periodo: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicadorManualUpsert"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -34861,6 +35021,78 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ChangelogEntradaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_notification_preferences_me_api_v1_notificacions_preferences_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_notification_preferences_me_api_v1_notificacions_preferences_me_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer <token> */
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPreferencesPatch"];
             };
         };
         responses: {

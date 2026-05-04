@@ -117,7 +117,7 @@ cd frontend && npm run lint    # ESLint + tsc --noEmit
 
 ### Programas anuales e iniciativas
 
-- Programas por motor: SAST, DAST, threat modeling, source code, MAST, etc. (routers `programa_*`, actividades, ejecuciones).
+- Programas por motor anual: SAST, DAST, SCA/CDS, threat modeling, source code, etc. (routers `programa_*`, actividades, ejecuciones). **MAST no es programa anual**: indicadores y ejecuciones móviles mes a mes; los hallazgos con fuente MAST siguen en dashboards de vulnerabilidades.
 - **Hub unificado:** `/programas` — acceso a dashboard anual, programas por tipo e iniciativas.
 - **Iniciativas:** registros, dashboard, detalle con pestañas y campos personalizados; hitos con peso/avance según modelo.
 

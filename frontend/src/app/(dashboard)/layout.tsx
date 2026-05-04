@@ -13,7 +13,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <TooltipProvider delayDuration={200}>
         <CommandPalette>
           <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-            <Sidebar />
+            <Suspense
+              fallback={
+                <aside
+                  className="relative flex h-full w-60 shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur"
+                  aria-hidden
+                />
+              }
+            >
+              <Sidebar />
+            </Suspense>
             <div className="flex min-w-0 flex-1 flex-col">
               <Header />
               <main className="flex-1 overflow-y-auto">

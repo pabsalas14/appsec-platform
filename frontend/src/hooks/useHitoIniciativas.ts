@@ -7,11 +7,14 @@ type Envelope<T> = { status: 'success'; data: T };
 
 const KEY = ['hito_iniciativas'] as const;
 
-export function useHitoIniciativas() {
+export function useHitoIniciativas(iniciativaId?: string) {
   return useQuery({
-    queryKey: KEY,
+    queryKey: [...KEY, iniciativaId ?? 'all'] as const,
     queryFn: async () => {
-      const { data } = await api.get<Envelope<HitoIniciativa[]>>('/hito_iniciativas/');
+      const qs = iniciativaId
+        ? `?iniciativa_id=${encodeURIComponent(iniciativaId)}`
+        : '';
+      const { data } = await api.get<Envelope<HitoIniciativa[]>>(`/hito_iniciativas/${qs}`);
       return data.data;
     },
   });

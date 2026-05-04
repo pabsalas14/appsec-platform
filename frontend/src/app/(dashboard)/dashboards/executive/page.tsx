@@ -1,16 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  AvanceVsMetaChart,
-  ExecutiveKpiCard,
-  PostureRing,
-  RankedBarChart,
-  SlaSemaforoWidget,
-} from '@/components/dashboard/executive';
+import { ExecutiveKpiCard, PostureRing, SlaSemaforoWidget } from '@/components/dashboard/executive';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { HierarchyFiltersBarCard } from '@/components/dashboard/HierarchyFiltersBar';
@@ -25,6 +20,15 @@ import {
   SelectValue,
 } from '@/components/ui/radix-select';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const AvanceVsMetaChart = dynamic(
+  () => import('@/components/dashboard/executive/AvanceVsMetaChart').then((m) => m.AvanceVsMetaChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full rounded-lg" /> },
+);
+const RankedBarChart = dynamic(
+  () => import('@/components/dashboard/executive/RankedBarChart').then((m) => m.RankedBarChart),
+  { ssr: false, loading: () => <Skeleton className="h-64 w-full rounded-lg" /> },
+);
 import {
   Table,
   TableBody,

@@ -54,7 +54,9 @@ class AuditoriaService(BaseService[Auditoria, AuditoriaCreate, AuditoriaUpdate])
         old_i = _estado_index(getattr(record, "estado", None))
         new_i = _estado_index(raw["estado"])
         if old_i is not None and new_i is not None:
-            if new_i != old_i and abs(new_i - old_i) > 1:
+            if new_i < old_i:
+                raise ValidationException("No se permite retroceder el estado de la auditoría.")
+            if new_i != old_i and (new_i - old_i) != 1:
                 raise ValidationException(
                     f"Transición de estado no permitida: «{record.estado}» → «{raw['estado']}». "
                     f"Use el orden: {' → '.join(_AUDITORIA_ESTADO_ORDER)} (un paso a la vez)."

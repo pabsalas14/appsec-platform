@@ -6,7 +6,19 @@
 
 ---
 
-## Metodología
+## Decisión y cierre (2026-05-02)
+
+Se adoptó el contrato visual **«dark ops»** documentado en **[ADR-0018](../adr/0018-dashboard-dark-ops-visual-contract.md)**:
+
+- Variables CSS `--dashboard-*` en `globals.css` y mapeo Tailwind `dashboard.*`.
+- Hook **`useDashboardChartTheme`** para Recharts (grid, ejes, tooltip) alineados al tema.
+- Páginas migradas a tokens de layout: **kanban**, **vulnerabilities**, **releases**, **emerging-themes** (sin hex para fondos/bordes salvo colores **puramente semánticos de datos** en charts/filtros).
+
+**Criterio de cierre para nuevos dashboards:** no introducir hex de layout; usar `dashboard.*` + utilidades documentadas; datos codificados por color pueden usar paletas fijas explícitas.
+
+---
+
+## Metodología (histórica)
 
 1. Revisión estática de clases Tailwind: uso de **tokens semánticos** (`bg-card`, `text-muted-foreground`, `border`, variables CSS del tema) vs **hex fijos** (`#141728`, `#252a45`, `#e8365d`, etc.).
 2. Muestreo de páginas representativas: índice `/dashboards`, ejecutivo, vulnerabilidades, kanban, programas, OKR embebido.
@@ -14,43 +26,36 @@
 
 ---
 
-## Hallazgo principal: dos “lenguajes” visuales
+## Hallazgo principal (resuelto por ADR-0018)
 
-| Familia | Descripción | Ejemplos de rutas |
-|--------|-------------|-------------------|
-| **A — Design system (tema)** | `Card`, `PageHeader`, `Badge`, colores derivados de `globals.css` / `next-themes`. Coherente con sidebar y catálogos. | `/dashboards/hub`, `/dashboards/executive` (parcial), `/dashboards/programs` (partes), `/okr_dashboard` |
-| **B — UI “dark ops” fija** | Fondos y bordes con **hex literales** (`bg-[#141728]`, `border-[#252a45]`), acento **magenta** `#e8365d`, texto `text-[#e2e8f0]`. Alta densidad tipográfica (`text-[10px]`, `font-black`). | `/dashboards/kanban`, `/dashboards/vulnerabilities`, tramos de paneles tipo “premium” |
-
-**Consecuencia:** el usuario percibe **inconsistencia** entre tableros “glass/shadcn” y tableros “cyber dashboard”; no es un bug funcional, es **deuda de diseño**.
+Antes coexistían dos estilos: **design system (tema)** vs **UI con hex fijos**. La migración a tokens `--dashboard-*` unifica la cromática de superficie manteniendo semántica de datos donde corresponde.
 
 ---
 
-## Detalle por área (orientativo)
+## Detalle por área (actualizado)
 
 | Ruta / página | Estilo dominante | Notas |
 |---------------|------------------|--------|
 | `/dashboards` (índice hub) | A | Enlaces y tarjetas alineadas al shell |
 | `/dashboards/executive` | Mix A/B | KPIs; revisar si quedan hex sueltos en gráficos |
-| `/dashboards/vulnerabilities` | **B** fuerte | Muchos `bg-[#141728]`, `#e8365d`, Recharts con stroke hex |
-| `/dashboards/kanban` | **B** fuerte | Kanban completo en paleta fija; `Sheet` lateral mismo tema |
-| `/dashboards/programs` | Mix | Heatmaps y paletas por tipo de programa (`PROGRAM_COLORS`) — aceptable por semántica de datos |
-| `/dashboards/releases` | Mix | Tabla + filtros; tender a A |
-| `/dashboards/emerging-themes` | A tendencial | Depende de evolución reciente |
+| `/dashboards/vulnerabilities` | Tokens dashboard + datos | Recharts vía `chartTheme`; series/severity/motor pueden usar colores de datos |
+| `/dashboards/kanban` | Tokens dashboard | Kanban + Sheet al contrato ADR-0018 |
+| `/dashboards/programs` | Mix | Heatmaps y paletas por tipo (`PROGRAM_COLORS`) — aceptable por semántica de datos |
+| `/dashboards/releases` | Tokens dashboard | Tabla + filtros migrados |
+| `/dashboards/emerging-themes` | Tokens dashboard | KPIs + tablas migrados |
 | `/dashboards/team` | A | Premium team dashboard |
-| `/dashboards/concentrado` | Revisar | Variante “concentrado” de hallazgos |
+| `/dashboards/concentrado` | Revisar | Variante «concentrado» de hallazgos |
 | `/okr_dashboard` | A | OKR drill-down, semáforos |
 
 ---
 
-## Recomendaciones (backlog UX; no implementadas aquí)
+## Recomendaciones residuales
 
-1. **Tokens de dashboard:** definir en CSS variables p.ej. `--dashboard-surface`, `--dashboard-border`, `--dashboard-accent` mapeadas al tema claro/oscuro.
-2. **Migración gradual:** sustituir `bg-[#141728]` → `bg-muted/30` o token equivalente **por archivo**, validando contraste WCAG.
-3. **Gráficos:** `components/charts` ya orientan a leer variables CSS (ADR-0008); alinear Recharts “inline” en vulnerabilities/kanban a wrappers que consuman el mismo contrato.
-4. **Tipografía:** unificar jerarquía (`text-xs` / `text-sm` / `font-semibold`) y reducir mezclas `font-black` + `text-[9px]` salvo KPIs explícitos.
+1. **Executive / concentrado:** grep `#` y alinear layout al mismo contrato si aparecen hex de superficie.
+2. **Tipografía:** donde aún exista `text-[9px]`/`text-[10px]` masivo, valorar sustitución gradual por `dashboard-section-label` / `text-xs` según jerarquía.
 
 ---
 
 ## Conclusión
 
-La plataforma es **funcionalmente completa** en dashboards, pero **visualmente heterogénea** entre el shell AppSec y los tableros de alto contenido (vulnerabilidades, kanban). La homogeneización debe planificarse como **épica UX** (tokens + refactors mecánicos), no como cambio puntual.
+Los tableros prioritarios pasan a **un solo contrato visual** (ADR-0018) integrable con el shell (ADR-0008). La homogeneización global puede continuar archivo a archivo sin nuevos hex de layout.

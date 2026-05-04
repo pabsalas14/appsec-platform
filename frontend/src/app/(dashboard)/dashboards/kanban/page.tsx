@@ -64,15 +64,15 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        'flex min-h-[480px] w-72 shrink-0 flex-col rounded-xl border border-[#252a45] bg-[#141728]/40',
-        isOver && 'ring-2 ring-[#e8365d]/50',
+        'flex min-h-[480px] w-72 shrink-0 flex-col rounded-xl border border-dashboard-border bg-dashboard-surface/40',
+        isOver && 'ring-2 ring-dashboard-accent/50',
       )}
     >
-      <div className="flex items-center justify-between border-b border-[#252a45] bg-[#1c2035]/30 p-4">
-        <h3 className="max-w-[200px] truncate text-xs font-bold uppercase tracking-widest text-slate-300" title={status}>
+      <div className="flex items-center justify-between border-b border-dashboard-border bg-dashboard-elevated/30 p-4">
+        <h3 className="dashboard-section-label max-w-[200px] truncate text-slate-300 dark:text-slate-300" title={status}>
           {status}
         </h3>
-        <span className="rounded bg-[#252a45] px-2 py-0.5 text-[10px] text-slate-400">{count}</span>
+        <span className="rounded bg-dashboard-border px-2 py-0.5 text-xs text-muted-foreground">{count}</span>
       </div>
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">{children}</div>
     </div>
@@ -104,14 +104,14 @@ function DraggableReleaseCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex gap-1 rounded-lg border border-[#252a45] bg-[#1c2035] shadow-lg transition-all',
-        'hover:border-[#e8365d]/50',
-        isDragging && 'opacity-60 ring-2 ring-[#e8365d]/40',
+        'flex gap-1 rounded-lg border border-dashboard-border bg-dashboard-elevated shadow-lg transition-all',
+        'hover:border-dashboard-accent/50',
+        isDragging && 'opacity-60 ring-2 ring-dashboard-accent/40',
       )}
     >
       <button
         type="button"
-        className="touch-none shrink-0 rounded-l-lg border-r border-[#252a45] bg-[#141728]/80 p-2 text-muted-foreground hover:text-foreground"
+        className="touch-none shrink-0 rounded-l-lg border-r border-dashboard-border bg-dashboard-surface/80 p-2 text-muted-foreground hover:text-foreground"
         {...listeners}
         {...attributes}
         aria-label="Arrastrar para cambiar de columna"
@@ -123,10 +123,10 @@ function DraggableReleaseCard({
         className="min-w-0 flex-1 rounded-r-lg p-3 text-left"
         onClick={onOpenDetail}
       >
-        <p className="text-sm font-semibold text-slate-100">{card.nombre}</p>
+        <p className="text-sm font-semibold text-dashboard-on-strong">{card.nombre}</p>
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="rounded bg-[#252a45] px-2 py-0.5 text-[10px] text-slate-400">v{card.version ?? '—'}</span>
-          <span className="text-[10px] italic text-muted-foreground">Abrir detalle</span>
+          <span className="rounded bg-dashboard-border px-2 py-0.5 text-xs text-muted-foreground">v{card.version ?? '—'}</span>
+          <span className="text-xs italic text-muted-foreground">Abrir detalle</span>
         </div>
       </button>
     </div>
@@ -135,12 +135,12 @@ function DraggableReleaseCard({
 
 function CardOverlay({ card }: { card: KanbanCard }) {
   return (
-    <div className="cursor-grabbing rounded-lg border border-[#e8365d]/50 bg-[#1c2035] p-4 shadow-xl ring-2 ring-[#e8365d]/40">
+    <div className="cursor-grabbing rounded-lg border border-dashboard-accent/50 bg-dashboard-elevated p-4 shadow-xl ring-2 ring-dashboard-accent/40">
       <div className="flex items-start gap-2">
-        <Package className="mt-0.5 h-4 w-4 shrink-0 text-[#e8365d]" />
+        <Package className="mt-0.5 h-4 w-4 shrink-0 text-dashboard-accent" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-100">{card.nombre}</p>
-          <span className="text-[10px] text-slate-400">v{card.version ?? '—'}</span>
+          <p className="text-sm font-semibold text-dashboard-on-strong">{card.nombre}</p>
+          <span className="text-xs text-muted-foreground">v{card.version ?? '—'}</span>
         </div>
       </div>
     </div>
@@ -179,9 +179,9 @@ function ReleaseDetailPanel({
     <Sheet open={Boolean(releaseId)} onOpenChange={(o) => !o && onClose()}>
       <SheetContent
         side="right"
-        className="w-[min(100vw,440px)] overflow-y-auto border-[#252a45] bg-[#0d0f1a] text-[#e2e8f0] sm:max-w-[440px]"
+        className="w-[min(100vw,440px)] overflow-y-auto border-dashboard-border bg-dashboard-canvas text-dashboard-on-strong sm:max-w-[440px]"
       >
-        <SheetHeader className="border-b border-[#252a45] pb-4 text-left">
+        <SheetHeader className="border-b border-dashboard-border pb-4 text-left">
           <SheetTitle className="text-lg text-foreground">Detalle de liberación</SheetTitle>
           <SheetDescription className="font-mono text-xs text-muted-foreground">{releaseId}</SheetDescription>
         </SheetHeader>
@@ -193,68 +193,68 @@ function ReleaseDetailPanel({
         {detail.data && (
           <div className="mt-6 space-y-6 text-sm">
             <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Estado en tablero</p>
+              <p className="dashboard-section-label">Estado en tablero</p>
               <Badge variant="outline" className="max-w-full whitespace-normal text-left">
                 {columnEstado}
               </Badge>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nombre</p>
+              <p className="dashboard-section-label">Nombre</p>
               <p className="mt-1 font-medium text-foreground">{detail.data.nombre}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Versión</p>
+                <p className="dashboard-section-label">Versión</p>
                 <p className="mt-1 font-mono">{detail.data.version}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Estado (API)</p>
+                <p className="dashboard-section-label">Estado (API)</p>
                 <p className="mt-1 text-xs">{detail.data.estado_actual}</p>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Servicio</p>
+              <p className="dashboard-section-label">Servicio</p>
               <p className="mt-1">{servicioNombre}</p>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Entrada etapa</p>
+                <p className="dashboard-section-label">Entrada etapa</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {detail.data.fecha_entrada ? formatDate(detail.data.fecha_entrada) : '—'}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Actualizado</p>
+                <p className="dashboard-section-label">Actualizado</p>
                 <p className="mt-1 text-xs text-muted-foreground">{formatDate(detail.data.updated_at)}</p>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Jira</p>
+              <p className="dashboard-section-label">Jira</p>
               <p className="mt-1 text-xs">{detail.data.jira_referencia ?? '—'}</p>
             </div>
             {detail.data.descripcion && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Descripción</p>
+                <p className="dashboard-section-label">Descripción</p>
                 <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{detail.data.descripcion}</p>
               </div>
             )}
             {ctxPreview && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <p className="dashboard-section-label">
                   Contexto (JSON)
                 </p>
-                <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-[#252a45] bg-[#141728] p-3 font-mono text-[10px] text-muted-foreground">
+                <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-dashboard-border bg-dashboard-surface p-3 font-mono text-xs text-muted-foreground">
                   {ctxPreview}
                 </pre>
               </div>
             )}
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Gatekeepers SAST/DAST/SCA, excepciones y bitácora completa están planificados en backlog de operación;
               aquí se muestran los datos persistidos del Service Release.
             </p>
             <Link
               href="/service_releases/registros"
-              className="inline-flex w-full items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] py-2 text-xs font-medium hover:bg-[#252a45]/80"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-dashboard-border bg-dashboard-elevated py-2 text-xs font-medium hover:bg-dashboard-border/80"
               onClick={onClose}
             >
               Ir a registros para editar
@@ -382,7 +382,7 @@ export default function KanbanDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0f1a] p-6 font-sans text-[#e2e8f0]">
+    <div className="min-h-screen bg-dashboard-canvas p-6 font-sans text-dashboard-on-strong">
       <ReleaseDetailPanel
         releaseId={detailId ?? ''}
         columnEstado={detailColumnEstado}
@@ -399,13 +399,13 @@ export default function KanbanDashboardPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/dashboards/releases"
-            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-xs font-medium text-foreground hover:bg-[#252a45]/80"
+            className="inline-flex items-center justify-center rounded-lg border border-dashboard-border bg-dashboard-elevated px-3 py-1.5 text-xs font-medium text-foreground hover:bg-dashboard-border/80"
           >
             Dashboard tabla
           </Link>
           <Link
             href="/service_releases/registros"
-            className="inline-flex items-center justify-center rounded-lg border border-[#252a45] bg-[#1c2035] px-3 py-1.5 text-xs font-medium text-foreground hover:bg-[#252a45]/80"
+            className="inline-flex items-center justify-center rounded-lg border border-dashboard-border bg-dashboard-elevated px-3 py-1.5 text-xs font-medium text-foreground hover:bg-dashboard-border/80"
           >
             Registros
           </Link>
@@ -420,30 +420,30 @@ export default function KanbanDashboardPage() {
           onClear={clearFilters}
           savedModulo={DASHBOARD_FILTER_MODULO.releases}
           onApplyFilters={applyFilters}
-          className="bg-[#141728] border-[#252a45]"
+          className="bg-dashboard-surface border-dashboard-border"
         />
-        <div className="rounded-xl border border-[#252a45] bg-[#141728]/50 p-4">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Buscar</label>
+        <div className="rounded-xl border border-dashboard-border bg-dashboard-surface/50 p-4">
+          <label className="dashboard-section-label">Buscar</label>
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Nombre, versión o ID…"
-            className="mt-2 w-full rounded-lg border border-[#252a45] bg-[#0d0f1a] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#e8365d]/40"
+            className="mt-2 w-full rounded-lg border border-dashboard-border bg-dashboard-canvas px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-dashboard-accent/40"
           />
         </div>
       </div>
 
       <div className="mb-8">
-        <div className="glass-hover rounded-xl border-b-4 border-[#e8365d] bg-[#141728]/50 p-5">
-          <div className="mb-2 flex items-center gap-2 text-[#e8365d]">
+        <div className="glass-hover rounded-xl border-b-4 border-dashboard-accent bg-dashboard-surface/50 p-5">
+          <div className="mb-2 flex items-center gap-2 text-dashboard-accent">
             <Layers className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="dashboard-section-label">
               Tarjetas (vista actual)
             </span>
           </div>
           {kanbanQuery.isLoading ? (
-            <div className="h-8 w-16 animate-pulse rounded bg-[#252a45]" />
+            <div className="h-8 w-16 animate-pulse rounded bg-dashboard-border" />
           ) : (
             <div className="text-3xl font-bold">{totalVisible}</div>
           )}
@@ -459,7 +459,7 @@ export default function KanbanDashboardPage() {
       {kanbanQuery.isLoading ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-96 animate-pulse rounded-xl border border-[#252a45] bg-[#141728]" />
+            <div key={i} className="h-96 animate-pulse rounded-xl border border-dashboard-border bg-dashboard-surface" />
           ))}
         </div>
       ) : (

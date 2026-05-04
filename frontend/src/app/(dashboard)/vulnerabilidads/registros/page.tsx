@@ -363,7 +363,15 @@ export default function VulnerabilidadsPage() {
         title="Catálogo de vulnerabilidades"
         description="Filtros, columnas configurables (spec 38), acciones masivas en la barra inferior (spec 37), exportación e impresión alineadas a la grilla, vista rápida lateral."
       />
-      <div className="mb-6 max-w-5xl">
+      <div className="mb-6 max-w-5xl space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/vulnerabilidads/import"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.06] px-3 text-sm font-medium text-foreground hover:bg-white/[0.1]"
+          >
+            Asistente de importación (3 pasos)
+          </Link>
+        </div>
         <VulnerabilidadBulkImportCard />
       </div>
       {flujoLoading && <p className="text-xs text-muted-foreground">Cargando catálogo de estatus…</p>}

@@ -60,6 +60,7 @@ def import_all_orm() -> None:
     import app.models.historico_scoring_mensual
     import app.models.hito_iniciativa
     import app.models.indicador_formula
+    import app.models.indicador_valor_manual
     import app.models.iniciativa
     import app.models.kanban_column
     import app.models.notificacion

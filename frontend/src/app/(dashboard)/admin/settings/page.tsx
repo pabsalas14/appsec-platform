@@ -48,6 +48,7 @@ const OPERACION_KEYS = new Set([
 const CATEGORY_LABEL: Record<string, string> = {
   app: 'Plataforma',
   features: 'Funcionalidad',
+  sla: 'SLA vulnerabilidades',
   catalogo: 'Catálogos',
   flujo: 'Flujos de liberación',
   kanban: 'Kanban',
@@ -62,6 +63,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 const CATEGORY_ORDER = [
   'app',
   'features',
+  'sla',
   'catalogo',
   'flujo',
   'kanban',
@@ -72,6 +74,128 @@ const CATEGORY_ORDER = [
   'reporte',
   'otros',
 ];
+
+const SLA_POR_MOTOR_SEVERIDADES = ['critica', 'alta', 'media', 'baja'] as const;
+
+function SlaPorMotorGridEditor({
+  jsonText,
+  onJsonChange,
+}: {
+  jsonText: string;
+  onJsonChange: (next: string) => void;
+}) {
+  const [newMotor, setNewMotor] = useState('');
+  let grid: Record<string, Record<string, number>>;
+  try {
+    const raw = JSON.parse(jsonText || '{}');
+    grid = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, Record<string, number>>) : {};
+  } catch {
+    return (
+      <p className="text-sm text-destructive">
+        JSON inválido: corrige el texto o restaura el valor original.
+      </p>
+    );
+  }
+
+  const motors = Object.keys(grid).sort((a, b) => a.localeCompare(b));
+
+  const setCell = (motor: string, sev: string, raw: string) => {
+    const nextGrid = { ...grid, [motor]: { ...(grid[motor] ?? {}) } };
+    if (raw.trim() === '') {
+      delete nextGrid[motor][sev];
+      if (Object.keys(nextGrid[motor]).length === 0) delete nextGrid[motor];
+    } else {
+      const n = Number(raw);
+      if (Number.isFinite(n) && n > 0 && n <= 3650) {
+        nextGrid[motor][sev] = Math.floor(n);
+      }
+    }
+    onJsonChange(JSON.stringify(nextGrid, null, 2));
+  };
+
+  const addMotor = (motor: string) => {
+    const m = motor.trim().toUpperCase();
+    if (!m) return;
+    const next = { ...grid, [m]: { critica: 7, alta: 30, media: 60, baja: 90 } };
+    onJsonChange(JSON.stringify(next, null, 2));
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Días de SLA por motor de hallazgo (`fuente`) y severidad. Se aplica al crear o importar
+        vulnerabilidades; tiene prioridad sobre `sla.severidades`.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-white/[0.08]">
+        <table className="w-full min-w-[480px] text-left text-xs">
+          <thead className="bg-muted/40">
+            <tr>
+              <th className="p-2 font-medium">Motor</th>
+              {SLA_POR_MOTOR_SEVERIDADES.map((s) => (
+                <th key={s} className="p-2 font-medium capitalize">
+                  {s}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {motors.map((motor) => (
+              <tr key={motor} className="border-t border-white/[0.06]">
+                <td className="p-2 font-mono font-medium">{motor}</td>
+                {SLA_POR_MOTOR_SEVERIDADES.map((sev) => (
+                  <td key={sev} className="p-1">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={3650}
+                      className="h-8 border-white/[0.08] bg-background/80 font-mono text-xs"
+                      value={grid[motor]?.[sev] ?? ''}
+                      onChange={(e) => setCell(motor, sev, e.target.value)}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-wrap items-end gap-2">
+        <Input
+          placeholder="Nuevo motor (ej. SAST)"
+          className="max-w-xs border-white/[0.08] bg-background/80"
+          value={newMotor}
+          onChange={(e) => setNewMotor(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            addMotor(newMotor);
+            setNewMotor('');
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="border-white/[0.12]"
+          onClick={() => {
+            addMotor(newMotor);
+            setNewMotor('');
+          }}
+        >
+          Añadir motor
+        </Button>
+      </div>
+      <details className="text-xs text-muted-foreground">
+        <summary className="cursor-pointer select-none">Editor JSON crudo</summary>
+        <textarea
+          className="mt-2 min-h-[100px] w-full rounded-lg border border-white/[0.08] bg-background/80 px-3 py-2 font-mono leading-relaxed shadow-inner"
+          value={jsonText}
+          onChange={(e) => onJsonChange(e.target.value)}
+          spellCheck={false}
+        />
+      </details>
+    </div>
+  );
+}
 
 function categoryFromKey(key: string): string {
   const i = key.indexOf('.');
@@ -98,6 +222,11 @@ function sortCategories(cats: string[]): string[] {
 }
 
 function renderEditor(setting: SystemSetting, value: unknown, onChange: (v: unknown) => void) {
+  if (setting.key === 'sla.por_motor' && typeof value === 'string') {
+    return (
+      <SlaPorMotorGridEditor jsonText={value} onJsonChange={(next) => onChange(next)} />
+    );
+  }
   if (
     (setting.value !== null && typeof setting.value === 'object') ||
     (typeof value === 'string' && (value.trim().startsWith('{') || value.trim().startsWith('[')))

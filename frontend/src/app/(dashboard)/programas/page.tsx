@@ -67,7 +67,8 @@ const LINKS: {
   {
     href: '/ejecucion_masts',
     title: 'Ejecuciones MAST / móvil',
-    description: 'Historial de pruebas móviles asociadas a aplicaciones.',
+    description:
+      'Captura operativa mes a mes (no programa anual): pruebas móviles e historial por aplicación; consolidar KPIs en Indicadores.',
     icon: Smartphone,
   },
 ];
@@ -77,7 +78,7 @@ export default function ProgramasHubPage() {
     <PageWrapper className="space-y-8 p-6">
       <PageHeader
         title="Programas e iniciativas"
-        description="Punto de entrada unificado: programas anuales por motor, iniciativas operativas y tableros de seguimiento (spec §5)."
+        description="Programas anuales por motor (sin MAST), iniciativas, indicadores/ejecuciones MAST mensuales y tableros (spec §5)."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

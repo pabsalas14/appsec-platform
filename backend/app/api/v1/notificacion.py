@@ -1,19 +1,43 @@
 """Notificacion CRUD endpoints — in-app (G2)."""
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db, require_backoffice, require_permission
+from app.api.deps import get_current_user, get_db, require_backoffice, require_permission
 from app.api.deps_ownership import require_ownership
 from app.core.permissions import P
 from app.core.response import success
 from app.models.notificacion import Notificacion
 from app.models.user import User
+from app.schemas.notification_preferences import (
+    NotificationPreferencesPatch,
+    merge_prefs_patch,
+    read_prefs_from_user,
+)
 from app.schemas.notificacion import NotificacionCreate, NotificacionRead, NotificacionUpdate
 from app.services.notificacion_service import marcar_todas_leidas_for_user, notificacion_svc
 from app.services.notification_rules_runner import run_all_notification_rules
 
 router = APIRouter()
+
+
+@router.get("/preferences/me")
+async def get_notification_preferences_me(current_user: User = Depends(get_current_user)):
+    return success(read_prefs_from_user(current_user.preferences).model_dump())
+
+
+@router.patch("/preferences/me")
+async def patch_notification_preferences_me(
+    body: NotificationPreferencesPatch,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    row = await db.execute(select(User).where(User.id == current_user.id))
+    u = row.scalar_one()
+    u.preferences = merge_prefs_patch(u.preferences if isinstance(u.preferences, dict) else None, body)
+    await db.flush()
+    return success(read_prefs_from_user(u.preferences).model_dump())
 
 
 @router.get("")

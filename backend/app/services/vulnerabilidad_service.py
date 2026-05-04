@@ -13,6 +13,7 @@ from app.schemas.vulnerabilidad import VulnerabilidadCreate, VulnerabilidadUpdat
 from app.services.base import BaseService
 from app.services.json_setting import get_json_setting
 from app.services.sla_policy import compute_deadline, resolve_sla_days, status_disables_sla
+from app.services.flujo_estatus_runtime import assert_flujo_estatus_db_transition
 from app.services.vulnerabilidad_flujo import (
     assert_transicion_permitida,
     estados_activa_clasificacion,
@@ -82,6 +83,13 @@ class VulnerabilidadService(BaseService[Vulnerabilidad, VulnerabilidadCreate, Vu
                 assert_transicion_permitida(catalog, str(prev), str(nxt))
             except ValueError as e:
                 raise ValidationException(str(e)) from e
+            await assert_flujo_estatus_db_transition(
+                db,
+                user_id=record.user_id,
+                entity_type="vulnerabilidad",
+                from_status=str(prev),
+                to_status=str(nxt),
+            )
             changes["estado"] = nxt
 
         next_estado = str(changes.get("estado", record.estado))

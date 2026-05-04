@@ -60,6 +60,16 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        /** Tableros «dark ops» — variables en globals.css (ADR-0018) */
+        dashboard: {
+          canvas: 'hsl(var(--dashboard-canvas) / <alpha-value>)',
+          surface: 'hsl(var(--dashboard-surface) / <alpha-value>)',
+          elevated: 'hsl(var(--dashboard-elevated) / <alpha-value>)',
+          border: 'hsl(var(--dashboard-border) / <alpha-value>)',
+          accent: 'hsl(var(--dashboard-accent) / <alpha-value>)',
+          muted: 'hsl(var(--dashboard-muted) / <alpha-value>)',
+          onStrong: 'hsl(var(--dashboard-on-strong) / <alpha-value>)',
+        },
         // Legacy dark palette (kept for backward compat during migration)
         dark: {
           DEFAULT: '#0f0f23',

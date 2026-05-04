@@ -15,7 +15,7 @@ from app.models.organizacion import Organizacion
 from app.models.repositorio import Repositorio
 from app.models.subdireccion import Subdireccion
 from app.models.vulnerabilidad import Vulnerabilidad
-from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
+from app.services.vulnerability_scope import VULNERABILITY_MOTOR_CODES, vulnerabilidad_en_celulas_o_repo
 
 
 def _hfd(
@@ -115,7 +115,7 @@ async def build_vulnerabilities_org_dashboard(
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
     engine_data = []
-    for m in ["SAST", "SCA", "CDS", "DAST", "MDA", "MAST"]:
+    for m in VULNERABILITY_MOTOR_CODES:
         actual = await _n(db, scope, [*extra_filters, Vulnerabilidad.fuente == m, Vulnerabilidad.estado != "Cerrada"])
         anterior = await _n(db, scope, [*extra_filters, Vulnerabilidad.fuente == m, Vulnerabilidad.created_at < this_month_start, Vulnerabilidad.estado != "Cerrada"])
         nuevas = await _n(db, scope, [*extra_filters, Vulnerabilidad.fuente == m, Vulnerabilidad.created_at >= this_month_start])

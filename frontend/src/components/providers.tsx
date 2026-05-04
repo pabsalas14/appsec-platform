@@ -1,12 +1,12 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { ReactNode, useEffect, useState } from 'react';
 
 import { ErrorBoundary } from '@/components/error-boundary';
+import { ReactQueryDevtoolsLazy } from '@/components/ReactQueryDevtoolsLazy';
 import { logger } from '@/lib/logger';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -63,7 +63,9 @@ export function Providers({ children }: { children: ReactNode }) {
               },
             }}
           />
-          <ReactQueryDevtools initialIsOpen={false} />
+          {process.env.NODE_ENV === 'development' ? (
+            <ReactQueryDevtoolsLazy initialIsOpen={false} />
+          ) : null}
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>

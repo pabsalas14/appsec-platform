@@ -30,3 +30,6 @@ New decisions MUST:
 | [0015](0015-password-policy-and-cookie-tuning.md) | Password policy, cookie tuning and edge rate-limit | accepted |
 | [0016](0016-no-code-builder-scope-brd.md) | No-Code builder scope (P04) bounded to BRD entity types | accepted |
 | [0017](0017-appsec-spec-ux-criteria.md) | AppSec modules spec — measurable UX criteria (P01–P24) | accepted |
+| [0018](0018-dashboard-dark-ops-visual-contract.md) | Dashboard «dark ops» visual contract (CSS tokens + charts) | accepted |
+| [0019](0019-app-wide-dashboard-shell-tokens.md) | App-wide shell: PageWrapper/PageHeader usan tokens dashboard | accepted |
+| [0020](0020-sidebar-navigation-eleven-sections.md) | Sidebar 11 secciones (dashboard + registros por módulo) | accepted |

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +8,7 @@ import {
   Activity,
   AlertCircle,
   ChevronRight,
+  Smartphone,
   Target,
   TrendingUp,
   X,
@@ -24,13 +26,21 @@ import {
 
 import { apiClient } from '@/lib/api';
 import { logger } from '@/lib/logger';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { GaugeChart, HistoricoMensualGrid } from '@/components/charts';
 import { cn } from '@/lib/utils';
+
+const GaugeChart = dynamic(
+  () => import('@/components/charts/GaugeChart').then((m) => m.GaugeChart),
+  { ssr: false, loading: () => <Skeleton className="h-44 w-full rounded-lg" /> },
+);
+const HistoricoMensualGrid = dynamic(
+  () => import('@/components/charts/HistoricoMensualGrid').then((m) => m.HistoricoMensualGrid),
+  { ssr: false, loading: () => <Skeleton className="h-56 w-full rounded-lg" /> },
+);
 
 interface ProgramBreakdown {
   program: string;
@@ -57,7 +67,8 @@ interface HeatmapResponse {
   heatmap: Record<string, HeatmapEntry[]>;
 }
 
-const PROGRAM_TYPES = ['SAST', 'DAST', 'SCA', 'CDS', 'MDA', 'MAST'];
+/** Programación anual por motor (MAST queda fuera: indicadores + ejecuciones mensuales). */
+const PROGRAM_TYPES = ['SAST', 'DAST', 'SCA', 'CDS', 'MDA'];
 
 const PROGRAM_LABELS: Record<string, string> = {
   SAST: 'Seguridad en Aplicaciones (SAST)',
@@ -65,7 +76,6 @@ const PROGRAM_LABELS: Record<string, string> = {
   SCA: 'Análisis de Composición (SCA)',
   CDS: 'Defensa de Código (CDS)',
   MDA: 'Análisis Móvil (MDA)',
-  MAST: 'Pruebas Móviles (MAST)',
 };
 
 const PROGRAM_COLORS: Record<string, string> = {
@@ -74,7 +84,6 @@ const PROGRAM_COLORS: Record<string, string> = {
   SCA: '#a855f7',
   CDS: '#10b981',
   MDA: '#f59e0b',
-  MAST: '#ec4899',
 };
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -86,7 +95,6 @@ const PROGRAM_CRUD_ROUTES: Record<string, string> = {
   SCA: '/programa_source_codes',
   CDS: '/programa_source_codes',
   MDA: '/programa_source_codes',
-  MAST: '/ejecucion_masts',
 };
 
 function getStatusLabel(pct: number): { label: string; cls: string } {
@@ -355,7 +363,8 @@ export default function ProgramsDashboardPage() {
             Dashboard de Programas Anuales
           </h1>
           <p className="text-xs text-muted-foreground">
-            Avance y desempeño de los programas de ciberseguridad por motor.
+            Avance anual por motor (SAST…MDA). MAST no es programa anual: usar Indicadores y Ejecuciones móviles; los
+            hallazgos MAST siguen en los tableros de vulnerabilidades.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -376,11 +385,59 @@ export default function ProgramsDashboardPage() {
         </div>
       </div>
 
+      <Card className="border-dashboard-border bg-dashboard-surface/90">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-primary shrink-0" />
+            MAST (móvil) — operación mensual
+          </CardTitle>
+          <CardDescription className="text-xs leading-relaxed">
+            No forma parte del ciclo de programas anuales. Captura KPIs mes a mes en{' '}
+            <Link href="/indicadores" className="font-medium text-primary underline-offset-4 hover:underline">
+              Indicadores
+            </Link>
+            , registra ejecuciones en{' '}
+            <Link href="/ejecucion_masts" className="font-medium text-primary underline-offset-4 hover:underline">
+              Ejecuciones MAST
+            </Link>
+            . Si cargas hallazgos con fuente MAST, aparecen en{' '}
+            <Link href="/dashboards/vulnerabilities" className="font-medium text-primary underline-offset-4 hover:underline">
+              Dashboard de vulnerabilidades
+            </Link>{' '}
+            y en{' '}
+            <Link href="/vulnerabilidads/registros?fuente=MAST" className="font-medium text-primary underline-offset-4 hover:underline">
+              Registros filtrados por MAST
+            </Link>
+            .
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2 pt-0">
+          <Link
+            href="/indicadores"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
+          >
+            Indicadores
+          </Link>
+          <Link
+            href="/ejecucion_masts"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
+          >
+            Ejecuciones MAST
+          </Link>
+          <Link
+            href="/vulnerabilidads/registros?fuente=MAST"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-dashboard-border bg-transparent px-3 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
+          >
+            Hallazgos MAST
+          </Link>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 grid-cols-1">
         <div className="space-y-4 min-w-0">
           {isLoading ? (
             <div data-testid="d3-program-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-56" />
               ))}
             </div>

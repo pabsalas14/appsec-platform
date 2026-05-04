@@ -362,6 +362,218 @@ HERRAMIENTAS_SEEDS = [
 ]
 
 
+def _motor_specific_indicadores() -> list[dict]:
+    """30 KPIs (5 x 6 motores) alineados a mockup 01_indicadores / Dashboard de Indicadores."""
+    motors = ["SAST", "DAST", "SCA", "CDS", "MDA", "MAST"]
+    closed_states = [
+        "Cerrada",
+        "Remediada",
+        "Cerrado",
+        "Remediada / Verificada",
+        "Falso positivo",
+    ]
+    open_states = ["Abierta", "Activa", "Nueva", "En análisis", "Pendiente", "Asignada"]
+    rows: list[dict] = []
+    for m in motors:
+
+        def F(*extra_filters: dict, _motor: str = m) -> list[dict]:
+            return [{"field": "fuente", "value": _motor}, *list(extra_filters)]
+
+        rows.append(
+            {
+                "code": f"{m}-001",
+                "nombre": f"{m} — # Altas/Críticas identificadas (vulnerabilidades)",
+                "motor": m,
+                "formula": {
+                    "type": "aggregate",
+                    "aggregation": "sum",
+                    "items": [
+                        {
+                            "type": "count",
+                            "entity": "vulnerabilidad",
+                            "filters": F({"field": "severidad", "value": "Critica"}),
+                        },
+                        {
+                            "type": "count",
+                            "entity": "vulnerabilidad",
+                            "filters": F({"field": "severidad", "value": "Alta"}),
+                        },
+                    ],
+                },
+                "sla_config": {"CRITICA": 7, "ALTA": 30, "MEDIA": 60, "BAJA": 90},
+                "threshold_green": 5.0,
+                "threshold_yellow": 12.0,
+                "threshold_red": 20.0,
+                "periodicidad": "monthly",
+            },
+        )
+        nombre_001b = (
+            f"{m} — # Amenazas Altas/Críticas mitigadas (proxy acum.)"
+            if m == "MDA"
+            else f"{m} — # Altas/Críticas remediadas en el mes (proxy acum.)"
+        )
+        rows.append(
+            {
+                "code": f"{m}-001b",
+                "nombre": nombre_001b,
+                "motor": m,
+                "formula": {
+                    "type": "count",
+                    "entity": "vulnerabilidad",
+                    "filters": F({"field": "estado", "op": "in", "value": closed_states}),
+                },
+                "threshold_green": 1.0,
+                "threshold_yellow": 10.0,
+                "threshold_red": 40.0,
+                "periodicidad": "monthly",
+            },
+        )
+        rows.append(
+            {
+                "code": f"{m}-002",
+                "nombre": f"{m} — % remediados sobre total",
+                "motor": m,
+                "formula": {
+                    "type": "ratio",
+                    "scale": 100.0,
+                    "numerator": {
+                        "type": "count",
+                        "entity": "vulnerabilidad",
+                        "filters": F({"field": "estado", "op": "in", "value": closed_states}),
+                    },
+                    "denominator": {"type": "count", "entity": "vulnerabilidad", "filters": F()},
+                    "semantics": {"higher_is_better": True},
+                },
+                "threshold_green": 80.0,
+                "threshold_yellow": 50.0,
+                "threshold_red": 30.0,
+                "periodicidad": "monthly",
+            },
+        )
+        rows.append(
+            {
+                "code": f"{m}-003",
+                "nombre": f"{m} — Backlog activo (estados abiertos)",
+                "motor": m,
+                "formula": {
+                    "type": "count",
+                    "entity": "vulnerabilidad",
+                    "filters": F({"field": "estado", "op": "in", "value": open_states}),
+                },
+                "threshold_green": 8.0,
+                "threshold_yellow": 20.0,
+                "threshold_red": 50.0,
+                "periodicidad": "monthly",
+            },
+        )
+        rows.append(
+            {
+                "code": f"{m}-004",
+                "nombre": f"{m} — % con SLA vencido",
+                "motor": m,
+                "formula": {
+                    "type": "ratio",
+                    "scale": 100.0,
+                    "numerator": {
+                        "type": "count",
+                        "entity": "vulnerabilidad",
+                        "filters": F({"field": "sla", "value": "vencido"}),
+                    },
+                    "denominator": {"type": "count", "entity": "vulnerabilidad", "filters": F()},
+                },
+                "threshold_green": 2.0,
+                "threshold_yellow": 8.0,
+                "threshold_red": 20.0,
+                "periodicidad": "monthly",
+            },
+        )
+    return rows
+
+
+def _pipeline_ci_cd_indicadores() -> list[dict]:
+    """KPIs de pipeline (spec: total / aprobados / rechazados / % aprobación) + desglose SAST/DAST."""
+    pr = "pipeline_release"
+    base_thresh_runs = {"threshold_green": None, "threshold_yellow": None, "threshold_red": None}
+    return [
+        {
+            "code": "PIPE-TOTAL",
+            "nombre": "Pipeline CI/CD — total escaneos",
+            "motor": "pipeline",
+            "formula": {"type": "count", "entity": pr, "filters": []},
+            **base_thresh_runs,
+            "periodicidad": "monthly",
+        },
+        {
+            "code": "PIPE-APROB",
+            "nombre": "Pipeline CI/CD — escaneos exitosos",
+            "motor": "pipeline",
+            "formula": {"type": "count", "entity": pr, "filters": [{"field": "resultado", "value": "Exitoso"}]},
+            **base_thresh_runs,
+            "periodicidad": "monthly",
+        },
+        {
+            "code": "PIPE-RECH",
+            "nombre": "Pipeline CI/CD — escaneos fallidos o cancelados",
+            "motor": "pipeline",
+            "formula": {
+                "type": "count",
+                "entity": pr,
+                "filters": [{"field": "resultado", "op": "in", "value": ["Fallido", "Cancelado"]}],
+            },
+            **base_thresh_runs,
+            "periodicidad": "monthly",
+        },
+        {
+            "code": "PIPE-PCT-OK",
+            "nombre": "Pipeline CI/CD — % aprobación (exitosos / total)",
+            "motor": "pipeline",
+            "formula": {
+                "type": "ratio",
+                "scale": 100.0,
+                "numerator": {"type": "count", "entity": pr, "filters": [{"field": "resultado", "value": "Exitoso"}]},
+                "denominator": {"type": "count", "entity": pr, "filters": []},
+                "semantics": {"higher_is_better": True},
+            },
+            "threshold_green": 85.0,
+            "threshold_yellow": 60.0,
+            "threshold_red": 40.0,
+            "periodicidad": "monthly",
+        },
+        {
+            "code": "PIPE-SAST-TOTAL",
+            "nombre": "Pipeline SAST — total escaneos",
+            "motor": "pipeline",
+            "formula": {"type": "count", "entity": pr, "filters": [{"field": "tipo", "value": "SAST"}]},
+            **base_thresh_runs,
+            "periodicidad": "monthly",
+        },
+        {
+            "code": "PIPE-DAST-TOTAL",
+            "nombre": "Pipeline DAST — total escaneos",
+            "motor": "pipeline",
+            "formula": {"type": "count", "entity": pr, "filters": [{"field": "tipo", "value": "DAST"}]},
+            **base_thresh_runs,
+            "periodicidad": "monthly",
+        },
+    ]
+
+
+def _fp_manual_indicador() -> list[dict]:
+    """% falsos positivos — valor por defecto 0; captura mensual en Tab 2."""
+    return [
+        {
+            "code": "FP-PCT-MANUAL",
+            "nombre": "% Falsos positivos (captura manual — Tab 2)",
+            "motor": "manual",
+            "formula": {"type": "constant", "value": 0.0},
+            "threshold_green": 5.0,
+            "threshold_yellow": 15.0,
+            "threshold_red": 35.0,
+            "periodicidad": "monthly",
+        }
+    ]
+
+
 INDICADOR_FORMULA_SEEDS: list[dict] = [
     {
         "code": "XXX-001",
@@ -383,12 +595,24 @@ INDICADOR_FORMULA_SEEDS: list[dict] = [
     },
     {
         "code": "XXX-001b",
-        "nombre": "Conteo vulnerabilidades con SLA vencido",
+        "nombre": "Hallazgos remediados/cerrados (todas las fuentes, acum.)",
         "motor": "multi",
         "formula": {
             "type": "count",
             "entity": "vulnerabilidad",
-            "filters": [{"field": "sla", "value": "vencido"}],
+            "filters": [
+                {
+                    "field": "estado",
+                    "op": "in",
+                    "value": [
+                        "Cerrada",
+                        "Remediada",
+                        "Cerrado",
+                        "Remediada / Verificada",
+                        "Falso positivo",
+                    ],
+                }
+            ],
         },
         "sla_config": {"DEFAULT": 30},
         "threshold_green": 0.0,
@@ -499,7 +723,7 @@ INDICADOR_FORMULA_SEEDS: list[dict] = [
         "threshold_red": 1.0,
         "periodicidad": "quarterly",
     },
-]
+] + _motor_specific_indicadores() + _pipeline_ci_cd_indicadores() + _fp_manual_indicador()
 
 
 async def _seed_indicadores_formulas(db, admin_id: uuid.UUID) -> None:

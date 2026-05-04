@@ -7,9 +7,11 @@ from io import StringIO
 from uuid import UUID
 
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationException
+from app.models.vulnerabilidad import Vulnerabilidad
 from app.schemas.vulnerabilidad import VulnerabilidadCreate
 from app.services.vulnerabilidad_service import vulnerabilidad_svc
 
@@ -40,6 +42,35 @@ def _count_assets(row: dict[str, str]) -> int:
         if v:
             n += 1
     return n
+
+
+async def _exists_duplicate_row(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    titulo: str,
+    fuente: str,
+    rid: UUID | None,
+    wid: UUID | None,
+    sid: UUID | None,
+    aid: UUID | None,
+) -> bool:
+    """Misma clave lógica que una fila: usuario + título + fuente + activo (4 FKs, incl. nulls)."""
+    q = await db.execute(
+        select(Vulnerabilidad.id)
+        .where(
+            Vulnerabilidad.user_id == user_id,
+            Vulnerabilidad.titulo == titulo,
+            Vulnerabilidad.fuente == fuente,
+            Vulnerabilidad.repositorio_id == rid,
+            Vulnerabilidad.activo_web_id == wid,
+            Vulnerabilidad.servicio_id == sid,
+            Vulnerabilidad.aplicacion_movil_id == aid,
+            Vulnerabilidad.deleted_at.is_(None),
+        )
+        .limit(1)
+    )
+    return q.scalar_one_or_none() is not None
 
 
 def _parse_uuid_cell(val: str | None) -> UUID | None:
@@ -81,7 +112,9 @@ async def import_vulnerabilidades_from_csv(
         raise ValidationException("CSV vacío o sin cabecera")
 
     created = 0
+    skipped_duplicates = 0
     errors: list[str] = []
+    seen_in_file: set[tuple[str, str, str, str, str, str]] = set()
     for i, row in enumerate(reader, start=2):
         line_label = f"fila {i}"
         try:
@@ -128,6 +161,32 @@ async def import_vulnerabilidades_from_csv(
 
             resp = _parse_uuid_cell(row.get("responsable_id"))
 
+            fkey = (
+                titulo,
+                fuente,
+                str(rid) if rid else "",
+                str(wid) if wid else "",
+                str(sid) if sid else "",
+                str(aid) if aid else "",
+            )
+            if fkey in seen_in_file:
+                errors.append(f"{line_label}: duplicado en el archivo (mismo título y activo)")
+                continue
+            seen_in_file.add(fkey)
+
+            if await _exists_duplicate_row(
+                db,
+                user_id=user_id,
+                titulo=titulo,
+                fuente=fuente,
+                rid=rid,
+                wid=wid,
+                sid=sid,
+                aid=aid,
+            ):
+                skipped_duplicates += 1
+                continue
+
             payload = VulnerabilidadCreate(
                 titulo=titulo,
                 descripcion=desc,
@@ -148,4 +207,4 @@ async def import_vulnerabilidades_from_csv(
         except (ValidationError, ValidationException) as e:
             errors.append(f"{line_label}: {e}")
 
-    return {"created": created, "errors": errors}
+    return {"created": created, "skipped_duplicates": skipped_duplicates, "errors": errors}

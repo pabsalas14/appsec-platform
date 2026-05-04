@@ -54,6 +54,19 @@ interface SupportedFunction {
 
 const EMPTY_FORM = { nombre: '', description: '', formula_text: '', enabled: true };
 
+/** Snippets para el builder (contexto de prueba JSON al ejecutar). */
+const FORMULA_BUILDER_CHIPS: { label: string; code: string }[] = [
+  { label: 'percentage(·)', code: 'percentage(closed_vulns, total_vulns)' },
+  { label: 'closed_vulns', code: 'closed_vulns' },
+  { label: 'total_vulns', code: 'total_vulns' },
+  { label: 'open_vulns', code: 'open_vulns' },
+  { label: 'if(·)', code: 'if(total_vulns > 0, percentage(closed_vulns, total_vulns), 0)' },
+  { label: '+', code: ' + ' },
+  { label: '*', code: ' * ' },
+  { label: '(', code: '(' },
+  { label: ')', code: ')' },
+];
+
 export default function FormulaAdminPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -156,6 +169,13 @@ export default function FormulaAdminPage() {
     setForm({ nombre: f.nombre, description: f.description || '', formula_text: f.formula_text, enabled: f.enabled });
     setShowForm(true);
     setFormError('');
+  };
+
+  const appendFormulaSnippet = (code: string) => {
+    setForm((p) => ({
+      ...p,
+      formula_text: p.formula_text ? `${p.formula_text}${code}` : code,
+    }));
   };
 
   const openNew = () => {
@@ -354,8 +374,26 @@ export default function FormulaAdminPage() {
                 className="font-mono text-sm"
                 data-testid="formula-text-input"
               />
+              <p className="text-xs font-medium text-muted-foreground mt-2 mb-1.5">
+                Builder (clic para insertar al final del texto)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {FORMULA_BUILDER_CHIPS.map((c) => (
+                  <Button
+                    key={c.label}
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="h-7 font-mono text-[11px]"
+                    onClick={() => appendFormulaSnippet(c.code)}
+                  >
+                    {c.label}
+                  </Button>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Usa las funciones disponibles (ver &quot;Ver funciones&quot; arriba).
+                Usa las funciones disponibles (ver &quot;Ver funciones&quot; arriba). Prueba con JSON de contexto en
+                &quot;Probar&quot;.
               </p>
             </div>
             <div className="flex items-center gap-2">

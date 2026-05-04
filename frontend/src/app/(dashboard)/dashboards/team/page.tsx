@@ -113,7 +113,7 @@ export default function TeamDashboardPremium() {
                 📅 Reporte Actual <ChevronDown className="w-4 h-4 ml-2" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-[#0f172a] border-white/[0.08] text-white">
+            <DropdownMenuContent align="end" className="w-48 border border-border bg-popover text-popover-foreground">
               <DropdownMenuItem className="cursor-pointer">Reporte Actual</DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">Mes Pasado</DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">Q1 2026</DropdownMenuItem>

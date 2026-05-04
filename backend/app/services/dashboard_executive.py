@@ -16,7 +16,11 @@ from app.models.repositorio import Repositorio
 from app.models.service_release import ServiceRelease
 from app.models.tema_emergente import TemaEmergente
 from app.models.vulnerabilidad import Vulnerabilidad
-from app.services.vulnerability_scope import FIVE_MOTORS, vulnerabilidad_en_celulas_o_repo
+from app.services.vulnerability_scope import (
+    ANNUAL_PROGRAM_MOTORS,
+    VULNERABILITY_MOTOR_CODES,
+    vulnerabilidad_en_celulas_o_repo,
+)
 
 
 def _hierarchy_dict(
@@ -86,9 +90,9 @@ async def build_executive_dashboard(
     now = datetime.now(UTC)
     tm = max(1, min(trend_months, 18))
 
-    # --- Programas: avance medio (cerradas / total) en motores V2 ---
+    # --- Programas anuales: avance medio (cerradas / total); MAST excluido (captura mensual / indicadores).
     progs: list[int] = []
-    for motor in FIVE_MOTORS:
+    for motor in ANNUAL_PROGRAM_MOTORS:
         tot = int(
             (
                 await db.execute(
@@ -262,9 +266,9 @@ async def build_executive_dashboard(
     tr = (await db.execute(sub_top)).all()
     top_repos = [{"label": n, "value": int(c or 0), "color": "#ef4444"} for n, c in tr]
 
-    # Críticos por motor (KPI sub)
+    # Críticos por motor (KPI sub) — incluye MAST para tableros de vulnerabilidades.
     by_fuente: list[dict] = []
-    for m in FIVE_MOTORS:
+    for m in VULNERABILITY_MOTOR_CODES:
         n = int(
             (
                 await db.execute(
@@ -517,7 +521,7 @@ async def get_executive_drilldown(
         return {"tipo": "vulnerabilidades", "items": items, "total": len(items), "filtro": fv, "valor": vv}
 
     if t == "programas":
-        items = [{"motor": m, "estado": "activo"} for m in FIVE_MOTORS]
+        items = [{"motor": m, "estado": "activo"} for m in ANNUAL_PROGRAM_MOTORS]
         return {"tipo": "programas", "items": items, "total": len(items), "filtro": fv, "valor": vv}
 
     if t == "auditorias":

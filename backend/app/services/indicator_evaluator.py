@@ -12,6 +12,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from app.models.control_seguridad import ControlSeguridad
 from app.models.hallazgo_sast import HallazgoSast
+from app.models.pipeline_release import PipelineRelease
 from app.models.service_release import ServiceRelease
 from app.models.vulnerabilidad import Vulnerabilidad
 
@@ -40,7 +41,10 @@ def _apply_filters(model_col: dict[str, InstrumentedAttribute], filters: list[di
         col = model_col[field]
         if op in ("in", "in_list") and isinstance(value, (list, tuple)) and value:
             vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
-            stmt = stmt.where(col.in_(vals))
+            if field == "resultado":
+                stmt = stmt.where(func.lower(col).in_([str(v).lower() for v in vals]))
+            else:
+                stmt = stmt.where(col.in_(vals))
             continue
         if op in ("not_in", "not_in_list") and isinstance(value, (list, tuple)) and value:
             vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
@@ -60,7 +64,7 @@ def _apply_filters(model_col: dict[str, InstrumentedAttribute], filters: list[di
             vals = [_norm_sev(str(x)) for x in value] if field == "severidad" else [str(x) for x in value]
             stmt = stmt.where(col.in_(vals))
             continue
-        if field in ("severidad", "estado", "fuente"):
+        if field in ("severidad", "estado", "fuente", "tipo", "resultado"):
             val = _norm_sev(value) if field == "severidad" else value
             stmt = stmt.where(func.lower(col) == str(val).lower())
         else:
@@ -134,6 +138,22 @@ async def _count_entity(
         )
         return float((await db.execute(stmt)).scalar_one())
 
+    if entity in ("pipeline_release", "pipeline"):
+        model_col = {
+            "tipo": PipelineRelease.tipo,
+            "resultado": PipelineRelease.resultado,
+        }
+        stmt = (
+            select(func.count())
+            .select_from(PipelineRelease)
+            .where(
+                PipelineRelease.user_id == user_id,
+                PipelineRelease.deleted_at.is_(None),
+            )
+        )
+        stmt = _apply_filters(model_col, filters or [], stmt)
+        return float((await db.execute(stmt)).scalar_one())
+
     if entity in ("control_seguridad", "control", "controles"):
         model_col = {
             "tipo": ControlSeguridad.tipo,
@@ -177,6 +197,12 @@ async def evaluate_formula(
         raise IndicatorEvaluationError("La fórmula debe ser un objeto JSON")
 
     ftype = formula.get("type")
+    if ftype == "constant":
+        try:
+            return float(formula.get("value", 0))
+        except (TypeError, ValueError) as e:
+            raise IndicatorEvaluationError("constant.value debe ser numérico") from e
+
     if ftype in (None, "count"):
         entity = formula.get("entity", "vulnerabilidad")
         return await _count_entity(db, user_id=user_id, entity=entity, filters=formula.get("filters"))

@@ -70,8 +70,8 @@ DEFAULT_SETTINGS: list[dict] = [
     # ── 1. Tipos de programas anuales ─────────────────────────────────────────
     {
         "key": "catalogo.tipos_programa",
-        "value": ["SAST", "DAST", "SCA", "Threat Modeling", "MAST", "Source Code Security", "Servicios Regulados"],
-        "description": "Tipos de programas anuales disponibles. Editable vía admin.",
+        "value": ["SAST", "DAST", "SCA", "Threat Modeling", "Source Code Security", "Servicios Regulados"],
+        "description": "Tipos de programas anuales (sin MAST: MAST es captura mensual / indicadores + hallazgos en tableros de vulnerabilidades). Editable vía admin.",
     },
     # ── 2. Estatus de vulnerabilidades (D1) ───────────────────────────────────
     {
@@ -223,18 +223,18 @@ DEFAULT_SETTINGS: list[dict] = [
     {
         "key": "sla.por_motor",
         "value": {
-            "SAST": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
-            "DAST": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
-            "SCA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
-            "CDS": {"critica": 7, "alta": 7, "media": 30, "baja": 60},
-            "MDA": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
-            "TM": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
-            "ThreatModeling": {"critica": 60, "alta": 60, "media": 90, "baja": 120},
+            "SAST": {"critica": 7, "alta": 15, "media": 30, "baja": 60},
+            "DAST": {"critica": 15, "alta": 30, "media": 45, "baja": 90},
+            "SCA": {"critica": 14, "alta": 30, "media": 60, "baja": 120},
+            "CDS": {"critica": 10, "alta": 21, "media": 45, "baja": 90},
+            "MDA": {"critica": 14, "alta": 30, "media": 60, "baja": 120},
+            "TM": {"critica": 21, "alta": 45, "media": 90, "baja": 120},
+            "ThreatModeling": {"critica": 21, "alta": 45, "media": 90, "baja": 120},
             "MAST": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
             "Auditoria": {"critica": 7, "alta": 30, "media": 90, "baja": 180},
-            "Terceros": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
+            "Tercero": {"critica": 7, "alta": 30, "media": 60, "baja": 90},
         },
-        "description": "SLA en días por motor de hallazgo y severidad. Sobrescribe sla.severidades por motor.",
+        "description": "SLA en días por motor de hallazgo (`fuente`) y severidad. Sobrescribe `sla.severidades` al crear/importar vulnerabilidades.",
     },
     # ── 5. Tipos de auditorías ────────────────────────────────────────────────
     {
