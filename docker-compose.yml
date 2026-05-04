@@ -28,6 +28,9 @@ services:
       dockerfile: Dockerfile
     container_name: framework_backend
     restart: unless-stopped
+    # Linux (Ubuntu servidor): resuelve host.docker.internal → máquina host (p. ej. Ollama fuera de Docker)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,7 +49,10 @@ services:
       CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://localhost,http://localhost:80,http://127.0.0.1,http://127.0.0.1:3000,http://127.0.0.1:80}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:?ADMIN_EMAIL must be set}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set}"
+      # Seed en arranque: solo si RUN_SEED=true en el .env del host (por defecto omitido → false).
+      # Nueva env para el backend: duplica la línea arriba del compose + entrada en .env.example + Settings si aplica.
       RUN_SEED: "${RUN_SEED:-false}"
+      SEED_DEMO_BUSINESS: "${SEED_DEMO_BUSINESS:-false}"
       WEBHOOK_URL: "${WEBHOOK_URL:-}"
       WEBHOOK_TYPE: "${WEBHOOK_TYPE:-slack}"
       SLA_ALERT_DAYS: "${SLA_ALERT_DAYS:-5}"
@@ -94,6 +100,8 @@ services:
       dockerfile: Dockerfile
     container_name: framework_celery
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,6 +1,10 @@
 """
 Dataset demo (BRD) — idempotente: jerarquía org (marcador `Direccion.codigo`), inventario
 y registros por módulo con prefijo «[DEMO]» en títulos clave.
+
+Orquesta el contexto (dirección, célula, repos, activos) y delega en `demo_business_modules`
+la carga densa (programas, actividades, pipeline, vulns). Para ampliar el demo, toca
+sobre todo `demo_business_modules.py` y la lista de imports/llamadas al final de esa rutina.
 """
 
 from __future__ import annotations
@@ -41,6 +45,229 @@ DEMO_AW_NOMBRE = "Portal clientes (staging)"
 DEMO_SVC_NOMBRE = "API Orquestación Pagos"
 DEMO_AM_BUNDLE = "com.appsec.platform.demo.ios"
 DEMO_AM_NOMBRE = "App móvil demo (iOS)"
+
+# Inventario mínimo (bootstrap KPIs) — distinto árbol org que `DEMO-*` para no mezclar datasets.
+OPER_DIRECCION_CODIGO = "SEED-ORG-ROOT"
+OPER_SUB_CODIGO = "SEED-SUB-TEC"
+OPER_ORG_CODIGO = "SEED-ORG-001"
+OPER_CEL_NOMBRE = "Célula por defecto"
+OPER_REPO_NOMBRE = "Repositorio principal"
+OPER_AW_NOMBRE = "Activo web principal"
+OPER_SVC_NOMBRE = "Servicio backend principal"
+OPER_AM_BUNDLE = "com.appsec.seed.bootstrap"
+OPER_AM_NOMBRE = "Aplicación móvil (bootstrap)"
+
+
+async def ensure_operational_inventory_context(db: AsyncSession, admin: User) -> Ctx:
+    """Dirección → … → app móvil **sin** releases de ejemplo, iniciativas ni temas emergentes."""
+    now = datetime.now(UTC)
+    uid = admin.id
+
+    d = (
+        await db.execute(
+            select(Direccion).where(
+                Direccion.user_id == uid,
+                Direccion.codigo == OPER_DIRECCION_CODIGO,
+                Direccion.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if d is None:
+        d = Direccion(
+            id=uuid.uuid4(),
+            user_id=uid,
+            nombre="Dirección corporativa (seed)",
+            codigo=OPER_DIRECCION_CODIGO,
+            descripcion="Jerarquía mínima para programas anuales y pipeline (bootstrap).",
+        )
+        db.add(d)
+        await db.flush()
+
+    sdir = (
+        await db.execute(
+            select(Subdireccion).where(
+                Subdireccion.user_id == uid,
+                Subdireccion.direccion_id == d.id,
+                Subdireccion.codigo == OPER_SUB_CODIGO,
+            )
+        )
+    ).scalar_one_or_none()
+    if sdir is None:
+        sdir = Subdireccion(
+            id=uuid.uuid4(),
+            user_id=uid,
+            direccion_id=d.id,
+            nombre="Subdirección tecnología",
+            codigo=OPER_SUB_CODIGO,
+            descripcion="Subdirección (seed)",
+        )
+        db.add(sdir)
+        await db.flush()
+
+    ger = (
+        await db.execute(
+            select(Gerencia).where(
+                Gerencia.user_id == uid,
+                Gerencia.subdireccion_id == sdir.id,
+                Gerencia.nombre == "Gerencia plataformas",
+            )
+        )
+    ).scalar_one_or_none()
+    if ger is None:
+        ger = Gerencia(
+            id=uuid.uuid4(),
+            user_id=uid,
+            subdireccion_id=sdir.id,
+            nombre="Gerencia plataformas",
+            descripcion="Gerencia (seed)",
+        )
+        db.add(ger)
+        await db.flush()
+
+    org = (
+        await db.execute(
+            select(Organizacion).where(
+                Organizacion.user_id == uid,
+                Organizacion.gerencia_id == ger.id,
+                Organizacion.codigo == OPER_ORG_CODIGO,
+            )
+        )
+    ).scalar_one_or_none()
+    if org is None:
+        org = Organizacion(
+            id=uuid.uuid4(),
+            user_id=uid,
+            gerencia_id=ger.id,
+            nombre="Organización principal",
+            codigo=OPER_ORG_CODIGO,
+            descripcion="Organización con célula y repositorio (bootstrap)",
+            plataforma="GitHub",
+        )
+        db.add(org)
+        await db.flush()
+
+    cel = (
+        await db.execute(
+            select(Celula).where(
+                Celula.user_id == uid,
+                Celula.organizacion_id == org.id,
+                Celula.nombre == OPER_CEL_NOMBRE,
+            )
+        )
+    ).scalar_one_or_none()
+    if cel is None:
+        cel = Celula(
+            id=uuid.uuid4(),
+            user_id=uid,
+            organizacion_id=org.id,
+            nombre=OPER_CEL_NOMBRE,
+            tipo="Squad",
+            descripcion="Célula para inventario y métricas operativas",
+        )
+        db.add(cel)
+        await db.flush()
+
+    repo = (
+        await db.execute(
+            select(Repositorio).where(
+                Repositorio.user_id == uid,
+                Repositorio.celula_id == cel.id,
+                Repositorio.nombre == OPER_REPO_NOMBRE,
+            )
+        )
+    ).scalar_one_or_none()
+    if repo is None:
+        repo = Repositorio(
+            id=uuid.uuid4(),
+            user_id=uid,
+            organizacion_id=org.id,
+            celula_id=cel.id,
+            nombre=OPER_REPO_NOMBRE,
+            url="https://github.com/example-org/default-repo",
+            plataforma="GitHub",
+            rama_default="main",
+        )
+        db.add(repo)
+        await db.flush()
+
+    aw = (
+        await db.execute(
+            select(ActivoWeb).where(
+                ActivoWeb.user_id == uid,
+                ActivoWeb.celula_id == cel.id,
+                ActivoWeb.nombre == OPER_AW_NOMBRE,
+            )
+        )
+    ).scalar_one_or_none()
+    if aw is None:
+        aw = ActivoWeb(
+            id=uuid.uuid4(),
+            user_id=uid,
+            celula_id=cel.id,
+            nombre=OPER_AW_NOMBRE,
+            url="https://app.example.com",
+            ambiente="Staging",
+            tipo="app",
+        )
+        db.add(aw)
+        await db.flush()
+
+    svc = (
+        await db.execute(
+            select(Servicio).where(
+                Servicio.user_id == uid,
+                Servicio.celula_id == cel.id,
+                Servicio.nombre == OPER_SVC_NOMBRE,
+            )
+        )
+    ).scalar_one_or_none()
+    if svc is None:
+        svc = Servicio(
+            id=uuid.uuid4(),
+            user_id=uid,
+            celula_id=cel.id,
+            nombre=OPER_SVC_NOMBRE,
+            descripcion="Servicio para liberaciones y pipeline (bootstrap)",
+            criticidad="Alta",
+        )
+        db.add(svc)
+        await db.flush()
+
+    amov = (
+        await db.execute(
+            select(AplicacionMovil).where(
+                AplicacionMovil.user_id == uid,
+                AplicacionMovil.celula_id == cel.id,
+                AplicacionMovil.bundle_id == OPER_AM_BUNDLE,
+            )
+        )
+    ).scalar_one_or_none()
+    if amov is None:
+        amov = AplicacionMovil(
+            id=uuid.uuid4(),
+            user_id=uid,
+            celula_id=cel.id,
+            nombre=OPER_AM_NOMBRE,
+            plataforma="iOS",
+            bundle_id=OPER_AM_BUNDLE,
+        )
+        db.add(amov)
+        await db.flush()
+
+    logger.info(
+        "seed.operational_inventory.ok",
+        extra={"event": "seed.operational_inventory.ok", "direccion_codigo": OPER_DIRECCION_CODIGO},
+    )
+
+    return Ctx(
+        uid=uid,
+        now=now,
+        cel_id=cel.id,
+        repo_id=repo.id,
+        aw_id=aw.id,
+        svc_id=svc.id,
+        amov_id=amov.id,
+    )
 
 
 async def _ensure_demo_business_context(db: AsyncSession, admin: User) -> Ctx:
@@ -330,7 +557,7 @@ async def seed_demo_business_data(db: AsyncSession, admin: User) -> None:
     ctx = await _ensure_demo_business_context(db, admin)
     await ensure_demo_vulnerabilities(db, admin, ctx)
     vids = await get_demo_vulnerability_ids(db, admin.id)
-    await seed_programas_y_hallazgos(db, admin, ctx, vids)
+    await seed_programas_y_hallazgos(db, admin, ctx, vids, demo=True)
     logger.info(
         "seed.demo_business.ok",
         extra={"event": "seed.demo_business.ok", "direccion_codigo": DEMO_DIRECCION_CODIGO},

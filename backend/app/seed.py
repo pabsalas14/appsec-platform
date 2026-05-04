@@ -8,6 +8,16 @@ Usage:
     python -m app.seed
     make seed                    # admin + catálogos y datos demo
     make seed-admin              # solo usuario admin (o promover por ADMIN_EMAIL)
+
+Extender datos (orden sensible):
+    - Fórmulas de indicador (`_seed_indicadores_formulas`) antes que valores manuales cuyo
+      `code` deba existir como KPI (`_seed_indicador_valores_manuales_demo`).
+    - Por defecto (`SEED_DEMO_BUSINESS=false`): inventario `SEED-*` + programas anuales, actividades
+      mensuales y pipeline — sin registros «demo» ni vulns de ejemplo. Con `SEED_DEMO_BUSINESS=true`:
+      `seed_demo_business_data` (vulnerabilidades [DEMO], OKR, auditorías, etc.).
+    - Nuevos códigos manuales: respetar la constraint en DB (p. ej. uq_indicador_manual_user_code_periodo)
+      y códigos alineados con `INDICADOR_FORMULA_SEEDS` (evitar mezclar "manual" con KPIs calculados
+      bajo el mismo `code` sin criterio de producto).
 """
 
 import asyncio
@@ -30,6 +40,7 @@ from app.models.catalog import Catalog
 from app.models.control_seguridad import ControlSeguridad
 from app.models.herramienta_externa import HerramientaExterna
 from app.models.indicador_formula import IndicadorFormula
+from app.models.indicador_valor_manual import IndicadorValorManual
 from app.models.regla_so_d import ReglaSoD
 from app.models.role import Role
 from app.models.system_setting import SystemSetting
@@ -754,6 +765,37 @@ INDICADOR_FORMULA_SEEDS: list[dict] = [
 ] + _motor_specific_indicadores() + _pipeline_ci_cd_indicadores() + _fp_manual_indicador()
 
 
+async def _seed_indicador_valores_manuales_demo(db, admin_id: uuid.UUID) -> None:
+    """Valores manuales por periodo (Tab 2 / KRI) — idempotente."""
+    rows: list[tuple[str, str, float, str | None]] = [
+        ("FP-PCT-MANUAL", "2026-01", 4.2, "seed demo — ene"),
+        ("FP-PCT-MANUAL", "2026-02", 3.1, "seed demo — feb"),
+        ("FP-PCT-MANUAL", "2026-03", 2.5, "seed demo — mar"),
+    ]
+    count = 0
+    for code, periodo, valor, notas in rows:
+        stmt = (
+            pg_insert(IndicadorValorManual)
+            .values(
+                id=uuid.uuid4(),
+                user_id=admin_id,
+                code=code,
+                periodo=periodo,
+                valor=valor,
+                notas=notas,
+            )
+            .on_conflict_do_nothing(constraint="uq_indicador_manual_user_code_periodo")
+        )
+        result = await db.execute(stmt)
+        if result.rowcount:
+            count += 1
+    await db.flush()
+    logger.info(
+        "seed.indicador_valor_manual",
+        extra={"event": "seed.indicador_valor_manual", "new_count": count},
+    )
+
+
 async def _seed_indicadores_formulas(db, admin_id: uuid.UUID) -> None:
     count = 0
     for row in INDICADOR_FORMULA_SEEDS:
@@ -888,6 +930,7 @@ async def _seed_kanban_columns(db) -> None:
 
 # ─── Catalogs (dynamic enums) ────────────────────────────────────────────────────
 
+# Tipos definidos en este seed — mantener alineado con `tests/test_seed_masivos.py` y GET `/catalogs/{type}`.
 CATALOG_SEEDS = [
     {
         "type": "severidades",
@@ -993,6 +1036,8 @@ CATALOG_SEEDS = [
     },
 ]
 
+CATALOG_SEED_TYPES = tuple(c["type"] for c in CATALOG_SEEDS)
+
 
 async def _seed_catalogs(db) -> None:
     """Seed dynamic catalogs if they don't exist."""
@@ -1024,8 +1069,16 @@ async def run_seed(db: AsyncSession) -> None:
     """Ejecuta inserts idempotentes sobre ``db`` (misma transacción que el caller).
 
     Usar desde tests con el engine de pytest; ``seed()`` delega aquí con ``async_session``.
+
+    Orden: catálogos base → indicadores (fórmulas → valores manuales bootstrap) → Kanban/catálogos
+    dinámicos → inventario + programas/pipeline (operacional por defecto, o dataset [DEMO] si
+    ``SEED_DEMO_BUSINESS``). Cambiar el orden puede romper FKs o códigos de indicador.
     """
-    from app.seeds.demo_business_seed import seed_demo_business_data
+    from app.seeds.demo_business_modules import seed_programas_y_hallazgos
+    from app.seeds.demo_business_seed import (
+        ensure_operational_inventory_context,
+        seed_demo_business_data,
+    )
     from app.seeds.navigation_seed import seed_navigation
     from app.seeds.nocode_defaults_seed import seed_nocode_defaults
 
@@ -1037,9 +1090,14 @@ async def run_seed(db: AsyncSession) -> None:
     await _seed_controles(db, admin.id)
     await _seed_herramientas(db, admin.id)
     await _seed_indicadores_formulas(db, admin.id)
+    await _seed_indicador_valores_manuales_demo(db, admin.id)
     await _seed_kanban_columns(db)  # Dashboard 7: Kanban columns
     await _seed_catalogs(db)  # Phase 6: Dynamic catalogs
-    await seed_demo_business_data(db, admin)
+    if settings.SEED_DEMO_BUSINESS:
+        await seed_demo_business_data(db, admin)
+    else:
+        ctx = await ensure_operational_inventory_context(db, admin)
+        await seed_programas_y_hallazgos(db, admin, ctx, [], demo=False)
     await seed_navigation(db)
     await seed_nocode_defaults(db, admin.id)
 

@@ -28,10 +28,17 @@ Flujo resumido: **Navegador → Nginx (:80) →** `{ /api/* → FastAPI ; /* →
 ```bash
 git clone <url> appsec-platform && cd appsec-platform
 cp .env.example .env   # SECRET_KEY, APPSEC_MASTER_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, …
+# Seed al arrancar: en `docker-compose.yml` el valor por defecto es RUN_SEED=false si no está en `.env`;
+#   `.env.example` trae RUN_SEED=true para desarrollo (el script del contenedor solo ejecuta seed si es la cadena `true`).
+# Con RUN_SEED=true: catálogos dinámicos, fórmulas de indicadores, valores manuales de ejemplo, navegación/no-code por defecto,
+#   inventario mínimo (árbol SEED-*) y programas anuales + actividades mensuales + pipeline (bootstrap operativo).
+# SEED_DEMO_BUSINESS=false (recomendado): sin vulns/OKR/auditorías de juguete con prefijo [DEMO]. Pon SEED_DEMO_BUSINESS=true
+#   solo si quieres el dataset showroom completo (vulns [DEMO], OKR, auditorías, notificaciones de ejemplo, etc.).
+# En producción: RUN_SEED=false y, si hace falta una sola carga, `make seed` o `make seed-admin` según caso.
 make up
 # opcional — usuario admin:
-make seed-admin   # solo admin/promoción por ADMIN_EMAIL (sin datos demo)
-# make seed       # admin + datos demo completos
+make seed-admin   # solo admin/promoción por ADMIN_EMAIL (sin catálogos ni bootstrap de datos)
+# make seed       # mismo pipeline que el seed en runtime; respeta SEED_DEMO_BUSINESS del `.env` del contenedor
 ```
 
 | URL | Uso |
@@ -52,7 +59,7 @@ Compose principal: [`docker-compose.yml`](docker-compose.yml). En desarrollo se 
 |----------|-----|
 | **postgres** | Base de datos persistente (`postgres_data`) |
 | **redis** | Broker/resultados Celery |
-| **backend** | FastAPI; al iniciar ejecuta **`alembic upgrade heads`** y opcionalmente **`python -m app.seed`** si `RUN_SEED=true` |
+| **backend** | FastAPI; al iniciar ejecuta **`alembic upgrade heads`** y opcionalmente **`python -m app.seed`** si `RUN_SEED=true`. El contenido del seed depende de **`SEED_DEMO_BUSINESS`** (ver `.env.example`) |
 | **celery-worker** | Worker para pipeline SCR y jobs |
 | **frontend** | Next.js (en override: `npm run dev` con hot-reload) |
 | **nginx** | Proxy a frontend y API |
@@ -64,7 +71,9 @@ Compose principal: [`docker-compose.yml`](docker-compose.yml). En desarrollo se 
 **Migraciones:** aplicadas en el arranque del contenedor backend (`upgrade heads`). Para ejecutar a mano:  
 `docker compose exec backend alembic upgrade heads`
 
-**Seed:** por defecto no corre; activar `RUN_SEED=true` en `.env` o usar `make seed` (reinicia backend con seed según Makefile).
+**Seed:** Compose usa `RUN_SEED:-false` si no defines la variable; con `.env` copiado desde `.env.example` suele quedar `RUN_SEED=true`. También puedes ejecutar **`make seed`** sin reiniciar el stack. **`SEED_DEMO_BUSINESS`** (inyectada en el servicio `backend`) decide entre bootstrap operativo únicamente (`false`) o dataset adicional `[DEMO]` (`true`). Declara ambas en `.env` y en `docker-compose.yml` → `backend.environment` si añades variables nuevas.
+
+**Servidor Ubuntu (producción / staging):** instala Docker Engine + plugin Compose v2, clona el repo, `cp .env.example .env` y rellena secretos. Ajusta `CORS_ORIGINS` y el `map` CORS en `nginx/nginx.conf` a tu dominio `https://…`. Deja `NEXT_PUBLIC_API_URL` vacío si el front y la API se sirven por el mismo Nginx. `host.docker.internal` queda resuelto vía `extra_hosts` en `docker-compose.yml` (Ollama u otros servicios en el host). En producción: `ENV=prod`, cookies `Secure`, expón solo el puerto `80`/`443` (pon un reverse proxy TLS delante o `listen 443 ssl` en Nginx) y no publiques Redis `6379` hacia internet (firewall o quita el mapeo de puertos en `docker-compose.yml`).
 
 ---
 
@@ -75,8 +84,8 @@ Compose principal: [`docker-compose.yml`](docker-compose.yml). En desarrollo se 
 | `make up` | Stack con override de desarrollo (hot-reload) |
 | `make up-prod` | Stack sin override (imagen backend “cerrada”) |
 | `make down` / `make restart` | Parar / reiniciar |
-| `make seed-admin` | Solo admin (o promoción por `ADMIN_EMAIL`); **no** carga datos demo |
-| `make seed` | Seed completo (admin + catálogos + datos demo) |
+| `make seed-admin` | Solo admin (o promoción por `ADMIN_EMAIL`); no ejecuta el seed de catálogos ni bootstrap |
+| `make seed` | Admin + catálogos + KPIs + bootstrap operativo; el dataset `[DEMO]` solo si `SEED_DEMO_BUSINESS=true` en el entorno del contenedor |
 | `make test` | Pytest **dentro del contenedor backend** — ⚠ trunca tablas de usuario en la BD objetivo; usar BD desechable |
 | `make types` | Regenera `frontend/src/types/api.ts` desde `http://127.0.0.1:8000/openapi.json` |
 | `make clean` | Destructivo: borra volúmenes |

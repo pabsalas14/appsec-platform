@@ -1,7 +1,17 @@
 """
-Registros demo por dominio (BRD) — idempotencia por `user_id` + nombre/título `«[DEMO] …`».
+Registros por dominio (BRD): modo **operacional** (`demo=False`, sin prefijo) o **showcase**
+(`demo=True`, títulos con prefijo `[DEMO]`).
 
-Llamado solo desde `demo_business_seed.seed_demo_business_data`.
+El modo operacional se invoca desde `app.seed.run_seed` cuando `SEED_DEMO_BUSINESS=false`.
+El dataset completo [DEMO] usa `seed_demo_business_data` (`demo=True`).
+
+Añadir filas aquí:
+    - Reutilizar el prefijo global `P = "[DEMO] "` en títulos/nombres únicos por usuario.
+    - Vulnerabilidades: preferir comprobar por título o clave estable, no solo "count >= N", para
+      no bloquear inserciones al re-ejecutar seed.
+    - Actividades mensuales / pipeline: misma idea (idempotencia por periodo+entidad o scan_id).
+    - No sembrar valores manuales de indicador con códigos de KPI puramente calculados; usar
+      `seed.py` + `IndicadorValorManual` y códigos acordes a fórmulas existentes.
 """
 
 from __future__ import annotations
@@ -76,6 +86,32 @@ from app.services.vulnerabilidad_service import vulnerabilidad_svc
 
 P = "[DEMO] "
 
+# Claves compartidas: operacional (sin prefijo) vs demo (fila con row_labels(demo=True) añade P).
+OPER_LABELS: dict[str, str] = {
+    "prog_sast": "Programa SAST 2026",
+    "prog_dast": "Programa DAST 2026",
+    "prog_tm": "Programa TM 2026",
+    "prog_sc": "Programa Source Code 2026",
+    "reg_regulacion": "CNBV KRI",
+    "hall_sast": "SAST — Uso de crypto débil",
+    "hall_dast": "DAST — reflejado en búsqueda",
+    "amenaza": "AMENAZA — suplantación en login",
+    "ctrl_mfa": "Control — MFA en login",
+    "ctrl_branch": "Control — branch protection",
+    "ctrl_reg": "Control — cifrado en tránsito",
+    "mast_hall": "MAST — almacenamiento inseguro",
+    "sr_pipe": "SR con pipeline y etapas",
+    "hpipe_sec": "Pipeline — secret en log",
+    "hpipe_dast": "Pipeline DAST — XSS reflejado",
+}
+
+
+def row_labels(demo: bool) -> dict[str, str]:
+    if not demo:
+        return OPER_LABELS
+    return {k: f"{P}{v}" for k, v in OPER_LABELS.items()}
+
+
 # Revisión tercero (nombre comercial único para idempotencia)
 DEMO_TERCERO_EMPRESA = f"{P}Pentest Demo SA"
 
@@ -116,8 +152,6 @@ async def get_demo_vulnerability_ids(db: AsyncSession, uid: uuid.UUID) -> list[u
 
 
 async def ensure_demo_vulnerabilities(db: AsyncSession, admin: User, ctx: Ctx) -> None:
-    if await _count_demo_vulns(db, admin.id) >= 4:
-        return
     base_extra = {"user_id": admin.id}
     for spec in [
         {
@@ -148,7 +182,29 @@ async def ensure_demo_vulnerabilities(db: AsyncSession, admin: User, ctx: Ctx) -
             "estado": "cerrada",
             "servicio_id": ctx.svc_id,
         },
+        {
+            "titulo": f"{P}Imagen base con paquetes vulnerables (contenedor)",
+            "fuente": "CDS",
+            "severidad": "Media",
+            "estado": "abierta",
+            "repositorio_id": ctx.repo_id,
+        },
+        {
+            "titulo": f"{P}API key en almacenamiento local (móvil)",
+            "fuente": "MDA",
+            "severidad": "Alta",
+            "estado": "en_revision",
+            "aplicacion_movil_id": ctx.amov_id,
+        },
     ]:
+        dup = await db.execute(
+            select(Vulnerabilidad.id).where(
+                Vulnerabilidad.user_id == admin.id,
+                Vulnerabilidad.titulo == spec["titulo"],
+            )
+        )
+        if dup.scalar_one_or_none():
+            continue
         schema = VulnerabilidadCreate(
             titulo=spec["titulo"],
             descripcion="Dataset demo (seed) — ver jerarquía org demo.",
@@ -158,24 +214,183 @@ async def ensure_demo_vulnerabilities(db: AsyncSession, admin: User, ctx: Ctx) -
             repositorio_id=spec.get("repositorio_id"),
             activo_web_id=spec.get("activo_web_id"),
             servicio_id=spec.get("servicio_id"),
+            aplicacion_movil_id=spec.get("aplicacion_movil_id"),
         )
         await vulnerabilidad_svc.create(db, schema, extra=base_extra)
     await db.flush()
 
 
-async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vid: list[uuid.UUID]) -> None:
+async def _ensure_actividades_mensuales_q1(db: AsyncSession, admin: User, lb: dict[str, str]) -> None:
+    """Enero–marzo con datos distintos por mes (histórico en dashboards de programas anuales)."""
+    ano = 2026
+    ps = (
+        await db.execute(
+            select(ProgramaSast).where(
+                ProgramaSast.user_id == admin.id,
+                ProgramaSast.nombre == lb["prog_sast"],
+            )
+        )
+    ).scalar_one_or_none()
+    if ps:
+        for mes in (1, 2):
+            n = await db.scalar(
+                select(func.count())
+                .select_from(ActividadMensualSast)
+                .where(
+                    ActividadMensualSast.programa_sast_id == ps.id,
+                    ActividadMensualSast.mes == mes,
+                    ActividadMensualSast.ano == ano,
+                )
+            )
+            if n:
+                continue
+            db.add(
+                ActividadMensualSast(
+                    id=uuid.uuid4(),
+                    user_id=admin.id,
+                    programa_sast_id=ps.id,
+                    mes=mes,
+                    ano=ano,
+                    total_hallazgos=8 + mes * 2,
+                    criticos=0,
+                    altos=1 + (mes % 2),
+                    medios=3 + mes,
+                    bajos=2,
+                    score=68.0 + mes * 2,
+                    sub_estado="En análisis",
+                )
+            )
+    pd = (
+        await db.execute(
+            select(ProgramaDast).where(
+                ProgramaDast.user_id == admin.id,
+                ProgramaDast.nombre == lb["prog_dast"],
+            )
+        )
+    ).scalar_one_or_none()
+    if pd:
+        for mes in (1, 2):
+            n = await db.scalar(
+                select(func.count())
+                .select_from(ActividadMensualDast)
+                .where(
+                    ActividadMensualDast.programa_dast_id == pd.id,
+                    ActividadMensualDast.mes == mes,
+                    ActividadMensualDast.ano == ano,
+                )
+            )
+            if n:
+                continue
+            db.add(
+                ActividadMensualDast(
+                    id=uuid.uuid4(),
+                    user_id=admin.id,
+                    programa_dast_id=pd.id,
+                    mes=mes,
+                    ano=ano,
+                    total_hallazgos=4 + mes,
+                    criticos=0,
+                    altos=1,
+                    medios=2,
+                    bajos=1 + (mes % 2),
+                    score=72.0 + mes,
+                    sub_estado="Ejecutado",
+                )
+            )
+    psc = (
+        await db.execute(
+            select(ProgramaSourceCode).where(
+                ProgramaSourceCode.user_id == admin.id,
+                ProgramaSourceCode.nombre == lb["prog_sc"],
+            )
+        )
+    ).scalar_one_or_none()
+    if psc:
+        for mes in (1, 2):
+            n = await db.scalar(
+                select(func.count())
+                .select_from(ActividadMensualSourceCode)
+                .where(
+                    ActividadMensualSourceCode.programa_source_code_id == psc.id,
+                    ActividadMensualSourceCode.mes == mes,
+                    ActividadMensualSourceCode.ano == ano,
+                )
+            )
+            if n:
+                continue
+            db.add(
+                ActividadMensualSourceCode(
+                    id=uuid.uuid4(),
+                    user_id=admin.id,
+                    programa_source_code_id=psc.id,
+                    mes=mes,
+                    ano=ano,
+                    total_hallazgos=1 + mes,
+                    criticos=0,
+                    altos=mes % 2,
+                    medios=1,
+                    bajos=0,
+                    score=88.0 + mes,
+                    sub_estado="Revisado",
+                )
+            )
+    srr = (
+        await db.execute(
+            select(ServicioReguladoRegistro).where(
+                ServicioReguladoRegistro.user_id == admin.id,
+                ServicioReguladoRegistro.nombre_regulacion == lb["reg_regulacion"],
+            )
+        )
+    ).scalar_one_or_none()
+    if srr:
+        for mes in (1, 2):
+            n = await db.scalar(
+                select(func.count())
+                .select_from(ActividadMensualServiciosRegulados)
+                .where(
+                    ActividadMensualServiciosRegulados.servicio_regulado_registro_id == srr.id,
+                    ActividadMensualServiciosRegulados.mes == mes,
+                    ActividadMensualServiciosRegulados.ano == ano,
+                )
+            )
+            if n:
+                continue
+            db.add(
+                ActividadMensualServiciosRegulados(
+                    id=uuid.uuid4(),
+                    user_id=admin.id,
+                    servicio_regulado_registro_id=srr.id,
+                    mes=mes,
+                    ano=ano,
+                    total_hallazgos=mes,
+                    criticos=0,
+                    altos=0,
+                    medios=mes,
+                    bajos=0,
+                    score=82.0,
+                    sub_estado="Seguimiento",
+                )
+            )
+    await db.flush()
+
+
+async def seed_programas_y_hallazgos(
+    db: AsyncSession, admin: User, ctx: Ctx, vid: list[uuid.UUID], *, demo: bool = True
+) -> None:
+    lb = row_labels(demo)
+    scan_pre = "DEMO-SCAN" if demo else "SEED-SCAN"
     # ── SAST
     r = await db.execute(
-        select(ProgramaSast).where(ProgramaSast.user_id == admin.id, ProgramaSast.nombre == f"{P}Programa SAST 2026")
+        select(ProgramaSast).where(ProgramaSast.user_id == admin.id, ProgramaSast.nombre == lb["prog_sast"])
     )
     if r.scalar_one_or_none() is None:
         p = ProgramaSast(
             id=uuid.uuid4(),
             user_id=admin.id,
             repositorio_id=ctx.repo_id,
-            nombre=f"{P}Programa SAST 2026",
+            nombre=lb["prog_sast"],
             ano=2026,
-            descripcion="Demo SAST",
+            descripcion=("Demo SAST" if demo else "Programa anual SAST (bootstrap)"),
             estado="Activo",
             metadatos_motor={"proveedor": "SonarQube", "version": "10.x"},
         )
@@ -201,7 +416,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 id=uuid.uuid4(),
                 user_id=admin.id,
                 actividad_sast_id=am.id,
-                titulo=f"{P}SAST — Uso de crypto débil",
+                titulo=lb["hall_sast"],
                 descripcion="Hallazgo demo",
                 severidad="Alta",
                 herramienta="Semgrep",
@@ -215,16 +430,16 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
 
     # ── DAST
     r2 = await db.execute(
-        select(ProgramaDast).where(ProgramaDast.user_id == admin.id, ProgramaDast.nombre == f"{P}Programa DAST 2026")
+        select(ProgramaDast).where(ProgramaDast.user_id == admin.id, ProgramaDast.nombre == lb["prog_dast"])
     )
     if r2.scalar_one_or_none() is None:
         pd = ProgramaDast(
             id=uuid.uuid4(),
             user_id=admin.id,
             activo_web_id=ctx.aw_id,
-            nombre=f"{P}Programa DAST 2026",
+            nombre=lb["prog_dast"],
             ano=2026,
-            descripcion="Demo DAST",
+            descripcion=("Demo DAST" if demo else "Programa anual DAST (bootstrap)"),
             estado="Activo",
         )
         db.add(pd)
@@ -260,7 +475,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 id=uuid.uuid4(),
                 user_id=admin.id,
                 ejecucion_dast_id=ej.id,
-                titulo=f"{P}DAST — reflejado en búsqueda",
+                titulo=lb["hall_dast"],
                 descripcion="Demo",
                 severidad="Alta",
                 url="https://example.com/q=test",
@@ -272,16 +487,16 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
     # ── Threat modeling
     r3 = await db.execute(
         select(ProgramaThreatModeling).where(
-            ProgramaThreatModeling.user_id == admin.id, ProgramaThreatModeling.nombre == f"{P}Programa TM 2026"
+            ProgramaThreatModeling.user_id == admin.id, ProgramaThreatModeling.nombre == lb["prog_tm"]
         )
     )
     if r3.scalar_one_or_none() is None:
         ptm = ProgramaThreatModeling(
             id=uuid.uuid4(),
             user_id=admin.id,
-            nombre=f"{P}Programa TM 2026",
+            nombre=lb["prog_tm"],
             ano=2026,
-            descripcion="Demo TM",
+            descripcion=("Demo TM" if demo else "Threat modeling anual (bootstrap)"),
             activo_web_id=ctx.aw_id,
             servicio_id=None,
             estado="Activo",
@@ -304,7 +519,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
             id=uuid.uuid4(),
             user_id=admin.id,
             sesion_id=ses.id,
-            titulo=f"{P}AMENAZA — suplantación en login",
+            titulo=lb["amenaza"],
             descripcion="STRIDE Spoofing",
             categoria_stride="Spoofing",
             dread_damage=6,
@@ -322,7 +537,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 id=uuid.uuid4(),
                 user_id=admin.id,
                 amenaza_id=amz.id,
-                nombre=f"{P}Control — MFA en login",
+                nombre=lb["ctrl_mfa"],
                 descripcion="Mitigación demo",
                 tipo="Preventivo",
                 estado="Pendiente",
@@ -334,7 +549,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
     # ── Source code security
     r4 = await db.execute(
         select(ProgramaSourceCode).where(
-            ProgramaSourceCode.user_id == admin.id, ProgramaSourceCode.nombre == f"{P}Programa Source Code 2026"
+            ProgramaSourceCode.user_id == admin.id, ProgramaSourceCode.nombre == lb["prog_sc"]
         )
     )
     if r4.scalar_one_or_none() is None:
@@ -342,7 +557,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
             id=uuid.uuid4(),
             user_id=admin.id,
             repositorio_id=ctx.repo_id,
-            nombre=f"{P}Programa Source Code 2026",
+            nombre=lb["prog_sc"],
             ano=2026,
             descripcion="Revisiones de controles en código",
             estado="Activo",
@@ -352,7 +567,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
         ctrl = ControlSourceCode(
             id=uuid.uuid4(),
             user_id=admin.id,
-            nombre=f"{P}Control — branch protection",
+            nombre=lb["ctrl_branch"],
             tipo="Branch Protection",
             descripcion="Obligatorio en main",
             obligatorio=True,
@@ -386,7 +601,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
     # ── Servicios regulados
     r5 = await db.execute(
         select(ServicioReguladoRegistro).where(
-            ServicioReguladoRegistro.user_id == admin.id, ServicioReguladoRegistro.nombre_regulacion == f"{P}CNBV KRI"
+            ServicioReguladoRegistro.user_id == admin.id, ServicioReguladoRegistro.nombre_regulacion == lb["reg_regulacion"]
         )
     )
     if r5.scalar_one_or_none() is None:
@@ -394,7 +609,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
             id=uuid.uuid4(),
             user_id=admin.id,
             servicio_id=ctx.svc_id,
-            nombre_regulacion=f"{P}CNBV KRI",
+            nombre_regulacion=lb["reg_regulacion"],
             ciclo="Q1",
             ano=2026,
             estado="En Revision",
@@ -405,7 +620,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
             id=uuid.uuid4(),
             user_id=admin.id,
             nombre_regulacion="CNBV",
-            nombre_control=f"{P}Control cifrado en tránsito",
+            nombre_control=lb["ctrl_reg"],
             descripcion="Demo",
             obligatorio=True,
         )
@@ -468,7 +683,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 id=uuid.uuid4(),
                 user_id=admin.id,
                 ejecucion_mast_id=ejm.id,
-                nombre=f"{P}MAST — almacenamiento inseguro",
+                nombre=lb["mast_hall"],
                 descripcion="Demo",
                 severidad="Media",
             )
@@ -478,7 +693,7 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
     # ── Releases + pipeline
     r7 = await db.execute(
         select(ServiceRelease).where(
-            ServiceRelease.user_id == admin.id, ServiceRelease.nombre == f"{P}SR con pipeline y etapas"
+            ServiceRelease.user_id == admin.id, ServiceRelease.nombre == lb["sr_pipe"]
         )
     )
     sr = r7.scalar_one_or_none()
@@ -487,8 +702,8 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
             id=uuid.uuid4(),
             user_id=admin.id,
             servicio_id=ctx.svc_id,
-            nombre=f"{P}SR con pipeline y etapas",
-            version="3.0.0-demo",
+            nombre=lb["sr_pipe"],
+            version=("3.0.0-demo" if demo else "3.0.0"),
             descripcion="Release para etapas y pipeline",
             estado_actual="En Pruebas de Seguridad",
             fecha_entrada=ctx.now,
@@ -521,9 +736,10 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                 service_release_id=sr.id,
                 repositorio_id=ctx.repo_id,
                 rama="main",
-                scan_id="DEMO-SCAN-1",
+                scan_id=f"{scan_pre}-1",
                 tipo="SAST",
                 resultado="Exitoso",
+                herramienta="Semgrep CI",
             )
             db.add(pl)
             await db.flush()
@@ -532,14 +748,99 @@ async def seed_programas_y_hallazgos(db: AsyncSession, admin: User, ctx: Ctx, vi
                     id=uuid.uuid4(),
                     user_id=admin.id,
                     pipeline_release_id=pl.id,
-                    titulo=f"{P}Pipeline — secret en log",
+                    titulo=lb["hpipe_sec"],
                     descripcion="Demo CI",
                     severidad="Alta",
                     regla="secrets-in-log",
                     estado="Abierto",
                 )
             )
+        # Pipeline adicional SCA / DAST (KPIs y tableros de CI/CD)
+        pl_specs = [
+            {
+                "scan_id": f"{scan_pre}-SCA-1",
+                "tipo": "SCA",
+                "resultado": "Exitoso",
+                "repositorio_id": ctx.repo_id,
+                "activo_web_id": None,
+                "rama": "main",
+                "herramienta": "Trivy",
+                "hallazgo": None,
+            },
+            {
+                "scan_id": f"{scan_pre}-DAST-2",
+                "tipo": "DAST",
+                "resultado": "Exitoso",
+                "repositorio_id": None,
+                "activo_web_id": ctx.aw_id,
+                "rama": "staging",
+                "herramienta": "OWASP ZAP",
+                "hallazgo": {
+                    "titulo": lb["hpipe_dast"],
+                    "severidad": "Media",
+                    "regla": "xss-reflected",
+                },
+            },
+            {
+                "scan_id": f"{scan_pre}-SAST-2",
+                "tipo": "SAST",
+                "resultado": "Fallido",
+                "repositorio_id": ctx.repo_id,
+                "activo_web_id": None,
+                "rama": "feature/demo" if demo else "feature/bootstrap",
+                "herramienta": "Sonar",
+                "hallazgo": None,
+            },
+        ]
+        for ps in pl_specs:
+            ex_pl = (
+                await db.execute(
+                    select(PipelineRelease.id).where(
+                        PipelineRelease.user_id == admin.id,
+                        PipelineRelease.scan_id == ps["scan_id"],
+                    )
+                )
+            ).scalar_one_or_none()
+            if ex_pl is not None:
+                continue
+            plx = PipelineRelease(
+                id=uuid.uuid4(),
+                user_id=admin.id,
+                service_release_id=sr.id,
+                repositorio_id=ps["repositorio_id"],
+                activo_web_id=ps["activo_web_id"],
+                rama=ps["rama"],
+                scan_id=ps["scan_id"],
+                tipo=ps["tipo"],
+                resultado=ps["resultado"],
+                herramienta=ps["herramienta"],
+            )
+            db.add(plx)
+            await db.flush()
+            hg = ps.get("hallazgo")
+            if hg:
+                db.add(
+                    HallazgoPipeline(
+                        id=uuid.uuid4(),
+                        user_id=admin.id,
+                        pipeline_release_id=plx.id,
+                        titulo=hg["titulo"],
+                        descripcion="Demo CI pipeline",
+                        severidad=hg["severidad"],
+                        regla=hg["regla"],
+                        estado="Abierto",
+                    )
+                )
     await db.flush()
+
+    await _ensure_actividades_mensuales_q1(db, admin, lb)
+
+    if not demo:
+        logger.info(
+            "seed.operational_programs.ok",
+            extra={"event": "seed.operational_programs.ok"},
+        )
+        return
 
     # ── Revisión tercero
     r8 = await db.execute(

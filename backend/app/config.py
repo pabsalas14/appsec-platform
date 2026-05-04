@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -76,8 +76,13 @@ class Settings(BaseSettings):
     )
 
     # ─── Seed control ───
-    RUN_SEED: bool = False  # Only run seed when explicitly enabled
-    SEED_FORCE_ADMIN_PASSWORD: bool = False  # Dev/UAT helper: reset admin password if admin already exists
+    # Nota: el arranque vía Docker usa el shell (`RUN_SEED=true` en .env), no este flag,
+    # para decidir si ejecuta `python -m app.seed`. Mantener alineado con .env por claridad.
+    RUN_SEED: bool = False
+    # true = además del bootstrap operativo, carga dataset [DEMO] completo (vulns, OKR, auditorías…).
+    SEED_DEMO_BUSINESS: bool = False
+    # Dev/UAT: si el admin ya existe, puede forzar la contraseña a ADMIN_PASSWORD.
+    SEED_FORCE_ADMIN_PASSWORD: bool = False
 
     # ───  MCP integration ───
     ARGUS_URL: str = "http://localhost:8899"
@@ -95,7 +100,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
-    OLLAMA_URL: str = "http://localhost:11434"
+    # Docker Compose define OLLAMA_BASE_URL; código SCR también — unificar lectura
+    OLLAMA_URL: str = Field(
+        default="http://localhost:11434",
+        validation_alias=AliasChoices("OLLAMA_URL", "OLLAMA_BASE_URL"),
+    )
 
     # ─── G2: evaluación diaria (nocturna) de reglas hacia in-app notifications ───
     SCHEDULE_NOTIFICATION_RULES: bool = False

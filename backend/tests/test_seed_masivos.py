@@ -8,7 +8,7 @@ from app.models.catalog import Catalog
 from app.models.module_view import ModuleView
 from app.models.role import Role
 from app.models.user import User
-from app.seed import run_seed
+from app.seed import CATALOG_SEED_TYPES, run_seed
 
 
 async def _run_seed_in_test_session(session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -59,7 +59,12 @@ async def test_seed_inserts_catalog_types(
         result = await db.execute(select(Catalog))
         rows = result.scalars().all()
         types = {c.type for c in rows}
-        assert len(types) >= 1
+        for t in CATALOG_SEED_TYPES:
+            assert t in types, f"Falta catálogo seed tipo {t!r}"
+        for c in rows:
+            if c.type in CATALOG_SEED_TYPES:
+                assert isinstance(c.values, list)
+                assert len(c.values) >= 1, f"Catálogo {c.type!r} sin valores"
 
 
 @pytest.mark.asyncio

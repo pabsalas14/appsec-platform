@@ -125,7 +125,7 @@ types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI 
 
 # ──────────────────── Maintenance ────────────────────
 
-seed: ## Full seed: admin + catálogos y datos demo (idempotente)
+seed: ## Seed completo: admin + catálogos + bootstrap operativo ([DEMO] solo si SEED_DEMO_BUSINESS=true)
 	docker compose exec backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
 
 seed-admin: ## Solo usuario admin (usa ADMIN_EMAIL/ADMIN_PASSWORD; promueve si ya registraste con ese email)
