@@ -88,8 +88,10 @@ services:
     image: redis:7-alpine
     container_name: framework_redis
     restart: unless-stopped
+    # Puerto host 16379 evita choque con Redis del sistema (6379). Dentro de la red Compose
+    # los servicios siguen usando redis:6379 (CELERY_* / REDIS_URL sin cambios).
     ports:
-      - "6379:6379"
+      - "${REDIS_PUBLISH_PORT:-16379}:6379"
 
   # ──────────────────────────────────
   # Celery worker — pipeline SCR (Inspector → Detective → Fiscal)
