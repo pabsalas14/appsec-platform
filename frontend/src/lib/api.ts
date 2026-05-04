@@ -10,6 +10,12 @@ export const api = axios.create({
   withCredentials: true, // send HttpOnly cookies with every request
 });
 
+/** ADR-0001: colecciones sin barra final; FastAPI usa redirect_slashes=False. */
+function stripTrailingSlash(path: string): string {
+  if (path.length <= 1) return path;
+  return path.replace(/\/+$/, '') || '/';
+}
+
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie
@@ -19,6 +25,9 @@ function readCookie(name: string): string | null {
 }
 
 api.interceptors.request.use((config) => {
+  if (typeof config.url === 'string') {
+    config.url = stripTrailingSlash(config.url);
+  }
   const method = config.method?.toUpperCase();
   if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
     const csrfToken = readCookie('csrf_token');

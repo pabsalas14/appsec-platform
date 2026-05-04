@@ -82,14 +82,14 @@ export default function RiskScoringAdminPage() {
   const { data: configs, isLoading } = useQuery<RiskScoringConfig[]>({
     queryKey: ['admin', 'risk-scoring'],
     queryFn: async () => {
-      const { data } = await api.get('/api/v1/admin/risk-scoring/');
+      const { data } = await api.get('/admin/risk-scoring');
       return data.data || data;
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (config: CreateConfigBody) => {
-      const { data } = await api.post('/api/v1/admin/risk-scoring/', config);
+      const { data } = await api.post('/admin/risk-scoring', config);
       return data;
     },
     onSuccess: () => {
@@ -112,7 +112,7 @@ export default function RiskScoringAdminPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.delete(`/api/v1/admin/risk-scoring/${id}`);
+      await api.delete(`/admin/risk-scoring/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'risk-scoring'] });
@@ -121,7 +121,7 @@ export default function RiskScoringAdminPage() {
 
   const activateMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await api.post(`/api/v1/admin/risk-scoring/${id}/activate`);
+      const { data } = await api.post(`/admin/risk-scoring/${id}/activate`);
       return data;
     },
     onSuccess: () => {
