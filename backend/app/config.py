@@ -1,5 +1,6 @@
 from typing import Literal
 
+from cryptography.fernet import Fernet
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -151,6 +152,21 @@ class Settings(BaseSettings):
         }
         if v.lower() in insecure:
             raise ValueError("SECRET_KEY must not use a well-known default value")
+        return v
+
+    @field_validator("APPSEC_MASTER_KEY")
+    @classmethod
+    def appsec_master_key_must_be_fernet(cls, v: str) -> str:
+        """Fernet requiere 32 bytes en base64 url-safe (p. ej. salida de generate_key)."""
+        try:
+            Fernet(v.encode("utf-8"))
+        except (TypeError, ValueError) as e:
+            raise ValueError(
+                "APPSEC_MASTER_KEY no es una clave Fernet válida (32 bytes, base64 url-safe). "
+                "Genera una con: "
+                'python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())". '
+                "No uses contraseñas ni `secrets.token_urlsafe` directamente."
+            ) from e
         return v
 
     @field_validator("AUTH_COOKIE_SAMESITE")

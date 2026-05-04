@@ -125,17 +125,19 @@ types: ## Regenerate frontend/src/types/api.ts from the running backend OpenAPI 
 
 # ──────────────────── Maintenance ────────────────────
 
+# `compose run --rm` evita depender de que `backend` esté estable: si el servicio está en
+# crash-loop (`exec` falla con "restarting"), el seed igual corre en un contenedor efímero.
 seed: ## Seed completo: admin + catálogos + bootstrap operativo ([DEMO] solo si SEED_DEMO_BUSINESS=true)
-	docker compose exec backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
+	docker compose run --rm backend python -c "import asyncio; from app.seed import seed; asyncio.run(seed())"
 
 seed-admin: ## Solo usuario admin (usa ADMIN_EMAIL/ADMIN_PASSWORD; promueve si ya registraste con ese email)
-	docker compose exec backend python -c "import asyncio; from app.seed import seed_admin_only; asyncio.run(seed_admin_only())"
+	docker compose run --rm backend python -c "import asyncio; from app.seed import seed_admin_only; asyncio.run(seed_admin_only())"
 
 # UAT: carga 5.000 vulnerabilidades de prueba (solo BD desechable; requiere `make seed` antes).
 # Ejecuta con: make seed-uat-volumen
 seed-uat-volumen: ## ⚠ 5000 filas [DEMO-VOL] — set SEED_UAT_VOLUME=1; usa `make clean` si la DB no es desechable
 	@printf "$(RED)⚠  Inserta 5000 Vulnerabilidad. Úsalo solo en base POSTGRES de un solo uso.$(NC)\n"
-	docker compose exec -e SEED_UAT_VOLUME=1 backend python -m app.seeds.seed_uat_volume
+	docker compose run --rm -e SEED_UAT_VOLUME=1 backend python -m app.seeds.seed_uat_volume
 
 clean: ## ⚠ Stop containers and remove ALL volumes (destructive)
 	@printf "$(RED)⚠  This will delete ALL data volumes!$(NC)\n"
