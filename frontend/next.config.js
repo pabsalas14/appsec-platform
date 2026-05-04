@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // Menos módulos en dev: importaciones “barrel” se resuelven a archivos concretos.
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/optimizePackageImports
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'recharts',
+      '@tanstack/react-query',
+    ],
+  },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
   },
